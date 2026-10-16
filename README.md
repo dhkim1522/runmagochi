@@ -28,6 +28,8 @@
 
 ## 빌드·실행
 
+Android SDK 플랫폼 37 이 설치돼 있어야 한다.
+
 ```
 flutter pub get
 dart run build_runner build
