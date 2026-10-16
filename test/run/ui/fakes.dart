@@ -20,12 +20,19 @@ RunSnapshot snap(
 );
 
 class FakeController extends RunController {
-  FakeController({this.restore = false, RunSnapshot? initial, this.error})
-    : _initial = initial ?? snap(RunState.idle);
+  FakeController({
+    this.restore = false,
+    RunSnapshot? initial,
+    this.error,
+    this.startError,
+    this.endError,
+  }) : _initial = initial ?? snap(RunState.idle);
 
   final bool restore;
   final RunSnapshot _initial;
   final String? error;
+  final Object? startError;
+  Object? endError;
   final List<String> calls = [];
 
   @override
@@ -34,6 +41,8 @@ class FakeController extends RunController {
   @override
   Future<void> start() async {
     calls.add('start');
+    await Future<void>.delayed(Duration.zero);
+    if (startError != null) throw startError!;
     state = RunViewState(
       snapshot: snap(RunState.recording, distanceM: 1230),
       runId: 'r',
@@ -63,6 +72,7 @@ class FakeController extends RunController {
   @override
   Future<RunSummary> end() async {
     calls.add('end');
+    if (endError != null) throw endError!;
     state = RunViewState(snapshot: snap(RunState.idle));
     return RunSummary(
       startedAt: DateTime(2026),

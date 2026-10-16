@@ -11,10 +11,12 @@ Future<FakeController> open(
   WidgetTester tester, {
   RunSnapshot? initial,
   String? error,
+  Object? endError,
 }) async {
   final controller = FakeController(
     initial: initial ?? snap(RunState.paused, distanceM: 2910),
     error: error,
+    endError: endError,
   );
   await tester.pumpWidget(
     ProviderScope(
@@ -110,5 +112,31 @@ void main() {
   testWidgets('lastError 가 있으면 배너로 보인다', (tester) async {
     await open(tester, error: '위치를 읽지 못했어요');
     expect(find.text('위치를 읽지 못했어요'), findsOneWidget);
+  });
+
+  testWidgets('end 가 실패하면 일시정지 화면에 남고 종료 버튼이 다시 동작한다', (tester) async {
+    final c = await open(tester, endError: StateError('fail'));
+    Future<void> hold() async {
+      final g = await tester.startGesture(tester.getCenter(find.text('종료')));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 1501));
+      await tester.pump();
+      await g.up();
+      await tester.pumpAndSettle();
+    }
+
+    await hold();
+    expect(c.calls, ['end']);
+    expect(find.byType(InRunScreen), findsOneWidget);
+    expect(find.text('재개'), findsOneWidget);
+    final bar = tester.widget<LinearProgressIndicator>(
+      find.byType(LinearProgressIndicator),
+    );
+    expect(bar.value, 0);
+
+    c.endError = null;
+    await hold();
+    expect(c.calls, ['end', 'end']);
+    expect(find.byType(InRunScreen), findsNothing);
   });
 }

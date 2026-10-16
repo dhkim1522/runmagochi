@@ -147,4 +147,37 @@ void main() {
     expect(c.calls, ['restore', 'start', 'pause', 'end']);
     expect(c.state.snapshot.state, RunState.idle);
   });
+
+  testWidgets('카운트다운 중 시작을 또 눌러도 start 는 한 번만 불린다', (tester) async {
+    final c = FakeController();
+    await pumpHome(tester, c);
+    await tester.tap(find.text('시작'));
+    await tester.pump();
+    // 카운트다운 오버레이가 덮고 있어도 버튼 자체가 비활성이다.
+    await tester.tap(find.text('시작'), warnIfMissed: false);
+    await tester.pump(const Duration(seconds: 1));
+    await tester.tap(find.text('시작'), warnIfMissed: false);
+    await tester.pump(const Duration(seconds: 2));
+    await tester.pumpAndSettle();
+    expect(c.calls.where((e) => e == 'start'), hasLength(1));
+  });
+
+  testWidgets('start 가 실패하면 카운트다운이 사라지고 시작 버튼이 다시 켜진다', (tester) async {
+    final c = FakeController(startError: StateError('boom'));
+    await pumpHome(tester, c);
+    await tester.tap(find.text('시작'));
+    await tester.pump();
+    await tester.pump(const Duration(seconds: 3));
+    await tester.pump();
+    await tester.pump();
+    expect(find.text('러닝을 시작하지 못했어요'), findsOneWidget);
+    expect(find.text('3'), findsNothing);
+    expect(find.text('1'), findsNothing);
+    expect(find.byType(InRunScreen), findsNothing);
+    final button = tester.widget<FilledButton>(
+      find.widgetWithText(FilledButton, '시작'),
+    );
+    expect(button.onPressed, isNotNull);
+    await tester.pumpAndSettle(const Duration(seconds: 5));
+  });
 }

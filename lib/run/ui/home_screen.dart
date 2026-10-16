@@ -65,6 +65,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       } catch (_) {
         _toast('저장하지 못했어요');
       }
+      if (!mounted) return;
       ref.invalidate(weeklyTotalProvider);
     }
   }
@@ -73,6 +74,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     await Navigator.of(
       context,
     ).push(MaterialPageRoute<void>(builder: (_) => const InRunScreen()));
+    if (!mounted) return;
     ref.invalidate(weeklyTotalProvider);
   }
 

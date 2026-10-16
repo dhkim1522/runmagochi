@@ -18,6 +18,7 @@ class InRunScreen extends ConsumerStatefulWidget {
 
 class _InRunScreenState extends ConsumerState<InRunScreen> {
   bool _ending = false;
+  final _stopKey = GlobalKey<_HoldToStopButtonState>();
 
   Future<void> _end() async {
     if (_ending) return;
@@ -27,6 +28,7 @@ class _InRunScreenState extends ConsumerState<InRunScreen> {
       if (mounted) Navigator.of(context).pop();
     } catch (_) {
       // 실패 원인은 lastError 배너로 보인다.
+      _stopKey.currentState?.reset();
       if (mounted) setState(() => _ending = false);
     }
   }
@@ -105,7 +107,11 @@ class _InRunScreenState extends ConsumerState<InRunScreen> {
                     child: const Text('재개'),
                   ),
                   const SizedBox(height: 12),
-                  _HoldToStopButton(enabled: !_ending, onComplete: _end),
+                  _HoldToStopButton(
+                    key: _stopKey,
+                    enabled: !_ending,
+                    onComplete: _end,
+                  ),
                 ] else
                   FilledButton(
                     onPressed: controller.pause,
@@ -140,7 +146,11 @@ class _Stat extends StatelessWidget {
 
 /// 1.5초 동안 누르고 있어야 [onComplete] 가 불리는 종료 버튼.
 class _HoldToStopButton extends StatefulWidget {
-  const _HoldToStopButton({required this.enabled, required this.onComplete});
+  const _HoldToStopButton({
+    super.key,
+    required this.enabled,
+    required this.onComplete,
+  });
 
   final bool enabled;
   final VoidCallback onComplete;
@@ -163,6 +173,9 @@ class _HoldToStopButtonState extends State<_HoldToStopButton>
     super.dispose();
   }
 
+  /// 종료가 실패했을 때 진행 막대를 비운다.
+  void reset() => _progress.reset();
+
   void _release() {
     if (_progress.status != AnimationStatus.completed) _progress.reset();
   }
@@ -170,33 +183,37 @@ class _HoldToStopButtonState extends State<_HoldToStopButton>
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    return Listener(
-      onPointerDown: (_) {
-        if (widget.enabled) _progress.forward(from: 0);
-      },
-      onPointerUp: (_) => _release(),
-      onPointerCancel: (_) => _release(),
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          Positioned.fill(
-            child: AnimatedBuilder(
-              animation: _progress,
-              builder: (context, _) => ClipRRect(
-                borderRadius: BorderRadius.circular(20),
-                child: LinearProgressIndicator(
-                  value: _progress.value,
-                  backgroundColor: scheme.errorContainer,
-                  color: scheme.error,
+    return Semantics(
+      button: true,
+      label: '길게 눌러 종료',
+      child: Listener(
+        onPointerDown: (_) {
+          if (widget.enabled) _progress.forward(from: 0);
+        },
+        onPointerUp: (_) => _release(),
+        onPointerCancel: (_) => _release(),
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            Positioned.fill(
+              child: AnimatedBuilder(
+                animation: _progress,
+                builder: (context, _) => ClipRRect(
+                  borderRadius: BorderRadius.circular(20),
+                  child: LinearProgressIndicator(
+                    value: _progress.value,
+                    backgroundColor: scheme.errorContainer,
+                    color: scheme.error,
+                  ),
                 ),
               ),
             ),
-          ),
-          const Padding(
-            padding: EdgeInsets.symmetric(vertical: 16),
-            child: Text('종료'),
-          ),
-        ],
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 16),
+              child: Text('종료'),
+            ),
+          ],
+        ),
       ),
     );
   }
