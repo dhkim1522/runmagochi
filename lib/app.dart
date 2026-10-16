@@ -1,0 +1,42 @@
+import 'package:flutter/material.dart';
+
+class RunmagochiApp extends StatelessWidget {
+  const RunmagochiApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: '런마고치',
+      theme: ThemeData(colorSchemeSeed: Colors.green, useMaterial3: true),
+      home: const _HomeShell(),
+    );
+  }
+}
+
+class _HomeShell extends StatefulWidget {
+  const _HomeShell();
+
+  @override
+  State<_HomeShell> createState() => _HomeShellState();
+}
+
+class _HomeShellState extends State<_HomeShell> {
+  static const _labels = ['러닝', '기록', '아바타'];
+  int _index = 0;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Center(child: Text('${_labels[_index]} 화면')),
+      bottomNavigationBar: NavigationBar(
+        selectedIndex: _index,
+        onDestinationSelected: (i) => setState(() => _index = i),
+        destinations: const [
+          NavigationDestination(icon: Icon(Icons.directions_run), label: '러닝'),
+          NavigationDestination(icon: Icon(Icons.history), label: '기록'),
+          NavigationDestination(icon: Icon(Icons.pets), label: '아바타'),
+        ],
+      ),
+    );
+  }
+}

@@ -28,4 +28,8 @@
 
 ## 빌드·실행
 
-TBD. Flutter 프로젝트 생성 후 작성한다.
+```
+flutter pub get
+dart run build_runner build
+flutter run
+```

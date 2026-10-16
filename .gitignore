@@ -16,3 +16,29 @@ key.properties
 
 # Claude Code PC별 설정
 .claude/settings.local.json
+
+# Flutter·Dart
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/
+build/
+coverage/
+*.iml
+*.ipr
+*.iws
+.last_build_id
+*.class
+*.log
+*.pyc
+*.swp
+migrate_working_dir/
+devtools_options.yaml
+**/doc/api/
+.fvm/
+.history
+.svn/
+.atom/
+.buildlog/
