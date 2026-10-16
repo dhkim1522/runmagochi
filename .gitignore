@@ -1,0 +1,16 @@
+# OS·에디터
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# 분석 원본 (저장소에 넣지 않음)
+*.apk
+*.dex
+
+# 비밀값
+.env
+*.keystore
+*.jks
+google-services.json
+GoogleService-Info.plist
