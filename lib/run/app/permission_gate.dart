@@ -1,10 +1,12 @@
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:permission_handler/permission_handler.dart' as ph;
 
 enum GateResult {
   ready,
   needsLocation,
+  needsPreciseLocation,
   locationDeniedForever,
   needsBatteryGuide,
 }
@@ -28,18 +30,22 @@ abstract interface class PermissionGate {
 class PermissionHandlerGate implements PermissionGate {
   PermissionHandlerGate({
     Future<ph.PermissionStatus> Function()? locationStatus,
+    Future<LocationAccuracyStatus> Function()? locationAccuracy,
   }) : _locationStatus =
-           locationStatus ?? (() => ph.Permission.locationWhenInUse.status);
+           locationStatus ?? (() => ph.Permission.locationWhenInUse.status),
+       _locationAccuracy = locationAccuracy ?? Geolocator.getLocationAccuracy;
 
   static const _battery = MethodChannel('runmagochi/battery');
 
   final Future<ph.PermissionStatus> Function() _locationStatus;
+  final Future<LocationAccuracyStatus> Function() _locationAccuracy;
   bool _batteryGuideDismissed = false;
 
   @override
   Future<GateResult> check() async {
     final location = await _locationStatus();
     if (location.isPermanentlyDenied) return GateResult.locationDeniedForever;
+    if (await _isReducedAccuracy()) return GateResult.needsPreciseLocation;
     if (!location.isGranted) return GateResult.needsLocation;
     if (!_batteryGuideDismissed &&
         await _battery.invokeMethod<bool>('isIgnoringBatteryOptimizations') !=
@@ -47,6 +53,16 @@ class PermissionHandlerGate implements PermissionGate {
       return GateResult.needsBatteryGuide;
     }
     return GateResult.ready;
+  }
+
+  // 대략적인 위치만 허용되면 정확도 20m 초과 점이 모두 버려져 거리가 0이 된다.
+  Future<bool> _isReducedAccuracy() async {
+    try {
+      return await _locationAccuracy() == LocationAccuracyStatus.reduced;
+    } on PlatformException {
+      // 위치 권한이 전혀 없으면 정확도 조회가 오류를 낸다.
+      return false;
+    }
   }
 
   @override

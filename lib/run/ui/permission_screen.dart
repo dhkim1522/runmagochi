@@ -13,6 +13,7 @@ class PermissionScreen extends ConsumerStatefulWidget {
 }
 
 const _locationMessage = '러닝 경로와 거리를 기록하려면 위치 권한이 필요합니다. 위치는 이 기기에만 저장됩니다.';
+const _preciseMessage = '정확한 위치를 허용해야 거리가 기록됩니다';
 
 class _PermissionScreenState extends ConsumerState<PermissionScreen>
     with WidgetsBindingObserver {
@@ -67,7 +68,7 @@ class _PermissionScreenState extends ConsumerState<PermissionScreen>
   Widget build(BuildContext context) {
     final gate = ref.read(permissionGateProvider);
     final (message, actions) = switch (_result) {
-      GateResult.needsLocation => (
+      GateResult.needsLocation || GateResult.needsPreciseLocation => (
         _locationMessage,
         [
           FilledButton(
@@ -122,6 +123,10 @@ class _PermissionScreenState extends ConsumerState<PermissionScreen>
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Text(message, textAlign: TextAlign.center),
+            if (_result == GateResult.needsPreciseLocation) ...[
+              const SizedBox(height: 8),
+              const Text(_preciseMessage, textAlign: TextAlign.center),
+            ],
             const SizedBox(height: 24),
             if (_result == null && !_failed)
               const Center(child: CircularProgressIndicator()),

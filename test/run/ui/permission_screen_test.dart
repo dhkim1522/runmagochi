@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:runmagochi/run/app/permission_gate.dart';
 import 'package:runmagochi/run/ui/permission_screen.dart';
@@ -81,6 +82,25 @@ void main() {
     await tester.tap(find.text('권한 허용'));
     await tester.pump();
     expect(ready, 1);
+  });
+
+  testWidgets('needsPreciseLocation이면 위치 안내에 정확한 위치 문구를 더한다', (tester) async {
+    final gate = FakeGate(GateResult.needsPreciseLocation);
+    await pump(tester, gate);
+
+    expect(
+      find.text('러닝 경로와 거리를 기록하려면 위치 권한이 필요합니다. 위치는 이 기기에만 저장됩니다.'),
+      findsOneWidget,
+    );
+    expect(find.text('정확한 위치를 허용해야 거리가 기록됩니다'), findsOneWidget);
+    await tester.tap(find.text('권한 허용'));
+    await tester.pump();
+    expect(gate.requested, 1);
+  });
+
+  testWidgets('needsLocation이면 정확한 위치 문구는 없다', (tester) async {
+    await pump(tester, FakeGate(GateResult.needsLocation));
+    expect(find.text('정확한 위치를 허용해야 거리가 기록됩니다'), findsNothing);
   });
 
   testWidgets('locationDeniedForever면 설정 열기 버튼', (tester) async {
@@ -205,6 +225,7 @@ void main() {
 
     PermissionHandlerGate gate() => PermissionHandlerGate(
       locationStatus: () async => PermissionStatus.granted,
+      locationAccuracy: () async => LocationAccuracyStatus.precise,
     );
 
     test('최적화 제외 상태면 ready', () async {
@@ -225,6 +246,57 @@ void main() {
       mock(false, calls);
       await gate().openBatterySettings();
       expect(calls, ['openBatteryOptimizationSettings']);
+    });
+  });
+
+  group('PermissionHandlerGate 정확한 위치 확인', () {
+    const channel = MethodChannel('runmagochi/battery');
+    final messenger =
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
+
+    setUp(
+      () => messenger.setMockMethodCallHandler(channel, (_) async => true),
+    );
+    tearDown(() => messenger.setMockMethodCallHandler(channel, null));
+
+    PermissionHandlerGate gate(
+      PermissionStatus status,
+      Future<LocationAccuracyStatus> Function() accuracy,
+    ) => PermissionHandlerGate(
+      locationStatus: () async => status,
+      locationAccuracy: accuracy,
+    );
+
+    test('허용됐어도 대략적인 위치면 needsPreciseLocation', () async {
+      final g = gate(
+        PermissionStatus.granted,
+        () async => LocationAccuracyStatus.reduced,
+      );
+      expect(await g.check(), GateResult.needsPreciseLocation);
+    });
+
+    test('대략적인 위치만 허용돼 상태가 denied여도 needsPreciseLocation', () async {
+      final g = gate(
+        PermissionStatus.denied,
+        () async => LocationAccuracyStatus.reduced,
+      );
+      expect(await g.check(), GateResult.needsPreciseLocation);
+    });
+
+    test('위치 권한이 없어 정확도 조회가 실패하면 needsLocation', () async {
+      final g = gate(
+        PermissionStatus.denied,
+        () async => throw PlatformException(code: 'PERMISSION_DENIED'),
+      );
+      expect(await g.check(), GateResult.needsLocation);
+    });
+
+    test('정확한 위치가 허용되면 ready', () async {
+      final g = gate(
+        PermissionStatus.granted,
+        () async => LocationAccuracyStatus.precise,
+      );
+      expect(await g.check(), GateResult.ready);
     });
   });
 }
