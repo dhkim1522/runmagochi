@@ -195,15 +195,22 @@ void main() {
     expect(restored.segmentIndex, 2);
   });
 
-  test('구간 번호는 start에서 0, resume마다 1씩 오른다', () {
+  test('점 없는 재개는 구간 번호를 쓰지 않는다', () {
     engine.start();
+    expect(engine.segmentIndex, 0);
+    engine.addSample(at(0, _lat0, _lng0));
     expect(engine.segmentIndex, 0);
     engine.pause();
     engine.resume();
     expect(engine.segmentIndex, 1);
     engine.pause();
     engine.resume();
-    expect(engine.segmentIndex, 2);
+    expect(engine.segmentIndex, 1);
+    final before = engine.segments.length;
+    engine.addSample(at(60, _northOf(5), _lng0));
+    expect(engine.segmentIndex, before);
+    expect(engine.segments, hasLength(before + 1));
+    expect(engine.segments.every((s) => s.isNotEmpty), isTrue);
   });
 
   test('현재 페이스는 일시정지 중 null, 재개 후 새 구간 30초 창이 10m 이상일 때부터 값', () {
