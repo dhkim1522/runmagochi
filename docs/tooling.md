@@ -38,6 +38,7 @@
 - **dart-flutter**: Dart MCP 서버가 `dart` 명령을 쓴다. Flutter SDK를 설치하고 `dart` 가 PATH에 있어야 한다.
 - **pixel-plugin**: [Aseprite](https://www.aseprite.org/) 1.3 이상이 설치돼 있어야 한다.
 - **skill-creator**: claude.ai 계정에 skill-creator 스킬이 이미 동기화돼 있으면 켜지 않아도 된다.
+- **상태 표시줄**: `.claude/statusline.sh` 가 모델, 5시간·주간 사용량, 세션 시간, 컨텍스트, effort 를 하단에 표시한다. bash 와 `jq` 가 필요하다. Windows 는 Git Bash 와 `winget install jqlang.jq` 로 설치한다.
 
 ## 플러그인 추가
 
