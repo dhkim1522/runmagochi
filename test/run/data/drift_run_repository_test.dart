@@ -87,6 +87,25 @@ void main() {
     expect(active.segments[1].map((e) => e.latitude), [2, 3]);
   });
 
+  test('저장된 구간 번호가 0부터 이어지지 않으면 findActiveRun은 StateError', () async {
+    final start = DateTime(2026, 1, 5, 9);
+    final id = await repo.createActiveRun(start);
+    DateTime t(int s) => start.add(Duration(seconds: s));
+    await repo.appendPoints(
+      id,
+      segmentIndex: 0,
+      points: [sample(t(1), 0, 0)],
+      movingTime: const Duration(seconds: 1),
+    );
+    await repo.appendPoints(
+      id,
+      segmentIndex: 2,
+      points: [sample(t(20), 2, 2)],
+      movingTime: const Duration(seconds: 2),
+    );
+    await expectLater(repo.findActiveRun(), throwsStateError);
+  });
+
   test('movingTime은 appendPoints 호출마다 갱신되고 빈 점 목록에서도 저장된다', () async {
     final id = await repo.createActiveRun(DateTime(2026, 1, 5, 9));
     await repo.appendPoints(

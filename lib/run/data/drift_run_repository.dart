@@ -109,6 +109,13 @@ class DriftRunRepository implements RunRepository {
             ),
           );
     }
+    // 엔진은 구간을 순서로만 이어 붙인다. 번호가 비면 구간이 섞인다.
+    final segmentNumbers = bySegment.keys.toList();
+    for (var i = 0; i < segmentNumbers.length; i++) {
+      if (segmentNumbers[i] != i) {
+        throw StateError('구간 번호가 0부터 이어지지 않는다: $segmentNumbers');
+      }
+    }
     return ActiveRun(
       id: run.id,
       startedAt: run.startedAt.toLocal(),
