@@ -150,6 +150,27 @@ void main() {
     expect(summary.splits.single.duration, const Duration(seconds: 15));
   });
 
+  test('남은 거리가 1m 미만이면 마지막 구간을 넣지 않는다', () {
+    engine.start();
+    engine.addSample(at(0, 0));
+    engine.addSample(at(400, 1000.0004));
+    final summary = engine.end();
+    expect(summary.distanceM, closeTo(1000.0004, 1e-6));
+    expect(summary.splits, hasLength(1));
+    expect(summary.splits.single.distanceM, 1000);
+  });
+
+  test('end 는 clock() 을 한 번 읽어 endedAt·movingTime 에 같이 쓴다', () {
+    // 읽을 때마다 1초씩 가는 시계.
+    var reads = 0;
+    final ticking = RunEngine(clock: () => t0.add(Duration(seconds: reads++)));
+    ticking.start();
+    final startedAt = t0;
+    final summary = ticking.end();
+    expect(summary.startedAt, startedAt);
+    expect(summary.movingTime, summary.endedAt.difference(startedAt));
+  });
+
   test('idle 에서 end 는 StateError', () {
     expect(engine.end, throwsStateError);
   });

@@ -11,6 +11,7 @@ const Duration _currentPaceWindow = Duration(seconds: 30);
 const double _minPaceDistanceM = 10;
 const Duration _staleSampleTolerance = Duration(seconds: 2);
 const double _splitM = 1000;
+const double _minLastSplitM = 1;
 
 enum RunState { idle, recording, paused, ended }
 
@@ -145,14 +146,15 @@ class RunEngine {
     _transition(RunState.paused, RunState.recording);
   }
 
-  /// 기록 중이나 일시정지 중에 끝낸다. 남은 거리를 마지막 구간으로 넣고
-  /// `RunEnded` 를 낸 뒤 `ended` 로 바꾸고 이벤트 스트림을 닫는다.
+  /// 기록 중이나 일시정지 중에 끝낸다. 남은 거리가 1m 이상이면 마지막
+  /// 구간으로 넣고 `RunEnded` 를 낸 뒤 `ended` 로 바꾸고 이벤트 스트림을
+  /// 닫는다. `clock()` 은 한 번만 읽는다.
   RunSummary end() {
     if (_state != RunState.recording && _state != RunState.paused) {
       throw StateError('Cannot go from $_state to ${RunState.ended}');
     }
     final remainingM = _distanceM - _splits.length * _splitM;
-    if (remainingM > 0) {
+    if (remainingM >= _minLastSplitM) {
       _splits.add(
         Split(
           index: _splits.length + 1,
@@ -162,10 +164,11 @@ class RunEngine {
       );
     }
     final startedAt = _startedAt!;
-    final movingTime = _movingTime();
+    final now = _clock();
+    final movingTime = _movingTime(now);
     final summary = RunSummary(
       startedAt: startedAt,
-      endedAt: _clock(),
+      endedAt: now,
       distanceM: _distanceM,
       movingTime: movingTime,
       avgPaceSecPerKm: _pace(movingTime, _distanceM),
@@ -175,7 +178,7 @@ class RunEngine {
       points: List.unmodifiable([for (final s in _segments) ...s]),
     );
     _events.add(RunEnded(summary));
-    _transition(_state, RunState.ended);
+    _transition(_state, RunState.ended, at: now);
     _events.close();
     return summary;
   }
@@ -240,12 +243,12 @@ class RunEngine {
     return d;
   }
 
-  /// 전이 시각(`clock()`)을 돌려준다.
-  DateTime _transition(RunState from, RunState to) {
+  /// 전이 시각([at], 없으면 `clock()`)을 돌려준다.
+  DateTime _transition(RunState from, RunState to, {DateTime? at}) {
     if (_state != from) {
       throw StateError('Cannot go from $_state to $to');
     }
-    final now = _clock();
+    final now = at ?? _clock();
     if (from == RunState.recording) {
       _movingBase += now.difference(_recordingSince!);
       _recordingSince = null;
@@ -259,11 +262,11 @@ class RunEngine {
     return now;
   }
 
-  Duration _movingTime() {
+  Duration _movingTime([DateTime? at]) {
     final since = _recordingSince;
     return since == null
         ? _movingBase
-        : _movingBase + _clock().difference(since);
+        : _movingBase + (at ?? _clock()).difference(since);
   }
 
   /// 현재 구간에서 `clock()` 까지 최근 30초 창의 시간 ÷ 거리.
