@@ -11,7 +11,7 @@
 
 원천 문서는 `docs/` 다. 결정이 바뀌면 해당 문서를 고치고, 이 파일에는 문서 위치만 둔다.
 
-- `docs/product.md` — 기획서: 목표, 요구사항(F1~F15), 사용자 시나리오
+- `docs/product.md` — 기획서: 목표, 요구사항(F1~F19), 사용자 시나리오
 - `docs/roadmap.md` — 페이즈별 범위·완료 기준, 현재 위치, 미결정 항목
 - `docs/architecture.md` — 기술 스택, 구조, 데이터 모델, 서버 이전 경로
 - `docs/screens.md` — MVP 화면 6개, 이동 흐름, UX 원칙
