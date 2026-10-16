@@ -47,7 +47,7 @@ void main() {
       isFalse,
     );
     expect(engine.snapshot.distanceM, 0);
-    expect(engine.acceptedPoints, hasLength(1));
+    expect(engine.segments.single, hasLength(1));
   });
 
   test('1초 만에 10m 이동한 점은 버린다', () {
@@ -63,7 +63,7 @@ void main() {
     expect(engine.addSample(at(9, _northOf(3), _lng0)), isFalse);
     expect(engine.addSample(at(10, _northOf(3), _lng0)), isFalse);
     expect(engine.snapshot.distanceM, 0);
-    expect(engine.acceptedPoints, hasLength(1));
+    expect(engine.segments.single, hasLength(1));
   });
 
   test('일시정지 중 점은 무시', () {
@@ -72,7 +72,7 @@ void main() {
     engine.pause();
     expect(engine.addSample(at(2, _northOf(5), _lng0)), isFalse);
     expect(engine.snapshot.distanceM, 0);
-    expect(engine.acceptedPoints, hasLength(1));
+    expect(engine.segments.single, hasLength(1));
   });
 
   test('재개 후 첫 점은 거리를 더하지 않는다', () {
@@ -152,20 +152,77 @@ void main() {
     expect(engine.resume, throwsStateError);
   });
 
-  test('restoredPoints로 만든 엔진은 paused이고 거리가 같다', () {
+  test('restoredSegments로 만든 엔진은 paused이고 거리가 같다', () {
     engine.start();
     for (var i = 0; i <= 20; i++) {
       engine.addSample(at(i, _northOf(3.0 * i), _lng0));
     }
+    engine.pause();
+    engine.resume();
+    for (var i = 0; i <= 10; i++) {
+      engine.addSample(at(100 + i, _northOf(500 + 3.0 * i), _lng0));
+    }
     final restored = RunEngine(
       clock: () => now,
       startedAt: t0,
-      restoredPoints: engine.acceptedPoints,
+      restoredSegments: engine.segments,
     );
     expect(restored.snapshot.state, RunState.paused);
-    expect(restored.snapshot.distanceM, engine.snapshot.distanceM);
-    expect(restored.snapshot.movingTime, const Duration(seconds: 20));
-    expect(restored.acceptedPoints, hasLength(21));
+    expect(
+      restored.snapshot.distanceM,
+      closeTo(engine.snapshot.distanceM, 1e-9),
+    );
+    expect(restored.segments.map((s) => s.length), [21, 11]);
+  });
+
+  test('구간 2개 복원: 구간 사이 거리·시간은 빼고 재개하면 구간 번호 2', () {
+    // 구간 0: 0~20초 60m, 구간 1: 500m 떨어진 곳에서 100~110초 30m.
+    final restored = RunEngine(
+      clock: () => now,
+      restoredSegments: [
+        [for (var i = 0; i <= 20; i++) at(i, _northOf(3.0 * i), _lng0)],
+        [
+          for (var i = 0; i <= 10; i++)
+            at(100 + i, _northOf(560 + 3.0 * i), _lng0),
+        ],
+      ],
+    );
+    expect(restored.snapshot.state, RunState.paused);
+    expect(restored.snapshot.distanceM, closeTo(90, 1e-6));
+    expect(restored.snapshot.movingTime, const Duration(seconds: 30));
+    expect(restored.segmentIndex, 1);
+    restored.resume();
+    expect(restored.segmentIndex, 2);
+  });
+
+  test('구간 번호는 start에서 0, resume마다 1씩 오른다', () {
+    engine.start();
+    expect(engine.segmentIndex, 0);
+    engine.pause();
+    engine.resume();
+    expect(engine.segmentIndex, 1);
+    engine.pause();
+    engine.resume();
+    expect(engine.segmentIndex, 2);
+  });
+
+  test('현재 페이스는 일시정지 중 null, 재개 후 새 구간 30초 창이 10m 이상일 때부터 값', () {
+    engine.start();
+    for (var i = 0; i <= 30; i++) {
+      engine.addSample(at(i, _northOf(2.0 * i), _lng0));
+    }
+    expect(engine.snapshot.currentPaceSecPerKm, closeTo(500, 1e-6));
+    engine.pause();
+    expect(engine.snapshot.currentPaceSecPerKm, isNull);
+    engine.resume();
+    expect(engine.snapshot.currentPaceSecPerKm, isNull);
+    // 새 구간: 초속 2m. 4초 뒤 8m 는 null, 6초 뒤 12m 는 값.
+    for (var i = 0; i <= 4; i++) {
+      engine.addSample(at(100 + i, _northOf(600 + 2.0 * i), _lng0));
+    }
+    expect(engine.snapshot.currentPaceSecPerKm, isNull);
+    engine.addSample(at(106, _northOf(612), _lng0));
+    expect(engine.snapshot.currentPaceSecPerKm, closeTo(500, 1e-6));
   });
 }
 

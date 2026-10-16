@@ -59,15 +59,16 @@ class RunEngine {
   RunEngine({
     required this._clock,
     this._startedAt,
-    List<LocationSample> restoredPoints = const [],
+    List<List<LocationSample>> restoredSegments = const [],
   }) {
-    if (restoredPoints.isEmpty) return;
-    for (final p in restoredPoints) {
-      _append(p, continuesSegment: _points.isNotEmpty);
+    if (restoredSegments.isEmpty) return;
+    for (final segment in restoredSegments) {
+      _openSegment();
+      segment.forEach(_append);
+      if (segment.isNotEmpty) {
+        _movingBase += segment.last.time.difference(segment.first.time);
+      }
     }
-    _movingBase = restoredPoints.last.time.difference(
-      restoredPoints.first.time,
-    );
     _state = RunState.paused;
   }
 
@@ -78,30 +79,33 @@ class RunEngine {
   DateTime? _startedAt;
   RunState _state = RunState.idle;
 
-  final List<LocationSample> _points = [];
+  /// 채택한 점. `start`·`resume` 마다 새 구간을 연다.
+  final List<List<LocationSample>> _segments = [];
 
-  /// `_points[i]` 까지의 누적 거리(m).
-  final List<double> _cumulativeM = [];
-
-  /// 현재 구간의 첫 점 인덱스.
-  int _segmentStart = 0;
-  bool _segmentPending = true;
+  /// 현재 구간 각 점까지의 구간 안 누적 거리(m).
+  List<double> _segmentCumulativeM = [];
+  double _distanceM = 0;
+  LocationSample? _lastAccepted;
 
   Duration _movingBase = Duration.zero;
   DateTime? _recordingSince;
 
   Stream<RunEvent> get events => _events.stream;
 
-  List<LocationSample> get acceptedPoints => List.unmodifiable(_points);
+  /// 현재 구간 번호. start 에서 0, resume 마다 1씩 오른다.
+  int get segmentIndex => _segments.isEmpty ? 0 : _segments.length - 1;
+
+  List<List<LocationSample>> get segments => List.unmodifiable([
+    for (final segment in _segments) List<LocationSample>.unmodifiable(segment),
+  ]);
 
   RunSnapshot get snapshot {
-    final distanceM = _cumulativeM.isEmpty ? 0.0 : _cumulativeM.last;
     final movingTime = _movingTime();
     return RunSnapshot(
       state: _state,
-      distanceM: distanceM,
+      distanceM: _distanceM,
       movingTime: movingTime,
-      avgPaceSecPerKm: _pace(movingTime, distanceM),
+      avgPaceSecPerKm: _pace(movingTime, _distanceM),
       currentPaceSecPerKm: _currentPace(),
       splits: const [],
     );
@@ -126,27 +130,33 @@ class RunEngine {
   bool addSample(LocationSample s) {
     if (_state != RunState.recording) return false;
     if (s.accuracy > _maxAccuracyM) return false;
-    if (_points.isNotEmpty) {
-      final last = _points.last;
+    final last = _lastAccepted;
+    if (last != null) {
       final dt = s.time.difference(last.time);
       if (dt <= Duration.zero) return false;
-      if (!_segmentPending) {
+      if (_segments.last.isNotEmpty) {
         final seconds = dt.inMicroseconds / Duration.microsecondsPerSecond;
         if (_distance(last, s) / seconds > _maxSpeedMps) return false;
       }
     }
-    _append(s, continuesSegment: !_segmentPending);
-    _segmentPending = false;
+    _append(s);
     return true;
   }
 
-  void _append(LocationSample s, {required bool continuesSegment}) {
-    if (!continuesSegment) _segmentStart = _points.length;
-    final base = _cumulativeM.isEmpty ? 0.0 : _cumulativeM.last;
-    _cumulativeM.add(
-      continuesSegment ? base + _distance(_points.last, s) : base,
+  void _openSegment() {
+    _segments.add([]);
+    _segmentCumulativeM = [];
+  }
+
+  void _append(LocationSample s) {
+    final segment = _segments.last;
+    final d = segment.isEmpty ? 0.0 : _distance(segment.last, s);
+    _distanceM += d;
+    _segmentCumulativeM.add(
+      (_segmentCumulativeM.isEmpty ? 0.0 : _segmentCumulativeM.last) + d,
     );
-    _points.add(s);
+    segment.add(s);
+    _lastAccepted = s;
   }
 
   void _transition(RunState from, RunState to) {
@@ -160,7 +170,7 @@ class RunEngine {
     }
     if (to == RunState.recording) {
       _recordingSince = now;
-      _segmentPending = true;
+      _openSegment();
     }
     _state = to;
     _events.add(StateChanged(from, to));
@@ -173,17 +183,20 @@ class RunEngine {
         : _movingBase + _clock().difference(since);
   }
 
+  /// 현재 구간에서 최근 30초 창의 시간 ÷ 거리. 기록 중이 아니면 null.
   double? _currentPace() {
-    if (_points.isEmpty) return null;
-    final last = _points.length - 1;
-    final windowStart = _points[last].time.subtract(_currentPaceWindow);
-    var first = _segmentStart;
-    while (_points[first].time.isBefore(windowStart)) {
+    if (_state != RunState.recording) return null;
+    final points = _segments.last;
+    if (points.isEmpty) return null;
+    final last = points.length - 1;
+    final windowStart = points[last].time.subtract(_currentPaceWindow);
+    var first = 0;
+    while (points[first].time.isBefore(windowStart)) {
       first++;
     }
     return _pace(
-      _points[last].time.difference(_points[first].time),
-      _cumulativeM[last] - _cumulativeM[first],
+      points[last].time.difference(points[first].time),
+      _segmentCumulativeM[last] - _segmentCumulativeM[first],
     );
   }
 
