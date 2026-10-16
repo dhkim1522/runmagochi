@@ -19,6 +19,7 @@
 - `docs/specs/game-rules.md` — 게임 규칙과 수치
 - `docs/decisions/` — 결정 기록 (번호순)
 - `docs/research/nrc-analysis.md` — Nike Run Club 분석 요약
+- `design/wireframes/` — 화면 10개 와이어프레임 (HTML 원본, PNG)
 
 ## 작업 규칙
 

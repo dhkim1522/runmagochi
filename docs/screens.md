@@ -1,6 +1,6 @@
 # 화면설계
 
-> MVP 화면 10개의 역할과 이동 흐름. 배치는 [와이어프레임](https://claude.ai/artifact/GGgUf6VGKuK3AkSRxrEnoQ)을 따른다.
+> MVP 화면 10개의 역할과 이동 흐름. 배치는 [와이어프레임](../design/wireframes/README.md)을 따른다.
 
 와이어프레임은 화면 구성을 정하는 콘티다. 실제 UI 디자인은 기능 개발 뒤에 적용한다.
 
