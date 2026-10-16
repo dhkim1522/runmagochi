@@ -40,3 +40,23 @@ class RunSummary {
   final List<Split> splits;
   final List<LocationSample> points;
 }
+
+const _weekdayNames = ['월', '화', '수', '목', '금', '토', '일'];
+
+/// 시작 시각의 요일·시간대로 짓는 이름. 예: "금요일 저녁 러닝".
+String autoRunName(DateTime startedAt) {
+  final hour = startedAt.hour;
+  final period = switch (hour) {
+    < 5 => '새벽',
+    < 11 => '아침',
+    < 14 => '점심',
+    < 18 => '오후',
+    < 22 => '저녁',
+    _ => '밤',
+  };
+  return '${_weekdayNames[startedAt.weekday - 1]}요일 $period 러닝';
+}
+
+/// 체중(kg) × 거리(km) × 1.036.
+double estimateCalories(double distanceM, {double weightKg = 65}) =>
+    weightKg * distanceM / 1000 * 1.036;

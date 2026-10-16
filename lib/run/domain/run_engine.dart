@@ -10,6 +10,7 @@ const double _maxSpeedMps = 7;
 const Duration _currentPaceWindow = Duration(seconds: 30);
 const double _minPaceDistanceM = 10;
 const Duration _staleSampleTolerance = Duration(seconds: 2);
+const double _splitM = 1000;
 
 enum RunState { idle, recording, paused, ended }
 
@@ -76,16 +77,14 @@ class RunEngine {
       if (segment.isEmpty) continue;
       _segmentPending = true;
       segment.forEach(_append);
-      _movingBase += segment.last.time.difference(segment.first.time);
     }
-    if (restoredMovingTime != null) _movingBase = restoredMovingTime;
+    _movingBase = restoredMovingTime ?? _sampleMovingTime;
     _state = RunState.paused;
   }
 
   final Clock _clock;
   final _events = StreamController<RunEvent>.broadcast();
 
-  // Task 4 의 요약(RunSummary.startedAt)에서 쓴다.
   DateTime? _startedAt;
   RunState _state = RunState.idle;
 
@@ -102,6 +101,15 @@ class RunEngine {
 
   Duration _movingBase = Duration.zero;
   DateTime? _recordingSince;
+
+  /// 구간마다 (마지막 점 − 첫 점 시각) 의 합. 구간 기록 시간의 기준이다.
+  Duration _sampleMovingTime = Duration.zero;
+
+  /// 완료한 1km 구간.
+  final List<Split> _splits = [];
+
+  /// 마지막 1km 경계를 지난 시점의 [_sampleMovingTime].
+  Duration _lastBoundaryTime = Duration.zero;
 
   Stream<RunEvent> get events => _events.stream;
 
@@ -121,7 +129,7 @@ class RunEngine {
       movingTime: movingTime,
       avgPaceSecPerKm: _pace(movingTime, _distanceM),
       currentPaceSecPerKm: _currentPace(),
-      splits: const [],
+      splits: List.unmodifiable(_splits),
     );
   }
 
@@ -137,7 +145,40 @@ class RunEngine {
     _transition(RunState.paused, RunState.recording);
   }
 
-  RunSummary end() => throw UnimplementedError('Task 4');
+  /// 기록 중이나 일시정지 중에 끝낸다. 남은 거리를 마지막 구간으로 넣고
+  /// `RunEnded` 를 낸 뒤 `ended` 로 바꾸고 이벤트 스트림을 닫는다.
+  RunSummary end() {
+    if (_state != RunState.recording && _state != RunState.paused) {
+      throw StateError('Cannot go from $_state to ${RunState.ended}');
+    }
+    final remainingM = _distanceM - _splits.length * _splitM;
+    if (remainingM > 0) {
+      _splits.add(
+        Split(
+          index: _splits.length + 1,
+          distanceM: remainingM,
+          duration: _sampleMovingTime - _lastBoundaryTime,
+        ),
+      );
+    }
+    final startedAt = _startedAt!;
+    final movingTime = _movingTime();
+    final summary = RunSummary(
+      startedAt: startedAt,
+      endedAt: _clock(),
+      distanceM: _distanceM,
+      movingTime: movingTime,
+      avgPaceSecPerKm: _pace(movingTime, _distanceM),
+      calories: estimateCalories(_distanceM),
+      name: autoRunName(startedAt),
+      splits: List.unmodifiable(_splits),
+      points: List.unmodifiable([for (final s in _segments) ...s]),
+    );
+    _events.add(RunEnded(summary));
+    _transition(_state, RunState.ended);
+    _events.close();
+    return summary;
+  }
 
   /// 채택하면 true.
   bool addSample(LocationSample s) {
@@ -166,13 +207,37 @@ class RunEngine {
       _segmentPending = false;
     }
     final segment = _segments.last;
-    final d = segment.isEmpty ? 0.0 : _distance(segment.last, s);
-    _distanceM += d;
+    final d = segment.isEmpty ? 0.0 : _advance(segment.last, s);
     _segmentCumulativeM.add(
       (_segmentCumulativeM.isEmpty ? 0.0 : _segmentCumulativeM.last) + d,
     );
     segment.add(s);
     _lastAccepted = s;
+  }
+
+  /// 같은 구간의 [prev] 에서 [s] 까지 거리·시간을 더하고 그 거리를 돌려준다.
+  /// 1km 경계를 지나면 두 점 사이를 선형 보간한 시각으로 구간을 닫는다.
+  /// 기록 중에 지난 경계만 `SplitCompleted` 를 낸다 (복원 중에는 내지 않는다).
+  double _advance(LocationSample prev, LocationSample s) {
+    final d = _distance(prev, s);
+    final dt = s.time.difference(prev.time);
+    while (d > 0 && _distanceM + d >= (_splits.length + 1) * _splitM) {
+      final fraction = ((_splits.length + 1) * _splitM - _distanceM) / d;
+      final boundaryTime =
+          _sampleMovingTime +
+          Duration(microseconds: (dt.inMicroseconds * fraction).round());
+      final split = Split(
+        index: _splits.length + 1,
+        distanceM: _splitM,
+        duration: boundaryTime - _lastBoundaryTime,
+      );
+      _splits.add(split);
+      _lastBoundaryTime = boundaryTime;
+      if (_state == RunState.recording) _events.add(SplitCompleted(split));
+    }
+    _distanceM += d;
+    _sampleMovingTime += dt;
+    return d;
   }
 
   /// 전이 시각(`clock()`)을 돌려준다.
