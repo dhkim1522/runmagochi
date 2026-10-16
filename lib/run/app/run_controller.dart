@@ -60,7 +60,9 @@ class RunController extends Notifier<RunViewState> {
     return const RunViewState(snapshot: _idleSnapshot);
   }
 
+  /// 이전 러닝의 lastSummary·lastError 는 지운다.
   Future<void> start() async {
+    if (_runId != null) throw StateError('이미 진행 중인 러닝이 있다.');
     final clock = ref.read(clockProvider);
     final runId = await _repository.createActiveRun(clock());
     final engine = RunEngine(clock: clock)..start();
@@ -69,7 +71,7 @@ class RunController extends Notifier<RunViewState> {
     _subscribe();
     _startFlushTimer();
     _startTick();
-    _publish();
+    state = RunViewState(snapshot: engine.snapshot, runId: runId);
   }
 
   void pause() {
@@ -142,7 +144,13 @@ class RunController extends Notifier<RunViewState> {
   }
 
   void _startFlushTimer() {
-    _flushTimer ??= Timer.periodic(_flushInterval, (_) => _flush());
+    // 실패한 점은 버퍼에 남아 다음 저장 때 다시 저장한다.
+    _flushTimer ??= Timer.periodic(
+      _flushInterval,
+      (_) => _flush().catchError((Object error) {
+        state = _copyState(lastError: error.toString());
+      }),
+    );
   }
 
   void _startTick() {

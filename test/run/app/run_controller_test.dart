@@ -42,6 +42,9 @@ class _FakeRunRepository implements RunRepository {
 
   /// 주면 appendPoints 가 이 완료를 기다린다.
   Completer<void>? appendGate;
+
+  /// 주면 다음 appendPoints 한 번이 이 오류를 던진다.
+  Object? appendError;
   final appendCalls = <_AppendCall>[];
   final completed = <(String, RunSummary)>[];
 
@@ -63,6 +66,11 @@ class _FakeRunRepository implements RunRepository {
   }) async {
     log.add('appendPoints');
     await appendGate?.future;
+    final error = appendError;
+    if (error != null) {
+      appendError = null;
+      throw error;
+    }
     appendCalls.add(
       _AppendCall(runId, segmentIndex, List.of(points), movingTime),
     );
@@ -88,7 +96,7 @@ class _FakeRunRepository implements RunRepository {
 }
 
 class _FakeLocationSource implements LocationSource {
-  final controller = StreamController<LocationSample>();
+  final controller = StreamController<LocationSample>.broadcast();
   int listenCount = 0;
 
   bool get isListened => controller.hasListener;
@@ -254,6 +262,63 @@ void main() {
       ]);
       expect(repository.appendCalls[0].points, hasLength(1));
       expect(repository.appendCalls[1].points, isEmpty);
+    });
+  });
+
+  test('러닝이 이미 있으면 start 는 StateError', () {
+    _run((async, controller, container, repository, location) {
+      controller.start();
+      async.flushMicrotasks();
+
+      Object? error;
+      controller.start().catchError((Object e) => error = e);
+      async.flushMicrotasks();
+
+      expect(error, isA<StateError>());
+      expect(repository.log, ['createActiveRun']);
+      expect(location.listenCount, 1);
+    });
+  });
+
+  test('start 는 이전 러닝의 lastSummary 를 지운다', () {
+    _run((async, controller, container, repository, location) {
+      controller.start();
+      async.flushMicrotasks();
+      controller.end();
+      async.flushMicrotasks();
+      expect(container.read(runControllerProvider).lastSummary, isNotNull);
+
+      controller.start();
+      async.flushMicrotasks();
+
+      final state = container.read(runControllerProvider);
+      expect(state.runId, _runId);
+      expect(state.lastSummary, isNull);
+      expect(state.lastError, isNull);
+    });
+  });
+
+  test('주기 저장 실패는 lastError 에 남기고 점은 다음 저장 때 저장한다', () {
+    _run((async, controller, container, repository, location) {
+      controller.start();
+      async.flushMicrotasks();
+      stepTo(async, location, 3);
+      repository.appendError = StateError('디스크 가득');
+
+      async.elapse(const Duration(seconds: 9));
+
+      expect(repository.appendCalls, isEmpty);
+      expect(
+        container.read(runControllerProvider).lastError,
+        contains('디스크 가득'),
+      );
+
+      async.elapse(const Duration(seconds: 10));
+
+      final call = repository.appendCalls.single;
+      expect(call.segmentIndex, 0);
+      expect(call.points, hasLength(1));
+      expect(call.movingTime, const Duration(seconds: 20));
     });
   });
 
