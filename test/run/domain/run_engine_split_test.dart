@@ -59,6 +59,8 @@ void main() {
       expect(s.paceSecPerKm, closeTo(400, 1e-3));
     }
     expect(summary.splits[2].duration, const Duration(seconds: 200));
+    expect(engine.snapshot.splits, hasLength(2));
+    expect(engine.snapshot.splits.every((s) => s.distanceM == 1000), isTrue);
   });
 
   test('SplitCompleted 이벤트가 경계마다 1번', () async {

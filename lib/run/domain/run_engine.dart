@@ -154,15 +154,15 @@ class RunEngine {
       throw StateError('Cannot go from $_state to ${RunState.ended}');
     }
     final remainingM = _distanceM - _splits.length * _splitM;
-    if (remainingM >= _minLastSplitM) {
-      _splits.add(
+    final splits = List<Split>.unmodifiable([
+      ..._splits,
+      if (remainingM >= _minLastSplitM)
         Split(
           index: _splits.length + 1,
           distanceM: remainingM,
           duration: _sampleMovingTime - _lastBoundaryTime,
         ),
-      );
-    }
+    ]);
     final startedAt = _startedAt!;
     final now = _clock();
     final movingTime = _movingTime(now);
@@ -174,7 +174,7 @@ class RunEngine {
       avgPaceSecPerKm: _pace(movingTime, _distanceM),
       calories: estimateCalories(_distanceM),
       name: autoRunName(startedAt),
-      splits: List.unmodifiable(_splits),
+      splits: splits,
       points: List.unmodifiable([for (final s in _segments) ...s]),
     );
     _events.add(RunEnded(summary));

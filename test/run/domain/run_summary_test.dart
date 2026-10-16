@@ -21,6 +21,11 @@ void main() {
     expect(autoRunName(DateTime(2026, 10, 18, 12)), '일요일 점심 러닝');
   });
 
+  test('autoRunName 은 UTC 시각도 기기 현지 시각으로 이름을 짓는다', () {
+    final utc = DateTime.utc(2026, 10, 16, 23);
+    expect(autoRunName(utc), autoRunName(utc.toLocal()));
+  });
+
   test('estimateCalories(5000) ≈ 336.7', () {
     expect(estimateCalories(5000), closeTo(336.7, 0.1));
     expect(estimateCalories(5000, weightKg: 80), closeTo(414.4, 0.1));

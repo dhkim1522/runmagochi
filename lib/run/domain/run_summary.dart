@@ -44,8 +44,10 @@ class RunSummary {
 const _weekdayNames = ['월', '화', '수', '목', '금', '토', '일'];
 
 /// 시작 시각의 요일·시간대로 짓는 이름. 예: "금요일 저녁 러닝".
+/// 요일·시간대는 기기 현지 시각 기준이다. UTC 시각은 현지 시각으로 바꿔 쓴다.
 String autoRunName(DateTime startedAt) {
-  final hour = startedAt.hour;
+  final local = startedAt.toLocal();
+  final hour = local.hour;
   final period = switch (hour) {
     < 5 => '새벽',
     < 11 => '아침',
@@ -54,7 +56,7 @@ String autoRunName(DateTime startedAt) {
     < 22 => '저녁',
     _ => '밤',
   };
-  return '${_weekdayNames[startedAt.weekday - 1]}요일 $period 러닝';
+  return '${_weekdayNames[local.weekday - 1]}요일 $period 러닝';
 }
 
 /// 체중(kg) × 거리(km) × 1.036.
