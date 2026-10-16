@@ -215,4 +215,75 @@ void main() {
     final (dist, count) = await repo.weeklyTotal(DateTime(2026, 1, 8));
     expect((dist, count), (0.0, 0));
   });
+
+  test('완료된 러닝에 appendPoints 하면 던지고 점을 추가하지 않는다', () async {
+    final start = DateTime(2026, 1, 5, 9);
+    final id = await repo.createActiveRun(start);
+    await repo.completeRun(id, summary(start));
+    await expectLater(
+      repo.appendPoints(
+        id,
+        segmentIndex: 0,
+        points: [sample(start, 1, 1)],
+        movingTime: const Duration(seconds: 1),
+      ),
+      throwsStateError,
+    );
+    expect(await db.select(db.runPoints).get(), isEmpty);
+  });
+
+  test('completeRun을 두 번 하면 두 번째에 던지고 Splits는 그대로다', () async {
+    final start = DateTime(2026, 1, 5, 9);
+    final id = await repo.createActiveRun(start);
+    final s = summary(
+      start,
+      splits: const [
+        Split(index: 0, distanceM: 1000, duration: Duration(minutes: 5)),
+      ],
+    );
+    await repo.completeRun(id, s);
+    await expectLater(repo.completeRun(id, s), throwsStateError);
+    expect(await db.select(db.splits).get(), hasLength(1));
+  });
+
+  test('없는 runId에 appendPoints 하면 던진다', () async {
+    await expectLater(
+      repo.appendPoints(
+        'nope',
+        segmentIndex: 0,
+        points: [sample(DateTime(2026, 1, 5), 1, 1)],
+        movingTime: Duration.zero,
+      ),
+      throwsStateError,
+    );
+    expect(await db.select(db.runPoints).get(), isEmpty);
+  });
+
+  test('DB에는 UTC로 저장된다 (기기 시간대와 무관)', () async {
+    final local = DateTime(2026, 1, 4, 23);
+    await repo.createActiveRun(local);
+    final row = await db
+        .customSelect('SELECT started_at FROM runs')
+        .getSingle();
+    final raw = row.read<String>('started_at');
+    expect(raw.endsWith('Z'), isTrue);
+    expect(DateTime.parse(raw).isAtSameMomentAs(local), isTrue);
+  });
+
+  test('거리 0이고 점 1개, 구간 없는 요약도 저장된다', () async {
+    final start = DateTime(2026, 1, 5, 9);
+    final id = await repo.createActiveRun(start);
+    await repo.completeRun(
+      id,
+      summary(start, distanceM: 0, points: [sample(start, 37.5, 127.0)]),
+    );
+    final detail = (await repo.getRun(id))!;
+    expect(detail.route, hasLength(1));
+    expect(detail.splits, isEmpty);
+  });
+
+  test('getRun은 진행 중 러닝에 null', () async {
+    final id = await repo.createActiveRun(DateTime(2026, 1, 5, 9));
+    expect(await repo.getRun(id), isNull);
+  });
 }

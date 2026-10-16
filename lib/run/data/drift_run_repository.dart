@@ -46,6 +46,18 @@ class DriftRunRepository implements RunRepository {
   }) {
     return _db.transaction(() async {
       final now = _now();
+      final updated =
+          await (_db.update(
+            _db.runs,
+          )..where((r) => r.id.equals(runId) & r.status.equals(_active))).write(
+            RunsCompanion(
+              movingTimeS: Value(movingTime.inSeconds),
+              updatedAt: Value(now),
+            ),
+          );
+      if (updated == 0) {
+        throw StateError('진행 중인 러닝이 아니다: $runId');
+      }
       await _db.batch((b) {
         b.insertAll(_db.runPoints, [
           for (final p in points)
@@ -63,12 +75,6 @@ class DriftRunRepository implements RunRepository {
             ),
         ]);
       });
-      await (_db.update(_db.runs)..where((r) => r.id.equals(runId))).write(
-        RunsCompanion(
-          movingTimeS: Value(movingTime.inSeconds),
-          updatedAt: Value(now),
-        ),
-      );
     });
   }
 
@@ -115,24 +121,30 @@ class DriftRunRepository implements RunRepository {
   Future<void> completeRun(String runId, RunSummary summary) {
     return _db.transaction(() async {
       final now = _now();
-      await (_db.update(_db.runs)..where((r) => r.id.equals(runId))).write(
-        RunsCompanion(
-          status: const Value(_completed),
-          startedAt: Value(summary.startedAt.toUtc()),
-          endedAt: Value(summary.endedAt.toUtc()),
-          distanceM: Value(summary.distanceM),
-          movingTimeS: Value(summary.movingTime.inSeconds),
-          avgPaceSecPerKm: Value(summary.avgPaceSecPerKm),
-          calories: Value(summary.calories),
-          name: Value(summary.name),
-          encodedRoute: Value(
-            encodePolyline([
-              for (final p in summary.points) (p.latitude, p.longitude),
-            ]),
-          ),
-          updatedAt: Value(now),
-        ),
-      );
+      final updated =
+          await (_db.update(
+            _db.runs,
+          )..where((r) => r.id.equals(runId) & r.status.equals(_active))).write(
+            RunsCompanion(
+              status: const Value(_completed),
+              startedAt: Value(summary.startedAt.toUtc()),
+              endedAt: Value(summary.endedAt.toUtc()),
+              distanceM: Value(summary.distanceM),
+              movingTimeS: Value(summary.movingTime.inSeconds),
+              avgPaceSecPerKm: Value(summary.avgPaceSecPerKm),
+              calories: Value(summary.calories),
+              name: Value(summary.name),
+              encodedRoute: Value(
+                encodePolyline([
+                  for (final p in summary.points) (p.latitude, p.longitude),
+                ]),
+              ),
+              updatedAt: Value(now),
+            ),
+          );
+      if (updated == 0) {
+        throw StateError('진행 중인 러닝이 아니다: $runId');
+      }
       await _db.batch((b) {
         b.insertAll(_db.splits, [
           for (final s in summary.splits)
@@ -174,9 +186,14 @@ class DriftRunRepository implements RunRepository {
 
   @override
   Future<RunDetail?> getRun(String id) async {
-    final run = await (_db.select(
-      _db.runs,
-    )..where((r) => r.id.equals(id) & r.deletedAt.isNull())).getSingleOrNull();
+    final run =
+        await (_db.select(_db.runs)..where(
+              (r) =>
+                  r.id.equals(id) &
+                  r.status.equals(_completed) &
+                  r.deletedAt.isNull(),
+            ))
+            .getSingleOrNull();
     if (run == null) return null;
     final splitRows =
         await (_db.select(_db.splits)
