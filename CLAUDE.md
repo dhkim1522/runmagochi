@@ -14,12 +14,12 @@
 - `docs/product.md` — 기획서: 목표, 요구사항(F1~F15), 사용자 시나리오
 - `docs/roadmap.md` — 페이즈별 범위·완료 기준, 현재 위치, 미결정 항목
 - `docs/architecture.md` — 기술 스택, 구조, 데이터 모델, 서버 이전 경로
-- `docs/screens.md` — 화면 10개, 이동 흐름, UX 원칙, 와이어프레임 링크
+- `docs/screens.md` — MVP 화면 6개, 이동 흐름, UX 원칙
 - `docs/specs/run-engine.md` — 기록 엔진 규칙
 - `docs/specs/game-rules.md` — 게임 규칙과 수치
 - `docs/decisions/` — 결정 기록 (번호순)
 - `docs/research/nrc-analysis.md` — Nike Run Club 분석 요약
-- `design/wireframes/` — 화면 10개 와이어프레임 (HTML 원본, PNG)
+- `design/wireframes/` — 화면 콘티 10개 (MVP 6개 + 후속 범위, HTML 원본·PNG)
 
 ## 작업 규칙
 

@@ -12,5 +12,4 @@ Thumbs.db
 .env
 *.keystore
 *.jks
-google-services.json
-GoogleService-Info.plist
+key.properties

@@ -4,32 +4,27 @@
 
 ## 기술 스택
 
-**개발 프레임워크는 미결정**이다. Flutter를 추천한다. 도트 아바타 애니메이션을 게임 엔진(Flame)으로 그릴 수 있고, Android·iOS에서 화면이 픽셀 단위로 똑같이 나온다.
+Flutter로 개발한다. 근거는 [결정 0004](decisions/0004-flutter.md).
 
-| 기준 | Flutter (추천) | React Native (Expo) |
+| 영역 | 선택 | 이유 |
 | --- | --- | --- |
-| 언어 | Dart | TypeScript |
-| 도트 애니메이션 | Flame 엔진으로 스프라이트 시트 재생 | Skia·Lottie 조합, 게임용 도구는 약함 |
-| 백그라운드 위치 | geolocator + 포그라운드 서비스 설정 | expo-location + TaskManager |
-| 로컬 DB | drift (SQLite) | expo-sqlite, WatermelonDB |
-| 화면 일관성 | 자체 렌더링, 플랫폼 차이 작음 | OS 기본 컴포넌트, 플랫폼별 차이 있음 |
+| 위치 | `geolocator` | 무료, 유지보수 활발. Android 포그라운드 서비스 지원 |
+| 경로 표시 | `CustomPainter` 로 경로 선만 그림 | 지도 API 키·계정 불필요, 오프라인 동작 |
+| 로컬 DB | `drift` (SQLite) | 마이그레이션·타입 안전 쿼리, 서버 동기화에 맞는 관계형 구조 |
+| 상태 관리 | `riverpod` (코드 생성 없이) | 기록 엔진의 이벤트 스트림을 화면에 연결 |
+| 아바타 렌더링 | 일반 위젯 + 스프라이트 시트 | 프레임을 Ticker 로 넘긴다. 게임 엔진 불필요 |
+| 로컬 알림 | `flutter_local_notifications` | 주간 목표 잔여 알림 |
 
-### 라이브러리 (Flutter 기준)
-
-- **위치**: `geolocator`
-- **지도**: `google_maps_flutter`
-- **로컬 DB**: `drift`
-- **상태 관리**: `riverpod`
-- **아바타 렌더링**: `flame`
+배경 지도가 필요해지면 `maplibre_gl` 또는 `flutter_map` 에 OpenFreeMap 타일을 쓴다. Google Maps는 API 키와 Google Cloud 프로젝트가 필요해 쓰지 않는다.
 
 ## 구조
 
 ```mermaid
 flowchart TB
-    UI["화면 10개 · 하단 탭 4개"]
+    UI["화면 6개 · 하단 탭 3개"]
     subgraph Domain["도메인"]
         Engine["기록 엔진<br/>GPS 수집·필터<br/>거리·페이스·구간"]
-        Game["게임 로직<br/>경험치·레벨·코인"]
+        Growth["성장 로직<br/>경험치·레벨·상태"]
         Avatar["아바타 렌더링"]
     end
     subgraph Data["데이터 계층"]
@@ -38,47 +33,50 @@ flowchart TB
         Remote["서버 구현<br/>(사용자 증가 시)"]
     end
     UI <--> Engine
-    UI <--> Game
+    UI <--> Growth
     UI --> Avatar
-    Engine -- "구간·목표 이벤트" --> Game
+    Engine -- "구간·종료 이벤트" --> Growth
     Engine --> Repo
-    Game --> Repo
+    Growth --> Repo
     Repo --> Local
     Repo -.-> Remote
 ```
 
-- **기록 엔진**은 화면과 분리된 독립 모듈이다. 1km 구간과 목표 달성을 이벤트로 내보낸다.
-- **게임 로직**은 엔진 이벤트만 구독한다. 기록 코드와 게임 코드가 서로를 모른다.
+- **기록 엔진**은 화면과 분리된 독립 모듈이다. 1km 구간과 러닝 종료를 이벤트로 내보낸다.
+- **성장 로직**은 엔진 이벤트만 구독한다. 기록 코드와 게임 코드가 서로를 모른다.
 - **저장소 인터페이스**는 화면·도메인이 저장 방식을 모르게 한다. 현재는 로컬 구현만 있다.
 
 ## 데이터 모델
 
-모든 데이터는 기기의 SQLite에 저장한다. 서버로 옮길 때 그대로 동기화할 수 있도록 다음을 지킨다.
+모든 데이터는 기기의 SQLite에 저장한다. 서버로 옮길 때 그대로 동기화할 수 있도록 **모든 테이블**이 다음 필드를 가진다.
 
-- 모든 행의 ID는 UUID다. 기기에서 만든 ID가 서버에서도 겹치지 않는다.
-- 모든 행에 생성 시각(`createdAt`)과 수정 시각(`updatedAt`)을 둔다.
-- 코인 잔액은 따로 저장하지 않고 지급·사용 내역(CoinTxn) 합계로 계산한다.
+- `id`: UUID. 기기에서 만든 ID가 서버에서도 겹치지 않는다.
+- `createdAt`, `updatedAt`: 생성·수정 시각
+- `deletedAt`: 삭제 표시. 행을 지우지 않고 표시만 해서 나중에 서버에 삭제를 전달한다.
 
 | 엔티티 | 주요 필드 |
 | --- | --- |
-| Profile | id, 닉네임, 체중 |
-| Avatar | id, 이름, 레벨, 경험치, 성장 단계, 부위별 장착 아이템 |
-| Run | id, 시작·종료 시각, 거리(m), 움직인 시간(초), 평균 페이스, 칼로리, 목표, 이름 |
-| RunPoint | runId, 시각, 위도, 경도, 고도, 정확도, 속도 |
-| Split | runId, km 순번, 시간, 페이스, 고도 변화 |
-| Goal | id, 종류(주간 거리), 목표값, 기간 |
-| CoinTxn | id, 금액(+/-), 사유(거리·목표·구매), runId |
-| Item | id, 부위, 이름, 가격, 해금 조건, 스프라이트 경로 |
-| Inventory | itemId, 획득 시각 |
-| Badge | id, 이름, 조건, 보상 코인 |
-| UserBadge | badgeId, 달성 시각, runId |
+| Profile | 닉네임, 체중 |
+| Avatar | 이름, 종류, 레벨, 경험치, 마지막 러닝 시각 |
+| Run | 시작·종료 시각, 거리(m), 움직인 시간(초), 평균 페이스, 칼로리, 이름, 압축 경로 |
+| RunPoint | runId, 시각, 위도, 경도, 정확도, 속도 (러닝 중에만 존재) |
+| Split | runId, km 순번, 시간, 페이스 |
+| WeeklyGoal | 주 시작일, 목표 거리, 달성 여부 |
+| XpTxn | 경험치(+), 사유(거리·주간 목표), runId |
 
-Item과 Badge 목록은 앱에 포함된 고정 데이터다.
+경험치와 레벨은 XpTxn 합계로 계산한다. 코인(CoinTxn), 아이템, 배지 테이블은 후속 페이즈에서 같은 원칙으로 추가한다.
+
+### 경로 저장
+
+- 러닝 중에는 위치 점을 RunPoint 에 10초마다 저장한다. 강제 종료 후 복구에 쓴다.
+- 러닝이 끝나면 경로를 압축 문자열(encoded polyline)로 바꿔 Run 에 저장하고 RunPoint 를 지운다.
+- 원본 점으로 30분 러닝은 약 180KB, 압축하면 약 10KB다(추정). 원본을 지우면 거리를 다시 계산할 수 없다.
 
 ## 백업과 복원
 
-- **OS 기본 백업**: Android 자동 백업, iOS iCloud 백업에 DB 파일을 포함한다.
-- **파일 내보내기·가져오기**: 전체 데이터를 파일 하나로 내보내고, 새 기기에서 가져온다.
+- **주 수단**: 전체 데이터를 파일 하나로 내보내고, 새 기기에서 가져온다.
+- **보조 수단**: Android 자동 백업, iOS iCloud 백업. Android 자동 백업은 앱당 25MB 한도가 있고 실행이 보장되지 않는다.
+- SQLite WAL 파일이 백업에 일관되게 담기는지는 복원 테스트로 확인한다.
 
 ## 서버 이전 경로
 
