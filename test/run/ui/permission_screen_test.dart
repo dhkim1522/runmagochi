@@ -1,6 +1,10 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:runmagochi/run/app/permission_gate.dart';
 import 'package:runmagochi/run/ui/permission_screen.dart';
 
@@ -10,19 +14,31 @@ class FakeGate implements PermissionGate {
   GateResult afterRequest;
   int requested = 0;
   int settingsOpened = 0;
+  int appSettingsOpened = 0;
+  Object? checkError;
+  Object? requestError;
+  Completer<GateResult>? checkGate;
   int dismissed = 0;
 
   @override
-  Future<GateResult> check() async => result;
+  Future<GateResult> check() async {
+    if (checkError != null) throw checkError!;
+    if (checkGate != null) return checkGate!.future;
+    return result;
+  }
 
   @override
   Future<GateResult> requestLocation() async {
     requested++;
+    if (requestError != null) throw requestError!;
     return result = afterRequest;
   }
 
   @override
   Future<void> openBatterySettings() async => settingsOpened++;
+
+  @override
+  Future<void> openAppSettings() async => appSettingsOpened++;
 
   @override
   void dismissBatteryGuide() => dismissed++;
@@ -74,7 +90,8 @@ void main() {
     expect(find.text('설정에서 위치 권한을 허용해 주세요'), findsOneWidget);
     await tester.tap(find.text('설정 열기'));
     await tester.pump();
-    expect(gate.settingsOpened, 1);
+    expect(gate.appSettingsOpened, 1);
+    expect(gate.settingsOpened, 0);
   });
 
   testWidgets('needsBatteryGuide에서 나중에를 누르면 ready로 진행', (tester) async {
@@ -106,5 +123,108 @@ void main() {
     );
     await tester.pump();
     expect(ready, 1);
+  });
+
+  testWidgets('ready 뒤 앱이 다시 활성화돼도 onReady는 한 번만', (tester) async {
+    var ready = 0;
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          permissionGateProvider.overrideWithValue(FakeGate(GateResult.ready)),
+        ],
+        child: MaterialApp(home: PermissionScreen(onReady: () => ready++)),
+      ),
+    );
+    await tester.pump();
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    await tester.pump();
+    expect(ready, 1);
+  });
+
+  testWidgets('나중에 뒤 앱이 다시 활성화돼도 onReady는 한 번만', (tester) async {
+    var ready = 0;
+    final gate = FakeGate(GateResult.needsBatteryGuide);
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [permissionGateProvider.overrideWithValue(gate)],
+        child: MaterialApp(home: PermissionScreen(onReady: () => ready++)),
+      ),
+    );
+    await tester.pump();
+    await tester.tap(find.text('나중에'));
+    await tester.pump();
+    gate.result = GateResult.ready;
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    await tester.pump();
+    expect(ready, 1);
+  });
+
+  testWidgets('check가 실패하면 위치 안내와 다시 시도 버튼', (tester) async {
+    final gate = FakeGate(GateResult.ready)..checkError = StateError('boom');
+    await pump(tester, gate);
+    expect(find.text('다시 시도'), findsOneWidget);
+    expect(find.textContaining('위치 권한이 필요합니다'), findsOneWidget);
+
+    gate.checkError = null;
+    gate.result = GateResult.needsLocation;
+    await tester.tap(find.text('다시 시도'));
+    await tester.pump();
+    expect(find.text('권한 허용'), findsOneWidget);
+  });
+
+  testWidgets('requestLocation이 실패해도 다시 시도 버튼', (tester) async {
+    final gate = FakeGate(GateResult.needsLocation)
+      ..requestError = StateError('boom');
+    await pump(tester, gate);
+    await tester.tap(find.text('권한 허용'));
+    await tester.pump();
+    expect(find.text('다시 시도'), findsOneWidget);
+  });
+
+  testWidgets('첫 확인 중에는 진행 표시', (tester) async {
+    final gate = FakeGate(GateResult.ready)..checkGate = Completer();
+    await pump(tester, gate);
+    expect(find.byType(CircularProgressIndicator), findsOneWidget);
+  });
+
+  group('PermissionHandlerGate 배터리 확인', () {
+    const channel = MethodChannel('runmagochi/battery');
+    final messenger =
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
+
+    void mock(bool ignoring, List<String> calls) {
+      messenger.setMockMethodCallHandler(channel, (call) async {
+        calls.add(call.method);
+        return call.method == 'isIgnoringBatteryOptimizations'
+            ? ignoring
+            : null;
+      });
+    }
+
+    tearDown(() => messenger.setMockMethodCallHandler(channel, null));
+
+    PermissionHandlerGate gate() => PermissionHandlerGate(
+      locationStatus: () async => PermissionStatus.granted,
+    );
+
+    test('최적화 제외 상태면 ready', () async {
+      mock(true, []);
+      expect(await gate().check(), GateResult.ready);
+    });
+
+    test('최적화가 켜져 있으면 needsBatteryGuide, 나중에 이후는 ready', () async {
+      mock(false, []);
+      final g = gate();
+      expect(await g.check(), GateResult.needsBatteryGuide);
+      g.dismissBatteryGuide();
+      expect(await g.check(), GateResult.ready);
+    });
+
+    test('openBatterySettings는 채널을 호출한다', () async {
+      final calls = <String>[];
+      mock(false, calls);
+      await gate().openBatterySettings();
+      expect(calls, ['openBatteryOptimizationSettings']);
+    });
   });
 }

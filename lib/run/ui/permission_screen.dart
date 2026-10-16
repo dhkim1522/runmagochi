@@ -12,15 +12,19 @@ class PermissionScreen extends ConsumerStatefulWidget {
   ConsumerState<PermissionScreen> createState() => _PermissionScreenState();
 }
 
+const _locationMessage = '러닝 경로와 거리를 기록하려면 위치 권한이 필요합니다. 위치는 이 기기에만 저장됩니다.';
+
 class _PermissionScreenState extends ConsumerState<PermissionScreen>
     with WidgetsBindingObserver {
   GateResult? _result;
+  bool _failed = false;
+  bool _done = false;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    _apply(ref.read(permissionGateProvider).check());
+    _apply(ref.read(permissionGateProvider).check);
   }
 
   @override
@@ -32,16 +36,31 @@ class _PermissionScreenState extends ConsumerState<PermissionScreen>
   // 설정 화면에서 돌아오면 다시 확인한다.
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed) {
-      _apply(ref.read(permissionGateProvider).check());
+    if (state == AppLifecycleState.resumed && !_done) {
+      _apply(ref.read(permissionGateProvider).check);
     }
   }
 
-  Future<void> _apply(Future<GateResult> pending) async {
-    final result = await pending;
-    if (!mounted) return;
-    setState(() => _result = result);
-    if (result == GateResult.ready) widget.onReady();
+  Future<void> _apply(Future<GateResult> Function() action) async {
+    if (_done) return;
+    GateResult? result;
+    try {
+      result = await action();
+    } catch (_) {
+      result = null;
+    }
+    if (!mounted || _done) return;
+    setState(() {
+      _result = result;
+      _failed = result == null;
+    });
+    if (result == GateResult.ready) _finish();
+  }
+
+  void _finish() {
+    if (_done) return;
+    _done = true;
+    widget.onReady();
   }
 
   @override
@@ -49,10 +68,10 @@ class _PermissionScreenState extends ConsumerState<PermissionScreen>
     final gate = ref.read(permissionGateProvider);
     final (message, actions) = switch (_result) {
       GateResult.needsLocation => (
-        '러닝 경로와 거리를 기록하려면 위치 권한이 필요합니다. 위치는 이 기기에만 저장됩니다.',
+        _locationMessage,
         [
           FilledButton(
-            onPressed: () => _apply(gate.requestLocation()),
+            onPressed: () => _apply(gate.requestLocation),
             child: const Text('권한 허용'),
           ),
         ],
@@ -61,7 +80,7 @@ class _PermissionScreenState extends ConsumerState<PermissionScreen>
         '설정에서 위치 권한을 허용해 주세요',
         [
           FilledButton(
-            onPressed: gate.openBatterySettings,
+            onPressed: gate.openAppSettings,
             child: const Text('설정 열기'),
           ),
         ],
@@ -76,9 +95,18 @@ class _PermissionScreenState extends ConsumerState<PermissionScreen>
           TextButton(
             onPressed: () {
               gate.dismissBatteryGuide();
-              widget.onReady();
+              _finish();
             },
             child: const Text('나중에'),
+          ),
+        ],
+      ),
+      _ when _failed => (
+        _locationMessage,
+        [
+          FilledButton(
+            onPressed: () => _apply(gate.check),
+            child: const Text('다시 시도'),
           ),
         ],
       ),
@@ -95,6 +123,8 @@ class _PermissionScreenState extends ConsumerState<PermissionScreen>
           children: [
             Text(message, textAlign: TextAlign.center),
             const SizedBox(height: 24),
+            if (_result == null && !_failed)
+              const Center(child: CircularProgressIndicator()),
             ...actions,
           ],
         ),
