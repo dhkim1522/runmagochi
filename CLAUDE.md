@@ -6,6 +6,7 @@
 
 1. `HANDOFF.md` 를 읽고 현재 상태와 다음 할 일을 파악한다.
 2. 작업 범위에 해당하는 `docs/` 문서를 읽는다.
+3. 새 PC이거나 플러그인 설정이 안 돼 있으면 `/kickoff` 실행을 권한다.
 
 ## 문서 지도
 
@@ -19,6 +20,7 @@
 - `docs/specs/game-rules.md` — 게임 규칙과 수치
 - `docs/decisions/` — 결정 기록 (번호순)
 - `docs/research/nrc-analysis.md` — Nike Run Club 분석 요약
+- `docs/tooling.md` — Claude Code 추천 플러그인 목록, 사용 시점, 기본값
 - `design/wireframes/` — 화면 콘티 10개 (MVP 6개 + 후속 범위, HTML 원본·PNG)
 
 ## 작업 규칙

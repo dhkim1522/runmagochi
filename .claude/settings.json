@@ -1,0 +1,20 @@
+{
+  "extraKnownMarketplaces": {
+    "dart-flutter": {
+      "source": { "source": "github", "repo": "flutter/agent-plugins" }
+    },
+    "ui-ux-pro-max-skill": {
+      "source": { "source": "github", "repo": "nextlevelbuilder/ui-ux-pro-max-skill" }
+    },
+    "pixel-plugin": {
+      "source": { "source": "github", "repo": "willibrandon/pixel-plugin" }
+    }
+  },
+  "enabledPlugins": {
+    "superpowers@claude-plugins-official": true,
+    "dart-flutter@dart-flutter": true,
+    "ui-ux-pro-max@ui-ux-pro-max-skill": false,
+    "pixel-plugin@pixel-plugin": false,
+    "skill-creator@claude-plugins-official": false
+  }
+}

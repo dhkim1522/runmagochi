@@ -13,3 +13,6 @@ Thumbs.db
 *.keystore
 *.jks
 key.properties
+
+# Claude Code PC별 설정
+.claude/settings.local.json
