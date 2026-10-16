@@ -9,6 +9,7 @@ const double _maxAccuracyM = 20;
 const double _maxSpeedMps = 7;
 const Duration _currentPaceWindow = Duration(seconds: 30);
 const double _minPaceDistanceM = 10;
+const Duration _staleSampleTolerance = Duration(seconds: 2);
 
 enum RunState { idle, recording, paused, ended }
 
@@ -56,18 +57,28 @@ class RunSnapshot {
 }
 
 class RunEngine {
+  /// [startedAt] 을 주면 복원 모드다. `paused` 로 시작하고 [restoredSegments]
+  /// 로 거리를 다시 계산한다. [restoredMovingTime] 을 주면 그 값이 움직인
+  /// 시간이고, 없으면 구간마다 (마지막 점 − 첫 점 시각) 의 합이다.
   RunEngine({
     required this._clock,
     this._startedAt,
     List<List<LocationSample>> restoredSegments = const [],
+    Duration? restoredMovingTime,
   }) {
-    if (restoredSegments.isEmpty) return;
+    if (_startedAt == null) {
+      if (restoredSegments.isNotEmpty || restoredMovingTime != null) {
+        throw ArgumentError('복원에는 startedAt 이 필요하다.');
+      }
+      return;
+    }
     for (final segment in restoredSegments) {
       if (segment.isEmpty) continue;
       _segmentPending = true;
       segment.forEach(_append);
       _movingBase += segment.last.time.difference(segment.first.time);
     }
+    if (restoredMovingTime != null) _movingBase = restoredMovingTime;
     _state = RunState.paused;
   }
 
@@ -115,8 +126,7 @@ class RunEngine {
   }
 
   void start() {
-    _transition(RunState.idle, RunState.recording);
-    _startedAt ??= _clock();
+    _startedAt = _transition(RunState.idle, RunState.recording);
   }
 
   void pause() {
@@ -133,6 +143,9 @@ class RunEngine {
   bool addSample(LocationSample s) {
     if (_state != RunState.recording) return false;
     if (s.accuracy > _maxAccuracyM) return false;
+    if (s.time.isBefore(_recordingSince!.subtract(_staleSampleTolerance))) {
+      return false;
+    }
     final last = _lastAccepted;
     if (last != null) {
       final dt = s.time.difference(last.time);
@@ -162,7 +175,8 @@ class RunEngine {
     _lastAccepted = s;
   }
 
-  void _transition(RunState from, RunState to) {
+  /// 전이 시각(`clock()`)을 돌려준다.
+  DateTime _transition(RunState from, RunState to) {
     if (_state != from) {
       throw StateError('Cannot go from $_state to $to');
     }
@@ -177,6 +191,7 @@ class RunEngine {
     }
     _state = to;
     _events.add(StateChanged(from, to));
+    return now;
   }
 
   Duration _movingTime() {
@@ -186,19 +201,18 @@ class RunEngine {
         : _movingBase + _clock().difference(since);
   }
 
-  /// 현재 구간에서 최근 30초 창의 시간 ÷ 거리. 기록 중이 아니면 null.
+  /// 현재 구간에서 `clock()` 까지 최근 30초 창의 시간 ÷ 거리.
+  /// 창 시간은 창 안 첫 점 시각부터 `clock()` 까지다. 기록 중이 아니면 null.
   double? _currentPace() {
     if (_state != RunState.recording || _segmentPending) return null;
+    final now = _clock();
     final points = _segments.last;
-    final last = points.length - 1;
-    final windowStart = points[last].time.subtract(_currentPaceWindow);
-    var first = 0;
-    while (points[first].time.isBefore(windowStart)) {
-      first++;
-    }
+    final windowStart = now.subtract(_currentPaceWindow);
+    final first = points.indexWhere((p) => !p.time.isBefore(windowStart));
+    if (first == -1) return null;
     return _pace(
-      points[last].time.difference(points[first].time),
-      _segmentCumulativeM[last] - _segmentCumulativeM[first],
+      now.difference(points[first].time),
+      _segmentCumulativeM.last - _segmentCumulativeM[first],
     );
   }
 

@@ -93,6 +93,7 @@ void main() {
     now = now.add(const Duration(seconds: 60));
     expect(engine.snapshot.movingTime, const Duration(seconds: 60));
     expect(engine.snapshot.avgPaceSecPerKm, isNull);
+    expect(engine.snapshot.currentPaceSecPerKm, isNull);
   });
 
   test('일시정지 시간은 movingTime에서 빠진다', () {
@@ -179,6 +180,7 @@ void main() {
     // 구간 0: 0~20초 60m, 구간 1: 500m 떨어진 곳에서 100~110초 30m.
     final restored = RunEngine(
       clock: () => now,
+      startedAt: t0,
       restoredSegments: [
         [for (var i = 0; i <= 20; i++) at(i, _northOf(3.0 * i), _lng0)],
         [
@@ -216,20 +218,118 @@ void main() {
   test('현재 페이스는 일시정지 중 null, 재개 후 새 구간 30초 창이 10m 이상일 때부터 값', () {
     engine.start();
     for (var i = 0; i <= 30; i++) {
+      now = t0.add(Duration(seconds: i));
       engine.addSample(at(i, _northOf(2.0 * i), _lng0));
     }
     expect(engine.snapshot.currentPaceSecPerKm, closeTo(500, 1e-6));
     engine.pause();
     expect(engine.snapshot.currentPaceSecPerKm, isNull);
+    now = t0.add(const Duration(seconds: 100));
     engine.resume();
     expect(engine.snapshot.currentPaceSecPerKm, isNull);
     // 새 구간: 초속 2m. 4초 뒤 8m 는 null, 6초 뒤 12m 는 값.
     for (var i = 0; i <= 4; i++) {
+      now = t0.add(Duration(seconds: 100 + i));
       engine.addSample(at(100 + i, _northOf(600 + 2.0 * i), _lng0));
     }
     expect(engine.snapshot.currentPaceSecPerKm, isNull);
+    now = t0.add(const Duration(seconds: 106));
     engine.addSample(at(106, _northOf(612), _lng0));
     expect(engine.snapshot.currentPaceSecPerKm, closeTo(500, 1e-6));
+  });
+
+  test('start 전에 찍힌 오래된 점은 버린다', () {
+    engine.start();
+    expect(engine.addSample(at(-300, _northOf(800), _lng0)), isFalse);
+    expect(engine.segments, isEmpty);
+    engine.addSample(at(0, _lat0, _lng0));
+    engine.addSample(at(2, _northOf(5), _lng0));
+    expect(engine.snapshot.distanceM, closeTo(5, 1e-6));
+  });
+
+  test('resume 전에 찍힌 오래된 점은 버린다', () {
+    engine.start();
+    engine.addSample(at(0, _lat0, _lng0));
+    engine.addSample(at(2, _northOf(5), _lng0));
+    engine.pause();
+    now = t0.add(const Duration(seconds: 600));
+    engine.resume();
+    expect(engine.addSample(at(300, _northOf(805), _lng0)), isFalse);
+    expect(engine.segments, hasLength(1));
+    engine.addSample(at(600, _northOf(5), _lng0));
+    engine.addSample(at(602, _northOf(10), _lng0));
+    expect(engine.snapshot.distanceM, closeTo(10, 1e-6));
+  });
+
+  test('현재 페이스 창은 시계 기준: 점 없이 120초 지나면 null', () {
+    engine.start();
+    for (var i = 0; i <= 60; i++) {
+      now = t0.add(Duration(seconds: i));
+      engine.addSample(at(i, _northOf(2.0 * i), _lng0));
+    }
+    expect(engine.snapshot.currentPaceSecPerKm, closeTo(500, 1e-6));
+    now = now.add(const Duration(seconds: 120));
+    expect(engine.snapshot.currentPaceSecPerKm, isNull);
+  });
+
+  test('재개 후 첫 점이 직전 채택 점보다 이르면 버린다', () {
+    engine.start();
+    engine.addSample(at(0, _lat0, _lng0));
+    now = t0.add(const Duration(seconds: 10));
+    engine.addSample(at(10, _northOf(20), _lng0)); // 점 A
+    engine.pause();
+    engine.resume();
+    expect(engine.addSample(at(9, _northOf(25), _lng0)), isFalse);
+    expect(engine.segments, hasLength(1));
+    expect(engine.segmentIndex, 1);
+  });
+
+  test('복원 후 재개한 첫 점이 마지막 복원 점보다 이르면 버린다', () {
+    now = t0.add(const Duration(seconds: 21));
+    final restored = RunEngine(
+      clock: () => now,
+      startedAt: t0,
+      restoredSegments: [
+        [for (var i = 0; i <= 20; i++) at(i, _northOf(3.0 * i), _lng0)],
+      ],
+    );
+    restored.resume();
+    expect(restored.addSample(at(19, _northOf(70), _lng0)), isFalse);
+    expect(restored.segments, hasLength(1));
+    expect(restored.snapshot.distanceM, closeTo(60, 1e-6));
+  });
+
+  test('restoredMovingTime 을 주면 그 값이 movingTime', () {
+    final restored = RunEngine(
+      clock: () => now,
+      startedAt: t0,
+      restoredSegments: [
+        [for (var i = 0; i <= 20; i++) at(i, _northOf(3.0 * i), _lng0)],
+      ],
+      restoredMovingTime: const Duration(seconds: 600),
+    );
+    now = now.add(const Duration(seconds: 60));
+    expect(restored.snapshot.state, RunState.paused);
+    expect(restored.snapshot.movingTime, const Duration(seconds: 600));
+  });
+
+  test('startedAt 만 주면 점이 없어도 paused', () {
+    final restored = RunEngine(clock: () => now, startedAt: t0);
+    expect(restored.snapshot.state, RunState.paused);
+    expect(restored.snapshot.movingTime, Duration.zero);
+    expect(restored.segmentIndex, 0);
+  });
+
+  test('startedAt 없이 restoredSegments 를 주면 ArgumentError', () {
+    expect(
+      () => RunEngine(
+        clock: () => now,
+        restoredSegments: [
+          [at(0, _lat0, _lng0)],
+        ],
+      ),
+      throwsArgumentError,
+    );
   });
 }
 
