@@ -1,34 +1,28 @@
 # runmagochi
 
-> 실제 러닝 기록(GPS·페이스)에 도트 아바타 육성을 더한 Android·iOS 러닝 앱. 달릴수록 캐릭터가 자라고, 받은 코인으로 러닝 옷·장비를 사서 꾸민다.
+> 실제 러닝 기록(GPS·페이스)에 도트 아바타 육성을 더한 Android·iOS 러닝 앱. `runmagochi` 는 개발 코드명이며, 정식 이름은 출시 전 상표 확인 후 정한다.
 
-`runmagochi` 는 개발 코드명이다. 정식 앱 이름은 출시 전 상표 확인 후 정한다 (다마고치 상표 유사 우려).
+## 세션 시작 시
 
-## 문서
+1. `HANDOFF.md` 를 읽고 현재 상태와 다음 할 일을 파악한다.
+2. 작업 범위에 해당하는 `docs/` 문서를 읽는다.
 
-- [통합 문서](https://claude.ai/code/artifact/0ac0d5b6-7b0b-4143-bda1-3ab9f9850a8c) — 목표, 요구사항(F1~F15), 시나리오, 작업 계획
-- [와이어프레임](https://claude.ai/artifact/GGgUf6VGKuK3AkSRxrEnoQ) — 핵심 화면 10개, NRC 도출 UX 원칙
-- [설계·개발 정의서](https://claude.ai/code/artifact/402308db-95f5-44a0-ad9c-6ca1d8111d2d) — 기술 스택, 아키텍처, 기록 엔진, 게임 규칙, 데이터 모델, 작업 체크리스트
-- `docs/nrc-analysis.md` — Nike Run Club 기술 구조 분석 요약
+## 문서 지도
 
-문서가 원본이다. 결정이 바뀌면 문서를 고치고, 이 파일에는 결정 결과만 남긴다.
+원천 문서는 `docs/` 다. 결정이 바뀌면 해당 문서를 고치고, 이 파일에는 문서 위치만 둔다.
 
-## 결정사항
-
-- 플랫폼: Android + iOS, 하나의 코드베이스
-- 기록은 기기에서, 보상(코인·경험치) 계산은 서버에서 한다
-- 성장 단계는 누적 거리 기준 4단계 (0~50km, 50~250km, 250~1,000km, 1,000km 이상)
-- 하단 탭 4개: 러닝, 기록, 아바타, 상점
-
-## 미결정
-
-- 개발 프레임워크: Flutter(추천) 또는 React Native
-- 도트 아트 제작 방법, 스프라이트 규격
-- 캐릭터 컨셉과 성장 단계별 외형
-- 보상 수치 초안 승인
-- 수익 모델
+- `docs/product.md` — 기획서: 목표, 요구사항(F1~F15), 사용자 시나리오
+- `docs/roadmap.md` — 페이즈별 범위·완료 기준, 현재 위치, 미결정 항목
+- `docs/architecture.md` — 기술 스택, 구조, 데이터 모델, 서버 이전 경로
+- `docs/screens.md` — 화면 10개, 이동 흐름, UX 원칙, 와이어프레임 링크
+- `docs/specs/run-engine.md` — 기록 엔진 규칙
+- `docs/specs/game-rules.md` — 게임 규칙과 수치
+- `docs/decisions/` — 결정 기록 (번호순)
+- `docs/research/nrc-analysis.md` — Nike Run Club 분석 요약
 
 ## 작업 규칙
 
-- Nike Run Club 분석 결과는 구조·UX 참고용이다. Nike 코드·리소스를 이 저장소에 넣지 않는다.
-- 작업을 마칠 때마다 `HANDOFF.md` 를 갱신한다. 다른 PC(집 Windows)에서 이어서 작업한다.
+- 로컬 우선: 서버 없이 기기에서 동작하게 만든다. 데이터 접근은 저장소 인터페이스를 거친다 (결정 0001).
+- 새 결정은 `docs/decisions/` 에 다음 번호로 파일을 추가한다.
+- Nike Run Club 분석은 구조·UX 참고용이다. Nike 코드·리소스를 이 저장소에 넣지 않는다.
+- 작업을 마칠 때마다 `HANDOFF.md` 를 갱신하고 push한다. 회사 Mac과 집 Windows PC를 오가며 작업한다.
