@@ -49,6 +49,18 @@ class RunController extends Notifier<RunViewState> {
   /// 저장을 한 번에 하나씩 순서대로 하도록 잇는 꼬리.
   Future<void> _flushQueue = Future.value();
 
+  /// createActiveRun 을 기다리는 중.
+  bool _starting = false;
+
+  /// end 가 진행 중.
+  bool _ending = false;
+
+  /// end 의 마지막 저장이 끝났다. 이후 저장은 하지 않는다.
+  bool _flushClosed = false;
+
+  /// completeRun 이 실패해 남은 요약. end 를 다시 부르면 이것으로 completeRun 만 한다.
+  RunSummary? _pendingSummary;
+
   RunRepository get _repository => ref.read(runRepositoryProvider);
 
   @override
@@ -62,49 +74,76 @@ class RunController extends Notifier<RunViewState> {
 
   /// 이전 러닝의 lastSummary·lastError 는 지운다.
   Future<void> start() async {
-    if (_runId != null) throw StateError('이미 진행 중인 러닝이 있다.');
-    final clock = ref.read(clockProvider);
-    final runId = await _repository.createActiveRun(clock());
-    final engine = RunEngine(clock: clock)..start();
-    _engine = engine;
-    _runId = runId;
-    _subscribe();
-    _startFlushTimer();
-    _startTick();
-    state = RunViewState(snapshot: engine.snapshot, runId: runId);
+    _requireNoRun();
+    _starting = true;
+    try {
+      final clock = ref.read(clockProvider);
+      final runId = await _repository.createActiveRun(clock());
+      final engine = RunEngine(clock: clock)..start();
+      _engine = engine;
+      _runId = runId;
+      _subscribe();
+      _startFlushTimer();
+      _startTick();
+      state = RunViewState(snapshot: engine.snapshot, runId: runId);
+    } finally {
+      _starting = false;
+    }
   }
 
   void pause() {
+    _requireNotEnding();
     _requireEngine().pause();
     _publish();
-    unawaited(_flush());
+    unawaited(_flushReportingError());
   }
 
   void resume() {
+    _requireNotEnding();
     _requireEngine().resume();
     _subscribe();
     _startTick();
     _publish();
   }
 
+  /// completeRun 이 실패하면 lastError 에 남기고 다시 던진다. 그 뒤 다시
+  /// 부르면 남은 요약으로 completeRun 만 다시 한다.
   Future<RunSummary> end() async {
+    _requireNotEnding();
     final engine = _requireEngine();
     final runId = _runId!;
-    _stopTimers();
-    // cancel 을 부른 뒤로는 점이 오지 않으므로 해제 완료를 기다리지 않는다.
-    unawaited(_subscription?.cancel());
-    _subscription = null;
-    await _flush();
-    final summary = engine.end();
-    await _repository.completeRun(runId, summary);
-    _engine = null;
-    _runId = null;
-    state = RunViewState(snapshot: _idleSnapshot, lastSummary: summary);
-    return summary;
+    _ending = true;
+    try {
+      var summary = _pendingSummary;
+      if (summary == null) {
+        _stopTimers();
+        // cancel 을 부른 뒤로는 점이 오지 않으므로 해제 완료를 기다리지 않는다.
+        unawaited(_subscription?.cancel());
+        _subscription = null;
+        await _flush();
+        _flushClosed = true;
+        summary = _pendingSummary = engine.end();
+      }
+      try {
+        await _repository.completeRun(runId, summary);
+      } catch (error) {
+        state = _copyState(lastError: error.toString());
+        rethrow;
+      }
+      _engine = null;
+      _runId = null;
+      _pendingSummary = null;
+      _flushClosed = false;
+      state = RunViewState(snapshot: _idleSnapshot, lastSummary: summary);
+      return summary;
+    } finally {
+      _ending = false;
+    }
   }
 
   /// 복구한 러닝이 있으면 true, 상태 paused. 위치 구독은 resume 때 한다.
   Future<bool> restoreIfAny() async {
+    _requireNoRun();
     final active = await _repository.findActiveRun();
     if (active == null) return false;
     _engine = RunEngine(
@@ -117,6 +156,16 @@ class RunController extends Notifier<RunViewState> {
     _startFlushTimer();
     _publish();
     return true;
+  }
+
+  void _requireNoRun() {
+    if (_starting || _runId != null) {
+      throw StateError('이미 진행 중인 러닝이 있다.');
+    }
+  }
+
+  void _requireNotEnding() {
+    if (_ending) throw StateError('러닝을 끝내는 중이다.');
   }
 
   RunEngine _requireEngine() => _engine ?? (throw StateError('진행 중인 러닝이 없다.'));
@@ -147,9 +196,7 @@ class RunController extends Notifier<RunViewState> {
     // 실패한 점은 버퍼에 남아 다음 저장 때 다시 저장한다.
     _flushTimer ??= Timer.periodic(
       _flushInterval,
-      (_) => _flush().catchError((Object error) {
-        state = _copyState(lastError: error.toString());
-      }),
+      (_) => _flushReportingError(),
     );
   }
 
@@ -162,6 +209,13 @@ class RunController extends Notifier<RunViewState> {
     _tickTimer?.cancel();
     _flushTimer = null;
     _tickTimer = null;
+  }
+
+  /// 저장 실패를 lastError 에 남긴다. 실패한 점은 버퍼에 남는다.
+  Future<void> _flushReportingError() {
+    return _flush().catchError((Object error) {
+      state = _copyState(lastError: error.toString());
+    });
   }
 
   /// 앞선 저장이 끝난 뒤 버퍼를 저장한다. 앞선 저장의 실패는 그 호출자가 받는다.
@@ -177,7 +231,7 @@ class RunController extends Notifier<RunViewState> {
   Future<void> _writeBuffer() async {
     final engine = _engine;
     final runId = _runId;
-    if (engine == null || runId == null) return;
+    if (engine == null || runId == null || _flushClosed) return;
     final movingTime = engine.snapshot.movingTime;
     if (_buffer.isEmpty) {
       await _repository.appendPoints(

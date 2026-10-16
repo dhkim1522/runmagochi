@@ -45,6 +45,9 @@ class _FakeRunRepository implements RunRepository {
 
   /// 주면 다음 appendPoints 한 번이 이 오류를 던진다.
   Object? appendError;
+
+  /// 주면 다음 completeRun 한 번이 이 오류를 던진다.
+  Object? completeError;
   final appendCalls = <_AppendCall>[];
   final completed = <(String, RunSummary)>[];
 
@@ -77,11 +80,19 @@ class _FakeRunRepository implements RunRepository {
   }
 
   @override
-  Future<ActiveRun?> findActiveRun() async => activeRun;
+  Future<ActiveRun?> findActiveRun() async {
+    log.add('findActiveRun');
+    return activeRun;
+  }
 
   @override
   Future<void> completeRun(String runId, RunSummary summary) async {
     log.add('completeRun');
+    final error = completeError;
+    if (error != null) {
+      completeError = null;
+      throw error;
+    }
     completed.add((runId, summary));
   }
 
@@ -139,6 +150,8 @@ void _run(
     );
     container.dispose();
     async.flushMicrotasks();
+    expect(async.pendingTimers, isEmpty);
+    expect(location.isListened, isFalse);
   });
 }
 
@@ -214,6 +227,7 @@ void main() {
         'completeRun',
       ]);
       expect(location.isListened, isFalse);
+      expect(async.pendingTimers, isEmpty);
 
       final state = container.read(runControllerProvider);
       expect(state.runId, isNull);
@@ -319,6 +333,127 @@ void main() {
       expect(call.segmentIndex, 0);
       expect(call.points, hasLength(1));
       expect(call.movingTime, const Duration(seconds: 20));
+    });
+  });
+
+  test('start 두 번을 연달아 부르면 러닝은 하나만 만들고 두 번째는 StateError', () {
+    _run((async, controller, container, repository, location) {
+      Object? error;
+      controller.start();
+      controller.start().catchError((Object e) => error = e);
+      async.flushMicrotasks();
+
+      expect(error, isA<StateError>());
+      expect(repository.log, ['createActiveRun']);
+      expect(location.listenCount, 1);
+    });
+  });
+
+  test('end 가 저장하는 동안 resume 은 StateError, end 뒤 구독·타이머가 없다', () {
+    _run((async, controller, container, repository, location) {
+      controller.start();
+      async.flushMicrotasks();
+      stepTo(async, location, 3);
+      controller.pause();
+      async.flushMicrotasks();
+      final gate = repository.appendGate = Completer<void>();
+
+      controller.end();
+      async.flushMicrotasks();
+      expect(controller.resume, throwsStateError);
+
+      gate.complete();
+      async.flushMicrotasks();
+      expect(repository.log.last, 'completeRun');
+      expect(location.isListened, isFalse);
+      expect(async.pendingTimers, isEmpty);
+    });
+  });
+
+  test(
+    'end 가 저장하는 동안 pause·end 는 StateError, completeRun 뒤 appendPoints 없음',
+    () {
+      _run((async, controller, container, repository, location) {
+        controller.start();
+        async.flushMicrotasks();
+        stepTo(async, location, 3);
+        final gate = repository.appendGate = Completer<void>();
+
+        controller.end();
+        async.flushMicrotasks();
+        expect(controller.pause, throwsStateError);
+        Object? error;
+        controller.end().then<void>((_) {}, onError: (Object e) => error = e);
+        async.flushMicrotasks();
+        expect(error, isA<StateError>());
+
+        gate.complete();
+        async.flushMicrotasks();
+        async.elapse(const Duration(seconds: 30));
+        expect(repository.log, [
+          'createActiveRun',
+          'appendPoints',
+          'completeRun',
+        ]);
+      });
+    },
+  );
+
+  test(
+    'completeRun 이 실패하면 lastError 에 남기고 end 를 다시 부르면 completeRun 만 다시 한다',
+    () {
+      _run((async, controller, container, repository, location) {
+        controller.start();
+        async.flushMicrotasks();
+        stepTo(async, location, 3);
+        repository.completeError = StateError('쓰기 실패');
+
+        Object? error;
+        controller.end().then<void>((_) {}, onError: (Object e) => error = e);
+        async.flushMicrotasks();
+        expect(error, isA<StateError>());
+        expect(
+          container.read(runControllerProvider).lastError,
+          contains('쓰기 실패'),
+        );
+
+        RunSummary? summary;
+        controller.end().then((s) => summary = s);
+        async.flushMicrotasks();
+
+        expect(summary, isNotNull);
+        expect(summary!.points, hasLength(1));
+        expect(repository.log, [
+          'createActiveRun',
+          'appendPoints',
+          'completeRun',
+          'completeRun',
+        ]);
+        final state = container.read(runControllerProvider);
+        expect(state.runId, isNull);
+        expect(state.lastSummary, same(summary));
+      });
+    },
+  );
+
+  test('pause 저장 실패는 lastError 에 남기고 점은 다음 저장 때 저장한다', () {
+    _run((async, controller, container, repository, location) {
+      controller.start();
+      async.flushMicrotasks();
+      stepTo(async, location, 3);
+      repository.appendError = StateError('디스크 가득');
+
+      controller.pause();
+      async.flushMicrotasks();
+
+      expect(repository.appendCalls, isEmpty);
+      expect(
+        container.read(runControllerProvider).lastError,
+        contains('디스크 가득'),
+      );
+
+      async.elapse(const Duration(seconds: 9));
+      expect(repository.appendCalls.single.points, hasLength(1));
     });
   });
 
@@ -460,6 +595,29 @@ void main() {
         final call = repository.appendCalls.last;
         expect(call.segmentIndex, 1);
         expect(call.points, hasLength(1));
+      });
+    });
+
+    test('러닝이 이미 있으면 StateError', () {
+      _run(activeRun: activeRun, (
+        async,
+        controller,
+        container,
+        repository,
+        location,
+      ) {
+        controller.start();
+        async.flushMicrotasks();
+
+        Object? error;
+        controller.restoreIfAny().then<void>(
+          (_) {},
+          onError: (Object e) => error = e,
+        );
+        async.flushMicrotasks();
+
+        expect(error, isA<StateError>());
+        expect(repository.log, ['createActiveRun']);
       });
     });
 
