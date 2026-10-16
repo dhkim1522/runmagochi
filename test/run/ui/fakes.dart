@@ -73,8 +73,7 @@ class FakeController extends RunController {
   Future<RunSummary> end() async {
     calls.add('end');
     if (endError != null) throw endError!;
-    state = RunViewState(snapshot: snap(RunState.idle));
-    return RunSummary(
+    final summary = RunSummary(
       startedAt: DateTime(2026),
       endedAt: DateTime(2026),
       distanceM: 0,
@@ -85,6 +84,8 @@ class FakeController extends RunController {
       splits: const [],
       points: const [],
     );
+    state = RunViewState(snapshot: snap(RunState.idle), lastSummary: summary);
+    return summary;
   }
 
   @override
@@ -125,8 +126,16 @@ class FakeGate implements PermissionGate {
 }
 
 class FakeRepo implements RunRepository {
-  FakeRepo(this.total);
+  FakeRepo(this.total, {this.runs = const [], this.details = const {}});
   (double, int) total;
+  List<RunListItem> runs;
+  Map<String, RunDetail> details;
+
+  @override
+  Future<List<RunListItem>> listRuns() async => runs;
+
+  @override
+  Future<RunDetail?> getRun(String id) async => details[id];
 
   @override
   Future<(double, int)> weeklyTotal(DateTime now) async => total;

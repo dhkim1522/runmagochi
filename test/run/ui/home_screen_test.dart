@@ -7,6 +7,7 @@ import 'package:runmagochi/run/domain/run_engine.dart';
 import 'package:runmagochi/run/ui/home_screen.dart';
 import 'package:runmagochi/run/ui/in_run_screen.dart';
 import 'package:runmagochi/run/ui/permission_screen.dart';
+import 'package:runmagochi/run/ui/summary_screen.dart';
 
 import 'fakes.dart';
 
@@ -112,6 +113,7 @@ void main() {
     expect(find.byType(InRunScreen), findsNothing);
     expect(find.text('기록 중이던 러닝이 있어요'), findsNothing);
     expect(find.text('시작'), findsOneWidget);
+    expect(find.byType(SummaryScreen), findsNothing);
   });
 
   testWidgets('복구할 러닝이 없으면 다이얼로그가 없고 restoreIfAny 는 한 번만 불린다', (tester) async {
@@ -143,6 +145,10 @@ void main() {
     await g.up();
     await tester.pumpAndSettle();
     expect(find.byType(InRunScreen), findsNothing);
+    expect(find.byType(SummaryScreen), findsOneWidget);
+    await tester.tap(find.text('확인'));
+    await tester.pumpAndSettle();
+    expect(find.byType(SummaryScreen), findsNothing);
     expect(find.text('이번 주 4.23 km · 2회'), findsOneWidget);
     expect(c.calls, ['restore', 'start', 'pause', 'end']);
     expect(c.state.snapshot.state, RunState.idle);

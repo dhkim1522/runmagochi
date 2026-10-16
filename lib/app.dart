@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'avatar/ui/avatar_placeholder.dart';
+import 'run/ui/history_screen.dart';
 import 'run/ui/home_screen.dart';
 
 class RunmagochiApp extends StatelessWidget {
@@ -33,7 +34,7 @@ class _HomeShellState extends State<_HomeShell> {
         index: _index,
         children: const [
           HomeScreen(),
-          Center(child: Text('기록 화면')),
+          HistoryScreen(),
           Center(
             child: Padding(
               padding: EdgeInsets.all(24),

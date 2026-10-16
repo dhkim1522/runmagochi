@@ -1,0 +1,112 @@
+import 'package:flutter/material.dart' hide Split;
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:runmagochi/run/app/providers.dart';
+import 'package:runmagochi/run/data/run_repository.dart';
+import 'package:runmagochi/run/domain/location_sample.dart';
+import 'package:runmagochi/run/domain/run_summary.dart';
+import 'package:runmagochi/run/ui/summary_screen.dart';
+
+import 'fakes.dart';
+
+final _splits = [
+  const Split(index: 1, distanceM: 1000, duration: Duration(seconds: 385)),
+  const Split(index: 2, distanceM: 1000, duration: Duration(seconds: 390)),
+  const Split(index: 3, distanceM: 500, duration: Duration(seconds: 200)),
+];
+
+RunSummary _summary() => RunSummary(
+  startedAt: DateTime(2026, 10, 16, 17, 51),
+  endedAt: DateTime(2026, 10, 16, 18, 20),
+  distanceM: 2500,
+  movingTime: const Duration(minutes: 16, seconds: 15),
+  avgPaceSecPerKm: 390,
+  calories: 168.35,
+  name: '금요일 오후 러닝',
+  splits: _splits,
+  points: [
+    for (var i = 0; i < 3; i++)
+      LocationSample(
+        time: DateTime(2026, 10, 16, 17, 51 + i),
+        latitude: 37.5 + i * 0.001,
+        longitude: 127.0 + i * 0.001,
+        accuracy: 5,
+      ),
+  ],
+);
+
+Future<void> pump(WidgetTester tester, Widget screen, {FakeRepo? repo}) async {
+  await tester.pumpWidget(
+    ProviderScope(
+      overrides: [
+        runRepositoryProvider.overrideWithValue(repo ?? FakeRepo((0, 0))),
+      ],
+      child: MaterialApp(home: screen),
+    ),
+  );
+}
+
+void main() {
+  testWidgets('요약 화면에 구간 행 수 = splits 수', (tester) async {
+    tester.view.physicalSize = const Size(800, 2400);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    await pump(tester, SummaryScreen.fromSummary(_summary()));
+    expect(find.byKey(const ValueKey('split-row')), findsNWidgets(3));
+    expect(find.text('금요일 오후 러닝'), findsOneWidget);
+    expect(find.text('2.50'), findsOneWidget);
+    expect(find.text('6\'30"'), findsWidgets);
+    expect(find.text('16:15'), findsOneWidget);
+    expect(find.text('168'), findsOneWidget);
+    expect(find.byType(CustomPaint), findsWidgets);
+  });
+
+  testWidgets('확인 버튼이 홈으로 돌아간다', (tester) async {
+    await pump(tester, const Scaffold(body: Text('home')));
+    final nav = tester.state<NavigatorState>(find.byType(Navigator));
+    nav.push(
+      MaterialPageRoute<void>(
+        builder: (_) => SummaryScreen.fromSummary(_summary()),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('확인'));
+    await tester.pumpAndSettle();
+    expect(find.byType(SummaryScreen), findsNothing);
+  });
+
+  testWidgets('forRun 은 불러오는 동안 진행 표시를 보이고 상세를 그린다', (tester) async {
+    tester.view.physicalSize = const Size(800, 2400);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    final repo = FakeRepo(
+      (0, 0),
+      details: {
+        'a': RunDetail(
+          run: RunListItem(
+            id: 'a',
+            name: '아침 러닝',
+            startedAt: DateTime(2026, 10, 10, 7),
+            distanceM: 2500,
+            movingTime: const Duration(minutes: 16, seconds: 15),
+            avgPaceSecPerKm: 390,
+          ),
+          calories: 168,
+          route: const [(37.5, 127.0), (37.501, 127.001)],
+          splits: _splits,
+        ),
+      },
+    );
+    await pump(tester, const SummaryScreen.forRun('a'), repo: repo);
+    expect(find.byType(CircularProgressIndicator), findsOneWidget);
+    await tester.pumpAndSettle();
+    expect(find.text('아침 러닝'), findsOneWidget);
+    expect(find.byKey(const ValueKey('split-row')), findsNWidgets(3));
+  });
+
+  testWidgets('forRun 에서 getRun 이 null 이면 찾을 수 없다는 안내', (tester) async {
+    await pump(tester, const SummaryScreen.forRun('none'));
+    await tester.pumpAndSettle();
+    expect(find.text('기록을 찾을 수 없어요'), findsOneWidget);
+  });
+}

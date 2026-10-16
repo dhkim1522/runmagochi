@@ -7,6 +7,7 @@ import '../app/permission_gate.dart';
 import '../app/providers.dart';
 import 'in_run_screen.dart';
 import 'permission_screen.dart';
+import 'summary_screen.dart';
 
 final weeklyTotalProvider = FutureProvider.autoDispose<(double, int)>(
   (ref) =>
@@ -71,11 +72,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   Future<void> _openInRun() async {
+    final before = ref.read(runControllerProvider).lastSummary;
     await Navigator.of(
       context,
     ).push(MaterialPageRoute<void>(builder: (_) => const InRunScreen()));
     if (!mounted) return;
     ref.invalidate(weeklyTotalProvider);
+    final after = ref.read(runControllerProvider).lastSummary;
+    if (after == null || identical(after, before)) return;
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(builder: (_) => SummaryScreen.fromSummary(after)),
+    );
   }
 
   void _toast(String message) {
