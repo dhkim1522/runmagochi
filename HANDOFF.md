@@ -4,20 +4,27 @@
 
 ## 현재 상태
 
-- 페이즈 0 준비 단계
-- 원천 문서 정리 완료: 기획서, 로드맵, 설계서, 화면설계, 명세 2종, 결정 4건, 와이어프레임, 검토 보고
-- 결정 완료: 로컬 우선, 원천 문서 저장소 보관, 보상(코인·상점·업적) 후속, Flutter 채택(Flame 없음), Android 먼저·iOS는 페이즈 3
-- 페이즈 1~6 구성과 완료 기준 확정 (`docs/roadmap.md`)
-- 기획·기술 스택 검토(`docs/research/plan-review.md`)의 핵심 권고 반영: MVP 화면 6개, 하단 탭 3개, 지도 대신 경로 선, 경로 압축 저장, 아바타 상태 반응 추가
-- 코드 없음
+- **페이즈 1 기록 코어 구현 완료, 실측 대기**
+  - 러닝 시작·일시정지·종료, 화면 꺼짐 기록, 강제 종료 후 복구, 요약·기록 화면, 권한·배터리 안내
+  - 테스트 151건 통과, 에뮬레이터에서 화면 꺼짐 기록(거리 오차 -1.7%)과 복구 확인
+  - 진행 상태와 구현 중 결정은 `docs/plans/phase-1.md`
+- 디자인은 와이어프레임 수준이다. 아바타 자리는 비어 있다(페이즈 2).
 
 ## 다음 할 일
 
-1. `/phase` 로 페이즈 1 기록 코어를 시작한다. 구현 계획 작성부터 진행된다.
-   - Flutter 프로젝트 생성과 기록 엔진(`docs/specs/run-engine.md`) 단위 테스트가 첫 작업이다.
+1. **실기기 실측** (`docs/plans/phase-1.md` "사람 확인")
+   - Android 기기에 APK 설치: `flutter build apk --debug` 후 `build/app/outputs/flutter-apk/app-debug.apk`
+   - 실제 30분 러닝 3회, 기록 누락 없는지
+   - 트랙 400m × 10바퀴 거리 오차 5% 이내인지
+   - 화면 끄고 주머니에 넣은 채 기록이 이어지는지
+   - "실측 때 함께 볼 것" 3가지도 확인
+2. 실측을 마치면 `/phase` 를 실행해 결과를 입력한다. 통과하면 페이즈 2(아바타 성장)로 넘어간다.
+   - 실측 전에 페이즈 2를 먼저 하려면 `/phase 2`
 
 ## 환경 메모
 
 - 회사 Mac: `~/personal/` 아래에서 git·gh 가 개인 계정(dhkim1522)으로 자동 전환된다.
-- 집 Windows: Claude Code 개인 계정 로그인, 개인 SSH 키를 GitHub에 등록한 뒤 이 저장소를 clone한다. 저장소 안에서 `git config user.email dhkim1522@naver.com` 을 설정한다.
-- Android 에뮬레이터 가상 GPS: `adb emu geo fix <경도> <위도>` 를 1초마다 보내 러닝을 흉내 낸다.
+- 집 Windows
+  - Claude Code 개인 계정 로그인, 개인 SSH 키를 GitHub에 등록한 뒤 이 저장소를 clone한다. 저장소 안에서 `git config user.email dhkim1522@naver.com` 을 설정한다.
+  - Flutter SDK와 Android SDK platform 37 이 필요하다. 첫 실행 때 `/kickoff`.
+- 에뮬레이터 가상 러닝: `dart run tool/fake_run.dart --minutes 5`. 에뮬레이터 위치 설정에서 "Location Accuracy" 를 켜야 위치가 들어온다.
