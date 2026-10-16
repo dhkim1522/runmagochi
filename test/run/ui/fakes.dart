@@ -26,17 +26,23 @@ class FakeController extends RunController {
     this.error,
     this.startError,
     this.endError,
+    this.initialSummary,
   }) : _initial = initial ?? snap(RunState.idle);
 
   final bool restore;
   final RunSnapshot _initial;
   final String? error;
   final Object? startError;
+  final RunSummary? initialSummary;
   Object? endError;
   final List<String> calls = [];
 
   @override
-  RunViewState build() => RunViewState(snapshot: _initial, lastError: error);
+  RunViewState build() => RunViewState(
+    snapshot: _initial,
+    lastError: error,
+    lastSummary: initialSummary,
+  );
 
   @override
   Future<void> start() async {

@@ -11,17 +11,6 @@ final runDetailProvider = FutureProvider.autoDispose.family<RunDetail?, String>(
   (ref, id) => ref.read(runRepositoryProvider).getRun(id),
 );
 
-const _weekdays = ['월', '화', '수', '목', '금', '토', '일'];
-
-/// `10월 17일 (토) 오후 5:51`
-String formatRunDate(DateTime t) {
-  final l = t.toLocal();
-  final h = l.hour % 12 == 0 ? 12 : l.hour % 12;
-  final ampm = l.hour < 12 ? '오전' : '오후';
-  return '${l.month}월 ${l.day}일 (${_weekdays[l.weekday - 1]}) '
-      "$ampm $h:${l.minute.toString().padLeft(2, '0')}";
-}
-
 class SummaryScreen extends ConsumerWidget {
   /// 러닝 종료 직후.
   const SummaryScreen.fromSummary(RunSummary this.summary, {super.key})
@@ -162,13 +151,13 @@ class _SummaryBody extends StatelessWidget {
               Text('페이스', style: theme.textTheme.labelMedium),
             ],
           ),
-          for (final sp in splits)
+          for (final (i, sp) in splits.indexed)
             Padding(
               key: const ValueKey('split-row'),
               padding: const EdgeInsets.symmetric(vertical: 6),
               child: Row(
                 children: [
-                  Expanded(child: Text('${sp.index}')),
+                  Expanded(child: Text(_splitLabel(splits, i))),
                   Text(formatPace(sp.paceSecPerKm)),
                 ],
               ),
@@ -177,6 +166,16 @@ class _SummaryBody extends StatelessWidget {
       ],
     );
   }
+}
+
+/// 온전한 1km 구간은 번호, 마지막 짧은 구간은 누적 거리(km)로 부른다.
+String _splitLabel(List<Split> splits, int i) {
+  final sp = splits[i];
+  if (sp.distanceM >= 1000) return '${sp.index}';
+  final cumulative = splits
+      .take(i + 1)
+      .fold<double>(0, (a, e) => a + e.distanceM);
+  return formatKm(cumulative).replaceFirst(RegExp(r'\.?0+$'), '');
 }
 
 class _Stat extends StatelessWidget {

@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:runmagochi/run/app/permission_gate.dart';
 import 'package:runmagochi/run/app/providers.dart';
 import 'package:runmagochi/run/domain/run_engine.dart';
+import 'package:runmagochi/run/domain/run_summary.dart';
 import 'package:runmagochi/run/ui/home_screen.dart';
 import 'package:runmagochi/run/ui/in_run_screen.dart';
 import 'package:runmagochi/run/ui/permission_screen.dart';
@@ -185,5 +186,63 @@ void main() {
     );
     expect(button.onPressed, isNotNull);
     await tester.pumpAndSettle(const Duration(seconds: 5));
+  });
+
+  Future<void> startRun(WidgetTester tester) async {
+    await tester.tap(find.text('시작'));
+    await tester.pump();
+    await tester.pump(const Duration(seconds: 3));
+    await tester.pumpAndSettle();
+  }
+
+  Future<void> holdStop(WidgetTester tester) async {
+    await tester.tap(find.text('일시정지'));
+    await tester.pump();
+    final g = await tester.startGesture(tester.getCenter(find.text('종료')));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 1501));
+    await tester.pump();
+    await g.up();
+    await tester.pumpAndSettle();
+  }
+
+  testWidgets('이전 요약이 남아 있어도 end 없이 돌아오면 요약을 다시 보이지 않는다', (tester) async {
+    final old = RunSummary(
+      startedAt: DateTime(2026),
+      endedAt: DateTime(2026),
+      distanceM: 0,
+      movingTime: Duration.zero,
+      avgPaceSecPerKm: null,
+      calories: 0,
+      name: 'old',
+      splits: const [],
+      points: const [],
+    );
+    final c = FakeController(initialSummary: old);
+    await pumpHome(tester, c);
+    await startRun(tester);
+    expect(find.byType(InRunScreen), findsOneWidget);
+    tester.state<NavigatorState>(find.byType(Navigator)).pop();
+    await tester.pumpAndSettle();
+    expect(find.byType(InRunScreen), findsNothing);
+    expect(find.byType(SummaryScreen), findsNothing);
+    expect(c.calls, isNot(contains('end')));
+  });
+
+  testWidgets('두 번째 러닝을 끝내면 새 요약이 보인다', (tester) async {
+    final c = FakeController();
+    await pumpHome(tester, c);
+    await startRun(tester);
+    await holdStop(tester);
+    final first = c.state.lastSummary;
+    await tester.tap(find.text('확인'));
+    await tester.pumpAndSettle();
+
+    await startRun(tester);
+    await holdStop(tester);
+    final second = c.state.lastSummary;
+    expect(identical(first, second), isFalse);
+    final screen = tester.widget<SummaryScreen>(find.byType(SummaryScreen));
+    expect(screen.summary, same(second));
   });
 }

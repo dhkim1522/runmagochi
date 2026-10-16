@@ -20,4 +20,17 @@ void main() {
     expect(formatKm(0), '0.00');
     expect(formatKm(12345), '12.35');
   });
+
+  test('formatRunDate', () {
+    expect(
+      formatRunDate(DateTime(2026, 10, 17, 17, 51)),
+      '10월 17일 (토) 오후 5:51',
+    );
+    expect(formatRunDate(DateTime(2026, 10, 12, 0, 5)), '10월 12일 (월) 오전 12:05');
+    expect(
+      formatRunDate(DateTime(2026, 10, 18, 12, 0)),
+      '10월 18일 (일) 오후 12:00',
+    );
+    expect(formatRunDate(DateTime(2026, 1, 2, 9, 7)), '1월 2일 (금) 오전 9:07');
+  });
 }

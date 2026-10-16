@@ -53,6 +53,19 @@ void main() {
     addTearDown(tester.view.reset);
     await pump(tester, SummaryScreen.fromSummary(_summary()));
     expect(find.byKey(const ValueKey('split-row')), findsNWidgets(3));
+    String rowText(int i) => tester
+        .widgetList<Text>(
+          find.descendant(
+            of: find.byKey(const ValueKey('split-row')).at(i),
+            matching: find.byType(Text),
+          ),
+        )
+        .map((t) => t.data)
+        .join('|');
+    expect(rowText(0), '1|6\'25"');
+    expect(rowText(1), '2|6\'30"');
+    // 마지막 짧은 구간은 번호 대신 누적 거리.
+    expect(rowText(2), '2.5|6\'40"');
     expect(find.text('금요일 오후 러닝'), findsOneWidget);
     expect(find.text('2.50'), findsOneWidget);
     expect(find.text('6\'30"'), findsWidgets);
@@ -108,5 +121,22 @@ void main() {
     await pump(tester, const SummaryScreen.forRun('none'));
     await tester.pumpAndSettle();
     expect(find.text('기록을 찾을 수 없어요'), findsOneWidget);
+  });
+
+  testWidgets('경로가 비어 있으면 안내 문구', (tester) async {
+    final s = _summary();
+    final empty = RunSummary(
+      startedAt: s.startedAt,
+      endedAt: s.endedAt,
+      distanceM: s.distanceM,
+      movingTime: s.movingTime,
+      avgPaceSecPerKm: s.avgPaceSecPerKm,
+      calories: s.calories,
+      name: s.name,
+      splits: s.splits,
+      points: const [],
+    );
+    await pump(tester, SummaryScreen.fromSummary(empty));
+    expect(find.text('경로가 없어요'), findsOneWidget);
   });
 }

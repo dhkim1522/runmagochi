@@ -18,3 +18,14 @@ String formatDuration(Duration d) {
 
 /// 미터를 km 소수 둘째 자리로.
 String formatKm(double meters) => (meters / 1000).toStringAsFixed(2);
+
+const _weekdays = ['월', '화', '수', '목', '금', '토', '일'];
+
+/// `10월 17일 (토) 오후 5:51`
+String formatRunDate(DateTime t) {
+  final l = t.toLocal();
+  final h = l.hour % 12 == 0 ? 12 : l.hour % 12;
+  final ampm = l.hour < 12 ? '오전' : '오후';
+  return '${l.month}월 ${l.day}일 (${_weekdays[l.weekday - 1]}) '
+      "$ampm $h:${l.minute.toString().padLeft(2, '0')}";
+}
