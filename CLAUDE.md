@@ -19,9 +19,15 @@
 - `docs/specs/run-engine.md` — 기록 엔진 규칙
 - `docs/specs/game-rules.md` — 게임 규칙과 수치
 - `docs/decisions/` — 결정 기록 (번호순)
+- `docs/plans/` — 페이즈별 구현 계획과 진행 상태 (`/phase` 가 작성)
 - `docs/research/nrc-analysis.md` — Nike Run Club 분석 요약
 - `docs/tooling.md` — Claude Code 추천 플러그인 목록, 사용 시점, 기본값
 - `design/wireframes/` — 화면 콘티 10개 (MVP 6개 + 후속 범위, HTML 원본·PNG)
+
+## 명령
+
+- `/kickoff` — 현황 브리핑, 이 PC의 플러그인 선택
+- `/phase [--auto] [페이즈 번호]` — 현재 페이즈를 계획부터 구현·검증·문서 갱신까지 진행. 중단된 지점부터 이어간다
 
 ## 작업 규칙
 
