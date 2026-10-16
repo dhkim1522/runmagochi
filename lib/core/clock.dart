@@ -1,0 +1,1 @@
+typedef Clock = DateTime Function();
