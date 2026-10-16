@@ -139,4 +139,23 @@ void main() {
     expect(c.calls, ['end', 'end']);
     expect(find.byType(InRunScreen), findsNothing);
   });
+
+  testWidgets('러닝 저장이 실패해 ended 면 재개 없이 종료만 남는다', (tester) async {
+    final c = await open(
+      tester,
+      initial: snap(RunState.ended, distanceM: 2910),
+    );
+    expect(find.text('2.91'), findsOneWidget);
+    expect(find.text('재개'), findsNothing);
+    expect(find.widgetWithText(FilledButton, '일시정지'), findsNothing);
+
+    final g = await tester.startGesture(tester.getCenter(find.text('종료')));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 1501));
+    await tester.pump();
+    await g.up();
+    await tester.pumpAndSettle();
+    expect(c.calls, ['end']);
+    expect(find.byType(InRunScreen), findsNothing);
+  });
 }

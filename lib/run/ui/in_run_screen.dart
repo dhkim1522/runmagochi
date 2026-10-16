@@ -38,7 +38,9 @@ class _InRunScreenState extends ConsumerState<InRunScreen> {
     final view = ref.watch(runControllerProvider);
     final controller = ref.read(runControllerProvider.notifier);
     final snap = view.snapshot;
-    final paused = snap.state == RunState.paused;
+    // ended 는 러닝 저장이 실패해 종료만 다시 할 수 있는 상태다.
+    final ended = snap.state == RunState.ended;
+    final paused = snap.state == RunState.paused || ended;
     final scheme = Theme.of(context).colorScheme;
 
     return PopScope(
@@ -102,11 +104,13 @@ class _InRunScreenState extends ConsumerState<InRunScreen> {
                   ),
                 ),
                 if (paused) ...[
-                  FilledButton(
-                    onPressed: _ending ? null : controller.resume,
-                    child: const Text('재개'),
-                  ),
-                  const SizedBox(height: 12),
+                  if (!ended) ...[
+                    FilledButton(
+                      onPressed: _ending ? null : controller.resume,
+                      child: const Text('재개'),
+                    ),
+                    const SizedBox(height: 12),
+                  ],
                   _HoldToStopButton(
                     key: _stopKey,
                     enabled: !_ending,

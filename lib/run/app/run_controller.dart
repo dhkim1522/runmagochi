@@ -11,6 +11,10 @@ import 'providers.dart';
 const Duration _flushInterval = Duration(seconds: 10);
 const Duration _tickInterval = Duration(seconds: 1);
 
+const String _locationErrorMessage = '위치 신호를 받지 못하고 있어요';
+const String _saveErrorMessage = '기록 저장에 실패했어요. 자동으로 다시 시도해요';
+const String _endErrorMessage = '러닝 저장에 실패했어요. 다시 종료해 주세요';
+
 const RunSnapshot _idleSnapshot = RunSnapshot(
   state: RunState.idle,
   distanceM: 0,
@@ -32,7 +36,7 @@ class RunViewState {
   final String? runId;
   final RunSummary? lastSummary;
 
-  /// 마지막 위치 스트림 오류 메시지.
+  /// 화면에 보일 마지막 오류 문구.
   final String? lastError;
 }
 
@@ -102,12 +106,15 @@ class RunController extends Notifier<RunViewState> {
     _requireNotEnding();
     _requireEngine().resume();
     _subscribe();
+    _startFlushTimer();
     _startTick();
     _publish();
   }
 
-  /// completeRun 이 실패하면 lastError 에 남기고 다시 던진다. 그 뒤 다시
-  /// 부르면 남은 요약으로 completeRun 만 다시 한다.
+  /// 저장이나 completeRun 이 실패하면 lastError 에 남기고 다시 던진다.
+  /// 마지막 저장이 실패하면 러닝은 그대로 남아 resume 이나 end 를 다시 부를 수
+  /// 있다. completeRun 이 실패하면 상태는 ended 가 되고, 다시 부르면 남은
+  /// 요약으로 completeRun 만 다시 한다.
   Future<RunSummary> end() async {
     _requireNotEnding();
     final engine = _requireEngine();
@@ -120,14 +127,20 @@ class RunController extends Notifier<RunViewState> {
         // cancel 을 부른 뒤로는 점이 오지 않으므로 해제 완료를 기다리지 않는다.
         unawaited(_subscription?.cancel());
         _subscription = null;
-        await _flush();
+        try {
+          await _flush();
+        } catch (_) {
+          state = _copyState(lastError: _endErrorMessage);
+          rethrow;
+        }
         _flushClosed = true;
         summary = _pendingSummary = engine.end();
+        _publish();
       }
       try {
         await _repository.completeRun(runId, summary);
-      } catch (error) {
-        state = _copyState(lastError: error.toString());
+      } catch (_) {
+        state = _copyState(lastError: _endErrorMessage);
         rethrow;
       }
       _engine = null;
@@ -176,8 +189,8 @@ class RunController extends Notifier<RunViewState> {
         .watch()
         .listen(
           _onSample,
-          onError: (Object error) {
-            state = _copyState(lastError: error.toString());
+          onError: (Object _) {
+            state = _copyState(lastError: _locationErrorMessage);
           },
         );
   }
@@ -188,7 +201,7 @@ class RunController extends Notifier<RunViewState> {
     final segmentIndex = engine.segmentIndex;
     if (engine.addSample(sample)) {
       _buffer.add((segmentIndex, sample));
-      _publish();
+      _publish(clearLocationError: true);
     }
   }
 
@@ -213,8 +226,8 @@ class RunController extends Notifier<RunViewState> {
 
   /// 저장 실패를 lastError 에 남긴다. 실패한 점은 버퍼에 남는다.
   Future<void> _flushReportingError() {
-    return _flush().catchError((Object error) {
-      state = _copyState(lastError: error.toString());
+    return _flush().catchError((Object _) {
+      state = _copyState(lastError: _saveErrorMessage);
     });
   }
 
@@ -260,22 +273,30 @@ class RunController extends Notifier<RunViewState> {
     }
   }
 
-  void _publish() {
+  /// [clearLocationError] 면 위치 스트림 오류 문구를 지운다. 다른 오류는 둔다.
+  void _publish({bool clearLocationError = false}) {
     final engine = _engine;
     if (engine == null) return;
-    state = _copyState(snapshot: engine.snapshot, runId: _runId);
+    final clear =
+        clearLocationError && state.lastError == _locationErrorMessage;
+    state = _copyState(
+      snapshot: engine.snapshot,
+      runId: _runId,
+      clearError: clear,
+    );
   }
 
   RunViewState _copyState({
     RunSnapshot? snapshot,
     String? runId,
     String? lastError,
+    bool clearError = false,
   }) {
     return RunViewState(
       snapshot: snapshot ?? state.snapshot,
       runId: runId ?? state.runId,
       lastSummary: state.lastSummary,
-      lastError: lastError ?? state.lastError,
+      lastError: clearError ? null : lastError ?? state.lastError,
     );
   }
 }

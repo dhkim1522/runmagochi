@@ -16,6 +16,9 @@ import 'package:runmagochi/run/domain/run_summary.dart';
 const _lat0 = 37.5;
 const _lng0 = 127.0;
 const _runId = 'run-1';
+const _saveError = '기록 저장에 실패했어요. 자동으로 다시 시도해요';
+const _endError = '러닝 저장에 실패했어요. 다시 종료해 주세요';
+const _locationError = '위치 신호를 받지 못하고 있어요';
 final _t0 = DateTime(2026, 10, 17, 7);
 
 /// 자오선을 따라 [meters] 만큼 북쪽으로 간 위도.
@@ -322,16 +325,17 @@ void main() {
       async.elapse(const Duration(seconds: 9));
 
       expect(repository.appendCalls, isEmpty);
-      expect(
-        container.read(runControllerProvider).lastError,
-        contains('디스크 가득'),
-      );
+      expect(container.read(runControllerProvider).lastError, _saveError);
 
-      async.elapse(const Duration(seconds: 10));
+      // 새 점이 채택돼도 저장 오류는 지우지 않는다.
+      stepTo(async, location, 6);
+      expect(container.read(runControllerProvider).lastError, _saveError);
+
+      async.elapse(const Duration(seconds: 9));
 
       final call = repository.appendCalls.single;
       expect(call.segmentIndex, 0);
-      expect(call.points, hasLength(1));
+      expect(call.points, hasLength(2));
       expect(call.movingTime, const Duration(seconds: 20));
     });
   });
@@ -412,10 +416,12 @@ void main() {
         controller.end().then<void>((_) {}, onError: (Object e) => error = e);
         async.flushMicrotasks();
         expect(error, isA<StateError>());
-        expect(
-          container.read(runControllerProvider).lastError,
-          contains('쓰기 실패'),
-        );
+        final failed = container.read(runControllerProvider);
+        expect(failed.lastError, _endError);
+        // 엔진은 이미 끝났으므로 재개할 수 없다. 화면은 종료만 남긴다.
+        expect(failed.snapshot.state, RunState.ended);
+        expect(controller.pause, throwsStateError);
+        expect(controller.resume, throwsStateError);
 
         RunSummary? summary;
         controller.end().then((s) => summary = s);
@@ -447,13 +453,47 @@ void main() {
       async.flushMicrotasks();
 
       expect(repository.appendCalls, isEmpty);
-      expect(
-        container.read(runControllerProvider).lastError,
-        contains('디스크 가득'),
-      );
+      expect(container.read(runControllerProvider).lastError, _saveError);
 
       async.elapse(const Duration(seconds: 9));
       expect(repository.appendCalls.single.points, hasLength(1));
+    });
+  });
+
+  test('end 의 저장이 실패하면 lastError 에 남기고 resume 하면 구독·주기 저장을 다시 한다', () {
+    _run((async, controller, container, repository, location) {
+      controller.start();
+      async.flushMicrotasks();
+      stepTo(async, location, 3);
+      controller.pause();
+      async.flushMicrotasks();
+      repository.appendError = StateError('디스크 가득');
+
+      Object? error;
+      controller.end().then<void>((_) {}, onError: (Object e) => error = e);
+      async.flushMicrotasks();
+
+      expect(error, isA<StateError>());
+      final failed = container.read(runControllerProvider);
+      expect(failed.lastError, _endError);
+      expect(failed.snapshot.state, RunState.paused);
+      expect(location.isListened, isFalse);
+      expect(async.pendingTimers, isEmpty);
+
+      controller.resume();
+      expect(location.isListened, isTrue);
+      stepTo(async, location, 6);
+      final before = repository.appendCalls.length;
+      async.elapse(const Duration(seconds: 10));
+
+      final saved = repository.appendCalls.skip(before).toList();
+      expect(saved, isNotEmpty);
+      expect(saved.first.segmentIndex, 1);
+      expect(saved.first.points, hasLength(1));
+      expect(
+        container.read(runControllerProvider).snapshot.movingTime,
+        const Duration(seconds: 12),
+      );
     });
   });
 
@@ -516,10 +556,12 @@ void main() {
 
       location.controller.addError(Exception('GPS 꺼짐'));
       async.flushMicrotasks();
+      expect(container.read(runControllerProvider).lastError, _locationError);
+
       stepTo(async, location, 6);
 
       final state = container.read(runControllerProvider);
-      expect(state.lastError, contains('GPS 꺼짐'));
+      expect(state.lastError, isNull);
       expect(state.snapshot.state, RunState.recording);
       expect(state.snapshot.distanceM, closeTo(3, 0.01));
     });
