@@ -1,6 +1,6 @@
 # 페이즈 2 구현 계획
 
-- 상태: 실행
+- 상태: 실측 대기
 - 모드: 수동
 - 범위: docs/roadmap.md 페이즈 2
 
@@ -388,10 +388,10 @@ final growthStateProvider = FutureProvider<GrowthState>(...);  // sync 뒤 load
 ## 완료 기준
 
 ### 자동 확인
-- [ ] `fvm flutter test` 전체 통과
-- [ ] `fvm dart analyze` 경고 0
-- [ ] `fvm flutter build apk --debug` 성공
-- [ ] 에뮬레이터 가상 러닝(`fvm dart run tool/fake_run.dart --minutes 6 --speed 3.0`)으로 1km 이상 달리면 요약에 경험치가 붙고, 홈 레벨 막대가 늘어난다
+- [x] `fvm flutter test` 전체 통과 (230건)
+- [x] `fvm dart analyze` 경고 0
+- [x] `fvm flutter build apk --debug` 성공
+- [ ] 에뮬레이터 가상 러닝(`fvm dart run tool/fake_run.dart --minutes 6 --speed 3.0`)으로 1km 이상 달리면 요약에 경험치가 붙고, 홈 레벨 막대가 늘어난다 — 검증 때 에뮬레이터가 없어 건너뜀. 실측 전에 확인한다
 
 ### 사람 확인
 - [ ] Aseprite 설치와 `/pixel-plugin:pixel-setup` 연결 (Task 11 선행 조건)
@@ -402,3 +402,20 @@ final growthStateProvider = FutureProvider<GrowthState>(...);  // sync 뒤 load
 ## 자동 결정
 
 없음
+
+## 구현 중 결정
+
+- **작업 진행**: 작업마다 서브에이전트가 구현하고 리뷰어가 검토한 뒤 `main` 에 커밋·push 했다. Task 11 은 Aseprite 준비 전이라 남겨 두었다.
+- **경험치 동기화**: `sync` 는 호출을 직렬화하고, 경험치를 받지 않은 러닝뿐 아니라 러닝이 있는 미달성 주를 모두 다시 판정한다. 동기화 도중 앱이 죽어도 지난주 보너스를 잃지 않는다.
+- **요약 화면**: 러닝 종료 직후 `sync` 를 먼저 부르고 그 결과로 경험치를 보여준 뒤 홈 상태를 다시 읽는다. `GrowthSummary` 의 이름 매개변수는 화면에 쓰이지 않아 뺐다.
+- **알림**
+  - 재예약은 `sync` 결과를 기다리게 하지 않는다. 멈추면 10초 뒤 포기한다.
+  - 알림 권한은 페이즈 1 권한 화면이 위치와 함께 요청하므로 스케줄러는 요청하지 않는다(결정 0009).
+  - 이미 표시된 다른 알림은 건드리지 않도록 예약된 알림만 지운다.
+- **아바타 애니메이션**: 프레임을 매 화면 갱신이 아니라 스프라이트 fps 타이머로 넘기고, 보이지 않는 탭에서는 멈춘다(배터리).
+- **스프라이트 규격**: face 레이어는 4단계가 함께 쓰므로 실제 그림은 단계마다 머리·눈 위치를 같게 그린다(`docs/specs/sprite-spec.md`).
+- **미룬 것**
+  - 동기화가 실패한 뒤 다음 러닝에서 한꺼번에 반영되면 요약의 "달린 거리"·"이번 주 목표" 문구가 이전 러닝·지난주 몫까지 포함해 보일 수 있다.
+  - 9'00" 근처 페이스에서 걷기·달리기 동작이 자주 바뀔 수 있다. UI 다듬기 때 경계 폭을 둔다.
+  - 알림 초기화는 Android 설정만 있다. iOS 는 페이즈 3.
+  - 러닝 중 화면은 스크롤이 없어 아주 작은 화면·큰 글자에서 넘칠 수 있다. 페이즈 3 UI 적용 때 확인한다.
