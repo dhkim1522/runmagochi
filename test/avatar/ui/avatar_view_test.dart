@@ -54,6 +54,20 @@ void main() {
     expect(_frame(tester), 3);
   });
 
+  testWidgets('TickerMode 가 꺼져 있으면 프레임이 넘어가지 않는다', (tester) async {
+    Widget wrap(bool on) => TickerMode(enabled: on, child: _wrap());
+    await tester.pumpWidget(wrap(false));
+    await tester.pump(const Duration(seconds: 1));
+    expect(_frame(tester), 0);
+    // 다시 켜면 이어서 돈다.
+    await tester.pumpWidget(wrap(true));
+    await tester.pump(const Duration(milliseconds: 100));
+    expect(_frame(tester), 1);
+    await tester.pumpWidget(wrap(false));
+    await tester.pump(const Duration(seconds: 1));
+    expect(_frame(tester), 1);
+  });
+
   testWidgets('크기는 32 × scale 정사각형', (tester) async {
     await tester.pumpWidget(_wrap());
     expect(tester.getSize(find.byType(AvatarView)), const Size(128, 128));

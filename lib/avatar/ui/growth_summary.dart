@@ -6,6 +6,7 @@ import '../../core/format.dart';
 import '../domain/growth_rules.dart';
 import '../domain/growth_state.dart';
 import 'avatar_view.dart';
+import 'sprite_sheet.dart';
 import 'weekly_goal_bar.dart';
 
 /// 러닝 직후 요약 위쪽에 놓는 경험치 획득·레벨업 영역.
@@ -43,6 +44,23 @@ class _GrowthSummaryState extends State<GrowthSummary>
       duration: const Duration(milliseconds: 600),
     );
     if (_animates) _controller.forward();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // 외형이 바뀌는 순간 새 단계 시트가 비어 보이지 않게 미리 읽어 둔다.
+    final g = widget.gain;
+    if (g.stageUp) {
+      precacheImage(
+        AssetImage(bodySheet(g.stageAfter, AvatarAction.idle)),
+        context,
+      );
+      precacheImage(
+        AssetImage(faceSheet(AvatarMood.normal, AvatarAction.idle)),
+        context,
+      );
+    }
   }
 
   @override

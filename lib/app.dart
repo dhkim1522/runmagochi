@@ -32,10 +32,14 @@ class _HomeShellState extends State<_HomeShell> {
     return Scaffold(
       body: IndexedStack(
         index: _index,
-        children: const [
-          HomeScreen(),
-          HistoryScreen(),
-          AvatarScreen(),
+        // 가려진 탭은 애니메이션을 돌리지 않는다.
+        children: [
+          for (final (i, screen) in const <Widget>[
+            HomeScreen(),
+            HistoryScreen(),
+            AvatarScreen(),
+          ].indexed)
+            TickerMode(enabled: i == _index, child: screen),
         ],
       ),
       bottomNavigationBar: NavigationBar(

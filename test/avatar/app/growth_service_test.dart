@@ -236,5 +236,23 @@ void main() {
       expect(scheduler.calls.length, 1);
       scheduler.hold!.complete();
     });
+
+    test('replaceAll 이 멈춰도 제한 시간 뒤 다음 sync 가 끝난다', () async {
+      final scheduler = FakeScheduler()..hold = Completer<void>();
+      service = GrowthService(
+        runs,
+        growth,
+        () => now,
+        scheduler: scheduler,
+        rescheduleTimeout: const Duration(milliseconds: 50),
+      );
+      runs.add('a', DateTime(2026, 10, 13, 7), 5020);
+      await service.sync();
+      final second = await service.sync().timeout(const Duration(seconds: 2));
+      expect(second.distanceXp, 0);
+      await pumpEventQueue();
+      expect(scheduler.calls.length, greaterThanOrEqualTo(1));
+      scheduler.hold!.complete();
+    });
   });
 }

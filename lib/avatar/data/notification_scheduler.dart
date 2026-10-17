@@ -11,6 +11,7 @@ abstract interface class NotificationScheduler {
 }
 
 /// flutter_local_notifications 구현. 정확한 알람 권한 없이 inexact 로 예약한다.
+/// 알림 권한은 페이즈 1 권한 화면(PermissionGate)이 위치 권한과 함께 요청한다.
 class LocalNotificationScheduler implements NotificationScheduler {
   LocalNotificationScheduler([FlutterLocalNotificationsPlugin? plugin])
     : _plugin = plugin ?? FlutterLocalNotificationsPlugin();
@@ -23,7 +24,6 @@ class LocalNotificationScheduler implements NotificationScheduler {
 
   final FlutterLocalNotificationsPlugin _plugin;
   Future<void>? _init;
-  bool _permissionAsked = false;
 
   Future<void> _ensureInit() => _init ??= _initialize();
 
@@ -45,18 +45,6 @@ class LocalNotificationScheduler implements NotificationScheduler {
     } catch (_) {
       _init = null; // 다음 호출에서 다시 시도한다.
       rethrow;
-    }
-    if (!_permissionAsked) {
-      try {
-        await _plugin
-            .resolvePlatformSpecificImplementation<
-              AndroidFlutterLocalNotificationsPlugin
-            >()
-            ?.requestNotificationsPermission();
-        _permissionAsked = true;
-      } catch (_) {
-        // 권한 요청이 실패해도 예약은 진행하고, 다음에 다시 묻는다.
-      }
     }
     await _plugin.cancelAllPendingNotifications();
     for (var i = 0; i < reminders.length; i++) {

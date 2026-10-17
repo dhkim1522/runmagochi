@@ -9,12 +9,21 @@ import '../domain/reminder_plan.dart';
 
 /// 완료된 러닝을 경험치·주간 목표 달성으로 옮기고, 화면이 보여 줄 상태를 만든다.
 class GrowthService {
-  GrowthService(this._runs, this._growth, this._clock, {this._scheduler});
+  GrowthService(
+    this._runs,
+    this._growth,
+    this._clock, {
+    this._scheduler,
+    this.rescheduleTimeout = const Duration(seconds: 10),
+  });
 
   final RunRepository _runs;
   final GrowthRepository _growth;
   final Clock _clock;
   final NotificationScheduler? _scheduler;
+
+  /// 스케줄러가 멈춰도 뒤따르는 sync 를 막지 않도록 재예약에 두는 제한 시간.
+  final Duration rescheduleTimeout;
 
   Future<void> _tail = Future.value();
 
@@ -40,7 +49,7 @@ class GrowthService {
         weekDistanceM: distanceM,
         weekAchieved: await _growth.isWeekAchieved(thisWeek),
       );
-      await scheduler.replaceAll(plan);
+      await scheduler.replaceAll(plan).timeout(rescheduleTimeout);
     } catch (_) {
       // 알림은 부가 기능이다.
     }

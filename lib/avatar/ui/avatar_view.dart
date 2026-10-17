@@ -1,7 +1,7 @@
+import 'dart:async';
 import 'dart:ui' as ui;
 
 import 'package:flutter/foundation.dart';
-import 'package:flutter/scheduler.dart';
 import 'package:flutter/widgets.dart';
 
 import '../domain/growth_rules.dart';
@@ -32,9 +32,9 @@ class AvatarView extends StatefulWidget {
 }
 
 @visibleForTesting
-class AvatarViewState extends State<AvatarView>
-    with SingleTickerProviderStateMixin {
-  late final Ticker _ticker;
+class AvatarViewState extends State<AvatarView> {
+  /// 스프라이트 fps 간격으로만 프레임을 넘긴다 (vsync 마다 그리지 않는다).
+  Timer? _timer;
   int _frame = 0;
 
   /// 레이어 이름 → (경로, 스트림, 리스너, 이미지)
@@ -47,8 +47,18 @@ class AvatarViewState extends State<AvatarView>
   @override
   void initState() {
     super.initState();
-    _ticker = createTicker(_onTick)..start();
     _syncLayers();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // 가려진 탭(TickerMode 꺼짐)에서는 멈추고, 다시 보이면 이어서 돈다.
+    if (TickerMode.valuesOf(context).enabled) {
+      _start();
+    } else {
+      _stop();
+    }
   }
 
   @override
@@ -56,20 +66,26 @@ class AvatarViewState extends State<AvatarView>
     super.didUpdateWidget(oldWidget);
     if (oldWidget.action != widget.action) {
       // 동작이 바뀌면 경과 시간을 0부터 다시 센다.
-      _ticker.stop();
+      _stop();
       _frame = 0;
-      _ticker.start();
+      if (TickerMode.valuesOf(context).enabled) _start();
     }
     _syncLayers();
   }
 
-  void _onTick(Duration elapsed) {
-    final a = widget.action;
-    final next =
-        (elapsed.inMicroseconds * fps(a) / Duration.microsecondsPerSecond)
-            .floor() %
-        frameCount(a);
-    if (next != _frame) setState(() => _frame = next);
+  void _start() {
+    if (_timer != null) return;
+    final interval = Duration(
+      microseconds: Duration.microsecondsPerSecond ~/ fps(widget.action),
+    );
+    _timer = Timer.periodic(interval, (_) {
+      setState(() => _frame = (_frame + 1) % frameCount(widget.action));
+    });
+  }
+
+  void _stop() {
+    _timer?.cancel();
+    _timer = null;
   }
 
   /// 현재 속성에 맞는 시트 경로로 레이어 이미지를 맞춘다.
@@ -94,7 +110,7 @@ class AvatarViewState extends State<AvatarView>
 
   @override
   void dispose() {
-    _ticker.dispose();
+    _stop();
     for (final l in _layers.values) {
       l.dispose();
     }
