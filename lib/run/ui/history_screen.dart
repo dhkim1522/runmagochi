@@ -97,7 +97,7 @@ class HistoryScreen extends ConsumerWidget {
                     : ListView.builder(
                         itemCount: list.length,
                         itemBuilder: (context, i) => Padding(
-                          padding: const EdgeInsets.only(bottom: Gap.s2),
+                          padding: const EdgeInsets.only(bottom: Gap.s3),
                           child: _RunTile(list[i]),
                         ),
                       ),
@@ -124,27 +124,34 @@ class _RunTile extends StatelessWidget {
     final date =
         '${run.startedAt.toLocal().month.toString().padLeft(2, '0')}/'
         '${run.startedAt.toLocal().day.toString().padLeft(2, '0')}';
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTap: () => Navigator.of(context).push(
-        MaterialPageRoute<void>(builder: (_) => SummaryScreen.forRun(run.id)),
-      ),
-      child: ClayCard(
-        radius: Radii.md,
-        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: Gap.s4),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              '$date · ${run.name}',
-              style: t.caption.copyWith(color: c.inkMuted),
-            ),
-            const SizedBox(height: Gap.s1),
-            Text(
-              stats,
-              style: t.heading.copyWith(fontSize: 20, height: 26 / 20),
-            ),
-          ],
+    void open() => Navigator.of(context).push(
+      MaterialPageRoute<void>(builder: (_) => SummaryScreen.forRun(run.id)),
+    );
+    return Semantics(
+      button: true,
+      label: '$date · ${run.name}, $stats',
+      excludeSemantics: true,
+      onTap: open,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: open,
+        child: ClayCard(
+          radius: Radii.md,
+          padding: const EdgeInsets.symmetric(vertical: 14, horizontal: Gap.s4),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                '$date · ${run.name}',
+                style: t.caption.copyWith(color: c.inkMuted),
+              ),
+              const SizedBox(height: Gap.s1),
+              Text(
+                stats,
+                style: t.heading.copyWith(fontSize: 20, height: 26 / 20),
+              ),
+            ],
+          ),
         ),
       ),
     );

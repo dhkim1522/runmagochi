@@ -6,6 +6,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:runmagochi/core/theme.dart';
+import 'package:runmagochi/core/ui/clay.dart';
 import 'package:runmagochi/run/app/permission_gate.dart';
 import 'package:runmagochi/run/ui/permission_screen.dart';
 
@@ -49,13 +51,54 @@ Future<void> pump(WidgetTester tester, FakeGate gate) async {
   await tester.pumpWidget(
     ProviderScope(
       overrides: [permissionGateProvider.overrideWithValue(gate)],
-      child: MaterialApp(home: PermissionScreen(onReady: () {})),
+      child: MaterialApp(
+        theme: appLightTheme(),
+        home: PermissionScreen(onReady: () {}),
+      ),
     ),
   );
   await tester.pump();
 }
 
 void main() {
+  testWidgets('글자 크기 1.3배에서 overflow 없이 그려진다', (tester) async {
+    tester.view.physicalSize = const Size(390, 844);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    for (final r in [
+      GateResult.needsPreciseLocation,
+      GateResult.needsBatteryGuide,
+    ]) {
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [permissionGateProvider.overrideWithValue(FakeGate(r))],
+          child: MaterialApp(
+            theme: appLightTheme(),
+            builder: (context, child) => MediaQuery(
+              data: MediaQuery.of(
+                context,
+              ).copyWith(textScaler: const TextScaler.linear(1.3)),
+              child: child!,
+            ),
+            home: PermissionScreen(onReady: () {}),
+          ),
+        ),
+      );
+      await tester.pump();
+      expect(tester.takeException(), isNull);
+    }
+  });
+
+  testWidgets('제목은 헤더다', (tester) async {
+    final handle = tester.ensureSemantics();
+    await pump(tester, FakeGate(GateResult.needsLocation));
+    expect(
+      tester.getSemantics(find.widgetWithText(ScreenTitle, '권한 안내')),
+      matchesSemantics(label: '권한 안내', isHeader: true),
+    );
+    handle.dispose();
+  });
+
   testWidgets('needsLocation이면 안내 문구와 권한 허용 버튼', (tester) async {
     final gate = FakeGate(GateResult.needsLocation);
     await pump(tester, gate);
@@ -75,7 +118,10 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [permissionGateProvider.overrideWithValue(gate)],
-        child: MaterialApp(home: PermissionScreen(onReady: () => ready++)),
+        child: MaterialApp(
+          theme: appLightTheme(),
+          home: PermissionScreen(onReady: () => ready++),
+        ),
       ),
     );
     await tester.pump();
@@ -120,7 +166,10 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [permissionGateProvider.overrideWithValue(gate)],
-        child: MaterialApp(home: PermissionScreen(onReady: () => ready++)),
+        child: MaterialApp(
+          theme: appLightTheme(),
+          home: PermissionScreen(onReady: () => ready++),
+        ),
       ),
     );
     await tester.pump();
@@ -138,7 +187,10 @@ void main() {
         overrides: [
           permissionGateProvider.overrideWithValue(FakeGate(GateResult.ready)),
         ],
-        child: MaterialApp(home: PermissionScreen(onReady: () => ready++)),
+        child: MaterialApp(
+          theme: appLightTheme(),
+          home: PermissionScreen(onReady: () => ready++),
+        ),
       ),
     );
     await tester.pump();
@@ -152,7 +204,10 @@ void main() {
         overrides: [
           permissionGateProvider.overrideWithValue(FakeGate(GateResult.ready)),
         ],
-        child: MaterialApp(home: PermissionScreen(onReady: () => ready++)),
+        child: MaterialApp(
+          theme: appLightTheme(),
+          home: PermissionScreen(onReady: () => ready++),
+        ),
       ),
     );
     await tester.pump();
@@ -167,7 +222,10 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [permissionGateProvider.overrideWithValue(gate)],
-        child: MaterialApp(home: PermissionScreen(onReady: () => ready++)),
+        child: MaterialApp(
+          theme: appLightTheme(),
+          home: PermissionScreen(onReady: () => ready++),
+        ),
       ),
     );
     await tester.pump();

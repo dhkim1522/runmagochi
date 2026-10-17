@@ -1,3 +1,5 @@
+import 'dart:ui' as ui;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -108,6 +110,30 @@ void main() {
     );
     await pump(tester, repo, null, 1.3);
     expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('러닝 카드는 버튼 시맨틱이고 카드 사이 간격은 12다', (tester) async {
+    final handle = tester.ensureSemantics();
+    final repo = FakeRepo(
+      (8000, 2),
+      runs: [
+        _item('b', '토요일 아침 러닝', DateTime(2026, 10, 17, 7), 5000),
+        _item('a', '목요일 저녁 러닝', DateTime(2026, 10, 15, 19), 3000),
+      ],
+    );
+    await pump(tester, repo);
+    final node = tester.getSemantics(
+      find.bySemanticsLabel(RegExp('토요일 아침 러닝')),
+    );
+    final data = node.getSemanticsData();
+    expect(data.flagsCollection.isButton, isTrue);
+    expect(data.hasAction(ui.SemanticsAction.tap), isTrue);
+    final cards = find.byType(ClayCard);
+    // 첫 카드는 이번 주 합계, 이후가 러닝 카드.
+    final a = tester.getRect(cards.at(1));
+    final b = tester.getRect(cards.at(2));
+    expect(b.top - a.bottom, Gap.s3);
+    handle.dispose();
   });
 
   testWidgets('제목은 헤더다', (tester) async {

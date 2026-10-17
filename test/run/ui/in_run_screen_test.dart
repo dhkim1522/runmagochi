@@ -1,3 +1,5 @@
+import 'dart:ui' as ui;
+
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -190,6 +192,20 @@ void main() {
   });
 
   group('접근성', () {
+    testWidgets('스크린 리더의 길게 누르기 동작으로 종료할 수 있다', (tester) async {
+      final handle = tester.ensureSemantics();
+      final c = await open(tester);
+      final node = tester.getSemantics(find.bySemanticsLabel('길게 눌러 종료'));
+      expect(
+        node.getSemanticsData().hasAction(ui.SemanticsAction.longPress),
+        isTrue,
+      );
+      tester.semantics.longPress(find.semantics.byLabel('길게 눌러 종료'));
+      await settle(tester);
+      expect(c.calls, ['end']);
+      handle.dispose();
+    });
+
     testWidgets('종료 버튼은 시맨틱 노드가 하나이고 라벨이 중복되지 않는다', (tester) async {
       final handle = tester.ensureSemantics();
       await open(tester);

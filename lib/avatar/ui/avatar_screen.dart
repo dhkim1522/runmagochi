@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/format.dart';
+import '../../core/theme.dart';
+import '../../core/ui/clay.dart';
 import '../app/providers.dart';
 import '../domain/growth_rules.dart';
 import '../domain/growth_state.dart';
@@ -26,40 +28,65 @@ class AvatarScreen extends ConsumerWidget {
     // 갱신 중에도 이전 값을 유지한다.
     final g = ref.watch(growthStateProvider).value;
     if (g == null) return const SizedBox.shrink();
-    final theme = Theme.of(context);
+    final c = AppColors.of(context);
+    final t = AppText.of(context);
     return SafeArea(
       child: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.fromLTRB(Gap.s5, Gap.s6, Gap.s5, Gap.s4),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Center(
-              child: AvatarView(
-                stage: g.stage,
-                mood: g.mood,
-                action: AvatarAction.idle,
-                scale: 8,
+            const ScreenTitle('아바타'),
+            const SizedBox(height: Gap.s4),
+            // 무대 카드: surface-soft, radius-xl, 립 없음.
+            DecoratedBox(
+              decoration: BoxDecoration(
+                color: c.surfaceSoft,
+                borderRadius: BorderRadius.circular(Radii.xl),
+                border: Border.all(color: c.line, width: Borders.thick),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(Gap.s5),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Center(
+                      child: AvatarView(
+                        stage: g.stage,
+                        mood: g.mood,
+                        action: AvatarAction.idle,
+                        scale: 4,
+                      ),
+                    ),
+                    const SizedBox(height: Gap.s2),
+                    Text(
+                      '${g.name} Lv.${g.level.level}',
+                      textAlign: TextAlign.center,
+                      style: t.title,
+                    ),
+                    const SizedBox(height: Gap.s2),
+                    Text(
+                      '누적 ${formatKm(g.totalDistanceM)}km · 러닝 ${g.runCount}회',
+                      textAlign: TextAlign.center,
+                      style: t.label.copyWith(
+                        fontWeight: FontWeight.w400,
+                        color: c.inkMuted,
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+                    _StageProgress(g),
+                  ],
+                ),
               ),
             ),
-            const SizedBox(height: 16),
-            Text(
-              '${g.name} Lv.${g.level.level}',
-              textAlign: TextAlign.center,
-              style: theme.textTheme.headlineSmall,
-            ),
-            const SizedBox(height: 4),
-            Text(
-              '누적 ${formatKm(g.totalDistanceM)}km · 러닝 ${g.runCount}회',
-              textAlign: TextAlign.center,
-              style: theme.textTheme.bodyMedium,
-            ),
-            const SizedBox(height: 20),
-            _StageProgress(g),
-            const SizedBox(height: 28),
-            Text('성장 단계', style: theme.textTheme.titleMedium),
-            const SizedBox(height: 8),
+            const SizedBox(height: Gap.s5),
+            Text('성장 단계', style: t.heading),
+            const SizedBox(height: Gap.s3),
             for (var s = 1; s <= stageStartLevels.length; s++)
-              _StageRow(stage: s, currentStage: g.stage),
+              Padding(
+                padding: const EdgeInsets.only(bottom: Gap.s3),
+                child: _StageRow(stage: s, currentStage: g.stage),
+              ),
           ],
         ),
       ),
@@ -73,6 +100,8 @@ class _StageProgress extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = AppColors.of(context);
+    final t = AppText.of(context);
     final remaining = g.xpToNextStage;
     double value = 1;
     if (remaining != null) {
@@ -83,16 +112,13 @@ class _StageProgress extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        ClipRRect(
-          borderRadius: BorderRadius.circular(6),
-          child: LinearProgressIndicator(value: value, minHeight: 12),
-        ),
+        ClayBar(value: value, height: 14, fill: c.primary, track: c.surface),
         const SizedBox(height: 6),
         Text(
           remaining == null
               ? '최고 단계'
               : '다음 성장 단계까지 ${(remaining / 10).toStringAsFixed(1)}km',
-          style: Theme.of(context).textTheme.bodyMedium,
+          style: t.caption.copyWith(color: c.inkMuted),
         ),
       ],
     );
@@ -106,34 +132,63 @@ class _StageRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = AppColors.of(context);
+    final t = AppText.of(context);
     final locked = stage > currentStage;
-    final status = stage == currentStage
+    final current = stage == currentStage;
+    final status = current
         ? '현재'
         : locked
         ? '잠김'
         : '달성';
-    final preview = AvatarView(
-      stage: stage,
-      mood: AvatarMood.normal,
-      action: AvatarAction.idle,
-      scale: 2,
+    final tile = Container(
+      width: 56,
+      height: 56,
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: c.surfaceSoft,
+        borderRadius: BorderRadius.circular(Radii.sm),
+      ),
+      child: FittedBox(
+        fit: BoxFit.scaleDown,
+        child: AvatarView(
+          stage: stage,
+          mood: AvatarMood.normal,
+          action: AvatarAction.idle,
+          scale: 2,
+        ),
+      ),
     );
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
+    return ClayCard(
+      radius: Radii.md,
+      borderColor: current ? c.primary : null,
+      lipColor: current ? c.primaryDeep : null,
+      padding: const EdgeInsets.symmetric(vertical: Gap.s3, horizontal: Gap.s4),
       child: Row(
         children: [
-          Opacity(opacity: locked ? 0.35 : 1, child: preview),
-          const SizedBox(width: 12),
+          Opacity(opacity: locked ? 0.45 : 1, child: tile),
+          const SizedBox(width: 14),
           Expanded(
-            child: Text(
-              '$stage단계 ${_stageNames[stage - 1]} · ${_levelRange(stage)}',
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('$stage단계 ${_stageNames[stage - 1]}', style: t.heading),
+                Text(
+                  _levelRange(stage),
+                  style: t.caption.copyWith(color: c.inkMuted),
+                ),
+              ],
             ),
           ),
+          const SizedBox(width: Gap.s2),
           Text(
             status,
-            style: TextStyle(
-              fontWeight: stage == currentStage ? FontWeight.bold : null,
-            ),
+            style: current
+                ? t.label.copyWith(color: c.primaryDeep)
+                : t.label.copyWith(
+                    fontWeight: FontWeight.w400,
+                    color: c.inkMuted,
+                  ),
           ),
         ],
       ),

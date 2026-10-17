@@ -264,6 +264,8 @@ class _HoldToStopButtonState extends State<_HoldToStopButton>
       button: true,
       label: '길게 눌러 종료',
       excludeSemantics: true,
+      // 스크린 리더 사용자는 1.5초 누르기 대신 길게 누르기 동작으로 종료한다.
+      onLongPress: widget.enabled ? widget.onComplete : null,
       child: Listener(
         onPointerDown: (_) {
           if (widget.enabled) _progress.forward(from: 0);

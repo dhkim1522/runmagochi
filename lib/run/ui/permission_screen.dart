@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/theme.dart';
+import '../../core/ui/clay.dart';
 import '../app/permission_gate.dart';
 
 class PermissionScreen extends ConsumerStatefulWidget {
@@ -71,29 +73,26 @@ class _PermissionScreenState extends ConsumerState<PermissionScreen>
       GateResult.needsLocation || GateResult.needsPreciseLocation => (
         _locationMessage,
         [
-          FilledButton(
+          ClayButton(
             onPressed: () => _apply(gate.requestLocation),
-            child: const Text('권한 허용'),
+            label: '권한 허용',
           ),
         ],
       ),
       GateResult.locationDeniedForever => (
         '설정에서 위치 권한을 허용해 주세요',
-        [
-          FilledButton(
-            onPressed: gate.openAppSettings,
-            child: const Text('설정 열기'),
-          ),
-        ],
+        [ClayButton(onPressed: gate.openAppSettings, label: '설정 열기')],
       ),
       GateResult.needsBatteryGuide => (
         '배터리 최적화가 켜져 있으면 화면이 꺼졌을 때 기록이 끊길 수 있습니다. 설정에서 배터리 사용을 제한 없음으로 바꿔 주세요.',
         [
-          FilledButton(
-            onPressed: gate.openBatterySettings,
-            child: const Text('설정 열기'),
-          ),
+          ClayButton(onPressed: gate.openBatterySettings, label: '설정 열기'),
           TextButton(
+            style: TextButton.styleFrom(
+              minimumSize: const Size.fromHeight(48),
+              foregroundColor: AppColors.of(context).inkMuted,
+              textStyle: AppText.of(context).label,
+            ),
             onPressed: () {
               gate.dismissBatteryGuide();
               _finish();
@@ -104,34 +103,63 @@ class _PermissionScreenState extends ConsumerState<PermissionScreen>
       ),
       _ when _failed => (
         _locationMessage,
-        [
-          FilledButton(
-            onPressed: () => _apply(gate.check),
-            child: const Text('다시 시도'),
-          ),
-        ],
+        [ClayButton(onPressed: () => _apply(gate.check), label: '다시 시도')],
       ),
       _ => ('', <Widget>[]),
     };
 
+    final c = AppColors.of(context);
+    final t = AppText.of(context);
     return Scaffold(
-      appBar: AppBar(title: const Text('권한 안내')),
-      body: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(message, textAlign: TextAlign.center),
-            if (_result == GateResult.needsPreciseLocation) ...[
-              const SizedBox(height: 8),
-              const Text(_preciseMessage, textAlign: TextAlign.center),
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(Gap.s5, Gap.s6, Gap.s5, Gap.s4),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const ScreenTitle('권한 안내'),
+              Expanded(
+                child: Center(
+                  child: SingleChildScrollView(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        if (message.isNotEmpty)
+                          ClayCard(
+                            padding: const EdgeInsets.all(Gap.s5),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                Text(
+                                  message,
+                                  textAlign: TextAlign.center,
+                                  style: t.body,
+                                ),
+                                if (_result ==
+                                    GateResult.needsPreciseLocation) ...[
+                                  const SizedBox(height: Gap.s2),
+                                  Text(
+                                    _preciseMessage,
+                                    textAlign: TextAlign.center,
+                                    style: t.bodyStrong.copyWith(
+                                      color: c.primaryDeep,
+                                    ),
+                                  ),
+                                ],
+                              ],
+                            ),
+                          ),
+                        const SizedBox(height: Gap.s6),
+                        if (_result == null && !_failed)
+                          const Center(child: CircularProgressIndicator()),
+                        ...actions,
+                      ],
+                    ),
+                  ),
+                ),
+              ),
             ],
-            const SizedBox(height: 24),
-            if (_result == null && !_failed)
-              const Center(child: CircularProgressIndicator()),
-            ...actions,
-          ],
+          ),
         ),
       ),
     );
