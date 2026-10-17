@@ -80,7 +80,7 @@ docs/specs/sprite-spec.md, docs/decisions/0009-phase2-packages.md
 - [x] 3. 아바타 위젯
 - [x] 4. 성장 데이터 저장
 - [x] 5. GrowthService
-- [ ] 6. 홈: 아바타·레벨·주간 목표
+- [x] 6. 홈: 아바타·레벨·주간 목표
 - [ ] 7. 러닝 중 아바타
 - [ ] 8. 요약 화면 경험치·레벨업 연출
 - [ ] 9. 아바타 탭
