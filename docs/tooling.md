@@ -8,8 +8,8 @@
 | --- | --- | --- | --- | --- |
 | [superpowers](https://github.com/obra/superpowers) | 아이디어 정리, 구현 계획, 테스트 먼저 작성(TDD), 코드 리뷰 흐름 | 모든 페이즈 | 켜짐 | `superpowers@claude-plugins-official` |
 | [dart-flutter](https://github.com/flutter/agent-plugins) | Flutter·Dart 공식 스킬과 Dart MCP 서버 | Flutter 프로젝트 생성부터 계속 | 켜짐 | `dart-flutter@dart-flutter` |
-| [ui-ux-pro-max](https://github.com/nextlevelbuilder/ui-ux-pro-max-skill) | 색상·글꼴·컴포넌트 규칙을 묶은 디자인 시스템 생성 | 페이즈 2.5 (디자인), 페이즈 3 (나머지 화면) | 꺼짐 | `ui-ux-pro-max@ui-ux-pro-max-skill` |
-| [pixel-plugin](https://github.com/willibrandon/pixel-plugin) | Aseprite 로 도트 그림·스프라이트 시트 제작 | 페이즈 2·2.5 (캐릭터 스프라이트), 페이즈 4 (아이템 스프라이트) | 꺼짐 | `pixel-plugin@pixel-plugin` |
+| [ui-ux-pro-max](https://github.com/nextlevelbuilder/ui-ux-pro-max-skill) | 색상·글꼴·컴포넌트 규칙을 묶은 디자인 시스템 생성 | 페이즈 2.5 (기본 디자인), 페이즈 3 (나머지 화면), 페이즈 6 (디자인 완성) | 꺼짐 | `ui-ux-pro-max@ui-ux-pro-max-skill` |
+| [pixel-plugin](https://github.com/willibrandon/pixel-plugin) | Aseprite 로 도트 그림·스프라이트 시트 제작 | 페이즈 6 (캐릭터·아이템 다듬기). 페이즈 2.5 캐릭터는 코드로 그린다 | 꺼짐 | `pixel-plugin@pixel-plugin` |
 | [skill-creator](https://github.com/anthropics/claude-plugins-official/tree/main/plugins/skill-creator) | 반복 작업을 프로젝트 스킬로 만들고 검증 | 반복 작업을 스킬로 만들 때 | 꺼짐 | `skill-creator@claude-plugins-official` |
 
 ## 마켓플레이스
