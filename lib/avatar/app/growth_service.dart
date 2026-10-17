@@ -2,24 +2,51 @@ import '../../core/clock.dart';
 import '../../core/week.dart';
 import '../../run/data/run_repository.dart';
 import '../data/growth_repository.dart';
+import '../data/notification_scheduler.dart';
 import '../domain/growth_rules.dart';
 import '../domain/growth_state.dart';
+import '../domain/reminder_plan.dart';
 
 /// 완료된 러닝을 경험치·주간 목표 달성으로 옮기고, 화면이 보여 줄 상태를 만든다.
 class GrowthService {
-  GrowthService(this._runs, this._growth, this._clock);
+  GrowthService(this._runs, this._growth, this._clock, {this._scheduler});
 
   final RunRepository _runs;
   final GrowthRepository _growth;
   final Clock _clock;
+  final NotificationScheduler? _scheduler;
 
   Future<void> _tail = Future.value();
 
   /// 동시에 불러도 한 번에 하나씩 실행해 같은 보상을 두 번 알리지 않는다.
   Future<GrowthGain> sync() {
-    final result = _tail.then((_) => _sync());
+    final result = _tail.then((_) async {
+      final gain = await _sync();
+      await _reschedule();
+      return gain;
+    });
     _tail = result.then<void>((_) {}, onError: (_) {});
     return result;
+  }
+
+  /// 알림을 현재 주 상태로 다시 예약한다. 실패해도 sync 를 깨뜨리지 않는다.
+  Future<void> _reschedule() async {
+    final scheduler = _scheduler;
+    if (scheduler == null) return;
+    try {
+      final now = _clock();
+      final thisWeek = weekStartOf(now);
+      final (distanceM, _) = await _runs.weeklyTotal(now);
+      final plan = planReminders(
+        now: now,
+        weekTargetM: await _growth.weeklyTarget(thisWeek),
+        weekDistanceM: distanceM,
+        weekAchieved: await _growth.isWeekAchieved(thisWeek),
+      );
+      await scheduler.replaceAll(plan);
+    } catch (_) {
+      // 알림은 부가 기능이다.
+    }
   }
 
   Future<GrowthGain> _sync() async {

@@ -2,7 +2,9 @@ import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:runmagochi/avatar/app/growth_service.dart';
 import 'package:runmagochi/avatar/data/drift_growth_repository.dart';
+import 'package:runmagochi/avatar/data/notification_scheduler.dart';
 import 'package:runmagochi/avatar/domain/growth_rules.dart';
+import 'package:runmagochi/avatar/domain/reminder_plan.dart';
 import 'package:runmagochi/core/week.dart';
 import 'package:runmagochi/run/data/app_database.dart';
 import 'package:runmagochi/run/data/run_repository.dart';
@@ -67,6 +69,17 @@ class FakeRunRepository implements RunRepository {
   @override
   Future<void> completeRun(String runId, RunSummary summary) =>
       throw UnimplementedError();
+}
+
+class FakeScheduler implements NotificationScheduler {
+  final List<List<PlannedReminder>> calls = [];
+  bool fail = false;
+
+  @override
+  Future<void> replaceAll(List<PlannedReminder> reminders) async {
+    calls.add(reminders);
+    if (fail) throw StateError('예약 실패');
+  }
 }
 
 void main() {
@@ -185,5 +198,26 @@ void main() {
     final gain = await service.sync();
     expect(gain.distanceXp, 0);
     expect(gain.goalBonusXp, 50);
+  });
+
+  group('알림 재예약', () {
+    test('sync 뒤 replaceAll 이 한 번 불린다', () async {
+      final scheduler = FakeScheduler();
+      service = GrowthService(runs, growth, () => now, scheduler: scheduler);
+      runs.add('a', DateTime(2026, 10, 13, 7), 6200);
+      await service.sync();
+      expect(scheduler.calls.length, 1);
+      // 토요일 낮이라 이번 주 금요일은 지났다: 다음 3주만.
+      expect(scheduler.calls.single.length, 3);
+    });
+
+    test('스케줄러가 실패해도 sync 결과는 그대로다', () async {
+      final scheduler = FakeScheduler()..fail = true;
+      service = GrowthService(runs, growth, () => now, scheduler: scheduler);
+      runs.add('a', DateTime(2026, 10, 13, 7), 5020);
+      final gain = await service.sync();
+      expect(gain.distanceXp, 50);
+      expect(scheduler.calls.length, 1);
+    });
   });
 }

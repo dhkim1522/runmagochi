@@ -29,3 +29,13 @@ String formatRunDate(DateTime t) {
   return '${l.month}월 ${l.day}일 (${_weekdays[l.weekday - 1]}) '
       "$ampm $h:${l.minute.toString().padLeft(2, '0')}";
 }
+
+/// 목표 km 표기. 10 → `10`, 12.5 → `12.5`.
+String formatTargetKm(double meters) {
+  final km = meters / 1000;
+  if (km == km.roundToDouble()) return km.toInt().toString();
+  return km
+      .toStringAsFixed(2)
+      .replaceFirst(RegExp(r'0+$'), '')
+      .replaceFirst(RegExp(r'\.$'), '');
+}

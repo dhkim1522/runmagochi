@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../run/app/providers.dart';
 import '../data/drift_growth_repository.dart';
 import '../data/growth_repository.dart';
+import '../data/notification_scheduler.dart';
 import '../domain/growth_state.dart';
 import 'growth_service.dart';
 
@@ -10,11 +11,16 @@ final growthRepositoryProvider = Provider<GrowthRepository>(
   (ref) => DriftGrowthRepository(ref.watch(appDatabaseProvider)),
 );
 
+final notificationSchedulerProvider = Provider<NotificationScheduler>(
+  (ref) => LocalNotificationScheduler(),
+);
+
 final growthServiceProvider = Provider<GrowthService>(
   (ref) => GrowthService(
     ref.watch(runRepositoryProvider),
     ref.watch(growthRepositoryProvider),
     ref.watch(clockProvider),
+    scheduler: ref.watch(notificationSchedulerProvider),
   ),
 );
 

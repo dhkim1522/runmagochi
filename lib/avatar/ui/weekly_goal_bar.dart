@@ -20,14 +20,7 @@ class WeeklyGoalBar extends StatelessWidget {
   final ValueChanged<double> onChangeTarget;
 
   /// 10 → `10`, 12.5 → `12.5`.
-  static String targetLabel(double meters) {
-    final km = meters / 1000;
-    if (km == km.roundToDouble()) return km.toInt().toString();
-    return km
-        .toStringAsFixed(2)
-        .replaceFirst(RegExp(r'0+$'), '')
-        .replaceFirst(RegExp(r'\.$'), '');
-  }
+  static String targetLabel(double meters) => formatTargetKm(meters);
 
   Future<void> _edit(BuildContext context) async {
     final km = await showDialog<double>(
