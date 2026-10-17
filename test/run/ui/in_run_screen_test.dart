@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:runmagochi/avatar/app/providers.dart';
+import 'package:runmagochi/avatar/domain/growth_rules.dart';
+import 'package:runmagochi/avatar/ui/avatar_view.dart';
 import 'package:runmagochi/run/app/providers.dart';
 import 'package:runmagochi/run/domain/run_engine.dart';
 import 'package:runmagochi/run/ui/in_run_screen.dart';
@@ -20,7 +24,12 @@ Future<FakeController> open(
   );
   await tester.pumpWidget(
     ProviderScope(
-      overrides: [runControllerProvider.overrideWith(() => controller)],
+      overrides: [
+        runControllerProvider.overrideWith(() => controller),
+        growthServiceProvider.overrideWithValue(
+          FakeGrowthService(growthState()),
+        ),
+      ],
       child: MaterialApp(
         home: Builder(
           builder: (context) => Scaffold(
@@ -36,9 +45,19 @@ Future<FakeController> open(
     ),
   );
   await tester.tap(find.text('open'));
-  await tester.pumpAndSettle();
+  await settle(tester);
   return controller;
 }
+
+/// 아바타 티커는 멈추지 않아 pumpAndSettle 이 끝나지 않는다. 고정 시간만 흘린다.
+Future<void> settle(WidgetTester tester) async {
+  for (var i = 0; i < 10; i++) {
+    await tester.pump(const Duration(milliseconds: 100));
+  }
+}
+
+AvatarView avatar(WidgetTester tester) =>
+    tester.widget<AvatarView>(find.byType(AvatarView));
 
 void main() {
   testWidgets('러닝 중에는 거리와 페이스·시간·일시정지 버튼이 보인다', (tester) async {
@@ -104,7 +123,7 @@ void main() {
     await tester.pump(const Duration(milliseconds: 1501));
     await tester.pump();
     await g.up();
-    await tester.pumpAndSettle();
+    await settle(tester);
     expect(c.calls, ['end']);
     expect(find.byType(InRunScreen), findsNothing);
   });
@@ -122,7 +141,7 @@ void main() {
       await tester.pump(const Duration(milliseconds: 1501));
       await tester.pump();
       await g.up();
-      await tester.pumpAndSettle();
+      await settle(tester);
     }
 
     await hold();
@@ -154,8 +173,52 @@ void main() {
     await tester.pump(const Duration(milliseconds: 1501));
     await tester.pump();
     await g.up();
-    await tester.pumpAndSettle();
+    await settle(tester);
     expect(c.calls, ['end']);
     expect(find.byType(InRunScreen), findsNothing);
+  });
+
+  group('러닝 중 아바타', () {
+    testWidgets('현재 페이스 300 이면 run, 표정은 기본', (tester) async {
+      await open(tester, initial: snap(RunState.recording, current: 300));
+      expect(avatar(tester).action, AvatarAction.run);
+      expect(avatar(tester).mood, AvatarMood.normal);
+      expect(avatar(tester).stage, 1);
+    });
+
+    testWidgets('현재 페이스 600 이면 walk', (tester) async {
+      await open(tester, initial: snap(RunState.recording, current: 600));
+      expect(avatar(tester).action, AvatarAction.walk);
+    });
+
+    testWidgets('현재 페이스가 없으면 walk', (tester) async {
+      await open(tester, initial: snap(RunState.recording));
+      expect(avatar(tester).action, AvatarAction.walk);
+    });
+
+    testWidgets('일시정지면 idle', (tester) async {
+      await open(tester, initial: snap(RunState.paused, current: 300));
+      expect(avatar(tester).action, AvatarAction.idle);
+    });
+
+    testWidgets('거리 숫자가 화면에서 가장 큰 글자다', (tester) async {
+      await open(
+        tester,
+        initial: snap(
+          RunState.recording,
+          distanceM: 2910,
+          avg: 385,
+          current: 370,
+        ),
+      );
+      double size(String t) => tester
+          .renderObject<RenderParagraph>(find.text(t))
+          .text
+          .style!
+          .fontSize!;
+      final dist = size('2.91');
+      expect(dist, greaterThan(size("6'25\"")));
+      expect(dist, greaterThan(size("6'10\"")));
+    });
   });
 }

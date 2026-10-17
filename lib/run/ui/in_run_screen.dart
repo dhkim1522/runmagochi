@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../avatar/app/providers.dart';
+import '../../avatar/domain/growth_rules.dart';
+import '../../avatar/ui/avatar_view.dart';
 import '../../core/format.dart';
 import '../app/providers.dart';
 import '../domain/run_engine.dart';
@@ -42,6 +45,8 @@ class _InRunScreenState extends ConsumerState<InRunScreen> {
     final ended = snap.state == RunState.ended;
     final paused = snap.state == RunState.paused || ended;
     final scheme = Theme.of(context).colorScheme;
+    // 로딩 중이거나 실패하면 1단계로 그린다.
+    final stage = ref.watch(growthStateProvider).value?.stage ?? 1;
 
     return PopScope(
       canPop: false,
@@ -85,6 +90,16 @@ class _InRunScreenState extends ConsumerState<InRunScreen> {
                               ?.copyWith(fontWeight: FontWeight.bold),
                         ),
                         const Text('km'),
+                        const SizedBox(height: 16),
+                        AvatarView(
+                          stage: stage,
+                          mood: AvatarMood.normal,
+                          action: actionFor(
+                            paused: paused,
+                            currentPaceSecPerKm: snap.currentPaceSecPerKm,
+                          ),
+                          scale: 3,
+                        ),
                         if (paused) ...[
                           const SizedBox(height: 32),
                           Row(
