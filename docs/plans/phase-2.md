@@ -76,7 +76,7 @@ docs/specs/sprite-spec.md, docs/decisions/0009-phase2-packages.md
 ## 작업
 
 - [x] 1. 성장 규칙
-- [ ] 2. 스프라이트 규격과 임시 스프라이트
+- [x] 2. 스프라이트 규격과 임시 스프라이트
 - [ ] 3. 아바타 위젯
 - [ ] 4. 성장 데이터 저장
 - [ ] 5. GrowthService
