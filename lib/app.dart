@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'avatar/ui/avatar_placeholder.dart';
+import 'avatar/ui/avatar_screen.dart';
 import 'run/ui/history_screen.dart';
 import 'run/ui/home_screen.dart';
 
@@ -35,12 +35,7 @@ class _HomeShellState extends State<_HomeShell> {
         children: const [
           HomeScreen(),
           HistoryScreen(),
-          Center(
-            child: Padding(
-              padding: EdgeInsets.all(24),
-              child: AvatarPlaceholder(),
-            ),
-          ),
+          AvatarScreen(),
         ],
       ),
       bottomNavigationBar: NavigationBar(
