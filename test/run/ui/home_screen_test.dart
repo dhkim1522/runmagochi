@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:runmagochi/avatar/app/providers.dart';
 import 'package:runmagochi/avatar/domain/growth_rules.dart';
+import 'package:runmagochi/avatar/domain/growth_state.dart';
 import 'package:runmagochi/avatar/ui/avatar_view.dart';
 import 'package:runmagochi/run/app/permission_gate.dart';
 import 'package:runmagochi/run/app/providers.dart';
@@ -319,5 +320,37 @@ void main() {
     expect(identical(first, second), isFalse);
     final screen = tester.widget<SummaryScreen>(find.byType(SummaryScreen));
     expect(screen.summary, same(second));
+  });
+
+  testWidgets('러닝을 끝내면 sync 한 번 후 요약에 gain 이 들어간다', (tester) async {
+    final g = FakeGrowthService(growthState())
+      ..syncGain = const GrowthGain(
+        distanceXp: 50,
+        goalBonusXp: 50,
+        levelBefore: 3,
+        levelAfter: 4,
+        stageBefore: 1,
+        stageAfter: 1,
+      );
+    final c = FakeController();
+    await pumpHome(tester, c, growth: g);
+    await startRun(tester);
+    final before = g.syncs;
+    await holdStop(tester);
+    expect(g.syncs, greaterThan(before));
+    expect(find.byType(SummaryScreen), findsOneWidget);
+    expect(find.text('레벨 업!'), findsOneWidget);
+    expect(find.text('Lv.3 에서 Lv.4 로'), findsOneWidget);
+    expect(find.text('이번 주 목표 10km 달성 · 경험치 +50'), findsOneWidget);
+  });
+
+  testWidgets('sync 가 실패해도 요약은 열리고 성장 영역만 빠진다', (tester) async {
+    final g = FakeGrowthService(growthState())..syncFails = true;
+    final c = FakeController();
+    await pumpHome(tester, c, growth: g);
+    await startRun(tester);
+    await holdStop(tester);
+    expect(find.byType(SummaryScreen), findsOneWidget);
+    expect(find.textContaining('경험치'), findsNothing);
   });
 }

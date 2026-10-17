@@ -80,11 +80,25 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       context,
     ).push(MaterialPageRoute<void>(builder: (_) => const InRunScreen()));
     if (!mounted) return;
-    ref.invalidate(growthStateProvider);
     final after = ref.read(runControllerProvider).lastSummary;
-    if (after == null || identical(after, before)) return;
+    if (after == null || identical(after, before)) {
+      ref.invalidate(growthStateProvider);
+      return;
+    }
+    // invalidate 보다 먼저 sync 해야 이번 러닝의 gain 을 이쪽이 받는다
+    // (provider 도 sync 하는데, 먼저 돌면 gain 이 그쪽에서 소모된다).
+    GrowthGain? gain;
+    try {
+      gain = await ref.read(growthServiceProvider).sync();
+    } catch (_) {
+      gain = null; // 성장 영역만 빼고 요약은 연다.
+    }
+    if (!mounted) return;
+    ref.invalidate(growthStateProvider);
     await Navigator.of(context).push(
-      MaterialPageRoute<void>(builder: (_) => SummaryScreen.fromSummary(after)),
+      MaterialPageRoute<void>(
+        builder: (_) => SummaryScreen.fromSummary(after, gain: gain),
+      ),
     );
   }
 

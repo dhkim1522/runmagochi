@@ -166,17 +166,25 @@ class FakeGrowthService implements GrowthService {
   Completer<void>? holdLoad;
   final List<double> targets = [];
 
+  /// 지정하면 sync 가 이 값을 돌려준다.
+  GrowthGain? syncGain;
+
+  /// true 면 sync 가 실패한다.
+  bool syncFails = false;
+
   @override
   Future<GrowthGain> sync() async {
     syncs++;
-    return const GrowthGain(
-      distanceXp: 0,
-      goalBonusXp: 0,
-      levelBefore: 1,
-      levelAfter: 1,
-      stageBefore: 1,
-      stageAfter: 1,
-    );
+    if (syncFails) throw StateError('sync failed');
+    return syncGain ??
+        const GrowthGain(
+          distanceXp: 0,
+          goalBonusXp: 0,
+          levelBefore: 1,
+          levelAfter: 1,
+          stageBefore: 1,
+          stageAfter: 1,
+        );
   }
 
   @override

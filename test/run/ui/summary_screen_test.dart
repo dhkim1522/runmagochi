@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart' hide Split;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:runmagochi/avatar/app/providers.dart';
+import 'package:runmagochi/avatar/domain/growth_state.dart';
 import 'package:runmagochi/run/app/providers.dart';
 import 'package:runmagochi/run/data/run_repository.dart';
 import 'package:runmagochi/run/domain/location_sample.dart';
@@ -40,6 +42,9 @@ Future<void> pump(WidgetTester tester, Widget screen, {FakeRepo? repo}) async {
     ProviderScope(
       overrides: [
         runRepositoryProvider.overrideWithValue(repo ?? FakeRepo((0, 0))),
+        growthServiceProvider.overrideWithValue(
+          FakeGrowthService(growthState()),
+        ),
       ],
       child: MaterialApp(home: screen),
     ),
@@ -138,5 +143,56 @@ void main() {
     );
     await pump(tester, SummaryScreen.fromSummary(empty));
     expect(find.text('경로가 없어요'), findsOneWidget);
+  });
+
+  testWidgets('fromSummary 에 gain 이 있으면 성장 영역이 보인다', (tester) async {
+    tester.view.physicalSize = const Size(800, 2400);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    await pump(
+      tester,
+      SummaryScreen.fromSummary(
+        _summary(),
+        gain: const GrowthGain(
+          distanceXp: 25,
+          goalBonusXp: 0,
+          levelBefore: 1,
+          levelAfter: 1,
+          stageBefore: 1,
+          stageAfter: 1,
+        ),
+      ),
+    );
+    expect(find.text('달린 거리 2.50km'), findsOneWidget);
+    expect(find.text('경험치 +25'), findsOneWidget);
+  });
+
+  testWidgets('gain 이 없으면 성장 영역이 없다', (tester) async {
+    await pump(tester, SummaryScreen.fromSummary(_summary()));
+    expect(find.textContaining('경험치'), findsNothing);
+  });
+
+  testWidgets('forRun 에는 성장 영역이 없다', (tester) async {
+    final repo = FakeRepo(
+      (0, 0),
+      details: {
+        'a': RunDetail(
+          run: RunListItem(
+            id: 'a',
+            name: '아침 러닝',
+            startedAt: DateTime(2026, 10, 10, 7),
+            distanceM: 2500,
+            movingTime: const Duration(minutes: 16, seconds: 15),
+            avgPaceSecPerKm: 390,
+          ),
+          calories: 168,
+          route: const [],
+          splits: const [],
+        ),
+      },
+    );
+    await pump(tester, const SummaryScreen.forRun('a'), repo: repo);
+    await tester.pumpAndSettle();
+    expect(find.textContaining('경험치'), findsNothing);
   });
 }

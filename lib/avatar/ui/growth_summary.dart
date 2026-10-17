@@ -1,0 +1,161 @@
+import 'dart:math' as math;
+
+import 'package:flutter/material.dart';
+
+import '../../core/format.dart';
+import '../domain/growth_rules.dart';
+import '../domain/growth_state.dart';
+import 'avatar_view.dart';
+import 'weekly_goal_bar.dart';
+
+/// 러닝 직후 요약 위쪽에 놓는 경험치 획득·레벨업 영역.
+class GrowthSummary extends StatefulWidget {
+  const GrowthSummary({
+    super.key,
+    required this.gain,
+    required this.name,
+    required this.distanceM,
+    this.weekTargetM,
+  });
+
+  final GrowthGain gain;
+  final String name;
+
+  /// 방금 달린 거리(미터).
+  final double distanceM;
+
+  /// 이번 주 목표(미터). 모르면 null.
+  final double? weekTargetM;
+
+  @override
+  State<GrowthSummary> createState() => _GrowthSummaryState();
+}
+
+class _GrowthSummaryState extends State<GrowthSummary>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+
+  bool get _animates => widget.gain.leveledUp || widget.gain.stageUp;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 600),
+    );
+    if (_animates) _controller.forward();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final g = widget.gain;
+    final target = widget.weekTargetM;
+    final goalLabel = target == null
+        ? '이번 주 목표 달성'
+        : '이번 주 목표 ${WeeklyGoalBar.targetLabel(target)}km 달성';
+    return Card(
+      margin: EdgeInsets.zero,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            _XpRow(
+              '달린 거리 ${formatKm(widget.distanceM)}km',
+              '경험치 +${g.distanceXp}',
+            ),
+            if (g.goalBonusXp > 0) ...[
+              const SizedBox(height: 8),
+              _XpRow(goalLabel, '경험치 +${g.goalBonusXp}', merged: true),
+            ],
+            if (_animates) ...[
+              const SizedBox(height: 16),
+              _avatar(),
+              const SizedBox(height: 8),
+              if (g.leveledUp) ...[
+                Text(
+                  '레벨 업!',
+                  textAlign: TextAlign.center,
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                Text(
+                  'Lv.${g.levelBefore} 에서 Lv.${g.levelAfter} 로',
+                  textAlign: TextAlign.center,
+                  style: theme.textTheme.bodyMedium,
+                ),
+              ],
+              if (g.stageUp)
+                Text(
+                  '새 외형 단계!',
+                  textAlign: TextAlign.center,
+                  style: theme.textTheme.titleMedium,
+                ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _avatar() {
+    final g = widget.gain;
+    return Center(
+      child: AnimatedBuilder(
+        animation: _controller,
+        builder: (context, _) {
+          final t = _controller.value;
+          // 커졌다 돌아온다: 1 → 1.3 → 1.
+          final scale = g.leveledUp ? 1 + 0.3 * math.sin(math.pi * t) : 1.0;
+          // 절반이 지나면 이전 단계에서 새 단계로 바뀐다.
+          final stage = g.stageUp && t < 0.5 ? g.stageBefore : g.stageAfter;
+          return Transform.scale(
+            key: const ValueKey('level-up-scale'),
+            scale: scale,
+            child: AvatarView(
+              stage: stage,
+              mood: AvatarMood.normal,
+              action: AvatarAction.idle,
+              scale: 6,
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _XpRow extends StatelessWidget {
+  const _XpRow(this.label, this.xp, {this.merged = false});
+  final String label;
+  final String xp;
+
+  /// true 면 라벨과 경험치를 한 문장으로 붙여 보인다.
+  final bool merged;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    if (merged) return Text('$label · $xp', style: theme.textTheme.bodyMedium);
+    return Row(
+      children: [
+        Expanded(child: Text(label, style: theme.textTheme.bodyMedium)),
+        Text(
+          xp,
+          style: theme.textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ],
+    );
+  }
+}

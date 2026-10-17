@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart' hide Split;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../avatar/app/providers.dart';
+import '../../avatar/domain/growth_state.dart';
+import '../../avatar/ui/growth_summary.dart';
 import '../../core/format.dart';
 import '../app/providers.dart';
 import '../data/run_repository.dart';
@@ -13,21 +16,39 @@ final runDetailProvider = FutureProvider.autoDispose.family<RunDetail?, String>(
 
 class SummaryScreen extends ConsumerWidget {
   /// 러닝 종료 직후.
-  const SummaryScreen.fromSummary(RunSummary this.summary, {super.key})
-    : runId = null;
+  const SummaryScreen.fromSummary(
+    RunSummary this.summary, {
+    this.gain,
+    super.key,
+  }) : runId = null;
 
-  /// 기록 목록에서 연 상세.
-  const SummaryScreen.forRun(String this.runId, {super.key}) : summary = null;
+  /// 기록 목록에서 연 상세. 성장 영역은 없다.
+  const SummaryScreen.forRun(String this.runId, {super.key})
+    : summary = null,
+      gain = null;
 
   final RunSummary? summary;
   final String? runId;
+
+  /// 이번 러닝으로 받은 성장. 없으면 성장 영역을 그리지 않는다.
+  final GrowthGain? gain;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final s = summary;
     final Widget body;
     if (s != null) {
+      final g = gain;
+      final growth = g == null
+          ? null
+          : GrowthSummary(
+              gain: g,
+              name: ref.watch(growthStateProvider).value?.name ?? '러니',
+              distanceM: s.distanceM,
+              weekTargetM: ref.watch(growthStateProvider).value?.weekTargetM,
+            );
       body = _SummaryBody(
+        growth: growth,
         name: s.name,
         startedAt: s.startedAt,
         distanceM: s.distanceM,
@@ -78,6 +99,7 @@ class SummaryScreen extends ConsumerWidget {
 
 class _SummaryBody extends StatelessWidget {
   const _SummaryBody({
+    this.growth,
     required this.name,
     required this.startedAt,
     required this.distanceM,
@@ -88,6 +110,7 @@ class _SummaryBody extends StatelessWidget {
     required this.splits,
   });
 
+  final Widget? growth;
   final String name;
   final DateTime startedAt;
   final double distanceM;
@@ -103,6 +126,7 @@ class _SummaryBody extends StatelessWidget {
     return ListView(
       padding: const EdgeInsets.all(24),
       children: [
+        if (growth != null) ...[growth!, const SizedBox(height: 16)],
         Text(formatRunDate(startedAt), style: theme.textTheme.bodyMedium),
         const SizedBox(height: 4),
         Text(name, style: theme.textTheme.titleLarge),
