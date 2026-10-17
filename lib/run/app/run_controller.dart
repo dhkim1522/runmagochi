@@ -1,5 +1,7 @@
 import 'dart:async';
 
+import 'package:flutter/widgets.dart' show AppLifecycleState;
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../data/run_repository.dart';
@@ -53,6 +55,9 @@ class RunController extends Notifier<RunViewState> {
   /// 끊긴 위치 구독을 다시 하려고 기다리는 타이머.
   Timer? _resubscribeTimer;
 
+  /// 끊긴 구독을 앱이 화면에 있을 때 다시 해야 한다.
+  bool _resubscribePending = false;
+
   /// 아직 저장하지 않은 채택 점과 그 구간 번호.
   final List<(int, LocationSample)> _buffer = [];
 
@@ -75,7 +80,10 @@ class RunController extends Notifier<RunViewState> {
 
   @override
   RunViewState build() {
+    final lifecycle = ref.read(appLifecycleProvider);
+    final lifecycleSub = lifecycle.changes.listen(_onLifecycleChanged);
     ref.onDispose(() {
+      lifecycleSub.cancel();
       _stopTimers();
       _subscription?.cancel();
     });
@@ -106,6 +114,7 @@ class RunController extends Notifier<RunViewState> {
     _requireEngine().pause();
     _resubscribeTimer?.cancel();
     _resubscribeTimer = null;
+    _resubscribePending = false;
     _publish();
     unawaited(_flushReportingError());
   }
@@ -115,6 +124,7 @@ class RunController extends Notifier<RunViewState> {
     _requireEngine().resume();
     _resubscribeTimer?.cancel();
     _resubscribeTimer = null;
+    _resubscribePending = false;
     _subscribe();
     _startFlushTimer();
     _startTick();
@@ -214,11 +224,36 @@ class RunController extends Notifier<RunViewState> {
     unawaited(_subscription?.cancel().catchError((Object _) {}));
     _subscription = null;
     if (_engine?.snapshot.state != RunState.recording) return;
+    _resubscribePending = true;
+    _resubscribeTimer?.cancel();
+    _resubscribeTimer = null;
+    if (_isForeground) _scheduleResubscribe();
+  }
+
+  bool get _isForeground =>
+      ref.read(appLifecycleProvider).current == AppLifecycleState.resumed;
+
+  void _scheduleResubscribe() {
     _resubscribeTimer?.cancel();
     _resubscribeTimer = Timer(_resubscribeInterval, () {
       _resubscribeTimer = null;
-      _subscribe();
+      // 백그라운드에서는 안드로이드가 위치 포그라운드 서비스 시작을 거부한다.
+      // 구독하지 않고 대기 표시만 남겨 화면으로 돌아올 때 구독한다.
+      if (_isForeground) {
+        _resubscribePending = false;
+        _subscribe();
+      }
     });
+  }
+
+  void _onLifecycleChanged(AppLifecycleState lifecycleState) {
+    if (lifecycleState != AppLifecycleState.resumed) return;
+    if (!_resubscribePending || _subscription != null) return;
+    if (_engine?.snapshot.state != RunState.recording) return;
+    _resubscribeTimer?.cancel();
+    _resubscribeTimer = null;
+    _resubscribePending = false;
+    _subscribe();
   }
 
   void _onSample(LocationSample sample) {
@@ -250,6 +285,7 @@ class RunController extends Notifier<RunViewState> {
     _flushTimer = null;
     _tickTimer = null;
     _resubscribeTimer = null;
+    _resubscribePending = false;
   }
 
   /// 저장 실패를 lastError 에 남긴다. 실패한 점은 버퍼에 남는다.

@@ -5,6 +5,8 @@ import 'package:drift/native.dart';
 import 'package:fake_async/fake_async.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter/widgets.dart' show AppLifecycleState;
+import 'package:runmagochi/run/app/app_lifecycle.dart';
 import 'package:runmagochi/run/app/providers.dart';
 import 'package:runmagochi/run/data/app_database.dart';
 import 'package:runmagochi/run/data/drift_run_repository.dart';
@@ -46,6 +48,7 @@ class _Harness {
         runRepositoryProvider.overrideWithValue(repository),
         locationSourceProvider.overrideWithValue(location),
         clockProvider.overrideWithValue(clock),
+        appLifecycleProvider.overrideWithValue(_AlwaysResumed()),
       ],
     );
   }
@@ -179,4 +182,13 @@ void main() {
       h.close();
     });
   });
+}
+
+/// 항상 화면에 있는 앱.
+class _AlwaysResumed implements AppLifecycle {
+  @override
+  AppLifecycleState get current => AppLifecycleState.resumed;
+
+  @override
+  Stream<AppLifecycleState> get changes => const Stream.empty();
 }

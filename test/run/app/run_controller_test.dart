@@ -4,6 +4,8 @@ import 'dart:math' as math;
 import 'package:fake_async/fake_async.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter/widgets.dart' show AppLifecycleState;
+import 'package:runmagochi/run/app/app_lifecycle.dart';
 import 'package:runmagochi/run/app/providers.dart';
 import 'package:runmagochi/run/app/run_controller.dart';
 import 'package:runmagochi/run/data/location_source.dart';
@@ -122,6 +124,23 @@ class _FakeLocationSource implements LocationSource {
   }
 }
 
+class _FakeAppLifecycle implements AppLifecycle {
+  @override
+  AppLifecycleState current = AppLifecycleState.resumed;
+  final _changes = StreamController<AppLifecycleState>.broadcast(sync: true);
+
+  @override
+  Stream<AppLifecycleState> get changes => _changes.stream;
+
+  void set(AppLifecycleState state) {
+    current = state;
+    _changes.add(state);
+  }
+}
+
+/// 현재 _run 이 쓰는 앱 생명주기. 기본은 화면에 있는 상태.
+late _FakeAppLifecycle _lifecycle;
+
 /// fake_async 시간과 같이 가는 시계로 컨테이너를 만들어 [body] 를 돌린다.
 void _run(
   void Function(
@@ -137,10 +156,12 @@ void _run(
   fakeAsync((async) {
     final repository = _FakeRunRepository()..activeRun = activeRun;
     final location = _FakeLocationSource();
+    final lifecycle = _lifecycle = _FakeAppLifecycle();
     final container = ProviderContainer(
       overrides: [
         runRepositoryProvider.overrideWithValue(repository),
         locationSourceProvider.overrideWithValue(location),
+        appLifecycleProvider.overrideWithValue(lifecycle),
         clockProvider.overrideWithValue(() => _t0.add(async.elapsed)),
       ],
     );
@@ -624,6 +645,92 @@ void main() {
 
       async.elapse(const Duration(seconds: 5));
       expect(location.listenCount, 2);
+    });
+  });
+
+  test('백그라운드에서 끊기면 구독하지 않다가, 화면으로 돌아오면 바로 구독한다', () {
+    _run((async, controller, container, repository, location) {
+      controller.start();
+      async.flushMicrotasks();
+      stepTo(async, location, 3);
+
+      _lifecycle.set(AppLifecycleState.paused);
+      location.controller.addError(Exception('GPS 꺼짐'));
+      async.flushMicrotasks();
+      async.elapse(const Duration(seconds: 30));
+      expect(location.listenCount, 1);
+      expect(container.read(runControllerProvider).lastError, _locationError);
+
+      _lifecycle.set(AppLifecycleState.inactive);
+      async.elapse(const Duration(seconds: 10));
+      expect(location.listenCount, 1);
+
+      _lifecycle.set(AppLifecycleState.resumed);
+      expect(location.listenCount, 2);
+      stepTo(async, location, 6);
+      final state = container.read(runControllerProvider);
+      expect(state.lastError, isNull);
+      expect(state.snapshot.distanceM, closeTo(3, 0.01));
+    });
+  });
+
+  test('재시도 시각에 백그라운드면 구독하지 않고, 돌아오면 바로 구독한다', () {
+    _run((async, controller, container, repository, location) {
+      controller.start();
+      async.flushMicrotasks();
+      location.controller.addError(Exception('GPS 꺼짐'));
+      async.flushMicrotasks();
+
+      async.elapse(const Duration(seconds: 2));
+      _lifecycle.set(AppLifecycleState.paused);
+      async.elapse(const Duration(seconds: 30));
+      expect(location.listenCount, 1);
+
+      _lifecycle.set(AppLifecycleState.resumed);
+      expect(location.listenCount, 2);
+    });
+  });
+
+  test('구독이 살아 있으면 화면으로 돌아와도 다시 구독하지 않는다', () {
+    _run((async, controller, container, repository, location) {
+      controller.start();
+      async.flushMicrotasks();
+
+      _lifecycle.set(AppLifecycleState.paused);
+      _lifecycle.set(AppLifecycleState.resumed);
+      expect(location.listenCount, 1);
+    });
+  });
+
+  test('사용자가 일시정지한 동안 화면으로 돌아와도 구독하지 않는다', () {
+    _run((async, controller, container, repository, location) {
+      controller.start();
+      async.flushMicrotasks();
+      _lifecycle.set(AppLifecycleState.paused);
+      location.controller.addError(Exception('GPS 꺼짐'));
+      async.flushMicrotasks();
+      controller.pause();
+      async.flushMicrotasks();
+
+      _lifecycle.set(AppLifecycleState.resumed);
+      async.elapse(const Duration(seconds: 30));
+      expect(location.listenCount, 1);
+    });
+  });
+
+  test('end 뒤에 화면으로 돌아와도 구독하지 않는다', () {
+    _run((async, controller, container, repository, location) {
+      controller.start();
+      async.flushMicrotasks();
+      _lifecycle.set(AppLifecycleState.paused);
+      location.controller.addError(Exception('GPS 꺼짐'));
+      async.flushMicrotasks();
+      controller.end();
+      async.flushMicrotasks();
+
+      _lifecycle.set(AppLifecycleState.resumed);
+      async.elapse(const Duration(seconds: 30));
+      expect(location.listenCount, 1);
     });
   });
 

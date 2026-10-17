@@ -6,6 +6,7 @@ import '../data/drift_run_repository.dart';
 import '../data/geolocator_location_source.dart';
 import '../data/location_source.dart';
 import '../data/run_repository.dart';
+import 'app_lifecycle.dart';
 import 'run_controller.dart';
 
 final appDatabaseProvider = Provider<AppDatabase>((ref) {
@@ -23,6 +24,12 @@ final locationSourceProvider = Provider<LocationSource>(
 );
 
 final clockProvider = Provider<Clock>((_) => DateTime.now);
+
+final appLifecycleProvider = Provider<AppLifecycle>((ref) {
+  final lifecycle = FlutterAppLifecycle();
+  ref.onDispose(lifecycle.dispose);
+  return lifecycle;
+});
 
 final runControllerProvider = NotifierProvider<RunController, RunViewState>(
   RunController.new,
