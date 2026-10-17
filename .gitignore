@@ -42,3 +42,6 @@ devtools_options.yaml
 .svn/
 .atom/
 .buildlog/
+
+# Claude Code 서브에이전트 작업 공간
+.claude/worktrees/
