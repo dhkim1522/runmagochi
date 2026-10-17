@@ -391,7 +391,13 @@ final growthStateProvider = FutureProvider<GrowthState>(...);  // sync 뒤 load
 - [x] `fvm flutter test` 전체 통과 (230건)
 - [x] `fvm dart analyze` 경고 0
 - [x] `fvm flutter build apk --debug` 성공
-- [ ] 에뮬레이터 가상 러닝(`fvm dart run tool/fake_run.dart --minutes 6 --speed 3.0`)으로 1km 이상 달리면 요약에 경험치가 붙고, 홈 레벨 막대가 늘어난다 — 검증 때 에뮬레이터가 없어 건너뜀. 실측 전에 확인한다
+
+### E2E (에뮬레이터, `/e2e` 가 확인)
+- [ ] 홈에 주간 목표 막대(`이번 주 목표 10km`), 아바타, `러니 Lv.1` 이 보이고 스프라이트가 그려진다
+- [ ] 가상 러닝(`fake_run.dart --minutes 6 --speed 3.0`)으로 1km 이상 달리는 동안 러닝 중 화면에 달리는 아바타가 보인다
+- [ ] 길게 눌러 종료하면 요약에 `경험치 +N`(달린 거리 100m당 1)이 보이고, 홈으로 돌아오면 레벨 막대가 늘어나 있다
+- [ ] 아바타 탭에 누적 거리·러닝 횟수와 성장 단계 4개(현재·잠김)가 보인다
+- [ ] 홈 목표 막대를 탭해 목표를 1km 로 바꾸면 이번 주 달성으로 바뀌고 연속 달성 주수가 보인다
 
 ### 사람 확인
 - [ ] Aseprite 설치와 `/pixel-plugin:pixel-setup` 연결 (Task 11 선행 조건)

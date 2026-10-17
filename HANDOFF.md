@@ -17,7 +17,7 @@
 1. **실기기 확인** — Android 기기에 APK 설치: `fvm flutter build apk --debug` 후 `build/app/outputs/flutter-apk/app-debug.apk`
    - 페이즈 1 (`docs/plans/phase-1.md` "사람 확인"): 실제 30분 러닝 3회 기록 누락 없음, 트랙 400m × 10바퀴 거리 오차 5% 이내, 화면 끄고 주머니에 넣은 채 기록 유지, "실측 때 함께 볼 것" 3가지
    - 페이즈 2 (`docs/plans/phase-2.md` "사람 확인"): 실제 러닝 1회로 경험치 획득부터 레벨업 연출까지(레벨 1에서 5km 이상이면 레벨업), 금요일 18:00 주간 목표 알림 도착
-   - 가능하면 실측 전에 에뮬레이터 가상 러닝(`fvm dart run tool/fake_run.dart --minutes 6 --speed 3.0`)으로 요약 경험치·홈 레벨 막대 확인
+   - 실측 전에 `/e2e 2` 로 에뮬레이터 E2E 시나리오를 먼저 확인한다(에뮬레이터가 없으면 설치를 묻는다). 이 PC(집 Windows)는 아직 에뮬레이터 미설치
 2. **실제 도트 스프라이트 (페이즈 2 작업 11)**: Aseprite 1.3 이상 구매·설치 → `/pixel-plugin:pixel-setup` 으로 연결 → `/phase 2` 로 작업 11 진행. 규격은 `docs/specs/sprite-spec.md`(face 공용이라 4단계 머리·눈 위치 고정)
 3. 지인 베타에서 아바타 때문에 다시 달리고 싶은지 의견을 모은다.
 4. 확인을 마치면 `/phase 1`, `/phase 2` 로 결과를 입력한다. 모두 통과하면 페이즈 3(완성도·iOS)으로 넘어간다.
@@ -35,4 +35,4 @@
   - FVM 은 `dart pub global activate fvm` 으로 설치했다. Git Bash 는 `fvm.bat` 을 확장자 없이 못 찾으므로 `~/bin/fvm` 래퍼(`exec "$LOCALAPPDATA/Pub/Cache/bin/fvm.bat" "$@"`)를 둔다. 개발자 모드를 켜야 `fvm use` 가 링크를 만든다.
   - Aseprite(pixel-plugin 용)는 미설치. 페이즈 2 스프라이트 작업 전에 구매·설치하고 `/pixel-plugin:pixel-setup`.
 - 상태 표시줄은 Mac·Windows 공용 설정 하나로 동작한다. Windows 는 Git for Windows 만 있으면 되고 `jq` 나 `settings.local.json` 은 필요 없다.
-- 에뮬레이터 가상 러닝: `fvm dart run tool/fake_run.dart --minutes 5`. 에뮬레이터 위치 설정에서 "Location Accuracy" 를 켜야 위치가 들어온다.
+- 에뮬레이터 확인은 `/e2e [페이즈]` 로 한다. 수동으로는 `fvm dart run tool/fake_run.dart --minutes 5`, 에뮬레이터 위치 설정에서 "Location Accuracy" 를 켜야 위치가 들어온다.

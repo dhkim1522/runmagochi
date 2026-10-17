@@ -39,6 +39,7 @@
 - **dart-flutter**: Dart MCP 서버가 전역 `dart` 명령을 쓴다. Flutter SDK를 설치하고 `dart` 가 PATH에 있어야 한다. 전역 버전도 `.fvmrc` 와 맞춰 두면 분석 결과가 같다.
 - **pixel-plugin**: [Aseprite](https://www.aseprite.org/) 1.3 이상이 설치돼 있어야 한다.
 - **skill-creator**: claude.ai 계정에 skill-creator 스킬이 이미 동기화돼 있으면 켜지 않아도 된다.
+- **에뮬레이터(E2E)**: `/e2e` 가 처음 실행될 때 Android Emulator, 시스템 이미지(Android 37 Google APIs), AVD `runmagochi` 가 있는지 보고 없으면 설치를 묻는다. 약 2GB 다운로드. Windows 는 하드웨어 가속(Windows 하이퍼바이저 플랫폼)이 필요하다.
 - **상태 표시줄**: `.claude/statusline.sh` 가 모델, 5시간·주간 사용량, 세션 시간, 컨텍스트, effort 를 하단에 표시한다. macOS 는 기본 bash, Windows 는 Git Bash 로 같은 설정이 그대로 동작한다(Claude Code 가 Windows 에서 Git Bash 로 실행). `jq` 같은 추가 설치는 필요 없다.
 
 ## 플러그인 추가
