@@ -23,6 +23,7 @@
 - `docs/decisions/` — 결정 기록 (번호순)
 - `docs/plans/` — 페이즈별 구현 계획과 진행 상태 (`/phase` 가 작성)
 - `docs/research/nrc-analysis.md` — Nike Run Club 분석 요약
+- `docs/research/market.md` — 시장조사: 유사 앱 전수 조사, 경쟁·타깃·수익화·위험, 제안
 - `docs/tooling.md` — Claude Code 추천 플러그인 목록, 사용 시점, 기본값
 - `design/wireframes/` — 화면 콘티 10개 (MVP 6개 + 후속 범위, HTML 원본·PNG)
 
