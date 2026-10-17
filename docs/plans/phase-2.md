@@ -84,7 +84,7 @@ docs/specs/sprite-spec.md, docs/decisions/0009-phase2-packages.md
 - [x] 7. 러닝 중 아바타
 - [x] 8. 요약 화면 경험치·레벨업 연출
 - [x] 9. 아바타 탭
-- [ ] 10. 주간 목표 알림
+- [x] 10. 주간 목표 알림
 - [ ] 11. 실제 도트 스프라이트 (Aseprite 준비 뒤)
 
 ### Task 1: 성장 규칙
