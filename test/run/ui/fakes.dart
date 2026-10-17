@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:runmagochi/avatar/app/growth_service.dart';
 import 'package:runmagochi/avatar/domain/growth_rules.dart';
 import 'package:runmagochi/avatar/domain/growth_state.dart';
@@ -158,6 +160,10 @@ class FakeGrowthService implements GrowthService {
   FakeGrowthService(this.state);
   GrowthState state;
   int syncs = 0;
+  int loads = 0;
+
+  /// 지정하면 load 가 이 Completer 가 끝날 때까지 기다린다.
+  Completer<void>? holdLoad;
   final List<double> targets = [];
 
   @override
@@ -174,7 +180,12 @@ class FakeGrowthService implements GrowthService {
   }
 
   @override
-  Future<GrowthState> load() async => state;
+  Future<GrowthState> load() async {
+    loads++;
+    final hold = holdLoad;
+    if (hold != null) await hold.future;
+    return state;
+  }
 
   @override
   Future<GrowthGain> setWeeklyTarget(double targetM) async {

@@ -154,7 +154,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final GrowthState? g = ref.watch(growthStateProvider).asData?.value;
+    final GrowthState? g = ref.watch(growthStateProvider).value;
     final nextLevelKm = g == null
         ? null
         : (g.level.xpForNext - g.level.xpIntoLevel) / 10;

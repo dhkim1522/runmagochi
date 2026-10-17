@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -74,7 +76,7 @@ void main() {
     final g = FakeGrowthService(growthState());
     await pumpHome(tester, FakeController(), growth: g);
     await tester.pump();
-    final before = g.syncs;
+    final before = g.loads;
     await tester.tap(find.text('이번 주 목표 10km'));
     await settle(tester);
     await tester.enterText(find.byType(TextField), '15');
@@ -82,7 +84,7 @@ void main() {
     await tester.tap(find.text('저장'));
     await settle(tester);
     expect(g.targets, [15000]);
-    expect(g.syncs, greaterThan(before));
+    expect(g.loads, greaterThan(before));
   });
 
   testWidgets('시작 버튼 → 카운트다운 3 표시 → 3초 후 러닝 중 화면', (tester) async {
@@ -148,14 +150,43 @@ void main() {
     expect(c.calls, ['restore']);
   });
 
-  testWidgets('복구 다이얼로그에서 종료하고 저장은 end 후 홈에 남는다', (tester) async {
-    final c = FakeController(restore: true);
-    await pumpHome(tester, c);
+  testWidgets('다시 읽는 동안에도 이전 값이 계속 보인다', (tester) async {
+    final g = FakeGrowthService(growthState());
+    await pumpHome(tester, FakeController(), growth: g);
+    await tester.pump();
+    expect(find.text('러니 Lv.3'), findsOneWidget);
+
+    g.holdLoad = Completer<void>();
+    await tester.tap(find.text('이번 주 목표 10km'));
     await settle(tester);
+    await tester.enterText(find.byType(TextField), '15');
+    await tester.pump();
+    await tester.tap(find.text('저장'));
+    await settle(tester);
+    // load 가 아직 끝나지 않았다.
+    expect(find.text('러니 Lv.3'), findsOneWidget);
+    expect(find.text('이번 주 목표 10km'), findsOneWidget);
+    expect(find.text('이번 주 -'), findsNothing);
+
+    g.holdLoad!.complete();
+    await settle(tester);
+    expect(find.text('러니 Lv.3'), findsOneWidget);
+  });
+
+  testWidgets('복구 다이얼로그에서 종료하고 저장은 end 후 홈에 남는다', (tester) async {
+    final g = FakeGrowthService(growthState(weekDistanceM: 1000));
+    final c = FakeController(restore: true);
+    await pumpHome(tester, c, growth: g);
+    await settle(tester);
+    expect(find.text('1.00km 달성'), findsOneWidget);
+    final before = g.loads;
+    g.state = growthState(weekDistanceM: 7000);
     await tester.tap(find.text('종료하고 저장'));
     await settle(tester);
     expect(c.calls, ['restore', 'end']);
     expect(find.byType(InRunScreen), findsNothing);
+    expect(find.text('7.00km 달성'), findsOneWidget);
+    expect(g.loads, greaterThan(before));
     expect(find.text('기록 중이던 러닝이 있어요'), findsNothing);
     expect(find.text('시작'), findsOneWidget);
     expect(find.byType(SummaryScreen), findsNothing);
