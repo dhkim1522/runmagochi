@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:runmagochi/app.dart';
+import 'package:runmagochi/avatar/app/providers.dart';
 import 'package:runmagochi/run/app/providers.dart';
 
 import 'run/ui/fakes.dart';
@@ -12,6 +13,9 @@ void main() {
         overrides: [
           runControllerProvider.overrideWith(FakeController.new),
           runRepositoryProvider.overrideWithValue(FakeRepo((0, 0))),
+          growthServiceProvider.overrideWithValue(
+            FakeGrowthService(growthState(weekDistanceM: 0)),
+          ),
         ],
         child: const RunmagochiApp(),
       ),
@@ -20,6 +24,6 @@ void main() {
     expect(find.text('러닝'), findsOneWidget);
     expect(find.text('기록'), findsOneWidget);
     expect(find.text('아바타'), findsOneWidget);
-    expect(find.text('이번 주 0.00 km · 0회'), findsOneWidget);
+    expect(find.text('0.00km 달성'), findsOneWidget);
   });
 }

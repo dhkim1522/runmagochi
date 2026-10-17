@@ -1,3 +1,6 @@
+import 'package:runmagochi/avatar/app/growth_service.dart';
+import 'package:runmagochi/avatar/domain/growth_rules.dart';
+import 'package:runmagochi/avatar/domain/growth_state.dart';
 import 'package:runmagochi/run/app/permission_gate.dart';
 import 'package:runmagochi/run/app/run_controller.dart';
 import 'package:runmagochi/run/data/run_repository.dart';
@@ -150,3 +153,62 @@ class FakeRepo implements RunRepository {
   dynamic noSuchMethod(Invocation invocation) =>
       throw UnimplementedError('${invocation.memberName}');
 }
+
+class FakeGrowthService implements GrowthService {
+  FakeGrowthService(this.state);
+  GrowthState state;
+  int syncs = 0;
+  final List<double> targets = [];
+
+  @override
+  Future<GrowthGain> sync() async {
+    syncs++;
+    return const GrowthGain(
+      distanceXp: 0,
+      goalBonusXp: 0,
+      levelBefore: 1,
+      levelAfter: 1,
+      stageBefore: 1,
+      stageAfter: 1,
+    );
+  }
+
+  @override
+  Future<GrowthState> load() async => state;
+
+  @override
+  Future<GrowthGain> setWeeklyTarget(double targetM) async {
+    targets.add(targetM);
+    return sync();
+  }
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) =>
+      throw UnimplementedError('${invocation.memberName}');
+}
+
+GrowthState growthState({
+  int level = 3,
+  int xpIntoLevel = 58,
+  double weekTargetM = 10000,
+  double weekDistanceM = 6200,
+  bool weekAchieved = false,
+  int streakWeeks = 0,
+}) => GrowthState(
+  name: '러니',
+  totalXp: 25 * level * (level - 1) + xpIntoLevel,
+  level: LevelProgress(
+    level: level,
+    xpIntoLevel: xpIntoLevel,
+    xpForNext: 50 * level,
+  ),
+  stage: 1,
+  xpToNextStage: 100,
+  mood: AvatarMood.normal,
+  weekTargetM: weekTargetM,
+  weekDistanceM: weekDistanceM,
+  weekAchieved: weekAchieved,
+  streakWeeks: streakWeeks,
+  totalDistanceM: 0,
+  runCount: 0,
+);

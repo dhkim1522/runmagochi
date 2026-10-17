@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../avatar/ui/avatar_placeholder.dart';
-import '../../core/format.dart';
+import '../../avatar/app/providers.dart';
+import '../../avatar/domain/growth_rules.dart';
+import '../../avatar/domain/growth_state.dart';
+import '../../avatar/ui/avatar_view.dart';
+import '../../avatar/ui/weekly_goal_bar.dart';
 import '../app/permission_gate.dart';
 import '../app/providers.dart';
 import 'in_run_screen.dart';
@@ -67,7 +70,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         _toast('저장하지 못했어요');
       }
       if (!mounted) return;
-      ref.invalidate(weeklyTotalProvider);
+      ref.invalidate(growthStateProvider);
     }
   }
 
@@ -77,7 +80,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       context,
     ).push(MaterialPageRoute<void>(builder: (_) => const InRunScreen()));
     if (!mounted) return;
-    ref.invalidate(weeklyTotalProvider);
+    ref.invalidate(growthStateProvider);
     final after = ref.read(runControllerProvider).lastSummary;
     if (after == null || identical(after, before)) return;
     await Navigator.of(context).push(
@@ -138,14 +141,23 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     return ok == true;
   }
 
+  Future<void> _changeTarget(double targetM) async {
+    try {
+      await ref.read(growthServiceProvider).setWeeklyTarget(targetM);
+    } catch (_) {
+      _toast('목표를 바꾸지 못했어요');
+    }
+    if (!mounted) return;
+    ref.invalidate(growthStateProvider);
+  }
+
   @override
   Widget build(BuildContext context) {
-    final weekly = ref.watch(weeklyTotalProvider);
-    final summary = weekly.when(
-      data: (t) => '이번 주 ${formatKm(t.$1)} km · ${t.$2}회',
-      loading: () => '이번 주 -',
-      error: (_, _) => '이번 주 -',
-    );
+    final theme = Theme.of(context);
+    final GrowthState? g = ref.watch(growthStateProvider).asData?.value;
+    final nextLevelKm = g == null
+        ? null
+        : (g.level.xpForNext - g.level.xpIntoLevel) / 10;
     return SafeArea(
       child: Stack(
         children: [
@@ -154,13 +166,54 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Text(
-                  summary,
-                  textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.titleLarge,
+                if (g != null)
+                  WeeklyGoalBar(
+                    targetM: g.weekTargetM,
+                    distanceM: g.weekDistanceM,
+                    streakWeeks: g.streakWeeks,
+                    onChangeTarget: _changeTarget,
+                  )
+                else
+                  Text(
+                    '이번 주 -',
+                    textAlign: TextAlign.center,
+                    style: theme.textTheme.titleMedium,
+                  ),
+                Expanded(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      AvatarView(
+                        stage: g?.stage ?? 1,
+                        mood: g?.mood ?? AvatarMood.normal,
+                        action: AvatarAction.idle,
+                        scale: 8,
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        g == null ? '-' : '${g.name} Lv.${g.level.level}',
+                        style: theme.textTheme.titleLarge,
+                      ),
+                      const SizedBox(height: 8),
+                      SizedBox(
+                        width: 200,
+                        child: LinearProgressIndicator(
+                          value: g == null
+                              ? 0
+                              : g.level.xpIntoLevel / g.level.xpForNext,
+                          minHeight: 8,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        nextLevelKm == null
+                            ? '-'
+                            : '다음 레벨까지 ${nextLevelKm.toStringAsFixed(1)}km',
+                        style: theme.textTheme.bodySmall,
+                      ),
+                    ],
+                  ),
                 ),
-                const SizedBox(height: 24),
-                const Expanded(child: AvatarPlaceholder()),
                 const SizedBox(height: 24),
                 FilledButton(
                   onPressed: _starting ? null : _onStart,

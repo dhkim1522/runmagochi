@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:runmagochi/avatar/app/providers.dart';
+import 'package:runmagochi/avatar/domain/growth_rules.dart';
+import 'package:runmagochi/avatar/ui/avatar_view.dart';
 import 'package:runmagochi/run/app/permission_gate.dart';
 import 'package:runmagochi/run/app/providers.dart';
 import 'package:runmagochi/run/domain/run_engine.dart';
@@ -17,6 +20,7 @@ Future<void> pumpHome(
   FakeController controller, {
   FakeGate? gate,
   FakeRepo? repo,
+  FakeGrowthService? growth,
 }) async {
   await tester.pumpWidget(
     ProviderScope(
@@ -26,6 +30,9 @@ Future<void> pumpHome(
           gate ?? FakeGate(GateResult.ready),
         ),
         runRepositoryProvider.overrideWithValue(repo ?? FakeRepo((0, 0))),
+        growthServiceProvider.overrideWithValue(
+          growth ?? FakeGrowthService(growthState()),
+        ),
         clockProvider.overrideWithValue(() => DateTime(2026, 10, 17)),
       ],
       child: const MaterialApp(home: Scaffold(body: HomeScreen())),
@@ -34,11 +41,48 @@ Future<void> pumpHome(
   await tester.pump();
 }
 
+/// 홈의 아바타 티커는 멈추지 않아 pumpAndSettle 이 끝나지 않는다. 고정 시간만 흘린다.
+Future<void> settle(WidgetTester tester) async {
+  for (var i = 0; i < 10; i++) {
+    await tester.pump(const Duration(milliseconds: 100));
+  }
+}
+
 void main() {
-  testWidgets('이번 주 합계와 아바타 자리가 보인다', (tester) async {
-    await pumpHome(tester, FakeController(), repo: FakeRepo((12340, 3)));
-    expect(find.text('이번 주 12.34 km · 3회'), findsOneWidget);
-    expect(find.text('아바타는 다음 업데이트에서 만나요'), findsOneWidget);
+  testWidgets('아바타·레벨·주간 목표가 보인다', (tester) async {
+    await pumpHome(
+      tester,
+      FakeController(),
+      growth: FakeGrowthService(growthState(streakWeeks: 2)),
+    );
+    await tester.pump();
+    expect(
+      tester.widget<AvatarView>(find.byType(AvatarView)).action,
+      AvatarAction.idle,
+    );
+    expect(find.text('이번 주 목표 10km'), findsOneWidget);
+    expect(find.text('6.20km 달성'), findsOneWidget);
+    expect(find.text('2주 연속 달성'), findsOneWidget);
+    expect(find.text('러니 Lv.3'), findsOneWidget);
+    // 150 - 58 = 92 → 9.2km
+    expect(find.text('다음 레벨까지 9.2km'), findsOneWidget);
+  });
+
+  testWidgets('목표를 15km 로 바꾸면 setWeeklyTarget(15000) 이 불리고 다시 읽는다', (
+    tester,
+  ) async {
+    final g = FakeGrowthService(growthState());
+    await pumpHome(tester, FakeController(), growth: g);
+    await tester.pump();
+    final before = g.syncs;
+    await tester.tap(find.text('이번 주 목표 10km'));
+    await settle(tester);
+    await tester.enterText(find.byType(TextField), '15');
+    await tester.pump();
+    await tester.tap(find.text('저장'));
+    await settle(tester);
+    expect(g.targets, [15000]);
+    expect(g.syncs, greaterThan(before));
   });
 
   testWidgets('시작 버튼 → 카운트다운 3 표시 → 3초 후 러닝 중 화면', (tester) async {
@@ -53,7 +97,7 @@ void main() {
     await tester.pump(const Duration(seconds: 1));
     expect(find.text('1'), findsOneWidget);
     await tester.pump(const Duration(seconds: 1));
-    await tester.pumpAndSettle();
+    await settle(tester);
     expect(c.calls, ['restore', 'start']);
     expect(find.byType(InRunScreen), findsOneWidget);
     expect(find.text('일시정지'), findsOneWidget);
@@ -64,7 +108,7 @@ void main() {
     final c = FakeController();
     await pumpHome(tester, c, gate: gate);
     await tester.tap(find.text('시작'));
-    await tester.pumpAndSettle();
+    await settle(tester);
     expect(find.byType(PermissionScreen), findsOneWidget);
     expect(c.calls, ['restore']);
 
@@ -75,7 +119,7 @@ void main() {
     expect(find.byType(PermissionScreen), findsNothing);
     expect(find.text('3'), findsOneWidget);
     await tester.pump(const Duration(seconds: 3));
-    await tester.pumpAndSettle();
+    await settle(tester);
     expect(c.calls, ['restore', 'start']);
   });
 
@@ -83,11 +127,11 @@ void main() {
     final c = FakeController();
     await pumpHome(tester, c, gate: FakeGate(GateResult.locationDeniedForever));
     await tester.tap(find.text('시작'));
-    await tester.pumpAndSettle();
+    await settle(tester);
     expect(find.byType(PermissionScreen), findsOneWidget);
     final nav = tester.state<NavigatorState>(find.byType(Navigator));
     nav.pop();
-    await tester.pumpAndSettle();
+    await settle(tester);
     await tester.pump(const Duration(seconds: 4));
     expect(c.calls, ['restore']);
   });
@@ -95,10 +139,10 @@ void main() {
   testWidgets('복구할 러닝이 있으면 다이얼로그 표시, 이어서 기록은 일시정지 화면', (tester) async {
     final c = FakeController(restore: true);
     await pumpHome(tester, c);
-    await tester.pumpAndSettle();
+    await settle(tester);
     expect(find.text('기록 중이던 러닝이 있어요'), findsOneWidget);
     await tester.tap(find.text('이어서 기록'));
-    await tester.pumpAndSettle();
+    await settle(tester);
     expect(find.byType(InRunScreen), findsOneWidget);
     expect(find.text('재개'), findsOneWidget);
     expect(c.calls, ['restore']);
@@ -107,9 +151,9 @@ void main() {
   testWidgets('복구 다이얼로그에서 종료하고 저장은 end 후 홈에 남는다', (tester) async {
     final c = FakeController(restore: true);
     await pumpHome(tester, c);
-    await tester.pumpAndSettle();
+    await settle(tester);
     await tester.tap(find.text('종료하고 저장'));
-    await tester.pumpAndSettle();
+    await settle(tester);
     expect(c.calls, ['restore', 'end']);
     expect(find.byType(InRunScreen), findsNothing);
     expect(find.text('기록 중이던 러닝이 있어요'), findsNothing);
@@ -120,37 +164,37 @@ void main() {
   testWidgets('복구할 러닝이 없으면 다이얼로그가 없고 restoreIfAny 는 한 번만 불린다', (tester) async {
     final c = FakeController();
     await pumpHome(tester, c);
-    await tester.pumpAndSettle();
+    await settle(tester);
     expect(find.text('기록 중이던 러닝이 있어요'), findsNothing);
     expect(c.calls, ['restore']);
   });
 
-  testWidgets('러닝이 끝나 홈으로 돌아오면 주간 합계를 다시 읽는다', (tester) async {
-    final repo = FakeRepo((1000, 1));
+  testWidgets('러닝이 끝나 홈으로 돌아오면 성장 상태를 다시 읽는다', (tester) async {
+    final growth = FakeGrowthService(growthState(weekDistanceM: 1000));
     final c = FakeController();
-    await pumpHome(tester, c, repo: repo);
-    expect(find.text('이번 주 1.00 km · 1회'), findsOneWidget);
+    await pumpHome(tester, c, growth: growth);
+    expect(find.text('1.00km 달성'), findsOneWidget);
 
     await tester.tap(find.text('시작'));
     await tester.pump();
     await tester.pump(const Duration(seconds: 3));
-    await tester.pumpAndSettle();
+    await settle(tester);
     await tester.tap(find.text('일시정지'));
     await tester.pump();
 
-    repo.total = (4230, 2);
+    growth.state = growthState(weekDistanceM: 4230);
     final g = await tester.startGesture(tester.getCenter(find.text('종료')));
     await tester.pump(); // 첫 프레임에서 타이머가 시작된다.
     await tester.pump(const Duration(milliseconds: 1501));
     await tester.pump();
     await g.up();
-    await tester.pumpAndSettle();
+    await settle(tester);
     expect(find.byType(InRunScreen), findsNothing);
     expect(find.byType(SummaryScreen), findsOneWidget);
     await tester.tap(find.text('확인'));
-    await tester.pumpAndSettle();
+    await settle(tester);
     expect(find.byType(SummaryScreen), findsNothing);
-    expect(find.text('이번 주 4.23 km · 2회'), findsOneWidget);
+    expect(find.text('4.23km 달성'), findsOneWidget);
     expect(c.calls, ['restore', 'start', 'pause', 'end']);
     expect(c.state.snapshot.state, RunState.idle);
   });
@@ -165,7 +209,7 @@ void main() {
     await tester.pump(const Duration(seconds: 1));
     await tester.tap(find.text('시작'), warnIfMissed: false);
     await tester.pump(const Duration(seconds: 2));
-    await tester.pumpAndSettle();
+    await settle(tester);
     expect(c.calls.where((e) => e == 'start'), hasLength(1));
   });
 
@@ -185,14 +229,14 @@ void main() {
       find.widgetWithText(FilledButton, '시작'),
     );
     expect(button.onPressed, isNotNull);
-    await tester.pumpAndSettle(const Duration(seconds: 5));
+    await settle(tester);
   });
 
   Future<void> startRun(WidgetTester tester) async {
     await tester.tap(find.text('시작'));
     await tester.pump();
     await tester.pump(const Duration(seconds: 3));
-    await tester.pumpAndSettle();
+    await settle(tester);
   }
 
   Future<void> holdStop(WidgetTester tester) async {
@@ -203,7 +247,7 @@ void main() {
     await tester.pump(const Duration(milliseconds: 1501));
     await tester.pump();
     await g.up();
-    await tester.pumpAndSettle();
+    await settle(tester);
   }
 
   testWidgets('이전 요약이 남아 있어도 end 없이 돌아오면 요약을 다시 보이지 않는다', (tester) async {
@@ -223,7 +267,7 @@ void main() {
     await startRun(tester);
     expect(find.byType(InRunScreen), findsOneWidget);
     tester.state<NavigatorState>(find.byType(Navigator)).pop();
-    await tester.pumpAndSettle();
+    await settle(tester);
     expect(find.byType(InRunScreen), findsNothing);
     expect(find.byType(SummaryScreen), findsNothing);
     expect(c.calls, isNot(contains('end')));
@@ -236,7 +280,7 @@ void main() {
     await holdStop(tester);
     final first = c.state.lastSummary;
     await tester.tap(find.text('확인'));
-    await tester.pumpAndSettle();
+    await settle(tester);
 
     await startRun(tester);
     await holdStop(tester);
