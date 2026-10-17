@@ -197,6 +197,9 @@ class _ClayButtonState extends State<ClayButton> {
     return Semantics(
       button: true,
       enabled: enabled,
+      label: widget.label,
+      excludeSemantics: true,
+      onTap: widget.onPressed,
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
         onTapDown: enabled ? (_) => _set(true) : null,
@@ -215,6 +218,21 @@ class _ClayButtonState extends State<ClayButton> {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// 화면 제목(title 글자). 스크린 리더에는 헤더로 읽힌다.
+class ScreenTitle extends StatelessWidget {
+  const ScreenTitle(this.text, {super.key});
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      header: true,
+      child: Text(text, style: AppText.of(context).title),
     );
   }
 }

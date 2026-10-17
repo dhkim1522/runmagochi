@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:runmagochi/core/theme.dart';
+import 'package:runmagochi/core/ui/clay.dart';
 import 'package:runmagochi/run/app/providers.dart';
 import 'package:runmagochi/run/data/run_repository.dart';
 import 'package:runmagochi/run/ui/history_screen.dart';
@@ -21,6 +23,7 @@ Future<void> pump(
   WidgetTester tester,
   FakeRepo repo, [
   FakeController? c,
+  double scale = 1.0,
 ]) async {
   await tester.pumpWidget(
     ProviderScope(
@@ -29,7 +32,16 @@ Future<void> pump(
         runControllerProvider.overrideWith(() => c ?? FakeController()),
         clockProvider.overrideWithValue(() => DateTime(2026, 10, 17)),
       ],
-      child: const MaterialApp(home: Scaffold(body: HistoryScreen())),
+      child: MaterialApp(
+        theme: appLightTheme(),
+        builder: (context, child) => MediaQuery(
+          data: MediaQuery.of(
+            context,
+          ).copyWith(textScaler: TextScaler.linear(scale)),
+          child: child!,
+        ),
+        home: const Scaffold(body: HistoryScreen()),
+      ),
     ),
   );
   await tester.pumpAndSettle();
@@ -45,11 +57,14 @@ void main() {
       ],
     );
     await pump(tester, repo);
-    expect(find.text('이번 주 8.00 km · 2회'), findsOneWidget);
-    final first = tester.getTopLeft(find.text('토요일 아침 러닝')).dy;
-    final second = tester.getTopLeft(find.text('목요일 저녁 러닝')).dy;
+    expect(find.text('이번 주'), findsOneWidget);
+    expect(find.text('8.00'), findsOneWidget);
+    expect(find.text('러닝 2회'), findsOneWidget);
+    expect(find.text('최근 러닝'), findsOneWidget);
+    final first = tester.getTopLeft(find.textContaining('토요일 아침 러닝')).dy;
+    final second = tester.getTopLeft(find.textContaining('목요일 저녁 러닝')).dy;
     expect(first, lessThan(second));
-    expect(find.text('5.00 km'), findsOneWidget);
+    expect(find.text("5.00km · 6'40\" · 20:00"), findsOneWidget);
   });
 
   testWidgets('항목을 누르면 상세로 이동한다', (tester) async {
@@ -58,7 +73,7 @@ void main() {
       runs: [_item('a', '목요일 저녁 러닝', DateTime(2026, 10, 15, 19), 3000)],
     );
     await pump(tester, repo);
-    await tester.tap(find.text('목요일 저녁 러닝'));
+    await tester.tap(find.textContaining('목요일 저녁 러닝'));
     await tester.pumpAndSettle();
     expect(find.byType(SummaryScreen), findsOneWidget);
     expect(find.text('기록을 찾을 수 없어요'), findsOneWidget);
@@ -77,6 +92,31 @@ void main() {
     repo.runs = [_item('a', '새 러닝', DateTime(2026, 10, 17, 7), 1000)];
     await c.end();
     await tester.pumpAndSettle();
-    expect(find.text('새 러닝'), findsOneWidget);
+    expect(find.textContaining('새 러닝'), findsOneWidget);
+  });
+
+  testWidgets('글자 크기 1.3배에서 overflow 없이 그려진다', (tester) async {
+    tester.view.physicalSize = const Size(390, 844);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    final repo = FakeRepo(
+      (12400, 3),
+      runs: [
+        _item('a', '토요일 점심 러닝', DateTime(2026, 10, 17, 12), 5020),
+        _item('b', '목요일 저녁 러닝', DateTime(2026, 10, 15, 19), 4280),
+      ],
+    );
+    await pump(tester, repo, null, 1.3);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('제목은 헤더다', (tester) async {
+    final handle = tester.ensureSemantics();
+    await pump(tester, FakeRepo((0, 0)));
+    expect(
+      tester.getSemantics(find.widgetWithText(ScreenTitle, '기록')),
+      matchesSemantics(label: '기록', isHeader: true),
+    );
+    handle.dispose();
   });
 }

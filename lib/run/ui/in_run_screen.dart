@@ -72,7 +72,7 @@ class _InRunScreenState extends ConsumerState<InRunScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Text(paused ? '일시정지' : '러닝 중', style: t.title),
+                ScreenTitle(paused ? '일시정지' : '러닝 중'),
                 if (view.lastError != null)
                   Padding(
                     padding: const EdgeInsets.only(top: Gap.s2),
@@ -263,6 +263,7 @@ class _HoldToStopButtonState extends State<_HoldToStopButton>
     return Semantics(
       button: true,
       label: '길게 눌러 종료',
+      excludeSemantics: true,
       child: Listener(
         onPointerDown: (_) {
           if (widget.enabled) _progress.forward(from: 0);

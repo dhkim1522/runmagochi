@@ -5,6 +5,8 @@ import '../../avatar/app/providers.dart';
 import '../../avatar/domain/growth_state.dart';
 import '../../avatar/ui/growth_summary.dart';
 import '../../core/format.dart';
+import '../../core/theme.dart';
+import '../../core/ui/clay.dart';
 import '../app/providers.dart';
 import '../data/run_repository.dart';
 import '../domain/run_summary.dart';
@@ -65,9 +67,9 @@ class SummaryScreen extends ConsumerWidget {
           .watch(runDetailProvider(runId!))
           .when(
             loading: () => const Center(child: CircularProgressIndicator()),
-            error: (_, _) => const Center(child: Text('기록을 찾을 수 없어요')),
+            error: (_, _) => const _Notice('기록을 찾을 수 없어요'),
             data: (d) => d == null
-                ? const Center(child: Text('기록을 찾을 수 없어요'))
+                ? const _Notice('기록을 찾을 수 없어요')
                 : _SummaryBody(
                     name: d.run.name,
                     startedAt: d.run.startedAt,
@@ -81,17 +83,24 @@ class SummaryScreen extends ConsumerWidget {
           );
     }
     return Scaffold(
-      appBar: AppBar(title: const Text('러닝 요약')),
-      body: SafeArea(child: body),
+      body: SafeArea(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const Padding(
+              padding: EdgeInsets.fromLTRB(Gap.s5, Gap.s6, Gap.s5, Gap.s4),
+              child: ScreenTitle('러닝 요약'),
+            ),
+            Expanded(child: body),
+          ],
+        ),
+      ),
       bottomNavigationBar: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(24, 8, 24, 16),
-          child: FilledButton(
+          padding: const EdgeInsets.fromLTRB(Gap.s5, Gap.s2, Gap.s5, Gap.s4),
+          child: ClayButton(
+            label: '확인',
             onPressed: () => Navigator.of(context).pop(),
-            child: const Padding(
-              padding: EdgeInsets.symmetric(vertical: 8),
-              child: Text('확인'),
-            ),
           ),
         ),
       ),
@@ -124,70 +133,131 @@ class _SummaryBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final c = AppColors.of(context);
+    final t = AppText.of(context);
     return ListView(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.fromLTRB(Gap.s5, 0, Gap.s5, Gap.s4),
       children: [
-        if (growth != null) ...[growth!, const SizedBox(height: 16)],
-        Text(formatRunDate(startedAt), style: theme.textTheme.bodyMedium),
-        const SizedBox(height: 4),
-        Text(name, style: theme.textTheme.titleLarge),
-        const SizedBox(height: 16),
+        if (growth != null) ...[growth!, const SizedBox(height: Gap.s5)],
         Text(
-          formatKm(distanceM),
-          style: theme.textTheme.displayLarge?.copyWith(
-            fontWeight: FontWeight.bold,
-          ),
+          formatRunDate(startedAt),
+          style: t.caption.copyWith(color: c.inkMuted),
         ),
-        Text('킬로미터', style: theme.textTheme.bodyMedium),
-        const SizedBox(height: 24),
+        const SizedBox(height: 2),
+        Text(name, style: t.heading.copyWith(fontSize: 22, height: 28 / 22)),
+        const SizedBox(height: Gap.s5),
         Row(
+          crossAxisAlignment: CrossAxisAlignment.baseline,
+          textBaseline: TextBaseline.alphabetic,
           children: [
-            _Stat(formatPace(avgPaceSecPerKm), '평균 페이스'),
-            _Stat(formatDuration(movingTime), '시간'),
-            _Stat(calories.round().toString(), '칼로리'),
+            Flexible(
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(formatKm(distanceM), style: t.numberL),
+              ),
+            ),
+            const SizedBox(width: Gap.s2),
+            Text(
+              'km',
+              style: t.heading.copyWith(fontSize: 22, color: c.primaryDeep),
+            ),
           ],
         ),
-        const SizedBox(height: 24),
-        SizedBox(
-          height: 220,
-          child: DecoratedBox(
-            decoration: BoxDecoration(
-              color: theme.colorScheme.surfaceContainerHighest,
-              borderRadius: BorderRadius.circular(16),
+        const SizedBox(height: Gap.s5),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: StatCard(
+                label: '평균 페이스',
+                value: formatPace(avgPaceSecPerKm),
+              ),
             ),
+            const SizedBox(width: Gap.s3),
+            Expanded(
+              child: StatCard(label: '시간', value: formatDuration(movingTime)),
+            ),
+            const SizedBox(width: Gap.s3),
+            Expanded(
+              child: StatCard(label: '칼로리', value: '${calories.round()}'),
+            ),
+          ],
+        ),
+        const SizedBox(height: Gap.s5),
+        ClayCard(
+          child: SizedBox(
+            height: 220,
             child: route.isEmpty
-                ? const Center(child: Text('경로가 없어요'))
+                ? Center(
+                    child: Text(
+                      '경로가 없어요',
+                      style: t.body.copyWith(color: c.inkMuted),
+                    ),
+                  )
                 : CustomPaint(
                     size: Size.infinite,
                     painter: RoutePainter(
                       route,
-                      color: theme.colorScheme.primary,
+                      color: c.primary,
+                      startColor: c.accent,
+                      endColor: c.ink,
                     ),
                   ),
           ),
         ),
         if (splits.isNotEmpty) ...[
-          const SizedBox(height: 24),
-          Text('구간', style: theme.textTheme.titleMedium),
-          const SizedBox(height: 8),
-          Row(
-            children: [
-              Expanded(child: Text('km', style: theme.textTheme.labelMedium)),
-              Text('페이스', style: theme.textTheme.labelMedium),
-            ],
-          ),
-          for (final (i, sp) in splits.indexed)
-            Padding(
-              key: const ValueKey('split-row'),
-              padding: const EdgeInsets.symmetric(vertical: 6),
-              child: Row(
-                children: [
-                  Expanded(child: Text(_splitLabel(splits, i))),
-                  Text(formatPace(sp.paceSecPerKm)),
-                ],
-              ),
+          const SizedBox(height: Gap.s5),
+          Text('구간', style: t.heading),
+          const SizedBox(height: Gap.s2),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: Gap.s1),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text('km', style: t.label.copyWith(color: c.inkMuted)),
+                ),
+                Text('페이스', style: t.label.copyWith(color: c.inkMuted)),
+              ],
             ),
+          ),
+          const SizedBox(height: Gap.s2),
+          ClayCard(
+            radius: Radii.md,
+            child: Column(
+              children: [
+                for (final (i, sp) in splits.indexed)
+                  Column(
+                    children: [
+                      if (i > 0)
+                        Divider(
+                          height: 2,
+                          thickness: 2,
+                          indent: 0,
+                          color: c.surfaceSoft,
+                        ),
+                      Padding(
+                        key: const ValueKey('split-row'),
+                        padding: const EdgeInsets.symmetric(
+                          vertical: Gap.s3,
+                          horizontal: Gap.s4,
+                        ),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                _splitLabel(splits, i),
+                                style: t.body,
+                              ),
+                            ),
+                            Text(formatPace(sp.paceSecPerKm), style: t.heading),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+              ],
+            ),
+          ),
         ],
       ],
     );
@@ -204,27 +274,11 @@ String _splitLabel(List<Split> splits, int i) {
   return formatKm(cumulative).replaceFirst(RegExp(r'\.?0+$'), '');
 }
 
-class _Stat extends StatelessWidget {
-  const _Stat(this.value, this.label);
-  final String value;
-  final String label;
+class _Notice extends StatelessWidget {
+  const _Notice(this.message);
+  final String message;
 
   @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Expanded(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            value,
-            style: theme.textTheme.titleLarge?.copyWith(
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          Text(label, style: theme.textTheme.bodySmall),
-        ],
-      ),
-    );
-  }
+  Widget build(BuildContext context) =>
+      Center(child: Text(message, style: AppText.of(context).body));
 }

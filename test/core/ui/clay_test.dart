@@ -61,4 +61,31 @@ void main() {
     expect(find.text('시간'), findsOneWidget);
     expect(find.text('18:42'), findsOneWidget);
   });
+
+  testWidgets('ClayButton 은 라벨과 버튼이 한 시맨틱 노드다', (tester) async {
+    final handle = tester.ensureSemantics();
+    await tester.pumpWidget(_wrap(ClayButton(label: '시작', onPressed: () {})));
+    expect(
+      tester.getSemantics(find.byType(ClayButton)),
+      matchesSemantics(
+        label: '시작',
+        isButton: true,
+        isEnabled: true,
+        hasEnabledState: true,
+        hasTapAction: true,
+      ),
+    );
+    expect(find.bySemanticsLabel('시작'), findsOneWidget);
+    handle.dispose();
+  });
+
+  testWidgets('ScreenTitle 은 헤더로 표시된다', (tester) async {
+    final handle = tester.ensureSemantics();
+    await tester.pumpWidget(_wrap(const ScreenTitle('기록')));
+    expect(
+      tester.getSemantics(find.byType(ScreenTitle)),
+      matchesSemantics(label: '기록', isHeader: true),
+    );
+    handle.dispose();
+  });
 }

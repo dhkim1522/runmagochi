@@ -189,6 +189,25 @@ void main() {
     expect(find.byType(InRunScreen), findsNothing);
   });
 
+  group('접근성', () {
+    testWidgets('종료 버튼은 시맨틱 노드가 하나이고 라벨이 중복되지 않는다', (tester) async {
+      final handle = tester.ensureSemantics();
+      await open(tester);
+      expect(find.bySemanticsLabel('길게 눌러 종료'), findsOneWidget);
+      handle.dispose();
+    });
+
+    testWidgets('화면 제목은 헤더다', (tester) async {
+      final handle = tester.ensureSemantics();
+      await open(tester);
+      expect(
+        tester.getSemantics(find.widgetWithText(ScreenTitle, '일시정지')),
+        matchesSemantics(label: '일시정지', isHeader: true),
+      );
+      handle.dispose();
+    });
+  });
+
   group('시안 요소', () {
     testWidgets('길게 눌러 종료 문구와 지표 카드 3개가 일시정지에 보인다', (tester) async {
       await open(tester);

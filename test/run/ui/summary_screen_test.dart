@@ -3,10 +3,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:runmagochi/avatar/app/providers.dart';
 import 'package:runmagochi/avatar/domain/growth_state.dart';
+import 'package:runmagochi/core/theme.dart';
 import 'package:runmagochi/run/app/providers.dart';
 import 'package:runmagochi/run/data/run_repository.dart';
 import 'package:runmagochi/run/domain/location_sample.dart';
 import 'package:runmagochi/run/domain/run_summary.dart';
+import 'package:runmagochi/core/ui/clay.dart';
 import 'package:runmagochi/run/ui/summary_screen.dart';
 
 import 'fakes.dart';
@@ -46,7 +48,7 @@ Future<void> pump(WidgetTester tester, Widget screen, {FakeRepo? repo}) async {
           FakeGrowthService(growthState()),
         ),
       ],
-      child: MaterialApp(home: screen),
+      child: MaterialApp(theme: appLightTheme(), home: screen),
     ),
   );
 }
@@ -194,5 +196,56 @@ void main() {
     await pump(tester, const SummaryScreen.forRun('a'), repo: repo);
     await tester.pumpAndSettle();
     expect(find.textContaining('경험치'), findsNothing);
+  });
+
+  testWidgets('글자 크기 1.3배, 레벨업 요약이 overflow 없이 그려진다', (tester) async {
+    tester.view.physicalSize = const Size(390, 844);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          runRepositoryProvider.overrideWithValue(FakeRepo((0, 0))),
+          growthServiceProvider.overrideWithValue(
+            FakeGrowthService(growthState()),
+          ),
+        ],
+        child: MaterialApp(
+          theme: appLightTheme(),
+          builder: (context, child) => MediaQuery(
+            data: MediaQuery.of(
+              context,
+            ).copyWith(textScaler: const TextScaler.linear(1.3)),
+            child: child!,
+          ),
+          home: SummaryScreen.fromSummary(
+            _summary(),
+            gain: const GrowthGain(
+              distanceXp: 25,
+              goalBonusXp: 50,
+              levelBefore: 3,
+              levelAfter: 4,
+              stageBefore: 1,
+              stageAfter: 1,
+            ),
+          ),
+        ),
+      ),
+    );
+    for (var i = 0; i < 10; i++) {
+      await tester.pump(const Duration(milliseconds: 100));
+    }
+    expect(tester.takeException(), isNull);
+    expect(find.text('레벨 업!'), findsOneWidget);
+  });
+
+  testWidgets('제목은 헤더다', (tester) async {
+    final handle = tester.ensureSemantics();
+    await pump(tester, SummaryScreen.fromSummary(_summary()));
+    expect(
+      tester.getSemantics(find.widgetWithText(ScreenTitle, '러닝 요약')),
+      matchesSemantics(label: '러닝 요약', isHeader: true),
+    );
+    handle.dispose();
   });
 }

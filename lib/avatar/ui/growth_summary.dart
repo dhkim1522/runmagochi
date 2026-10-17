@@ -3,6 +3,8 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import '../../core/format.dart';
+import '../../core/theme.dart';
+import '../../core/ui/clay.dart';
 import '../domain/growth_rules.dart';
 import '../domain/growth_state.dart';
 import 'avatar_view.dart';
@@ -71,52 +73,56 @@ class _GrowthSummaryState extends State<GrowthSummary>
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final c = AppColors.of(context);
+    final t = AppText.of(context);
     final g = widget.gain;
     final target = widget.weekTargetM;
     final goalLabel = target == null
         ? '이번 주 목표 달성'
         : '이번 주 목표 ${WeeklyGoalBar.targetLabel(target)}km 달성';
-    return Card(
-      margin: EdgeInsets.zero,
+    final rows = Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _XpRow('달린 거리 ${formatKm(widget.distanceM)}km', '경험치 +${g.distanceXp}'),
+        if (g.goalBonusXp > 0) ...[
+          const SizedBox(height: Gap.s3),
+          _XpRow(goalLabel, '경험치 +${g.goalBonusXp}', merged: true),
+        ],
+      ],
+    );
+    if (!_animates) return rows;
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: c.surfaceSoft,
+        borderRadius: BorderRadius.circular(Radii.xl),
+        border: Border.all(color: c.line, width: Borders.thick),
+      ),
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(Gap.s5),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            _XpRow(
-              '달린 거리 ${formatKm(widget.distanceM)}km',
-              '경험치 +${g.distanceXp}',
-            ),
-            if (g.goalBonusXp > 0) ...[
-              const SizedBox(height: 8),
-              _XpRow(goalLabel, '경험치 +${g.goalBonusXp}', merged: true),
+            if (g.leveledUp) ...[
+              Text(
+                '레벨 업!',
+                textAlign: TextAlign.center,
+                style: t.title.copyWith(color: c.primaryDeep),
+              ),
+              const SizedBox(height: Gap.s2),
+              Text(
+                'Lv.${g.levelBefore} 에서 Lv.${g.levelAfter} 로',
+                textAlign: TextAlign.center,
+                style: t.label.copyWith(color: c.inkMuted),
+              ),
             ],
-            if (_animates) ...[
-              const SizedBox(height: 16),
-              _avatar(),
-              const SizedBox(height: 8),
-              if (g.leveledUp) ...[
-                Text(
-                  '레벨 업!',
-                  textAlign: TextAlign.center,
-                  style: theme.textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                Text(
-                  'Lv.${g.levelBefore} 에서 Lv.${g.levelAfter} 로',
-                  textAlign: TextAlign.center,
-                  style: theme.textTheme.bodyMedium,
-                ),
-              ],
-              if (g.stageUp)
-                Text(
-                  '새 외형 단계!',
-                  textAlign: TextAlign.center,
-                  style: theme.textTheme.titleMedium,
-                ),
+            if (g.stageUp) ...[
+              const SizedBox(height: Gap.s2),
+              Text('새 외형 단계!', textAlign: TextAlign.center, style: t.heading),
             ],
+            const SizedBox(height: Gap.s3),
+            _avatar(),
+            const SizedBox(height: Gap.s5),
+            rows,
           ],
         ),
       ),
@@ -150,6 +156,7 @@ class _GrowthSummaryState extends State<GrowthSummary>
   }
 }
 
+/// 경험치 한 줄: 흰 카드, 값은 success 색 Jua 22.
 class _XpRow extends StatelessWidget {
   const _XpRow(this.label, this.xp, {this.merged = false});
   final String label;
@@ -160,18 +167,33 @@ class _XpRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    if (merged) return Text('$label · $xp', style: theme.textTheme.bodyMedium);
-    return Row(
-      children: [
-        Expanded(child: Text(label, style: theme.textTheme.bodyMedium)),
-        Text(
-          xp,
-          style: theme.textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-      ],
+    final c = AppColors.of(context);
+    final t = AppText.of(context);
+    final xpStyle = t.heading.copyWith(
+      fontSize: 22,
+      height: 28 / 22,
+      color: c.success,
+    );
+    return ClayCard(
+      radius: Radii.md,
+      padding: const EdgeInsets.symmetric(vertical: 14, horizontal: Gap.s4),
+      child: merged
+          ? Text.rich(
+              TextSpan(
+                style: t.body,
+                children: [
+                  TextSpan(text: '$label · '),
+                  TextSpan(text: xp, style: xpStyle),
+                ],
+              ),
+            )
+          : Row(
+              children: [
+                Expanded(child: Text(label, style: t.body)),
+                const SizedBox(width: Gap.s2),
+                Text(xp, style: xpStyle),
+              ],
+            ),
     );
   }
 }

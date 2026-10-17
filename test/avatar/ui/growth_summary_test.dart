@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:runmagochi/avatar/domain/growth_state.dart';
 import 'package:runmagochi/avatar/ui/avatar_view.dart';
 import 'package:runmagochi/avatar/ui/growth_summary.dart';
+import 'package:runmagochi/core/theme.dart';
 
 GrowthGain gain({
   int distanceXp = 50,
@@ -27,6 +28,7 @@ Future<void> pumpIt(
 }) async {
   await tester.pumpWidget(
     MaterialApp(
+      theme: appLightTheme(),
       home: Scaffold(
         body: GrowthSummary(gain: g, distanceM: 5020, weekTargetM: weekTargetM),
       ),

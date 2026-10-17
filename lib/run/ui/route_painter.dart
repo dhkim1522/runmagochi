@@ -41,35 +41,50 @@ List<Offset> projectRoute(
   ];
 }
 
-/// 지도 타일 없이 경로 선만 그린다.
+/// 지도 타일 없이 경로 선과 시작·끝 점만 그린다. 색은 모두 호출하는 쪽이 토큰에서 넘긴다.
 class RoutePainter extends CustomPainter {
-  RoutePainter(this.route, {required this.color});
+  RoutePainter(
+    this.route, {
+    required this.color,
+    required this.startColor,
+    required this.endColor,
+  });
 
   final List<(double, double)> route;
   final Color color;
+  final Color startColor;
+  final Color endColor;
+
+  static const double lineWidth = 6;
+  static const double dotRadius = 8;
 
   @override
   void paint(Canvas canvas, Size size) {
     final pts = projectRoute(route, size);
     if (pts.isEmpty) return;
-    final paint = Paint()
+    final line = Paint()
       ..color = color
-      ..strokeWidth = 4
+      ..strokeWidth = lineWidth
       ..strokeCap = StrokeCap.round
       ..strokeJoin = StrokeJoin.round
       ..style = PaintingStyle.stroke;
-    if (pts.length == 1) {
-      canvas.drawCircle(pts.first, 5, paint..style = PaintingStyle.fill);
-      return;
+    if (pts.length > 1) {
+      final path = Path()..moveTo(pts.first.dx, pts.first.dy);
+      for (final p in pts.skip(1)) {
+        path.lineTo(p.dx, p.dy);
+      }
+      canvas.drawPath(path, line);
     }
-    final path = Path()..moveTo(pts.first.dx, pts.first.dy);
-    for (final p in pts.skip(1)) {
-      path.lineTo(p.dx, p.dy);
+    canvas.drawCircle(pts.first, dotRadius, Paint()..color = startColor);
+    if (pts.length > 1) {
+      canvas.drawCircle(pts.last, dotRadius, Paint()..color = endColor);
     }
-    canvas.drawPath(path, paint);
   }
 
   @override
   bool shouldRepaint(RoutePainter old) =>
-      old.route != route || old.color != color;
+      old.route != route ||
+      old.color != color ||
+      old.startColor != startColor ||
+      old.endColor != endColor;
 }
