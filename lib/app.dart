@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'avatar/ui/avatar_screen.dart';
+import 'core/theme.dart';
 import 'run/ui/history_screen.dart';
 import 'run/ui/home_screen.dart';
 
@@ -11,7 +12,9 @@ class RunmagochiApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: '런마고치',
-      theme: ThemeData(colorSchemeSeed: Colors.green, useMaterial3: true),
+      theme: appLightTheme(),
+      darkTheme: appDarkTheme(),
+      themeMode: ThemeMode.system,
       home: const _HomeShell(),
     );
   }
