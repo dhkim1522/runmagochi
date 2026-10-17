@@ -42,7 +42,7 @@
 - [x] 4. 앱 테마 적용
 - [x] 5. 홈·러닝 중·일시정지 화면
 - [x] 6. 요약·기록 화면
-- [ ] 7. 아바타 탭·주간 목표·권한 화면
+- [x] 7. 아바타 탭·주간 목표·권한 화면
 - [ ] 8. 캐릭터 종류 3종 (무작위 고정)
 - [ ] 9. 캐릭터 스프라이트 완성 (3종)
 
@@ -104,7 +104,7 @@
 **Files:** Modify `lib/avatar/ui/avatar_screen.dart`, `lib/run/ui/permission_screen.dart`, `lib/app.dart`(탭바)
 - [ ] **Step 1:** 실패하는 테스트: 글자 크기 1.3배에서 overflow 없음. 시안 메모의 새 요소.
 - [ ] **Step 2:** 시안대로 구현. 테스트·분석 통과.
-- [ ] **Step 3:** 색 리터럴 검사: `grep -rnE "Color\(0x|Colors\.[a-z]" lib --include=*.dart | grep -v lib/core/theme.dart` 결과가 비어 있다(투명 `Colors.transparent` 만 예외). 커밋.
+- [ ] **Step 3:** 색 리터럴 검사: `grep -rnE "Color\(0x|(^|[^A-Za-z])Colors\.[a-z]" lib --include=*.dart | grep -v lib/core/theme.dart` 결과가 비어 있다(투명 `Colors.transparent` 만 예외). 커밋.
 
 ### Task 8: 캐릭터 종류 3종 (무작위 고정, 결정 0011)
 
