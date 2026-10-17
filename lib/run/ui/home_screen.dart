@@ -164,8 +164,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     }
     if (!mounted) return;
     ref.invalidate(growthStateProvider);
-    if (gain == null || gain.goalBonusXp <= 0) return;
-    if (gain.leveledUp) {
+    final g = gain;
+    if (g == null) return;
+    // 목표 보너스 말고도 아직 반영하지 않은 러닝 경험치로 레벨이 오를 수 있다.
+    if (g.leveledUp) {
       await showDialog<void>(
         context: context,
         builder: (context) => AlertDialog(
@@ -173,8 +175,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text('Lv.${gain!.levelBefore} 에서 Lv.${gain.levelAfter} 로'),
-              if (gain.stageUp) const Text('새 외형 단계!'),
+              Text('Lv.${g.levelBefore} 에서 Lv.${g.levelAfter} 로'),
+              if (g.stageUp) const Text('새 외형 단계!'),
             ],
           ),
           actions: [
@@ -185,8 +187,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           ],
         ),
       );
-    } else {
-      _toast('이번 주 목표 달성 · 경험치 +${gain.goalBonusXp}');
+    } else if (g.goalBonusXp > 0) {
+      _toast('이번 주 목표 달성 · 경험치 +${g.goalBonusXp}');
     }
   }
 

@@ -135,7 +135,7 @@ class RunController extends Notifier<RunViewState> {
       if (summary == null) {
         _stopTimers();
         // cancel 을 부른 뒤로는 점이 오지 않으므로 해제 완료를 기다리지 않는다.
-        unawaited(_subscription?.cancel());
+        unawaited(_subscription?.cancel().catchError((Object _) {}));
         _subscription = null;
         try {
           await _flush();
@@ -211,7 +211,7 @@ class RunController extends Notifier<RunViewState> {
   /// 오류나 종료로 끊긴 구독을 버린다. 기록 중이면 잠시 뒤 다시 구독하고,
   /// 일시정지 중이면 resume 이 다시 구독한다.
   void _dropSubscription() {
-    unawaited(_subscription?.cancel());
+    unawaited(_subscription?.cancel().catchError((Object _) {}));
     _subscription = null;
     if (_engine?.snapshot.state != RunState.recording) return;
     _resubscribeTimer?.cancel();

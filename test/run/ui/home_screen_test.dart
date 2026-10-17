@@ -133,6 +133,23 @@ void main() {
     expect(find.text('레벨 업!'), findsNothing);
   });
 
+  testWidgets('목표 보너스 없이 밀린 러닝 경험치로 레벨이 올라도 다이얼로그', (tester) async {
+    final g = FakeGrowthService(growthState())
+      ..targetGain = const GrowthGain(
+        distanceXp: 30,
+        goalBonusXp: 0,
+        levelBefore: 1,
+        levelAfter: 2,
+        stageBefore: 1,
+        stageAfter: 1,
+      );
+    await pumpHome(tester, FakeController(), growth: g);
+    await changeTarget(tester);
+    expect(find.text('레벨 업!'), findsOneWidget);
+    expect(find.text('Lv.1 에서 Lv.2 로'), findsOneWidget);
+    expect(find.text('새 외형 단계!'), findsNothing);
+  });
+
   testWidgets('보상이 없으면 아무것도 띄우지 않는다', (tester) async {
     final g = FakeGrowthService(growthState());
     await pumpHome(tester, FakeController(), growth: g);
