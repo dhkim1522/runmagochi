@@ -122,9 +122,10 @@
 **Files:** Create/Modify `tool/sprites/<kind>.dart`(종류별 그림 데이터), `tool/render_sprites.dart`(그림 데이터 → `assets/sprites/<kind>/...` PNG, `tool/gen_placeholder_sprites.dart` 대체), `assets/sprites/**`, `design/character/*.png`(8배 미리보기), `docs/specs/sprite-spec.md`(만드는 방법). Test: `test/avatar/ui/sprite_assets_test.dart`, 새 `test/tool/sprite_data_test.dart`
 
 형식은 작업 3 의 `tool/sprites/sprite_data.dart`(팔레트 + 줄 격자, 가운데·발끝 y=29 정렬)를 쓴다. 콘셉트는 `tool/sprites/concepts.dart` 의 1·4단계를 기준으로 2·3단계를 사이에 그린다.
-- 병아리: 1 알 → 2 껍데기를 쓴 아기 병아리 → 3 병아리 → 4 헤어밴드 병아리
-- 젤리: 1 새싹 젤리 → 2 잎이 둘인 젤리 → 3 큰 젤리 → 4 헤어밴드 젤리
-- 도토리: 1 작은 도토리 → 2 도토리 → 3 큰 도토리 → 4 헤어밴드 도토리
+- 펫 러너(결정 0013): 단계마다 장비가 하나씩 는다 — 1 없음, 2 러닝화, 3 러닝화+손목 밴드, 4 러닝화+손목 밴드+헤어밴드+완주 메달
+- 병아리: 1 알 → 2 껍데기를 쓴 아기 병아리 → 3 병아리 → 4 마라토너 병아리
+- 젤리: 1 새싹 젤리 → 2 잎이 둘인 젤리 → 3 큰 젤리 → 4 마라토너 젤리
+- 도토리: 1 작은 도토리 → 2 도토리 → 3 큰 도토리 → 4 마라토너 도토리
 
 - [ ] **Step 1:** 실패하는 테스트(`sprite_data_test`): 모든 프레임이 검사(`validateFrame`)를 통과한다. 같은 종류의 4단계 body 에서 face 가 칠하는 픽셀이 모두 body 의 불투명 픽셀 위에 있다(눈이 머리 밖으로 나가지 않음). 각 동작의 프레임끼리 서로 다르다. 걷기·달리기 프레임의 발끝 최하단 불투명 픽셀이 y=29 또는 y=28(달리기 공중 프레임) 이다.
 - [ ] **Step 2:** 종류마다 4단계 × (idle 2, walk 4, run 4) body 와 3표정(normal·sleepy·asleep) × 3동작 face 를 그린다. 1단계 알(병아리)은 걷기·달리기 때 통통 튀는 동작으로 대신한다. `fvm dart run tool/render_sprites.dart` 로 PNG 와 미리보기를 만든다.
