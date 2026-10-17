@@ -254,9 +254,7 @@ void main() {
     final messenger =
         TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
 
-    setUp(
-      () => messenger.setMockMethodCallHandler(channel, (_) async => true),
-    );
+    setUp(() => messenger.setMockMethodCallHandler(channel, (_) async => true));
     tearDown(() => messenger.setMockMethodCallHandler(channel, null));
 
     PermissionHandlerGate gate(

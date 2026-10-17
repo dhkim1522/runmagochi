@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:runmagochi/avatar/ui/weekly_goal_bar.dart';
+import 'package:runmagochi/core/theme.dart';
+import 'package:runmagochi/core/ui/clay.dart';
 
 Future<List<double>> _pump(
   WidgetTester tester, {
@@ -11,6 +13,7 @@ Future<List<double>> _pump(
   final changed = <double>[];
   await tester.pumpWidget(
     MaterialApp(
+      theme: appLightTheme(),
       home: Scaffold(
         body: WeeklyGoalBar(
           targetM: targetM,
@@ -32,18 +35,14 @@ void main() {
     await _pump(tester);
     expect(find.text('이번 주 목표 10km'), findsOneWidget);
     expect(find.text('6.20km 달성'), findsOneWidget);
-    final bar = tester.widget<LinearProgressIndicator>(
-      find.byType(LinearProgressIndicator),
-    );
+    final bar = tester.widget<ClayBar>(find.byType(ClayBar));
     expect(bar.value, closeTo(0.62, 1e-9));
   });
 
   testWidgets('목표가 소수면 끝의 0 없이 보이고 막대는 1을 넘지 않는다', (tester) async {
     await _pump(tester, targetM: 12500, distanceM: 20000);
     expect(find.text('이번 주 목표 12.5km'), findsOneWidget);
-    final bar = tester.widget<LinearProgressIndicator>(
-      find.byType(LinearProgressIndicator),
-    );
+    final bar = tester.widget<ClayBar>(find.byType(ClayBar));
     expect(bar.value, 1.0);
   });
 

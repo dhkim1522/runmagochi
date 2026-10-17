@@ -5,6 +5,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:runmagochi/avatar/app/providers.dart';
 import 'package:runmagochi/avatar/domain/growth_rules.dart';
 import 'package:runmagochi/avatar/ui/avatar_view.dart';
+import 'package:runmagochi/core/theme.dart';
+import 'package:runmagochi/core/ui/clay.dart';
 import 'package:runmagochi/run/app/providers.dart';
 import 'package:runmagochi/run/domain/run_engine.dart';
 import 'package:runmagochi/run/ui/in_run_screen.dart';
@@ -31,6 +33,7 @@ Future<FakeController> open(
         ),
       ],
       child: MaterialApp(
+        theme: appLightTheme(),
         home: Builder(
           builder: (context) => Scaffold(
             body: TextButton(
@@ -100,7 +103,7 @@ void main() {
 
   testWidgets('종료 버튼을 짧게 누르면 종료되지 않는다', (tester) async {
     final c = await open(tester);
-    await tester.tap(find.text('종료'));
+    await tester.tap(find.text('길게 눌러 종료'));
     await tester.pump(const Duration(seconds: 2));
     expect(c.calls, isEmpty);
     expect(find.byType(InRunScreen), findsOneWidget);
@@ -108,7 +111,9 @@ void main() {
 
   testWidgets('1.4초만 누르고 떼면 종료되지 않는다', (tester) async {
     final c = await open(tester);
-    final g = await tester.startGesture(tester.getCenter(find.text('종료')));
+    final g = await tester.startGesture(
+      tester.getCenter(find.text('길게 눌러 종료')),
+    );
     await tester.pump(); // 첫 프레임에서 타이머가 시작된다.
     await tester.pump(const Duration(milliseconds: 1400));
     await g.up();
@@ -118,7 +123,9 @@ void main() {
 
   testWidgets('1.5초 길게 누르면 end 가 불리고 화면이 닫힌다', (tester) async {
     final c = await open(tester);
-    final g = await tester.startGesture(tester.getCenter(find.text('종료')));
+    final g = await tester.startGesture(
+      tester.getCenter(find.text('길게 눌러 종료')),
+    );
     await tester.pump(); // 첫 프레임에서 타이머가 시작된다.
     await tester.pump(const Duration(milliseconds: 1501));
     await tester.pump();
@@ -136,7 +143,9 @@ void main() {
   testWidgets('end 가 실패하면 일시정지 화면에 남고 종료 버튼이 다시 동작한다', (tester) async {
     final c = await open(tester, endError: StateError('fail'));
     Future<void> hold() async {
-      final g = await tester.startGesture(tester.getCenter(find.text('종료')));
+      final g = await tester.startGesture(
+        tester.getCenter(find.text('길게 눌러 종료')),
+      );
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 1501));
       await tester.pump();
@@ -148,10 +157,10 @@ void main() {
     expect(c.calls, ['end']);
     expect(find.byType(InRunScreen), findsOneWidget);
     expect(find.text('재개'), findsOneWidget);
-    final bar = tester.widget<LinearProgressIndicator>(
-      find.byType(LinearProgressIndicator),
+    final fill = tester.widget<FractionallySizedBox>(
+      find.byKey(const Key('hold-fill')),
     );
-    expect(bar.value, 0);
+    expect(fill.widthFactor, 0);
 
     c.endError = null;
     await hold();
@@ -166,9 +175,11 @@ void main() {
     );
     expect(find.text('2.91'), findsOneWidget);
     expect(find.text('재개'), findsNothing);
-    expect(find.widgetWithText(FilledButton, '일시정지'), findsNothing);
+    expect(find.widgetWithText(ClayButton, '일시정지'), findsNothing);
 
-    final g = await tester.startGesture(tester.getCenter(find.text('종료')));
+    final g = await tester.startGesture(
+      tester.getCenter(find.text('길게 눌러 종료')),
+    );
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 1501));
     await tester.pump();
@@ -176,6 +187,83 @@ void main() {
     await settle(tester);
     expect(c.calls, ['end']);
     expect(find.byType(InRunScreen), findsNothing);
+  });
+
+  group('시안 요소', () {
+    testWidgets('길게 눌러 종료 문구와 지표 카드 3개가 일시정지에 보인다', (tester) async {
+      await open(tester);
+      expect(find.text('일시정지'), findsOneWidget); // 제목
+      expect(find.text('길게 눌러 종료'), findsOneWidget);
+      expect(find.byType(StatCard), findsNWidgets(3));
+      expect(find.text('칼로리'), findsOneWidget);
+    });
+
+    testWidgets('누르는 동안 종료 버튼이 왼쪽부터 차오른다', (tester) async {
+      await open(tester);
+      double factor() => tester
+          .widget<FractionallySizedBox>(find.byKey(const Key('hold-fill')))
+          .widthFactor!;
+      expect(factor(), 0);
+      final g = await tester.startGesture(
+        tester.getCenter(find.text('길게 눌러 종료')),
+      );
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 750));
+      expect(factor(), closeTo(0.5, 0.05));
+      await g.up();
+      await tester.pump();
+      expect(factor(), 0);
+    });
+
+    testWidgets('위치 오류 문구는 danger 색이다', (tester) async {
+      await open(tester, error: '위치를 읽지 못했어요');
+      final style = tester
+          .renderObject<RenderParagraph>(find.text('위치를 읽지 못했어요'))
+          .text
+          .style!;
+      expect(style.color, AppColors.light.danger);
+    });
+  });
+
+  group('글자 크기 1.3배', () {
+    for (final state in [RunState.recording, RunState.paused]) {
+      testWidgets('$state 에서 overflow 없이 그려진다', (tester) async {
+        tester.view.physicalSize = const Size(390, 844);
+        tester.view.devicePixelRatio = 1;
+        addTearDown(tester.view.reset);
+        final controller = FakeController(
+          initial: snap(
+            state,
+            distanceM: 5340,
+            movingTime: const Duration(minutes: 32, seconds: 9),
+            avg: 378,
+            current: 370,
+          ),
+        );
+        await tester.pumpWidget(
+          ProviderScope(
+            overrides: [
+              runControllerProvider.overrideWith(() => controller),
+              growthServiceProvider.overrideWithValue(
+                FakeGrowthService(growthState()),
+              ),
+            ],
+            child: MaterialApp(
+              theme: appLightTheme(),
+              builder: (context, child) => MediaQuery(
+                data: MediaQuery.of(
+                  context,
+                ).copyWith(textScaler: const TextScaler.linear(1.3)),
+                child: child!,
+              ),
+              home: const InRunScreen(),
+            ),
+          ),
+        );
+        await settle(tester);
+        expect(tester.takeException(), isNull);
+      });
+    }
   });
 
   group('러닝 중 아바타', () {

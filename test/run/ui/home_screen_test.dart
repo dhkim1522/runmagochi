@@ -7,6 +7,8 @@ import 'package:runmagochi/avatar/app/providers.dart';
 import 'package:runmagochi/avatar/domain/growth_rules.dart';
 import 'package:runmagochi/avatar/domain/growth_state.dart';
 import 'package:runmagochi/avatar/ui/avatar_view.dart';
+import 'package:runmagochi/core/theme.dart';
+import 'package:runmagochi/core/ui/clay.dart';
 import 'package:runmagochi/run/app/permission_gate.dart';
 import 'package:runmagochi/run/app/providers.dart';
 import 'package:runmagochi/run/domain/run_engine.dart';
@@ -24,6 +26,7 @@ Future<void> pumpHome(
   FakeGate? gate,
   FakeRepo? repo,
   FakeGrowthService? growth,
+  double textScale = 1,
 }) async {
   await tester.pumpWidget(
     ProviderScope(
@@ -38,7 +41,16 @@ Future<void> pumpHome(
         ),
         clockProvider.overrideWithValue(() => DateTime(2026, 10, 17)),
       ],
-      child: const MaterialApp(home: Scaffold(body: HomeScreen())),
+      child: MaterialApp(
+        theme: appLightTheme(),
+        builder: (context, child) => MediaQuery(
+          data: MediaQuery.of(
+            context,
+          ).copyWith(textScaler: TextScaler.linear(textScale)),
+          child: child!,
+        ),
+        home: const Scaffold(body: HomeScreen()),
+      ),
     ),
   );
   await tester.pump();
@@ -286,7 +298,9 @@ void main() {
     await tester.pump();
 
     growth.state = growthState(weekDistanceM: 4230);
-    final g = await tester.startGesture(tester.getCenter(find.text('종료')));
+    final g = await tester.startGesture(
+      tester.getCenter(find.text('길게 눌러 종료')),
+    );
     await tester.pump(); // 첫 프레임에서 타이머가 시작된다.
     await tester.pump(const Duration(milliseconds: 1501));
     await tester.pump();
@@ -328,8 +342,8 @@ void main() {
     expect(find.text('3'), findsNothing);
     expect(find.text('1'), findsNothing);
     expect(find.byType(InRunScreen), findsNothing);
-    final button = tester.widget<FilledButton>(
-      find.widgetWithText(FilledButton, '시작'),
+    final button = tester.widget<ClayButton>(
+      find.widgetWithText(ClayButton, '시작'),
     );
     expect(button.onPressed, isNotNull);
     await settle(tester);
@@ -345,7 +359,9 @@ void main() {
   Future<void> holdStop(WidgetTester tester) async {
     await tester.tap(find.text('일시정지'));
     await tester.pump();
-    final g = await tester.startGesture(tester.getCenter(find.text('종료')));
+    final g = await tester.startGesture(
+      tester.getCenter(find.text('길게 눌러 종료')),
+    );
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 1501));
     await tester.pump();
@@ -425,5 +441,31 @@ void main() {
     await holdStop(tester);
     expect(find.byType(SummaryScreen), findsOneWidget);
     expect(find.textContaining('경험치'), findsNothing);
+  });
+
+  testWidgets('글자 크기 1.3배에서 overflow 없이 그려진다', (tester) async {
+    tester.view.physicalSize = const Size(390, 844);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    await pumpHome(
+      tester,
+      FakeController(),
+      growth: FakeGrowthService(growthState(streakWeeks: 2)),
+      textScale: 1.3,
+    );
+    await settle(tester);
+    expect(tester.takeException(), isNull);
+    expect(find.text('시작'), findsOneWidget);
+  });
+
+  testWidgets('주간 목표 카드 안에 연속 달성이, 무대 안에 레벨 막대가 있다', (tester) async {
+    await pumpHome(
+      tester,
+      FakeController(),
+      growth: FakeGrowthService(growthState(streakWeeks: 2)),
+    );
+    await settle(tester);
+    expect(find.byType(ClayBar), findsNWidgets(2));
+    expect(find.widgetWithText(ClayButton, '시작'), findsOneWidget);
   });
 }

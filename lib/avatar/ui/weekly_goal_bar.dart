@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../../core/format.dart';
+import '../../core/theme.dart';
+import '../../core/ui/clay.dart';
 
 /// 이번 주 목표와 진행 막대. 탭하면 목표(km)를 바꾸는 창이 열린다.
 class WeeklyGoalBar extends StatelessWidget {
@@ -32,32 +34,53 @@ class WeeklyGoalBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final c = AppColors.of(context);
+    final t = AppText.of(context);
     final progress = targetM <= 0
         ? 0.0
         : (distanceM / targetM).clamp(0.0, 1.0).toDouble();
-    return InkWell(
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
       onTap: () => _edit(context),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 8),
+      child: ClayCard(
+        padding: const EdgeInsets.symmetric(
+          vertical: Gap.s4,
+          horizontal: Gap.s5,
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.baseline,
+              textBaseline: TextBaseline.alphabetic,
               children: [
-                Text(
-                  '이번 주 목표 ${targetLabel(targetM)}km',
-                  style: theme.textTheme.titleMedium,
+                Flexible(
+                  child: Text(
+                    '이번 주 목표 ${targetLabel(targetM)}km',
+                    style: t.heading,
+                  ),
                 ),
-                Text('${formatKm(distanceM)}km 달성'),
+                const SizedBox(width: Gap.s2),
+                Text(
+                  '${formatKm(distanceM)}km 달성',
+                  style: t.label.copyWith(color: c.primaryDeep),
+                ),
               ],
             ),
-            const SizedBox(height: 8),
-            LinearProgressIndicator(value: progress, minHeight: 8),
+            const SizedBox(height: 10),
+            ClayBar(
+              value: progress,
+              height: 14,
+              fill: c.primary,
+              track: c.surfaceSoft,
+            ),
             if (streakWeeks > 0) ...[
-              const SizedBox(height: 6),
-              Text('$streakWeeks주 연속 달성', style: theme.textTheme.bodySmall),
+              const SizedBox(height: 10),
+              Text(
+                '$streakWeeks주 연속 달성',
+                style: t.caption.copyWith(color: c.inkMuted),
+              ),
             ],
           ],
         ),

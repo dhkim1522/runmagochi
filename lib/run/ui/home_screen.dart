@@ -6,6 +6,8 @@ import '../../avatar/domain/growth_rules.dart';
 import '../../avatar/domain/growth_state.dart';
 import '../../avatar/ui/avatar_view.dart';
 import '../../avatar/ui/weekly_goal_bar.dart';
+import '../../core/theme.dart';
+import '../../core/ui/clay.dart';
 import '../app/permission_gate.dart';
 import '../app/providers.dart';
 import 'in_run_screen.dart';
@@ -194,7 +196,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final c = AppColors.of(context);
+    final t = AppText.of(context);
     final GrowthState? g = ref.watch(growthStateProvider).value;
     final nextLevelKm = g == null
         ? null
@@ -203,7 +206,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       child: Stack(
         children: [
           Padding(
-            padding: const EdgeInsets.all(24),
+            padding: const EdgeInsets.fromLTRB(Gap.s5, Gap.s6, Gap.s5, 0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
@@ -215,70 +218,79 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     onChangeTarget: _changeTarget,
                   )
                 else
-                  Text(
-                    '이번 주 -',
-                    textAlign: TextAlign.center,
-                    style: theme.textTheme.titleMedium,
+                  ClayCard(
+                    padding: const EdgeInsets.symmetric(
+                      vertical: Gap.s4,
+                      horizontal: Gap.s5,
+                    ),
+                    child: Text(
+                      '이번 주 -',
+                      textAlign: TextAlign.center,
+                      style: t.heading,
+                    ),
                   ),
+                const SizedBox(height: Gap.s4),
                 Expanded(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      AvatarView(
-                        stage: g?.stage ?? 1,
-                        mood: g?.mood ?? AvatarMood.normal,
-                        action: AvatarAction.idle,
-                        scale: 8,
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        g == null ? '-' : '${g.name} Lv.${g.level.level}',
-                        style: theme.textTheme.titleLarge,
-                      ),
-                      const SizedBox(height: 8),
-                      SizedBox(
-                        width: 200,
-                        child: LinearProgressIndicator(
-                          value: g == null
-                              ? 0
-                              : g.level.xpIntoLevel / g.level.xpForNext,
-                          minHeight: 8,
+                  child: ClayCard(
+                    radius: Radii.xl,
+                    color: c.surfaceSoft,
+                    lipColor: c.line,
+                    child: Center(
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            AvatarView(
+                              stage: g?.stage ?? 1,
+                              mood: g?.mood ?? AvatarMood.normal,
+                              action: AvatarAction.idle,
+                              scale: 4,
+                            ),
+                            const SizedBox(height: Gap.s3),
+                            Text(
+                              g == null ? '-' : '${g.name} Lv.${g.level.level}',
+                              style: t.title,
+                            ),
+                            const SizedBox(height: Gap.s3),
+                            SizedBox(
+                              width: 220,
+                              child: ClayBar(
+                                value: g == null
+                                    ? 0
+                                    : g.level.xpIntoLevel / g.level.xpForNext,
+                                height: 10,
+                                fill: c.accent,
+                                track: c.surface,
+                              ),
+                            ),
+                            const SizedBox(height: Gap.s3),
+                            Text(
+                              nextLevelKm == null
+                                  ? '-'
+                                  : '다음 레벨까지 ${nextLevelKm.toStringAsFixed(1)}km',
+                              style: t.label.copyWith(
+                                color: c.inkMuted,
+                                fontWeight: FontWeight.w400,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                      const SizedBox(height: 6),
-                      Text(
-                        nextLevelKm == null
-                            ? '-'
-                            : '다음 레벨까지 ${nextLevelKm.toStringAsFixed(1)}km',
-                        style: theme.textTheme.bodySmall,
-                      ),
-                    ],
+                    ),
                   ),
                 ),
-                const SizedBox(height: 24),
-                FilledButton(
-                  onPressed: _starting ? null : _onStart,
-                  child: const Padding(
-                    padding: EdgeInsets.symmetric(vertical: 8),
-                    child: Text('시작'),
-                  ),
-                ),
+                const SizedBox(height: Gap.s4),
+                ClayButton(label: '시작', onPressed: _starting ? null : _onStart),
+                const SizedBox(height: Gap.s2),
               ],
             ),
           ),
           if (_countdown != null)
             Positioned.fill(
               child: ColoredBox(
-                color: Theme.of(context).colorScheme.surface,
-                child: Center(
-                  child: Text(
-                    '$_countdown',
-                    style: Theme.of(context).textTheme.displayLarge?.copyWith(
-                      fontSize: 120,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
+                color: c.cream,
+                child: Center(child: Text('$_countdown', style: t.distanceXl)),
               ),
             ),
         ],

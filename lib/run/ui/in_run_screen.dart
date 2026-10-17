@@ -5,6 +5,8 @@ import '../../avatar/app/providers.dart';
 import '../../avatar/domain/growth_rules.dart';
 import '../../avatar/ui/avatar_view.dart';
 import '../../core/format.dart';
+import '../../core/theme.dart';
+import '../../core/ui/clay.dart';
 import '../app/providers.dart';
 import '../domain/run_engine.dart';
 import '../domain/run_summary.dart';
@@ -44,98 +46,130 @@ class _InRunScreenState extends ConsumerState<InRunScreen> {
     // ended 는 러닝 저장이 실패해 종료만 다시 할 수 있는 상태다.
     final ended = snap.state == RunState.ended;
     final paused = snap.state == RunState.paused || ended;
-    final scheme = Theme.of(context).colorScheme;
+    final c = AppColors.of(context);
+    final t = AppText.of(context);
     // 로딩 중이거나 실패하면 1단계로 그린다.
     final stage = ref.watch(growthStateProvider).value?.stage ?? 1;
+
+    final avatarStage = _AvatarStage(
+      child: AvatarView(
+        stage: stage,
+        mood: AvatarMood.normal,
+        action: actionFor(
+          paused: paused,
+          currentPaceSecPerKm: snap.currentPaceSecPerKm,
+        ),
+        scale: 3,
+      ),
+    );
 
     return PopScope(
       canPop: false,
       child: Scaffold(
-        appBar: AppBar(
-          automaticallyImplyLeading: false,
-          title: Text(paused ? '일시정지' : '러닝 중'),
-        ),
         body: SafeArea(
           child: Padding(
-            padding: const EdgeInsets.all(24),
+            padding: const EdgeInsets.fromLTRB(Gap.s5, Gap.s6, Gap.s5, Gap.s8),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                Text(paused ? '일시정지' : '러닝 중', style: t.title),
                 if (view.lastError != null)
                   Padding(
-                    padding: const EdgeInsets.only(bottom: 12),
+                    padding: const EdgeInsets.only(top: Gap.s2),
                     child: Text(
                       view.lastError!,
-                      textAlign: TextAlign.center,
-                      style: TextStyle(color: scheme.error),
+                      style: t.body.copyWith(color: c.danger),
                     ),
                   ),
-                if (!paused)
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceAround,
-                    children: [
-                      _Stat('평균 페이스', formatPace(snap.avgPaceSecPerKm)),
-                      _Stat('현재 페이스', formatPace(snap.currentPaceSecPerKm)),
-                      _Stat('시간', formatDuration(snap.movingTime)),
-                    ],
+                const SizedBox(height: Gap.s4),
+                if (!paused) ...[
+                  _StatRow([
+                    StatCard(
+                      label: '평균 페이스',
+                      value: formatPace(snap.avgPaceSecPerKm),
+                    ),
+                    StatCard(
+                      label: '현재 페이스',
+                      value: formatPace(snap.currentPaceSecPerKm),
+                    ),
+                    StatCard(
+                      label: '시간',
+                      value: formatDuration(snap.movingTime),
+                    ),
+                  ]),
+                  Expanded(
+                    child: Center(
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(formatKm(snap.distanceM), style: t.distanceXl),
+                            Text(
+                              'km',
+                              style: t.title.copyWith(color: c.primaryDeep),
+                            ),
+                            const SizedBox(height: Gap.s6),
+                            avatarStage,
+                          ],
+                        ),
+                      ),
+                    ),
                   ),
-                Expanded(
-                  child: Center(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          formatKm(snap.distanceM),
-                          style: Theme.of(context).textTheme.displayLarge
-                              ?.copyWith(fontWeight: FontWeight.bold),
-                        ),
-                        const Text('km'),
-                        const SizedBox(height: 16),
-                        AvatarView(
-                          stage: stage,
-                          mood: AvatarMood.normal,
-                          action: actionFor(
-                            paused: paused,
-                            currentPaceSecPerKm: snap.currentPaceSecPerKm,
-                          ),
-                          scale: 3,
-                        ),
-                        if (paused) ...[
-                          const SizedBox(height: 32),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceAround,
-                            children: [
-                              _Stat('평균 페이스', formatPace(snap.avgPaceSecPerKm)),
-                              _Stat('시간', formatDuration(snap.movingTime)),
-                              _Stat(
-                                '칼로리',
-                                '${estimateCalories(snap.distanceM).round()} kcal',
-                              ),
-                            ],
+                  ClayButton.accent(
+                    context,
+                    label: '일시정지',
+                    onPressed: controller.pause,
+                  ),
+                ] else ...[
+                  Center(
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(formatKm(snap.distanceM), style: t.numberL),
+                          Text(
+                            'km',
+                            style: t.heading.copyWith(
+                              fontSize: 22,
+                              color: c.primaryDeep,
+                            ),
                           ),
                         ],
-                      ],
+                      ),
                     ),
                   ),
-                ),
-                if (paused) ...[
-                  if (!ended) ...[
-                    FilledButton(
-                      onPressed: _ending ? null : controller.resume,
-                      child: const Text('재개'),
+                  const SizedBox(height: Gap.s5),
+                  _StatRow([
+                    StatCard(
+                      label: '평균 페이스',
+                      value: formatPace(snap.avgPaceSecPerKm),
                     ),
-                    const SizedBox(height: 12),
+                    StatCard(
+                      label: '시간',
+                      value: formatDuration(snap.movingTime),
+                    ),
+                    StatCard(
+                      label: '칼로리',
+                      value: '${estimateCalories(snap.distanceM).round()} kcal',
+                    ),
+                  ]),
+                  Expanded(child: Center(child: avatarStage)),
+                  if (!ended) ...[
+                    ClayButton.accent(
+                      context,
+                      label: '재개',
+                      onPressed: _ending ? null : controller.resume,
+                    ),
+                    const SizedBox(height: Gap.s2),
                   ],
                   _HoldToStopButton(
                     key: _stopKey,
                     enabled: !_ending,
                     onComplete: _end,
                   ),
-                ] else
-                  FilledButton(
-                    onPressed: controller.pause,
-                    child: const Text('일시정지'),
-                  ),
+                ],
               ],
             ),
           ),
@@ -145,25 +179,49 @@ class _InRunScreenState extends ConsumerState<InRunScreen> {
   }
 }
 
-class _Stat extends StatelessWidget {
-  const _Stat(this.label, this.value);
+/// 160×120 아바타 무대(surface-soft, radius-xl).
+class _AvatarStage extends StatelessWidget {
+  const _AvatarStage({required this.child});
 
-  final String label;
-  final String value;
+  final Widget child;
 
   @override
   Widget build(BuildContext context) {
-    return Column(
+    return Container(
+      width: 160,
+      height: 120,
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: AppColors.of(context).surfaceSoft,
+        borderRadius: BorderRadius.circular(Radii.xl),
+      ),
+      child: child,
+    );
+  }
+}
+
+/// 지표 카드 3개를 같은 폭으로 늘어놓는다.
+class _StatRow extends StatelessWidget {
+  const _StatRow(this.cards);
+
+  final List<Widget> cards;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: Theme.of(context).textTheme.labelMedium),
-        const SizedBox(height: 4),
-        Text(value, style: Theme.of(context).textTheme.titleLarge),
+        for (var i = 0; i < cards.length; i++) ...[
+          if (i > 0) const SizedBox(width: Gap.s3),
+          Expanded(child: cards[i]),
+        ],
       ],
     );
   }
 }
 
 /// 1.5초 동안 누르고 있어야 [onComplete] 가 불리는 종료 버튼.
+/// 흰 카드형 알약이고, 누르는 동안 왼쪽부터 surface-soft 로 차오른다.
 class _HoldToStopButton extends StatefulWidget {
   const _HoldToStopButton({
     super.key,
@@ -201,7 +259,7 @@ class _HoldToStopButtonState extends State<_HoldToStopButton>
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
+    final c = AppColors.of(context);
     return Semantics(
       button: true,
       label: '길게 눌러 종료',
@@ -211,27 +269,37 @@ class _HoldToStopButtonState extends State<_HoldToStopButton>
         },
         onPointerUp: (_) => _release(),
         onPointerCancel: (_) => _release(),
-        child: Stack(
-          alignment: Alignment.center,
-          children: [
-            Positioned.fill(
-              child: AnimatedBuilder(
-                animation: _progress,
-                builder: (context, _) => ClipRRect(
-                  borderRadius: BorderRadius.circular(20),
-                  child: LinearProgressIndicator(
-                    value: _progress.value,
-                    backgroundColor: scheme.errorContainer,
-                    color: scheme.error,
+        child: ClayCard(
+          radius: Radii.pill,
+          child: SizedBox(
+            height: 64 - 2 * Borders.thick,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(Radii.pill),
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  Positioned.fill(
+                    child: AnimatedBuilder(
+                      animation: _progress,
+                      builder: (context, _) => Align(
+                        alignment: Alignment.centerLeft,
+                        child: FractionallySizedBox(
+                          key: const Key('hold-fill'),
+                          widthFactor: _progress.value,
+                          heightFactor: 1,
+                          child: ColoredBox(color: c.surfaceSoft),
+                        ),
+                      ),
+                    ),
                   ),
-                ),
+                  Text(
+                    '길게 눌러 종료',
+                    style: AppText.of(context).button.copyWith(fontSize: 22),
+                  ),
+                ],
               ),
             ),
-            const Padding(
-              padding: EdgeInsets.symmetric(vertical: 16),
-              child: Text('종료'),
-            ),
-          ],
+          ),
         ),
       ),
     );
