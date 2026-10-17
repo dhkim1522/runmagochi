@@ -70,6 +70,7 @@ Map<String, Color> _colors(AppColors c) => {
 };
 
 void main() {
+  _fontAndErrorTests();
   final themes = {
     'light': (appLightTheme(), _light),
     'dark': (appDarkTheme(), _dark),
@@ -160,4 +161,23 @@ void main() {
     expect(Borders.thick, 3);
     expect(Borders.lip, 6);
   });
+}
+
+void _fontAndErrorTests() {
+  for (final t in [appLightTheme(), appDarkTheme()]) {
+    final tx = t.extension<AppText>()!;
+    test('본문 스타일은 fontWeight 와 같은 wght FontVariation 을 가진다', () {
+      for (final s in [tx.body, tx.bodyStrong, tx.label, tx.caption]) {
+        expect(s.fontVariations, [
+          FontVariation('wght', s.fontWeight!.value.toDouble()),
+        ]);
+      }
+    });
+    test('onError 가 error 위에서 대비 4.5 이상', () {
+      expect(
+        _contrast(t.colorScheme.onError, t.colorScheme.error),
+        greaterThanOrEqualTo(4.5),
+      );
+    });
+  }
 }

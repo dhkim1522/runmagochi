@@ -195,6 +195,10 @@ TextStyle _s(
   fontSize: size,
   height: height / size,
   fontWeight: w,
+  // 가변 글꼴(NotoSansKR)은 fontWeight 만으로 wght 축이 보장되지 않아 함께 지정한다.
+  fontVariations: family == _bodyFont
+      ? [FontVariation('wght', w.value.toDouble())]
+      : null,
   color: c,
 );
 
@@ -297,6 +301,7 @@ ThemeData appDarkTheme() => _build(AppColors.dark, Brightness.dark);
 /// - scaffold 배경 = cream, 카드·다이얼로그 = surface
 /// - primary/onPrimary = primary/on-primary, secondary/onSecondary = accent/on-accent
 /// - onSurface = ink, onSurfaceVariant = ink-muted
+/// - onError = surface(라이트)·cream(다크): danger 위 글자, 대비 4.5 이상(테스트)
 /// - surfaceContainerHighest = surface-soft, outline = line, error = danger
 /// 나머지 토큰(lineStrong, primaryDeep, accentDeep, success)은 [AppColors] 로 읽는다.
 ThemeData _build(AppColors c, Brightness brightness) {
