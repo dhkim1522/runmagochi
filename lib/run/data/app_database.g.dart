@@ -1931,17 +1931,1419 @@ class SplitsCompanion extends UpdateCompanion<SplitRow> {
   }
 }
 
+class $AvatarsTable extends Avatars with TableInfo<$AvatarsTable, Avatar> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $AvatarsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+    'name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _kindMeta = const VerificationMeta('kind');
+  @override
+  late final GeneratedColumn<String> kind = GeneratedColumn<String>(
+    'kind',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('default'),
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _deletedAtMeta = const VerificationMeta(
+    'deletedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> deletedAt = GeneratedColumn<DateTime>(
+    'deleted_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    name,
+    kind,
+    createdAt,
+    updatedAt,
+    deletedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'avatars';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<Avatar> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+        _nameMeta,
+        name.isAcceptableOrUnknown(data['name']!, _nameMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_nameMeta);
+    }
+    if (data.containsKey('kind')) {
+      context.handle(
+        _kindMeta,
+        kind.isAcceptableOrUnknown(data['kind']!, _kindMeta),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    if (data.containsKey('deleted_at')) {
+      context.handle(
+        _deletedAtMeta,
+        deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  Avatar map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return Avatar(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      name: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}name'],
+      )!,
+      kind: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}kind'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+      deletedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}deleted_at'],
+      ),
+    );
+  }
+
+  @override
+  $AvatarsTable createAlias(String alias) {
+    return $AvatarsTable(attachedDatabase, alias);
+  }
+}
+
+class Avatar extends DataClass implements Insertable<Avatar> {
+  final String id;
+  final String name;
+  final String kind;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  final DateTime? deletedAt;
+  const Avatar({
+    required this.id,
+    required this.name,
+    required this.kind,
+    required this.createdAt,
+    required this.updatedAt,
+    this.deletedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['name'] = Variable<String>(name);
+    map['kind'] = Variable<String>(kind);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    if (!nullToAbsent || deletedAt != null) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt);
+    }
+    return map;
+  }
+
+  AvatarsCompanion toCompanion(bool nullToAbsent) {
+    return AvatarsCompanion(
+      id: Value(id),
+      name: Value(name),
+      kind: Value(kind),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+      deletedAt: deletedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deletedAt),
+    );
+  }
+
+  factory Avatar.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return Avatar(
+      id: serializer.fromJson<String>(json['id']),
+      name: serializer.fromJson<String>(json['name']),
+      kind: serializer.fromJson<String>(json['kind']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'name': serializer.toJson<String>(name),
+      'kind': serializer.toJson<String>(kind),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'deletedAt': serializer.toJson<DateTime?>(deletedAt),
+    };
+  }
+
+  Avatar copyWith({
+    String? id,
+    String? name,
+    String? kind,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+    Value<DateTime?> deletedAt = const Value.absent(),
+  }) => Avatar(
+    id: id ?? this.id,
+    name: name ?? this.name,
+    kind: kind ?? this.kind,
+    createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+    deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
+  );
+  Avatar copyWithCompanion(AvatarsCompanion data) {
+    return Avatar(
+      id: data.id.present ? data.id.value : this.id,
+      name: data.name.present ? data.name.value : this.name,
+      kind: data.kind.present ? data.kind.value : this.kind,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('Avatar(')
+          ..write('id: $id, ')
+          ..write('name: $name, ')
+          ..write('kind: $kind, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode =>
+      Object.hash(id, name, kind, createdAt, updatedAt, deletedAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is Avatar &&
+          other.id == this.id &&
+          other.name == this.name &&
+          other.kind == this.kind &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt &&
+          other.deletedAt == this.deletedAt);
+}
+
+class AvatarsCompanion extends UpdateCompanion<Avatar> {
+  final Value<String> id;
+  final Value<String> name;
+  final Value<String> kind;
+  final Value<DateTime> createdAt;
+  final Value<DateTime> updatedAt;
+  final Value<DateTime?> deletedAt;
+  final Value<int> rowid;
+  const AvatarsCompanion({
+    this.id = const Value.absent(),
+    this.name = const Value.absent(),
+    this.kind = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  AvatarsCompanion.insert({
+    required String id,
+    required String name,
+    this.kind = const Value.absent(),
+    required DateTime createdAt,
+    required DateTime updatedAt,
+    this.deletedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       name = Value(name),
+       createdAt = Value(createdAt),
+       updatedAt = Value(updatedAt);
+  static Insertable<Avatar> custom({
+    Expression<String>? id,
+    Expression<String>? name,
+    Expression<String>? kind,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
+    Expression<DateTime>? deletedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (name != null) 'name': name,
+      if (kind != null) 'kind': kind,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (deletedAt != null) 'deleted_at': deletedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  AvatarsCompanion copyWith({
+    Value<String>? id,
+    Value<String>? name,
+    Value<String>? kind,
+    Value<DateTime>? createdAt,
+    Value<DateTime>? updatedAt,
+    Value<DateTime?>? deletedAt,
+    Value<int>? rowid,
+  }) {
+    return AvatarsCompanion(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      kind: kind ?? this.kind,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      deletedAt: deletedAt ?? this.deletedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (kind.present) {
+      map['kind'] = Variable<String>(kind.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (deletedAt.present) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('AvatarsCompanion(')
+          ..write('id: $id, ')
+          ..write('name: $name, ')
+          ..write('kind: $kind, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $WeeklyGoalsTable extends WeeklyGoals
+    with TableInfo<$WeeklyGoalsTable, WeeklyGoal> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $WeeklyGoalsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _weekStartMeta = const VerificationMeta(
+    'weekStart',
+  );
+  @override
+  late final GeneratedColumn<String> weekStart = GeneratedColumn<String>(
+    'week_start',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _targetMMeta = const VerificationMeta(
+    'targetM',
+  );
+  @override
+  late final GeneratedColumn<double> targetM = GeneratedColumn<double>(
+    'target_m',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _achievedAtMeta = const VerificationMeta(
+    'achievedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> achievedAt = GeneratedColumn<DateTime>(
+    'achieved_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _deletedAtMeta = const VerificationMeta(
+    'deletedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> deletedAt = GeneratedColumn<DateTime>(
+    'deleted_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    weekStart,
+    targetM,
+    achievedAt,
+    createdAt,
+    updatedAt,
+    deletedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'weekly_goals';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<WeeklyGoal> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('week_start')) {
+      context.handle(
+        _weekStartMeta,
+        weekStart.isAcceptableOrUnknown(data['week_start']!, _weekStartMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_weekStartMeta);
+    }
+    if (data.containsKey('target_m')) {
+      context.handle(
+        _targetMMeta,
+        targetM.isAcceptableOrUnknown(data['target_m']!, _targetMMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_targetMMeta);
+    }
+    if (data.containsKey('achieved_at')) {
+      context.handle(
+        _achievedAtMeta,
+        achievedAt.isAcceptableOrUnknown(data['achieved_at']!, _achievedAtMeta),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    if (data.containsKey('deleted_at')) {
+      context.handle(
+        _deletedAtMeta,
+        deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  List<Set<GeneratedColumn>> get uniqueKeys => [
+    {weekStart},
+  ];
+  @override
+  WeeklyGoal map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return WeeklyGoal(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      weekStart: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}week_start'],
+      )!,
+      targetM: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}target_m'],
+      )!,
+      achievedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}achieved_at'],
+      ),
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+      deletedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}deleted_at'],
+      ),
+    );
+  }
+
+  @override
+  $WeeklyGoalsTable createAlias(String alias) {
+    return $WeeklyGoalsTable(attachedDatabase, alias);
+  }
+}
+
+class WeeklyGoal extends DataClass implements Insertable<WeeklyGoal> {
+  final String id;
+  final String weekStart;
+  final double targetM;
+  final DateTime? achievedAt;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  final DateTime? deletedAt;
+  const WeeklyGoal({
+    required this.id,
+    required this.weekStart,
+    required this.targetM,
+    this.achievedAt,
+    required this.createdAt,
+    required this.updatedAt,
+    this.deletedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['week_start'] = Variable<String>(weekStart);
+    map['target_m'] = Variable<double>(targetM);
+    if (!nullToAbsent || achievedAt != null) {
+      map['achieved_at'] = Variable<DateTime>(achievedAt);
+    }
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    if (!nullToAbsent || deletedAt != null) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt);
+    }
+    return map;
+  }
+
+  WeeklyGoalsCompanion toCompanion(bool nullToAbsent) {
+    return WeeklyGoalsCompanion(
+      id: Value(id),
+      weekStart: Value(weekStart),
+      targetM: Value(targetM),
+      achievedAt: achievedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(achievedAt),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+      deletedAt: deletedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deletedAt),
+    );
+  }
+
+  factory WeeklyGoal.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return WeeklyGoal(
+      id: serializer.fromJson<String>(json['id']),
+      weekStart: serializer.fromJson<String>(json['weekStart']),
+      targetM: serializer.fromJson<double>(json['targetM']),
+      achievedAt: serializer.fromJson<DateTime?>(json['achievedAt']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'weekStart': serializer.toJson<String>(weekStart),
+      'targetM': serializer.toJson<double>(targetM),
+      'achievedAt': serializer.toJson<DateTime?>(achievedAt),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'deletedAt': serializer.toJson<DateTime?>(deletedAt),
+    };
+  }
+
+  WeeklyGoal copyWith({
+    String? id,
+    String? weekStart,
+    double? targetM,
+    Value<DateTime?> achievedAt = const Value.absent(),
+    DateTime? createdAt,
+    DateTime? updatedAt,
+    Value<DateTime?> deletedAt = const Value.absent(),
+  }) => WeeklyGoal(
+    id: id ?? this.id,
+    weekStart: weekStart ?? this.weekStart,
+    targetM: targetM ?? this.targetM,
+    achievedAt: achievedAt.present ? achievedAt.value : this.achievedAt,
+    createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+    deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
+  );
+  WeeklyGoal copyWithCompanion(WeeklyGoalsCompanion data) {
+    return WeeklyGoal(
+      id: data.id.present ? data.id.value : this.id,
+      weekStart: data.weekStart.present ? data.weekStart.value : this.weekStart,
+      targetM: data.targetM.present ? data.targetM.value : this.targetM,
+      achievedAt: data.achievedAt.present
+          ? data.achievedAt.value
+          : this.achievedAt,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('WeeklyGoal(')
+          ..write('id: $id, ')
+          ..write('weekStart: $weekStart, ')
+          ..write('targetM: $targetM, ')
+          ..write('achievedAt: $achievedAt, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    weekStart,
+    targetM,
+    achievedAt,
+    createdAt,
+    updatedAt,
+    deletedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is WeeklyGoal &&
+          other.id == this.id &&
+          other.weekStart == this.weekStart &&
+          other.targetM == this.targetM &&
+          other.achievedAt == this.achievedAt &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt &&
+          other.deletedAt == this.deletedAt);
+}
+
+class WeeklyGoalsCompanion extends UpdateCompanion<WeeklyGoal> {
+  final Value<String> id;
+  final Value<String> weekStart;
+  final Value<double> targetM;
+  final Value<DateTime?> achievedAt;
+  final Value<DateTime> createdAt;
+  final Value<DateTime> updatedAt;
+  final Value<DateTime?> deletedAt;
+  final Value<int> rowid;
+  const WeeklyGoalsCompanion({
+    this.id = const Value.absent(),
+    this.weekStart = const Value.absent(),
+    this.targetM = const Value.absent(),
+    this.achievedAt = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  WeeklyGoalsCompanion.insert({
+    required String id,
+    required String weekStart,
+    required double targetM,
+    this.achievedAt = const Value.absent(),
+    required DateTime createdAt,
+    required DateTime updatedAt,
+    this.deletedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       weekStart = Value(weekStart),
+       targetM = Value(targetM),
+       createdAt = Value(createdAt),
+       updatedAt = Value(updatedAt);
+  static Insertable<WeeklyGoal> custom({
+    Expression<String>? id,
+    Expression<String>? weekStart,
+    Expression<double>? targetM,
+    Expression<DateTime>? achievedAt,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
+    Expression<DateTime>? deletedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (weekStart != null) 'week_start': weekStart,
+      if (targetM != null) 'target_m': targetM,
+      if (achievedAt != null) 'achieved_at': achievedAt,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (deletedAt != null) 'deleted_at': deletedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  WeeklyGoalsCompanion copyWith({
+    Value<String>? id,
+    Value<String>? weekStart,
+    Value<double>? targetM,
+    Value<DateTime?>? achievedAt,
+    Value<DateTime>? createdAt,
+    Value<DateTime>? updatedAt,
+    Value<DateTime?>? deletedAt,
+    Value<int>? rowid,
+  }) {
+    return WeeklyGoalsCompanion(
+      id: id ?? this.id,
+      weekStart: weekStart ?? this.weekStart,
+      targetM: targetM ?? this.targetM,
+      achievedAt: achievedAt ?? this.achievedAt,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      deletedAt: deletedAt ?? this.deletedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (weekStart.present) {
+      map['week_start'] = Variable<String>(weekStart.value);
+    }
+    if (targetM.present) {
+      map['target_m'] = Variable<double>(targetM.value);
+    }
+    if (achievedAt.present) {
+      map['achieved_at'] = Variable<DateTime>(achievedAt.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (deletedAt.present) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('WeeklyGoalsCompanion(')
+          ..write('id: $id, ')
+          ..write('weekStart: $weekStart, ')
+          ..write('targetM: $targetM, ')
+          ..write('achievedAt: $achievedAt, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $XpTxnsTable extends XpTxns with TableInfo<$XpTxnsTable, XpTxn> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $XpTxnsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _amountMeta = const VerificationMeta('amount');
+  @override
+  late final GeneratedColumn<int> amount = GeneratedColumn<int>(
+    'amount',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _reasonMeta = const VerificationMeta('reason');
+  @override
+  late final GeneratedColumn<String> reason = GeneratedColumn<String>(
+    'reason',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _runIdMeta = const VerificationMeta('runId');
+  @override
+  late final GeneratedColumn<String> runId = GeneratedColumn<String>(
+    'run_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES runs (id)',
+    ),
+  );
+  static const VerificationMeta _weekStartMeta = const VerificationMeta(
+    'weekStart',
+  );
+  @override
+  late final GeneratedColumn<String> weekStart = GeneratedColumn<String>(
+    'week_start',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _deletedAtMeta = const VerificationMeta(
+    'deletedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> deletedAt = GeneratedColumn<DateTime>(
+    'deleted_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    amount,
+    reason,
+    runId,
+    weekStart,
+    createdAt,
+    updatedAt,
+    deletedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'xp_txns';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<XpTxn> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('amount')) {
+      context.handle(
+        _amountMeta,
+        amount.isAcceptableOrUnknown(data['amount']!, _amountMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_amountMeta);
+    }
+    if (data.containsKey('reason')) {
+      context.handle(
+        _reasonMeta,
+        reason.isAcceptableOrUnknown(data['reason']!, _reasonMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_reasonMeta);
+    }
+    if (data.containsKey('run_id')) {
+      context.handle(
+        _runIdMeta,
+        runId.isAcceptableOrUnknown(data['run_id']!, _runIdMeta),
+      );
+    }
+    if (data.containsKey('week_start')) {
+      context.handle(
+        _weekStartMeta,
+        weekStart.isAcceptableOrUnknown(data['week_start']!, _weekStartMeta),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    if (data.containsKey('deleted_at')) {
+      context.handle(
+        _deletedAtMeta,
+        deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  List<Set<GeneratedColumn>> get uniqueKeys => [
+    {runId, reason},
+    {weekStart, reason},
+  ];
+  @override
+  XpTxn map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return XpTxn(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      amount: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}amount'],
+      )!,
+      reason: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}reason'],
+      )!,
+      runId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}run_id'],
+      ),
+      weekStart: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}week_start'],
+      ),
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+      deletedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}deleted_at'],
+      ),
+    );
+  }
+
+  @override
+  $XpTxnsTable createAlias(String alias) {
+    return $XpTxnsTable(attachedDatabase, alias);
+  }
+}
+
+class XpTxn extends DataClass implements Insertable<XpTxn> {
+  final String id;
+  final int amount;
+  final String reason;
+  final String? runId;
+  final String? weekStart;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  final DateTime? deletedAt;
+  const XpTxn({
+    required this.id,
+    required this.amount,
+    required this.reason,
+    this.runId,
+    this.weekStart,
+    required this.createdAt,
+    required this.updatedAt,
+    this.deletedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['amount'] = Variable<int>(amount);
+    map['reason'] = Variable<String>(reason);
+    if (!nullToAbsent || runId != null) {
+      map['run_id'] = Variable<String>(runId);
+    }
+    if (!nullToAbsent || weekStart != null) {
+      map['week_start'] = Variable<String>(weekStart);
+    }
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    if (!nullToAbsent || deletedAt != null) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt);
+    }
+    return map;
+  }
+
+  XpTxnsCompanion toCompanion(bool nullToAbsent) {
+    return XpTxnsCompanion(
+      id: Value(id),
+      amount: Value(amount),
+      reason: Value(reason),
+      runId: runId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(runId),
+      weekStart: weekStart == null && nullToAbsent
+          ? const Value.absent()
+          : Value(weekStart),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+      deletedAt: deletedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deletedAt),
+    );
+  }
+
+  factory XpTxn.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return XpTxn(
+      id: serializer.fromJson<String>(json['id']),
+      amount: serializer.fromJson<int>(json['amount']),
+      reason: serializer.fromJson<String>(json['reason']),
+      runId: serializer.fromJson<String?>(json['runId']),
+      weekStart: serializer.fromJson<String?>(json['weekStart']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'amount': serializer.toJson<int>(amount),
+      'reason': serializer.toJson<String>(reason),
+      'runId': serializer.toJson<String?>(runId),
+      'weekStart': serializer.toJson<String?>(weekStart),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'deletedAt': serializer.toJson<DateTime?>(deletedAt),
+    };
+  }
+
+  XpTxn copyWith({
+    String? id,
+    int? amount,
+    String? reason,
+    Value<String?> runId = const Value.absent(),
+    Value<String?> weekStart = const Value.absent(),
+    DateTime? createdAt,
+    DateTime? updatedAt,
+    Value<DateTime?> deletedAt = const Value.absent(),
+  }) => XpTxn(
+    id: id ?? this.id,
+    amount: amount ?? this.amount,
+    reason: reason ?? this.reason,
+    runId: runId.present ? runId.value : this.runId,
+    weekStart: weekStart.present ? weekStart.value : this.weekStart,
+    createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+    deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
+  );
+  XpTxn copyWithCompanion(XpTxnsCompanion data) {
+    return XpTxn(
+      id: data.id.present ? data.id.value : this.id,
+      amount: data.amount.present ? data.amount.value : this.amount,
+      reason: data.reason.present ? data.reason.value : this.reason,
+      runId: data.runId.present ? data.runId.value : this.runId,
+      weekStart: data.weekStart.present ? data.weekStart.value : this.weekStart,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('XpTxn(')
+          ..write('id: $id, ')
+          ..write('amount: $amount, ')
+          ..write('reason: $reason, ')
+          ..write('runId: $runId, ')
+          ..write('weekStart: $weekStart, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    amount,
+    reason,
+    runId,
+    weekStart,
+    createdAt,
+    updatedAt,
+    deletedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is XpTxn &&
+          other.id == this.id &&
+          other.amount == this.amount &&
+          other.reason == this.reason &&
+          other.runId == this.runId &&
+          other.weekStart == this.weekStart &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt &&
+          other.deletedAt == this.deletedAt);
+}
+
+class XpTxnsCompanion extends UpdateCompanion<XpTxn> {
+  final Value<String> id;
+  final Value<int> amount;
+  final Value<String> reason;
+  final Value<String?> runId;
+  final Value<String?> weekStart;
+  final Value<DateTime> createdAt;
+  final Value<DateTime> updatedAt;
+  final Value<DateTime?> deletedAt;
+  final Value<int> rowid;
+  const XpTxnsCompanion({
+    this.id = const Value.absent(),
+    this.amount = const Value.absent(),
+    this.reason = const Value.absent(),
+    this.runId = const Value.absent(),
+    this.weekStart = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  XpTxnsCompanion.insert({
+    required String id,
+    required int amount,
+    required String reason,
+    this.runId = const Value.absent(),
+    this.weekStart = const Value.absent(),
+    required DateTime createdAt,
+    required DateTime updatedAt,
+    this.deletedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       amount = Value(amount),
+       reason = Value(reason),
+       createdAt = Value(createdAt),
+       updatedAt = Value(updatedAt);
+  static Insertable<XpTxn> custom({
+    Expression<String>? id,
+    Expression<int>? amount,
+    Expression<String>? reason,
+    Expression<String>? runId,
+    Expression<String>? weekStart,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
+    Expression<DateTime>? deletedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (amount != null) 'amount': amount,
+      if (reason != null) 'reason': reason,
+      if (runId != null) 'run_id': runId,
+      if (weekStart != null) 'week_start': weekStart,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (deletedAt != null) 'deleted_at': deletedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  XpTxnsCompanion copyWith({
+    Value<String>? id,
+    Value<int>? amount,
+    Value<String>? reason,
+    Value<String?>? runId,
+    Value<String?>? weekStart,
+    Value<DateTime>? createdAt,
+    Value<DateTime>? updatedAt,
+    Value<DateTime?>? deletedAt,
+    Value<int>? rowid,
+  }) {
+    return XpTxnsCompanion(
+      id: id ?? this.id,
+      amount: amount ?? this.amount,
+      reason: reason ?? this.reason,
+      runId: runId ?? this.runId,
+      weekStart: weekStart ?? this.weekStart,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      deletedAt: deletedAt ?? this.deletedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (amount.present) {
+      map['amount'] = Variable<int>(amount.value);
+    }
+    if (reason.present) {
+      map['reason'] = Variable<String>(reason.value);
+    }
+    if (runId.present) {
+      map['run_id'] = Variable<String>(runId.value);
+    }
+    if (weekStart.present) {
+      map['week_start'] = Variable<String>(weekStart.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (deletedAt.present) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('XpTxnsCompanion(')
+          ..write('id: $id, ')
+          ..write('amount: $amount, ')
+          ..write('reason: $reason, ')
+          ..write('runId: $runId, ')
+          ..write('weekStart: $weekStart, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
   late final $RunsTable runs = $RunsTable(this);
   late final $RunPointsTable runPoints = $RunPointsTable(this);
   late final $SplitsTable splits = $SplitsTable(this);
+  late final $AvatarsTable avatars = $AvatarsTable(this);
+  late final $WeeklyGoalsTable weeklyGoals = $WeeklyGoalsTable(this);
+  late final $XpTxnsTable xpTxns = $XpTxnsTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
   @override
-  List<DatabaseSchemaEntity> get allSchemaEntities => [runs, runPoints, splits];
+  List<DatabaseSchemaEntity> get allSchemaEntities => [
+    runs,
+    runPoints,
+    splits,
+    avatars,
+    weeklyGoals,
+    xpTxns,
+  ];
 }
 
 typedef $$RunsTableCreateCompanionBuilder =
@@ -2015,6 +3417,25 @@ final class $$RunsTableReferences
     ).filter((f) => f.runId.id.sqlEquals($_itemColumn<String>('id')!));
 
     final cache = $_typedResult.readTableOrNull(_splitsRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+
+  static MultiTypedResultKey<$XpTxnsTable, List<XpTxn>> _xpTxnsRefsTable(
+    _$AppDatabase db,
+  ) => MultiTypedResultKey.fromTable(
+    db.xpTxns,
+    aliasName: 'runs__id__xp_txns__run_id',
+  );
+
+  $$XpTxnsTableProcessedTableManager get xpTxnsRefs {
+    final manager = $$XpTxnsTableTableManager(
+      $_db,
+      $_db.xpTxns,
+    ).filter((f) => f.runId.id.sqlEquals($_itemColumn<String>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_xpTxnsRefsTable($_db));
     return ProcessedTableManager(
       manager.$state.copyWith(prefetchedData: cache),
     );
@@ -2135,6 +3556,31 @@ class $$RunsTableFilterComposer extends Composer<_$AppDatabase, $RunsTable> {
           }) => $$SplitsTableFilterComposer(
             $db: $db,
             $table: $db.splits,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<bool> xpTxnsRefs(
+    Expression<bool> Function($$XpTxnsTableFilterComposer f) f,
+  ) {
+    final $$XpTxnsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.xpTxns,
+      getReferencedColumn: (t) => t.runId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$XpTxnsTableFilterComposer(
+            $db: $db,
+            $table: $db.xpTxns,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -2322,6 +3768,31 @@ class $$RunsTableAnnotationComposer
     );
     return f(composer);
   }
+
+  Expression<T> xpTxnsRefs<T extends Object>(
+    Expression<T> Function($$XpTxnsTableAnnotationComposer a) f,
+  ) {
+    final $$XpTxnsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.xpTxns,
+      getReferencedColumn: (t) => t.runId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$XpTxnsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.xpTxns,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
 }
 
 class $$RunsTableTableManager
@@ -2337,7 +3808,11 @@ class $$RunsTableTableManager
           $$RunsTableUpdateCompanionBuilder,
           (Run, $$RunsTableReferences),
           Run,
-          PrefetchHooks Function({bool runPointsRefs, bool splitsRefs})
+          PrefetchHooks Function({
+            bool runPointsRefs,
+            bool splitsRefs,
+            bool xpTxnsRefs,
+          })
         > {
   $$RunsTableTableManager(_$AppDatabase db, $RunsTable table)
     : super(
@@ -2422,43 +3897,68 @@ class $$RunsTableTableManager
                 ),
               )
               .toList(),
-          prefetchHooksCallback: ({runPointsRefs = false, splitsRefs = false}) {
-            return PrefetchHooks(
-              db: db,
-              explicitlyWatchedTables: [
-                if (runPointsRefs) db.runPoints,
-                if (splitsRefs) db.splits,
-              ],
-              addJoins: null,
-              getPrefetchedDataCallback: (items) async {
-                return [
-                  if (runPointsRefs)
-                    await $_getPrefetchedData<Run, $RunsTable, RunPoint>(
-                      currentTable: table,
-                      referencedTable: $$RunsTableReferences
-                          ._runPointsRefsTable(db),
-                      managerFromTypedResult: (p0) =>
-                          $$RunsTableReferences(db, table, p0).runPointsRefs,
-                      referencedItemsForCurrentItem: (item, referencedItems) =>
-                          referencedItems.where((e) => e.runId == item.id),
-                      typedResults: items,
-                    ),
-                  if (splitsRefs)
-                    await $_getPrefetchedData<Run, $RunsTable, SplitRow>(
-                      currentTable: table,
-                      referencedTable: $$RunsTableReferences._splitsRefsTable(
-                        db,
-                      ),
-                      managerFromTypedResult: (p0) =>
-                          $$RunsTableReferences(db, table, p0).splitsRefs,
-                      referencedItemsForCurrentItem: (item, referencedItems) =>
-                          referencedItems.where((e) => e.runId == item.id),
-                      typedResults: items,
-                    ),
-                ];
+          prefetchHooksCallback:
+              ({
+                runPointsRefs = false,
+                splitsRefs = false,
+                xpTxnsRefs = false,
+              }) {
+                return PrefetchHooks(
+                  db: db,
+                  explicitlyWatchedTables: [
+                    if (runPointsRefs) db.runPoints,
+                    if (splitsRefs) db.splits,
+                    if (xpTxnsRefs) db.xpTxns,
+                  ],
+                  addJoins: null,
+                  getPrefetchedDataCallback: (items) async {
+                    return [
+                      if (runPointsRefs)
+                        await $_getPrefetchedData<Run, $RunsTable, RunPoint>(
+                          currentTable: table,
+                          referencedTable: $$RunsTableReferences
+                              ._runPointsRefsTable(db),
+                          managerFromTypedResult: (p0) => $$RunsTableReferences(
+                            db,
+                            table,
+                            p0,
+                          ).runPointsRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.runId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
+                      if (splitsRefs)
+                        await $_getPrefetchedData<Run, $RunsTable, SplitRow>(
+                          currentTable: table,
+                          referencedTable: $$RunsTableReferences
+                              ._splitsRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$RunsTableReferences(db, table, p0).splitsRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.runId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
+                      if (xpTxnsRefs)
+                        await $_getPrefetchedData<Run, $RunsTable, XpTxn>(
+                          currentTable: table,
+                          referencedTable: $$RunsTableReferences
+                              ._xpTxnsRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$RunsTableReferences(db, table, p0).xpTxnsRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.runId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
+                    ];
+                  },
+                );
               },
-            );
-          },
         ),
       );
 }
@@ -2475,7 +3975,11 @@ typedef $$RunsTableProcessedTableManager =
       $$RunsTableUpdateCompanionBuilder,
       (Run, $$RunsTableReferences),
       Run,
-      PrefetchHooks Function({bool runPointsRefs, bool splitsRefs})
+      PrefetchHooks Function({
+        bool runPointsRefs,
+        bool splitsRefs,
+        bool xpTxnsRefs,
+      })
     >;
 typedef $$RunPointsTableCreateCompanionBuilder =
     RunPointsCompanion Function({
@@ -3284,6 +4788,851 @@ typedef $$SplitsTableProcessedTableManager =
       SplitRow,
       PrefetchHooks Function({bool runId})
     >;
+typedef $$AvatarsTableCreateCompanionBuilder =
+    AvatarsCompanion Function({
+      required String id,
+      required String name,
+      Value<String> kind,
+      required DateTime createdAt,
+      required DateTime updatedAt,
+      Value<DateTime?> deletedAt,
+      Value<int> rowid,
+    });
+typedef $$AvatarsTableUpdateCompanionBuilder =
+    AvatarsCompanion Function({
+      Value<String> id,
+      Value<String> name,
+      Value<String> kind,
+      Value<DateTime> createdAt,
+      Value<DateTime> updatedAt,
+      Value<DateTime?> deletedAt,
+      Value<int> rowid,
+    });
+
+class $$AvatarsTableFilterComposer
+    extends Composer<_$AppDatabase, $AvatarsTable> {
+  $$AvatarsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get kind => $composableBuilder(
+    column: $table.kind,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$AvatarsTableOrderingComposer
+    extends Composer<_$AppDatabase, $AvatarsTable> {
+  $$AvatarsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get kind => $composableBuilder(
+    column: $table.kind,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$AvatarsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $AvatarsTable> {
+  $$AvatarsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<String> get kind =>
+      $composableBuilder(column: $table.kind, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get deletedAt =>
+      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
+}
+
+class $$AvatarsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $AvatarsTable,
+          Avatar,
+          $$AvatarsTableFilterComposer,
+          $$AvatarsTableOrderingComposer,
+          $$AvatarsTableAnnotationComposer,
+          $$AvatarsTableCreateCompanionBuilder,
+          $$AvatarsTableUpdateCompanionBuilder,
+          (Avatar, BaseReferences<_$AppDatabase, $AvatarsTable, Avatar>),
+          Avatar,
+          PrefetchHooks Function()
+        > {
+  $$AvatarsTableTableManager(_$AppDatabase db, $AvatarsTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$AvatarsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$AvatarsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$AvatarsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> name = const Value.absent(),
+                Value<String> kind = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<DateTime?> deletedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => AvatarsCompanion(
+                id: id,
+                name: name,
+                kind: kind,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String name,
+                Value<String> kind = const Value.absent(),
+                required DateTime createdAt,
+                required DateTime updatedAt,
+                Value<DateTime?> deletedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => AvatarsCompanion.insert(
+                id: id,
+                name: name,
+                kind: kind,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$AvatarsTable, Avatar>(table),
+                  BaseReferences<_$AppDatabase, $AvatarsTable, Avatar>(
+                    db,
+                    table,
+                    e,
+                  ),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$AvatarsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $AvatarsTable,
+      Avatar,
+      $$AvatarsTableFilterComposer,
+      $$AvatarsTableOrderingComposer,
+      $$AvatarsTableAnnotationComposer,
+      $$AvatarsTableCreateCompanionBuilder,
+      $$AvatarsTableUpdateCompanionBuilder,
+      (Avatar, BaseReferences<_$AppDatabase, $AvatarsTable, Avatar>),
+      Avatar,
+      PrefetchHooks Function()
+    >;
+typedef $$WeeklyGoalsTableCreateCompanionBuilder =
+    WeeklyGoalsCompanion Function({
+      required String id,
+      required String weekStart,
+      required double targetM,
+      Value<DateTime?> achievedAt,
+      required DateTime createdAt,
+      required DateTime updatedAt,
+      Value<DateTime?> deletedAt,
+      Value<int> rowid,
+    });
+typedef $$WeeklyGoalsTableUpdateCompanionBuilder =
+    WeeklyGoalsCompanion Function({
+      Value<String> id,
+      Value<String> weekStart,
+      Value<double> targetM,
+      Value<DateTime?> achievedAt,
+      Value<DateTime> createdAt,
+      Value<DateTime> updatedAt,
+      Value<DateTime?> deletedAt,
+      Value<int> rowid,
+    });
+
+class $$WeeklyGoalsTableFilterComposer
+    extends Composer<_$AppDatabase, $WeeklyGoalsTable> {
+  $$WeeklyGoalsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get weekStart => $composableBuilder(
+    column: $table.weekStart,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get targetM => $composableBuilder(
+    column: $table.targetM,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get achievedAt => $composableBuilder(
+    column: $table.achievedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$WeeklyGoalsTableOrderingComposer
+    extends Composer<_$AppDatabase, $WeeklyGoalsTable> {
+  $$WeeklyGoalsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get weekStart => $composableBuilder(
+    column: $table.weekStart,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get targetM => $composableBuilder(
+    column: $table.targetM,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get achievedAt => $composableBuilder(
+    column: $table.achievedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$WeeklyGoalsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $WeeklyGoalsTable> {
+  $$WeeklyGoalsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get weekStart =>
+      $composableBuilder(column: $table.weekStart, builder: (column) => column);
+
+  GeneratedColumn<double> get targetM =>
+      $composableBuilder(column: $table.targetM, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get achievedAt => $composableBuilder(
+    column: $table.achievedAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get deletedAt =>
+      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
+}
+
+class $$WeeklyGoalsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $WeeklyGoalsTable,
+          WeeklyGoal,
+          $$WeeklyGoalsTableFilterComposer,
+          $$WeeklyGoalsTableOrderingComposer,
+          $$WeeklyGoalsTableAnnotationComposer,
+          $$WeeklyGoalsTableCreateCompanionBuilder,
+          $$WeeklyGoalsTableUpdateCompanionBuilder,
+          (
+            WeeklyGoal,
+            BaseReferences<_$AppDatabase, $WeeklyGoalsTable, WeeklyGoal>,
+          ),
+          WeeklyGoal,
+          PrefetchHooks Function()
+        > {
+  $$WeeklyGoalsTableTableManager(_$AppDatabase db, $WeeklyGoalsTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$WeeklyGoalsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$WeeklyGoalsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$WeeklyGoalsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> weekStart = const Value.absent(),
+                Value<double> targetM = const Value.absent(),
+                Value<DateTime?> achievedAt = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<DateTime?> deletedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => WeeklyGoalsCompanion(
+                id: id,
+                weekStart: weekStart,
+                targetM: targetM,
+                achievedAt: achievedAt,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String weekStart,
+                required double targetM,
+                Value<DateTime?> achievedAt = const Value.absent(),
+                required DateTime createdAt,
+                required DateTime updatedAt,
+                Value<DateTime?> deletedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => WeeklyGoalsCompanion.insert(
+                id: id,
+                weekStart: weekStart,
+                targetM: targetM,
+                achievedAt: achievedAt,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$WeeklyGoalsTable, WeeklyGoal>(table),
+                  BaseReferences<_$AppDatabase, $WeeklyGoalsTable, WeeklyGoal>(
+                    db,
+                    table,
+                    e,
+                  ),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$WeeklyGoalsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $WeeklyGoalsTable,
+      WeeklyGoal,
+      $$WeeklyGoalsTableFilterComposer,
+      $$WeeklyGoalsTableOrderingComposer,
+      $$WeeklyGoalsTableAnnotationComposer,
+      $$WeeklyGoalsTableCreateCompanionBuilder,
+      $$WeeklyGoalsTableUpdateCompanionBuilder,
+      (
+        WeeklyGoal,
+        BaseReferences<_$AppDatabase, $WeeklyGoalsTable, WeeklyGoal>,
+      ),
+      WeeklyGoal,
+      PrefetchHooks Function()
+    >;
+typedef $$XpTxnsTableCreateCompanionBuilder =
+    XpTxnsCompanion Function({
+      required String id,
+      required int amount,
+      required String reason,
+      Value<String?> runId,
+      Value<String?> weekStart,
+      required DateTime createdAt,
+      required DateTime updatedAt,
+      Value<DateTime?> deletedAt,
+      Value<int> rowid,
+    });
+typedef $$XpTxnsTableUpdateCompanionBuilder =
+    XpTxnsCompanion Function({
+      Value<String> id,
+      Value<int> amount,
+      Value<String> reason,
+      Value<String?> runId,
+      Value<String?> weekStart,
+      Value<DateTime> createdAt,
+      Value<DateTime> updatedAt,
+      Value<DateTime?> deletedAt,
+      Value<int> rowid,
+    });
+
+final class $$XpTxnsTableReferences
+    extends BaseReferences<_$AppDatabase, $XpTxnsTable, XpTxn> {
+  $$XpTxnsTableReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static $RunsTable _runIdTable(_$AppDatabase db) =>
+      db.runs.createAlias('xp_txns__run_id__runs__id');
+
+  $$RunsTableProcessedTableManager? get runId {
+    final $_column = $_itemColumn<String>('run_id');
+    if ($_column == null) return null;
+    final manager = $$RunsTableTableManager(
+      $_db,
+      $_db.runs,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_runIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$XpTxnsTableFilterComposer
+    extends Composer<_$AppDatabase, $XpTxnsTable> {
+  $$XpTxnsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get amount => $composableBuilder(
+    column: $table.amount,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get reason => $composableBuilder(
+    column: $table.reason,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get weekStart => $composableBuilder(
+    column: $table.weekStart,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$RunsTableFilterComposer get runId {
+    final $$RunsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.runId,
+      referencedTable: $db.runs,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$RunsTableFilterComposer(
+            $db: $db,
+            $table: $db.runs,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$XpTxnsTableOrderingComposer
+    extends Composer<_$AppDatabase, $XpTxnsTable> {
+  $$XpTxnsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get amount => $composableBuilder(
+    column: $table.amount,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get reason => $composableBuilder(
+    column: $table.reason,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get weekStart => $composableBuilder(
+    column: $table.weekStart,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$RunsTableOrderingComposer get runId {
+    final $$RunsTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.runId,
+      referencedTable: $db.runs,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$RunsTableOrderingComposer(
+            $db: $db,
+            $table: $db.runs,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$XpTxnsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $XpTxnsTable> {
+  $$XpTxnsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<int> get amount =>
+      $composableBuilder(column: $table.amount, builder: (column) => column);
+
+  GeneratedColumn<String> get reason =>
+      $composableBuilder(column: $table.reason, builder: (column) => column);
+
+  GeneratedColumn<String> get weekStart =>
+      $composableBuilder(column: $table.weekStart, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get deletedAt =>
+      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
+
+  $$RunsTableAnnotationComposer get runId {
+    final $$RunsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.runId,
+      referencedTable: $db.runs,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$RunsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.runs,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$XpTxnsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $XpTxnsTable,
+          XpTxn,
+          $$XpTxnsTableFilterComposer,
+          $$XpTxnsTableOrderingComposer,
+          $$XpTxnsTableAnnotationComposer,
+          $$XpTxnsTableCreateCompanionBuilder,
+          $$XpTxnsTableUpdateCompanionBuilder,
+          (XpTxn, $$XpTxnsTableReferences),
+          XpTxn,
+          PrefetchHooks Function({bool runId})
+        > {
+  $$XpTxnsTableTableManager(_$AppDatabase db, $XpTxnsTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$XpTxnsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$XpTxnsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$XpTxnsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<int> amount = const Value.absent(),
+                Value<String> reason = const Value.absent(),
+                Value<String?> runId = const Value.absent(),
+                Value<String?> weekStart = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<DateTime?> deletedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => XpTxnsCompanion(
+                id: id,
+                amount: amount,
+                reason: reason,
+                runId: runId,
+                weekStart: weekStart,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required int amount,
+                required String reason,
+                Value<String?> runId = const Value.absent(),
+                Value<String?> weekStart = const Value.absent(),
+                required DateTime createdAt,
+                required DateTime updatedAt,
+                Value<DateTime?> deletedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => XpTxnsCompanion.insert(
+                id: id,
+                amount: amount,
+                reason: reason,
+                runId: runId,
+                weekStart: weekStart,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$XpTxnsTable, XpTxn>(table),
+                  $$XpTxnsTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({runId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (runId) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.runId,
+                                referencedTable: $$XpTxnsTableReferences
+                                    ._runIdTable(db),
+                                referencedColumn: $$XpTxnsTableReferences
+                                    ._runIdTable(db)
+                                    .id,
+                              )
+                              as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$XpTxnsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $XpTxnsTable,
+      XpTxn,
+      $$XpTxnsTableFilterComposer,
+      $$XpTxnsTableOrderingComposer,
+      $$XpTxnsTableAnnotationComposer,
+      $$XpTxnsTableCreateCompanionBuilder,
+      $$XpTxnsTableUpdateCompanionBuilder,
+      (XpTxn, $$XpTxnsTableReferences),
+      XpTxn,
+      PrefetchHooks Function({bool runId})
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -3293,4 +5642,10 @@ class $AppDatabaseManager {
       $$RunPointsTableTableManager(_db, _db.runPoints);
   $$SplitsTableTableManager get splits =>
       $$SplitsTableTableManager(_db, _db.splits);
+  $$AvatarsTableTableManager get avatars =>
+      $$AvatarsTableTableManager(_db, _db.avatars);
+  $$WeeklyGoalsTableTableManager get weeklyGoals =>
+      $$WeeklyGoalsTableTableManager(_db, _db.weeklyGoals);
+  $$XpTxnsTableTableManager get xpTxns =>
+      $$XpTxnsTableTableManager(_db, _db.xpTxns);
 }

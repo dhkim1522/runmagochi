@@ -8,11 +8,15 @@ import '../data/location_source.dart';
 import '../data/run_repository.dart';
 import 'run_controller.dart';
 
-final runRepositoryProvider = Provider<RunRepository>((ref) {
+final appDatabaseProvider = Provider<AppDatabase>((ref) {
   final db = AppDatabase.production();
   ref.onDispose(db.close);
-  return DriftRunRepository(db);
+  return db;
 });
+
+final runRepositoryProvider = Provider<RunRepository>(
+  (ref) => DriftRunRepository(ref.watch(appDatabaseProvider)),
+);
 
 final locationSourceProvider = Provider<LocationSource>(
   (_) => GeolocatorLocationSource(),
