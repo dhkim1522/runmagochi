@@ -34,10 +34,16 @@ void main() {
     expect(levelFor(120).xpForNext, 100);
   });
   test('단계 경계', () {
-    expect(
-      [1, 4, 5, 9, 10, 19, 20, 99].map(stageForLevel),
-      [1, 1, 2, 2, 3, 3, 4, 4],
-    );
+    expect([1, 4, 5, 9, 10, 19, 20, 99].map(stageForLevel), [
+      1,
+      1,
+      2,
+      2,
+      3,
+      3,
+      4,
+      4,
+    ]);
     expect(xpToNextStage(0), 500);
     expect(xpToNextStage(9500), isNull);
   });

@@ -82,9 +82,11 @@ AvatarMood moodFor(DateTime? lastRunStartedAt, DateTime now) {
   final last = lastRunStartedAt.toLocal();
   final today = now.toLocal();
   // UTC 로 옮겨 일광절약 시간에 흔들리지 않게 날짜만 비교한다.
-  final days = DateTime.utc(today.year, today.month, today.day)
-      .difference(DateTime.utc(last.year, last.month, last.day))
-      .inDays;
+  final days = DateTime.utc(
+    today.year,
+    today.month,
+    today.day,
+  ).difference(DateTime.utc(last.year, last.month, last.day)).inDays;
   if (days >= 7) return AvatarMood.asleep;
   if (days >= 3) return AvatarMood.sleepy;
   return AvatarMood.normal;

@@ -18,6 +18,7 @@
 - `docs/screens.md` — MVP 화면 6개, 이동 흐름, UX 원칙
 - `docs/specs/run-engine.md` — 기록 엔진 규칙
 - `docs/specs/game-rules.md` — 게임 규칙과 수치
+- `docs/specs/sprite-spec.md` — 스프라이트 규격: 프레임·레이어·파일 이름
 - `docs/decisions/` — 결정 기록 (번호순)
 - `docs/plans/` — 페이즈별 구현 계획과 진행 상태 (`/phase` 가 작성)
 - `docs/research/nrc-analysis.md` — Nike Run Club 분석 요약
