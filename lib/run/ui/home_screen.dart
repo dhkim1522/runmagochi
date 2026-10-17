@@ -156,13 +156,38 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   Future<void> _changeTarget(double targetM) async {
+    GrowthGain? gain;
     try {
-      await ref.read(growthServiceProvider).setWeeklyTarget(targetM);
+      gain = await ref.read(growthServiceProvider).setWeeklyTarget(targetM);
     } catch (_) {
       _toast('목표를 바꾸지 못했어요');
     }
     if (!mounted) return;
     ref.invalidate(growthStateProvider);
+    if (gain == null || gain.goalBonusXp <= 0) return;
+    if (gain.leveledUp) {
+      await showDialog<void>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('레벨 업!'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text('Lv.${gain!.levelBefore} 에서 Lv.${gain.levelAfter} 로'),
+              if (gain.stageUp) const Text('새 외형 단계!'),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('확인'),
+            ),
+          ],
+        ),
+      );
+    } else {
+      _toast('이번 주 목표 달성 · 경험치 +${gain.goalBonusXp}');
+    }
   }
 
   @override

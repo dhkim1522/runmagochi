@@ -4,7 +4,14 @@ import 'package:runmagochi/run/domain/run_summary.dart';
 
 void main() {
   test('5.02km 는 50', () => expect(distanceXp(5020, []), 50));
-  test('99m 는 0', () => expect(distanceXp(99, []), 0));
+  test('1296m 는 13 (표시 1.30km)', () => expect(distanceXp(1296, []), 13));
+  test('1294m 는 12 (표시 1.29km)', () => expect(distanceXp(1294, []), 12));
+  test('94m 는 0, 95m 는 1 (표시 단위 10m 로 반올림)', () {
+    expect(distanceXp(94, []), 0);
+    expect(distanceXp(95, []), 1);
+  });
+  test('99m 는 1 (표시 0.10km)', () => expect(distanceXp(99, []), 1));
+  test('44m 는 0', () => expect(distanceXp(44, []), 0));
   test('149초 구간은 빼고 150초 구간은 넣는다', () {
     final splits = [
       Split(index: 0, distanceM: 1000, duration: Duration(seconds: 149)),

@@ -169,6 +169,9 @@ class FakeGrowthService implements GrowthService {
   /// 지정하면 다음 sync 한 번만 이 값을 돌려주고 비운다.
   GrowthGain? syncGain;
 
+  /// 지정하면 다음 setWeeklyTarget 한 번만 이 값을 돌려준다.
+  GrowthGain? targetGain;
+
   /// true 면 sync 가 실패한다.
   bool syncFails = false;
 
@@ -200,7 +203,9 @@ class FakeGrowthService implements GrowthService {
   @override
   Future<GrowthGain> setWeeklyTarget(double targetM) async {
     targets.add(targetM);
-    return sync();
+    final g = targetGain;
+    targetGain = null;
+    return g ?? await sync();
   }
 
   @override

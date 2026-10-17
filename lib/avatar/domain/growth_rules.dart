@@ -9,7 +9,7 @@ const double _minPaceSecPerKm = 150;
 /// 이 페이스(초/km)보다 느리면 걷는 동작.
 const double _runPaceSecPerKm = 540;
 
-/// 러닝 거리로 얻는 경험치. 100m당 1, 소수점 버림.
+/// 러닝 거리로 얻는 경험치. 거리를 먼저 10m(화면 표시 단위)로 반올림하고 100m당 1, 소수점 버림.
 /// 속도 검사에 걸린 1km 구간의 거리는 뺀다. 1km 미만 마지막 구간은 검사하지 않는다.
 int distanceXp(double distanceM, List<Split> splits) {
   var excluded = 0.0;
@@ -20,7 +20,7 @@ int distanceXp(double distanceM, List<Split> splits) {
   }
   final counted = distanceM - excluded;
   if (counted <= 0) return 0;
-  return counted ~/ 100;
+  return (counted / 10).round() ~/ 10;
 }
 
 class LevelProgress {

@@ -88,6 +88,60 @@ void main() {
     expect(g.loads, greaterThan(before));
   });
 
+  Future<void> changeTarget(WidgetTester tester) async {
+    await tester.tap(find.text('이번 주 목표 10km'));
+    await settle(tester);
+    await tester.enterText(find.byType(TextField), '5');
+    await tester.pump();
+    await tester.tap(find.text('저장'));
+    await settle(tester);
+  }
+
+  testWidgets('목표를 낮춰 보너스만 받으면 스낵바로 알린다', (tester) async {
+    final g = FakeGrowthService(growthState())
+      ..targetGain = const GrowthGain(
+        distanceXp: 0,
+        goalBonusXp: 50,
+        levelBefore: 3,
+        levelAfter: 3,
+        stageBefore: 1,
+        stageAfter: 1,
+      );
+    await pumpHome(tester, FakeController(), growth: g);
+    await changeTarget(tester);
+    expect(find.text('이번 주 목표 달성 · 경험치 +50'), findsOneWidget);
+    expect(find.text('레벨 업!'), findsNothing);
+  });
+
+  testWidgets('목표를 낮춰 레벨이 오르면 레벨 업 다이얼로그', (tester) async {
+    final g = FakeGrowthService(growthState())
+      ..targetGain = const GrowthGain(
+        distanceXp: 0,
+        goalBonusXp: 50,
+        levelBefore: 4,
+        levelAfter: 5,
+        stageBefore: 1,
+        stageAfter: 2,
+      );
+    await pumpHome(tester, FakeController(), growth: g);
+    await changeTarget(tester);
+    expect(find.text('레벨 업!'), findsOneWidget);
+    expect(find.text('Lv.4 에서 Lv.5 로'), findsOneWidget);
+    expect(find.text('새 외형 단계!'), findsOneWidget);
+    await tester.tap(find.text('확인'));
+    await settle(tester);
+    expect(find.text('레벨 업!'), findsNothing);
+  });
+
+  testWidgets('보상이 없으면 아무것도 띄우지 않는다', (tester) async {
+    final g = FakeGrowthService(growthState());
+    await pumpHome(tester, FakeController(), growth: g);
+    await changeTarget(tester);
+    expect(g.targets, [5000]);
+    expect(find.byType(SnackBar), findsNothing);
+    expect(find.text('레벨 업!'), findsNothing);
+  });
+
   testWidgets('시작 버튼 → 카운트다운 3 표시 → 3초 후 러닝 중 화면', (tester) async {
     final c = FakeController();
     await pumpHome(tester, c);
