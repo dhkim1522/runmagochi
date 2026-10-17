@@ -35,7 +35,8 @@
 
 ## 사전 준비
 
-- **dart-flutter**: Dart MCP 서버가 `dart` 명령을 쓴다. Flutter SDK를 설치하고 `dart` 가 PATH에 있어야 한다.
+- **Flutter 버전**: 프로젝트 Flutter 는 `.fvmrc` 로 고정한다(결정 0008). [FVM](https://fvm.app) 을 설치하고(`dart pub global activate fvm` 또는 macOS `brew install fvm`) 저장소에서 `fvm install` 을 실행한다. Windows 는 개발자 모드를 켜야 한다.
+- **dart-flutter**: Dart MCP 서버가 전역 `dart` 명령을 쓴다. Flutter SDK를 설치하고 `dart` 가 PATH에 있어야 한다. 전역 버전도 `.fvmrc` 와 맞춰 두면 분석 결과가 같다.
 - **pixel-plugin**: [Aseprite](https://www.aseprite.org/) 1.3 이상이 설치돼 있어야 한다.
 - **skill-creator**: claude.ai 계정에 skill-creator 스킬이 이미 동기화돼 있으면 켜지 않아도 된다.
 - **상태 표시줄**: `.claude/statusline.sh` 가 모델, 5시간·주간 사용량, 세션 시간, 컨텍스트, effort 를 하단에 표시한다. macOS 는 기본 bash, Windows 는 Git Bash 로 같은 설정이 그대로 동작한다(Claude Code 가 Windows 에서 Git Bash 로 실행). `jq` 같은 추가 설치는 필요 없다.

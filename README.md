@@ -28,10 +28,10 @@
 
 ## 빌드·실행
 
-Android SDK 플랫폼 37 이 설치돼 있어야 한다.
+Android SDK 플랫폼 37 과 [FVM](https://fvm.app) 이 필요하다. Flutter 버전은 `.fvmrc` 로 고정돼 있다(결정 0008). 처음 한 번 `fvm install` 을 실행한다.
 
 ```
-flutter pub get
-dart run build_runner build
-flutter run
+fvm flutter pub get
+fvm dart run build_runner build
+fvm flutter run
 ```

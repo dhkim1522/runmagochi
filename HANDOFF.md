@@ -13,7 +13,7 @@
 ## 다음 할 일
 
 1. **실기기 실측** (`docs/plans/phase-1.md` "사람 확인")
-   - Android 기기에 APK 설치: `flutter build apk --debug` 후 `build/app/outputs/flutter-apk/app-debug.apk`
+   - Android 기기에 APK 설치: `fvm flutter build apk --debug` 후 `build/app/outputs/flutter-apk/app-debug.apk`
    - 실제 30분 러닝 3회, 기록 누락 없는지
    - 트랙 400m × 10바퀴 거리 오차 5% 이내인지
    - 화면 끄고 주머니에 넣은 채 기록이 이어지는지
@@ -23,6 +23,8 @@
 
 ## 환경 메모
 
+- **Flutter 버전은 `.fvmrc`(3.47.7)로 고정한다** (결정 0008). 명령은 `fvm flutter ...`, `fvm dart ...` 로 실행한다.
+  - 회사 Mac에서 할 일: `dart pub global activate fvm`(또는 `brew install fvm`) → 저장소에서 `fvm install` → `fvm flutter test` 통과 확인. Mac 에서 바뀐 `pubspec.lock` 이 있으면 커밋한다.
 - 회사 Mac: `~/personal/` 아래에서 git·gh 가 개인 계정(dhkim1522)으로 자동 전환된다.
 - 집 Windows
   - Claude Code 개인 계정 로그인, 개인 SSH 키를 GitHub에 등록한 뒤 이 저장소를 clone한다. 저장소 안에서 `git config user.email dhkim1522@naver.com` 을 설정한다.
@@ -31,4 +33,4 @@
   - Android Studio 없이 cmdline-tools 로 설치했다. 새 sdkmanager 는 `platforms/android-37.0`, `build-tools/36.0.0`, `ndk/28.2.13676358` 처럼 `/` 형식을 쓴다. NDK 는 Gradle 자동 설치가 실패하므로 직접 설치한다.
   - Aseprite(pixel-plugin 용)는 미설치. 페이즈 2 스프라이트 작업 전에 구매·설치하고 `/pixel-plugin:pixel-setup`.
 - 상태 표시줄은 Mac·Windows 공용 설정 하나로 동작한다. Windows 는 Git for Windows 만 있으면 되고 `jq` 나 `settings.local.json` 은 필요 없다.
-- 에뮬레이터 가상 러닝: `dart run tool/fake_run.dart --minutes 5`. 에뮬레이터 위치 설정에서 "Location Accuracy" 를 켜야 위치가 들어온다.
+- 에뮬레이터 가상 러닝: `fvm dart run tool/fake_run.dart --minutes 5`. 에뮬레이터 위치 설정에서 "Location Accuracy" 를 켜야 위치가 들어온다.

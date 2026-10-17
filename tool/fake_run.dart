@@ -1,5 +1,5 @@
 // 에뮬레이터에 가상 GPS 를 1초마다 주입한다.
-// 사용: dart run tool/fake_run.dart --minutes 5 --speed 3.0 --lat 37.5260 --lng 126.9240
+// 사용: fvm dart run tool/fake_run.dart --minutes 5 --speed 3.0 --lat 37.5260 --lng 126.9240
 // 선택: --seconds <초> (--minutes 대신), --adb <adb 경로>
 import 'dart:io';
 

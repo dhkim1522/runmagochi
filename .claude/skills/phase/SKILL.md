@@ -100,7 +100,7 @@ argument-hint: "[--auto] [페이즈 번호]"
 
 1. `superpowers:test-driven-development` 를 따라 테스트를 먼저 작성하고 실패를 확인한다.
 2. 구현해 테스트를 통과시킨다.
-3. `dart analyze` 와 `flutter test` 를 통과시킨다.
+3. `fvm dart analyze` 와 `fvm flutter test` 를 통과시킨다.
 4. `superpowers:requesting-code-review` 로 리뷰하고 지적을 반영한다.
 5. 계획 파일에서 작업을 체크하고, 코드와 함께 커밋·push한다.
 
@@ -114,8 +114,8 @@ argument-hint: "[--auto] [페이즈 번호]"
 
 `superpowers:verification-before-completion` 을 따른다. 결과를 실제 명령 출력으로 확인하기 전에는 통과라고 쓰지 않는다.
 
-- `flutter test`, `dart analyze`
-- `flutter build apk --debug`
+- `fvm flutter test`, `fvm dart analyze`
+- `fvm flutter build apk --debug`
 - 계획의 "자동 확인" 항목
 - 에뮬레이터가 실행 중이면 앱을 띄워 핵심 흐름을 확인한다. 실행 중이 아니면 건너뛰고 그 사실을 적는다.
 
