@@ -19,6 +19,7 @@
 - `docs/specs/run-engine.md` — 기록 엔진 규칙
 - `docs/specs/game-rules.md` — 게임 규칙과 수치
 - `docs/specs/sprite-spec.md` — 스프라이트 규격: 프레임·레이어·파일 이름
+- `docs/design/design-system.md` — 디자인 시스템(색·글꼴·간격·컴포넌트 규칙), 값은 `docs/design/tokens.json`
 - `docs/decisions/` — 결정 기록 (번호순)
 - `docs/plans/` — 페이즈별 구현 계획과 진행 상태 (`/phase` 가 작성)
 - `docs/research/nrc-analysis.md` — Nike Run Club 분석 요약
