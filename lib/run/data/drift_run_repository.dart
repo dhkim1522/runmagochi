@@ -1,6 +1,7 @@
 import 'package:drift/drift.dart';
 import 'package:uuid/uuid.dart';
 
+import '../../core/week.dart';
 import '../domain/location_sample.dart';
 import '../domain/polyline_codec.dart';
 import '../domain/run_summary.dart';
@@ -225,13 +226,7 @@ class DriftRunRepository implements RunRepository {
 
   @override
   Future<(double distanceM, int count)> weeklyTotal(DateTime now) async {
-    final local = now.toLocal();
-    // DateTime 생성자의 day 연산으로 월요일 0시를 구한다 (일광절약 시간 영향 없음).
-    final monday = DateTime(
-      local.year,
-      local.month,
-      local.day - (local.weekday - 1),
-    );
+    final monday = weekStartOf(now);
     final nextMonday = DateTime(monday.year, monday.month, monday.day + 7);
     final rows =
         await (_db.select(_db.runs)..where(
