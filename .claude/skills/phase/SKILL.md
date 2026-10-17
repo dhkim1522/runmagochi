@@ -48,6 +48,18 @@ argument-hint: "[--auto] [페이즈 번호]"
 | 있음 | 완료 | 다음 페이즈로 1번부터 |
 
 3. 진행할 페이즈, 현재 상태, 모드를 한 줄로 알린다.
+4. 상태가 `없음`·`계획`·`실행` 이면 아래 "도구 확인" 을 한다.
+
+### 도구 확인
+
+1. `docs/tooling.md` 플러그인 목록 표의 "사용 시점" 을 이번 페이즈 범위와 대조해 필요한 플러그인을 고른다.
+2. 고른 플러그인의 스킬이 현재 세션의 스킬 목록에 있는지 본다(`<플러그인>:<스킬>` 형식).
+3. 없으면 플러그인이 꺼져 있거나 설치되지 않은 것이다. `/kickoff` 4번 "적용" 과 같은 명령(`--scope local`)으로 켠다. 수동 모드는 먼저 묻는다.
+   - 켠 뒤에는 `/reload-plugins` 를 해야 스킬이 보인다. 무엇을 켰는지 알리고 멈춘다. 다시 `/phase` 를 실행하면 이어서 진행한다. 자동 모드도 같다.
+4. 플러그인은 켜져 있지만 `docs/tooling.md` "사전 준비" 가 안 돼 있으면(예: Aseprite 미설치, 플러그인 MCP 서버 연결 실패) 멈추지 않는다.
+   - 계획 파일 "사람 확인" 에 준비 항목을 넣는다.
+   - 그 준비가 필요한 작업은 같은 규격의 임시 결과물(예: 임시 스프라이트)로 먼저 진행하고, 실제 결과물 작업은 준비 뒤로 미룬다.
+5. 결과를 한 줄로 알린다. 예: `도구: pixel-plugin 켜짐, Aseprite 미설치 → 임시 스프라이트로 진행`
 
 ## 2. 계획
 
@@ -58,6 +70,9 @@ argument-hint: "[--auto] [페이즈 번호]"
 - 범위에 걸린 요구사항(`docs/product.md`), 명세(`docs/specs/`), 구조(`docs/architecture.md`), 화면(`docs/screens.md`)
 - 와이어프레임 이미지 `design/wireframes/png/`
 - Flutter 구조는 `dart-flutter:flutter-apply-architecture-best-practices` 를 따른다.
+- 도트 그림·스프라이트 시트 작업은 `pixel-plugin` 스킬(`pixel-art-creator`, `pixel-art-animator`, `pixel-art-exporter` 등)로 만든다. 규격은 `docs/architecture.md` 를 따른다.
+- 색상·글꼴·컴포넌트 등 UI 디자인 작업은 `ui-ux-pro-max:ui-ux-pro-max` 로 디자인 시스템을 먼저 만들고, 그 규칙으로 화면에 적용한다.
+- 위 스킬을 쓰는 작업에는 "스킬:" 줄에 스킬 이름을 적는다.
 
 계획 파일 형식:
 
@@ -73,6 +88,7 @@ argument-hint: "[--auto] [페이즈 번호]"
   - 파일: <만들거나 고칠 파일>
   - 테스트: <먼저 작성할 테스트>
   - 확인: <통과를 확인할 명령>
+  - 스킬: <쓸 플러그인 스킬. 없으면 줄을 뺀다>
 ...
 
 ## 완료 기준
@@ -96,7 +112,7 @@ argument-hint: "[--auto] [페이즈 번호]"
 
 ## 4. 실행
 
-`superpowers:subagent-driven-development` 로 체크되지 않은 작업을 순서대로 진행한다. 작업마다:
+`superpowers:subagent-driven-development` 로 체크되지 않은 작업을 순서대로 진행한다. 작업에 "스킬:" 이 있으면 그 스킬을 불러 따른다. 작업마다:
 
 1. `superpowers:test-driven-development` 를 따라 테스트를 먼저 작성하고 실패를 확인한다.
 2. 구현해 테스트를 통과시킨다.

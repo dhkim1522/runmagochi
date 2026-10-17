@@ -1,6 +1,6 @@
 # 개발 도구
 
-> 이 저장소에서 쓰는 Claude Code 플러그인 목록과 켜는 시점. 새 PC에서는 `/kickoff` 로 이 목록을 보고 필요한 플러그인을 켠다.
+> 이 저장소에서 쓰는 Claude Code 플러그인 목록과 켜는 시점. 새 PC에서는 `/kickoff` 로 이 목록을 보고 필요한 플러그인을 켠다. `/phase` 는 시작할 때 "사용 시점" 을 보고 이번 페이즈에 필요한 플러그인과 사전 준비를 확인한다.
 
 ## 플러그인 목록
 
@@ -8,8 +8,8 @@
 | --- | --- | --- | --- | --- |
 | [superpowers](https://github.com/obra/superpowers) | 아이디어 정리, 구현 계획, 테스트 먼저 작성(TDD), 코드 리뷰 흐름 | 모든 페이즈 | 켜짐 | `superpowers@claude-plugins-official` |
 | [dart-flutter](https://github.com/flutter/agent-plugins) | Flutter·Dart 공식 스킬과 Dart MCP 서버 | Flutter 프로젝트 생성부터 계속 | 켜짐 | `dart-flutter@dart-flutter` |
-| [ui-ux-pro-max](https://github.com/nextlevelbuilder/ui-ux-pro-max-skill) | 색상·글꼴·컴포넌트 규칙을 묶은 디자인 시스템 생성 | 전체 UI 디자인 적용 페이즈 | 꺼짐 | `ui-ux-pro-max@ui-ux-pro-max-skill` |
-| [pixel-plugin](https://github.com/willibrandon/pixel-plugin) | Aseprite 로 도트 그림·스프라이트 시트 제작 | 캐릭터·아이템 스프라이트 제작 페이즈 | 꺼짐 | `pixel-plugin@pixel-plugin` |
+| [ui-ux-pro-max](https://github.com/nextlevelbuilder/ui-ux-pro-max-skill) | 색상·글꼴·컴포넌트 규칙을 묶은 디자인 시스템 생성 | 페이즈 3 (전체 UI 디자인 적용) | 꺼짐 | `ui-ux-pro-max@ui-ux-pro-max-skill` |
+| [pixel-plugin](https://github.com/willibrandon/pixel-plugin) | Aseprite 로 도트 그림·스프라이트 시트 제작 | 페이즈 2 (캐릭터 스프라이트), 페이즈 4 (아이템 스프라이트) | 꺼짐 | `pixel-plugin@pixel-plugin` |
 | [skill-creator](https://github.com/anthropics/claude-plugins-official/tree/main/plugins/skill-creator) | 반복 작업을 프로젝트 스킬로 만들고 검증 | 반복 작업을 스킬로 만들 때 | 꺼짐 | `skill-creator@claude-plugins-official` |
 
 ## 마켓플레이스
