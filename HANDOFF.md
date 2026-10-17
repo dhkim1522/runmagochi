@@ -27,4 +27,5 @@
 - 집 Windows
   - Claude Code 개인 계정 로그인, 개인 SSH 키를 GitHub에 등록한 뒤 이 저장소를 clone한다. 저장소 안에서 `git config user.email dhkim1522@naver.com` 을 설정한다.
   - Flutter SDK와 Android SDK platform 37 이 필요하다. 첫 실행 때 `/kickoff`.
+- 상태 표시줄은 Mac·Windows 공용 설정 하나로 동작한다. Windows 는 Git for Windows 만 있으면 되고 `jq` 나 `settings.local.json` 은 필요 없다.
 - 에뮬레이터 가상 러닝: `dart run tool/fake_run.dart --minutes 5`. 에뮬레이터 위치 설정에서 "Location Accuracy" 를 켜야 위치가 들어온다.

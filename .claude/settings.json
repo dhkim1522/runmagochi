@@ -1,7 +1,7 @@
 {
   "statusLine": {
     "type": "command",
-    "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/statusline.sh\""
+    "command": "bash \"$(git rev-parse --show-toplevel)/.claude/statusline.sh\""
   },
   "extraKnownMarketplaces": {
     "dart-flutter": {
