@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:runmagochi/avatar/app/growth_service.dart';
@@ -74,10 +76,12 @@ class FakeRunRepository implements RunRepository {
 class FakeScheduler implements NotificationScheduler {
   final List<List<PlannedReminder>> calls = [];
   bool fail = false;
+  Completer<void>? hold;
 
   @override
   Future<void> replaceAll(List<PlannedReminder> reminders) async {
     calls.add(reminders);
+    await hold?.future;
     if (fail) throw StateError('예약 실패');
   }
 }
@@ -206,6 +210,7 @@ void main() {
       service = GrowthService(runs, growth, () => now, scheduler: scheduler);
       runs.add('a', DateTime(2026, 10, 13, 7), 6200);
       await service.sync();
+      await pumpEventQueue();
       expect(scheduler.calls.length, 1);
       // 토요일 낮이라 이번 주 금요일은 지났다: 다음 3주만.
       expect(scheduler.calls.single.length, 3);
@@ -217,7 +222,19 @@ void main() {
       runs.add('a', DateTime(2026, 10, 13, 7), 5020);
       final gain = await service.sync();
       expect(gain.distanceXp, 50);
+      await pumpEventQueue();
       expect(scheduler.calls.length, 1);
+    });
+
+    test('replaceAll 이 끝나지 않아도 sync 는 gain 을 돌려준다', () async {
+      final scheduler = FakeScheduler()..hold = Completer<void>();
+      service = GrowthService(runs, growth, () => now, scheduler: scheduler);
+      runs.add('a', DateTime(2026, 10, 13, 7), 5020);
+      final gain = await service.sync().timeout(const Duration(seconds: 2));
+      expect(gain.distanceXp, 50);
+      await pumpEventQueue();
+      expect(scheduler.calls.length, 1);
+      scheduler.hold!.complete();
     });
   });
 }

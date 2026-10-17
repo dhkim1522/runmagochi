@@ -47,14 +47,18 @@ class LocalNotificationScheduler implements NotificationScheduler {
       rethrow;
     }
     if (!_permissionAsked) {
-      _permissionAsked = true;
-      await _plugin
-          .resolvePlatformSpecificImplementation<
-            AndroidFlutterLocalNotificationsPlugin
-          >()
-          ?.requestNotificationsPermission();
+      try {
+        await _plugin
+            .resolvePlatformSpecificImplementation<
+              AndroidFlutterLocalNotificationsPlugin
+            >()
+            ?.requestNotificationsPermission();
+        _permissionAsked = true;
+      } catch (_) {
+        // 권한 요청이 실패해도 예약은 진행하고, 다음에 다시 묻는다.
+      }
     }
-    await _plugin.cancelAll();
+    await _plugin.cancelAllPendingNotifications();
     for (var i = 0; i < reminders.length; i++) {
       final r = reminders[i];
       await _plugin.zonedSchedule(

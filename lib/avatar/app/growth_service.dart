@@ -20,12 +20,9 @@ class GrowthService {
 
   /// 동시에 불러도 한 번에 하나씩 실행해 같은 보상을 두 번 알리지 않는다.
   Future<GrowthGain> sync() {
-    final result = _tail.then((_) async {
-      final gain = await _sync();
-      await _reschedule();
-      return gain;
-    });
-    _tail = result.then<void>((_) {}, onError: (_) {});
+    final result = _tail.then((_) => _sync());
+    // 재예약은 sync 뒤, 다음 sync 앞에 직렬로 돌되 호출자는 기다리지 않는다.
+    _tail = result.then<void>((_) => _reschedule(), onError: (_) {});
     return result;
   }
 
