@@ -39,13 +39,15 @@ class SummaryScreen extends ConsumerWidget {
     final Widget body;
     if (s != null) {
       final g = gain;
+      final weekTargetM = g == null
+          ? null
+          : ref.watch(growthStateProvider).value?.weekTargetM;
       final growth = g == null
           ? null
           : GrowthSummary(
               gain: g,
-              name: ref.watch(growthStateProvider).value?.name ?? '러니',
               distanceM: s.distanceM,
-              weekTargetM: ref.watch(growthStateProvider).value?.weekTargetM,
+              weekTargetM: weekTargetM,
             );
       body = _SummaryBody(
         growth: growth,

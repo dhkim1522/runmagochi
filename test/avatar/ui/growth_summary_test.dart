@@ -28,12 +28,7 @@ Future<void> pumpIt(
   await tester.pumpWidget(
     MaterialApp(
       home: Scaffold(
-        body: GrowthSummary(
-          gain: g,
-          name: '러니',
-          distanceM: 5020,
-          weekTargetM: weekTargetM,
-        ),
+        body: GrowthSummary(gain: g, distanceM: 5020, weekTargetM: weekTargetM),
       ),
     ),
   );

@@ -13,13 +13,11 @@ class GrowthSummary extends StatefulWidget {
   const GrowthSummary({
     super.key,
     required this.gain,
-    required this.name,
     required this.distanceM,
     this.weekTargetM,
   });
 
   final GrowthGain gain;
-  final String name;
 
   /// 방금 달린 거리(미터).
   final double distanceM;

@@ -166,7 +166,7 @@ class FakeGrowthService implements GrowthService {
   Completer<void>? holdLoad;
   final List<double> targets = [];
 
-  /// 지정하면 sync 가 이 값을 돌려준다.
+  /// 지정하면 다음 sync 한 번만 이 값을 돌려주고 비운다.
   GrowthGain? syncGain;
 
   /// true 면 sync 가 실패한다.
@@ -176,7 +176,9 @@ class FakeGrowthService implements GrowthService {
   Future<GrowthGain> sync() async {
     syncs++;
     if (syncFails) throw StateError('sync failed');
-    return syncGain ??
+    final g = syncGain;
+    syncGain = null; // 실제 서비스처럼 한 번 받으면 소모된다.
+    return g ??
         const GrowthGain(
           distanceXp: 0,
           goalBonusXp: 0,

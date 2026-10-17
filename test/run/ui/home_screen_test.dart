@@ -323,21 +323,23 @@ void main() {
   });
 
   testWidgets('러닝을 끝내면 sync 한 번 후 요약에 gain 이 들어간다', (tester) async {
-    final g = FakeGrowthService(growthState())
-      ..syncGain = const GrowthGain(
-        distanceXp: 50,
-        goalBonusXp: 50,
-        levelBefore: 3,
-        levelAfter: 4,
-        stageBefore: 1,
-        stageAfter: 1,
-      );
+    final g = FakeGrowthService(growthState());
     final c = FakeController();
     await pumpHome(tester, c, growth: g);
     await startRun(tester);
     final before = g.syncs;
+    // 러닝 중에 생긴 gain: 먼저 sync 한 쪽이 받는다.
+    g.syncGain = const GrowthGain(
+      distanceXp: 50,
+      goalBonusXp: 50,
+      levelBefore: 3,
+      levelAfter: 4,
+      stageBefore: 1,
+      stageAfter: 1,
+    );
     await holdStop(tester);
-    expect(g.syncs, greaterThan(before));
+    // 우리 sync 한 번 + invalidate 뒤 provider 재계산의 sync 한 번.
+    expect(g.syncs, before + 2);
     expect(find.byType(SummaryScreen), findsOneWidget);
     expect(find.text('레벨 업!'), findsOneWidget);
     expect(find.text('Lv.3 에서 Lv.4 로'), findsOneWidget);
