@@ -72,7 +72,6 @@ class FakeRunRepository implements RunRepository {
 void main() {
   // 2026-10-17 은 토요일. 이번 주 월요일은 10-12.
   final now = DateTime(2026, 10, 17, 12);
-  final thisWeek = DateTime(2026, 10, 12);
   late AppDatabase db;
   late DriftGrowthRepository growth;
   late FakeRunRepository runs;
@@ -170,6 +169,21 @@ void main() {
     expect(state.totalDistanceM, 1000);
     expect(state.weekDistanceM, 1000);
     expect(state.weekTargetM, 10000);
-    expect(thisWeek.weekday, DateTime.monday);
+  });
+
+  test('동시에 sync 해도 경험치와 보너스는 한 번만 알린다', () async {
+    runs.add('a', DateTime(2026, 10, 13, 7), 11000);
+    final gains = await Future.wait([service.sync(), service.sync()]);
+    expect(gains.fold(0, (s, g) => s + g.distanceXp), 110);
+    expect(gains.fold(0, (s, g) => s + g.goalBonusXp), 50);
+    expect(await growth.totalXp(), 160);
+  });
+
+  test('경험치는 있지만 보너스가 빠진 지난 주도 sync 가 보너스를 준다', () async {
+    runs.add('a', DateTime(2026, 10, 6, 7), 11000);
+    await growth.addDistanceXp('a', 110);
+    final gain = await service.sync();
+    expect(gain.distanceXp, 0);
+    expect(gain.goalBonusXp, 50);
   });
 }

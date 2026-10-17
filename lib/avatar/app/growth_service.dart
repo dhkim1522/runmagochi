@@ -13,14 +13,27 @@ class GrowthService {
   final GrowthRepository _growth;
   final Clock _clock;
 
-  Future<GrowthGain> sync() async {
+  Future<void> _tail = Future.value();
+
+  /// 동시에 불러도 한 번에 하나씩 실행해 같은 보상을 두 번 알리지 않는다.
+  Future<GrowthGain> sync() {
+    final result = _tail.then((_) => _sync());
+    _tail = result.then<void>((_) {}, onError: (_) {});
+    return result;
+  }
+
+  Future<GrowthGain> _sync() async {
     final xpBefore = await _growth.totalXp();
     final levelBefore = levelFor(xpBefore).level;
 
     final known = await _growth.runIdsWithDistanceXp();
     final runs = await _runs.listRuns(); // 최신순
     var distanceXpSum = 0;
-    final weeks = <DateTime>{weekStartOf(_clock())};
+    // 러닝이 있는 모든 주와 이번 주를 판정한다 (중간에 끊긴 보너스도 복구).
+    final weeks = <DateTime>{
+      weekStartOf(_clock()),
+      for (final r in runs) weekStartOf(r.startedAt),
+    };
     for (final r in runs.reversed) {
       if (known.contains(r.id)) continue;
       final detail = await _runs.getRun(r.id);
@@ -28,7 +41,6 @@ class GrowthService {
       final xp = distanceXp(detail.run.distanceM, detail.splits);
       await _growth.addDistanceXp(r.id, xp);
       distanceXpSum += xp;
-      weeks.add(weekStartOf(r.startedAt));
     }
 
     var bonusSum = 0;
