@@ -6,8 +6,18 @@ import 'package:image/image.dart' as img;
 
 const px = 32;
 const frames = {'idle': 2, 'walk': 4, 'run': 4};
-const stageColors = [0xFF6FCF97, 0xFF56CCF2, 0xFFF2994A, 0xFFBB6BD9];
+// 종류별 기본색: 병아리 노랑, 젤리 주황, 도토리 갈색. 단계가 오르면 조금씩 진해진다.
+const kindColors = {
+  'chick': 0xFFF2C94C,
+  'jelly': 0xFFF2994A,
+  'acorn': 0xFF9B6B43,
+};
 const moods = ['normal', 'sleepy', 'asleep'];
+
+int shade(int rgb, double k) {
+  int ch(int s) => (((rgb >> s) & 255) * k).round().clamp(0, 255);
+  return 0xFF000000 | (ch(16) << 16) | (ch(8) << 8) | ch(0);
+}
 
 void fill(img.Image im, int x, int y, int w, int h, int rgb) {
   img.fillRect(
@@ -21,10 +31,10 @@ void fill(img.Image im, int x, int y, int w, int h, int rgb) {
 }
 
 /// 발끝이 프레임 아래에서 2px 위(y=29)에 오도록 그린다. 단계가 오르면 키 +3px.
-img.Image body(int stage, String action) {
+img.Image body(String kind, int stage, String action) {
   final n = frames[action]!;
   final im = img.Image(width: px * n, height: px, numChannels: 4);
-  final color = stageColors[stage - 1];
+  final color = shade(kindColors[kind]!, 1 - 0.08 * (stage - 1));
   final dark = (color >> 1) & 0x7F7F7F;
   final h = 14 + 3 * (stage - 1); // 몸 높이
   final w = 12 + 2 * (stage - 1);
@@ -84,16 +94,24 @@ void save(String path, img.Image im) {
 }
 
 void main() {
-  for (final action in frames.keys) {
-    for (var stage = 1; stage <= 4; stage++) {
-      save(
-        'assets/sprites/body/stage${stage}_$action.png',
-        body(stage, action),
-      );
-    }
-    for (final mood in moods) {
-      save('assets/sprites/face/${mood}_$action.png', face(mood, action));
+  var n = 0;
+  for (final kind in kindColors.keys) {
+    for (final action in frames.keys) {
+      for (var stage = 1; stage <= 4; stage++) {
+        save(
+          'assets/sprites/$kind/body/stage${stage}_$action.png',
+          body(kind, stage, action),
+        );
+        n++;
+      }
+      for (final mood in moods) {
+        save(
+          'assets/sprites/$kind/face/${mood}_$action.png',
+          face(mood, action),
+        );
+        n++;
+      }
     }
   }
-  stdout.writeln('임시 스프라이트 24개 생성');
+  stdout.writeln('임시 스프라이트 $n개 생성');
 }

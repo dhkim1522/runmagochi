@@ -97,7 +97,9 @@ class HistoryScreen extends ConsumerWidget {
                     : ListView.builder(
                         itemCount: list.length,
                         itemBuilder: (context, i) => Padding(
-                          padding: const EdgeInsets.only(bottom: Gap.s3),
+                          padding: const EdgeInsets.only(
+                            bottom: Gap.s3 - Borders.lip,
+                          ),
                           child: _RunTile(list[i]),
                         ),
                       ),

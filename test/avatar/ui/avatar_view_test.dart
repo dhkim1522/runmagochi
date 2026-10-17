@@ -4,6 +4,7 @@ import 'package:runmagochi/avatar/domain/growth_rules.dart';
 import 'package:runmagochi/avatar/ui/avatar_view.dart';
 
 Widget _wrap({
+  AvatarKind kind = AvatarKind.chick,
   int stage = 1,
   AvatarMood mood = AvatarMood.normal,
   AvatarAction action = AvatarAction.run,
@@ -11,7 +12,13 @@ Widget _wrap({
 }) => Directionality(
   textDirection: TextDirection.ltr,
   child: Center(
-    child: AvatarView(stage: stage, mood: mood, action: action, scale: scale),
+    child: AvatarView(
+      kind: kind,
+      stage: stage,
+      mood: mood,
+      action: action,
+      scale: scale,
+    ),
   ),
 );
 
@@ -80,11 +87,11 @@ void main() {
     await tester.runAsync(() async {
       final ctx = tester.element(find.byType(AvatarView));
       await precacheImage(
-        const AssetImage('assets/sprites/body/stage1_run.png'),
+        const AssetImage('assets/sprites/chick/body/stage1_run.png'),
         ctx,
       );
       await precacheImage(
-        const AssetImage('assets/sprites/face/normal_run.png'),
+        const AssetImage('assets/sprites/chick/face/normal_run.png'),
         ctx,
       );
       await Future<void>.delayed(const Duration(milliseconds: 100));

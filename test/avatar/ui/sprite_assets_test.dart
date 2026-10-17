@@ -25,28 +25,32 @@ void main() {
 
   test('시트 경로 규칙', () {
     expect(
-      bodySheet(1, AvatarAction.run),
-      'assets/sprites/body/stage1_run.png',
+      bodySheet(AvatarKind.jelly, 1, AvatarAction.run),
+      'assets/sprites/jelly/body/stage1_run.png',
     );
     expect(
-      faceSheet(AvatarMood.sleepy, AvatarAction.idle),
-      'assets/sprites/face/sleepy_idle.png',
+      faceSheet(AvatarKind.acorn, AvatarMood.sleepy, AvatarAction.idle),
+      'assets/sprites/acorn/face/sleepy_idle.png',
     );
     expect(spriteLayerOrder.first, 'body');
   });
 
   test('모든 body 시트가 (프레임 수 × 32) × 32 이다', () {
-    for (var stage = 1; stage <= 4; stage++) {
-      for (final a in AvatarAction.values) {
-        expectSheet(bodySheet(stage, a), a);
+    for (final k in AvatarKind.values) {
+      for (var stage = 1; stage <= 4; stage++) {
+        for (final a in AvatarAction.values) {
+          expectSheet(bodySheet(k, stage, a), a);
+        }
       }
     }
   });
 
   test('모든 face 시트가 (프레임 수 × 32) × 32 이다', () {
-    for (final m in AvatarMood.values) {
-      for (final a in AvatarAction.values) {
-        expectSheet(faceSheet(m, a), a);
+    for (final k in AvatarKind.values) {
+      for (final m in AvatarMood.values) {
+        for (final a in AvatarAction.values) {
+          expectSheet(faceSheet(k, m, a), a);
+        }
       }
     }
   });

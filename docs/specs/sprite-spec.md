@@ -18,13 +18,13 @@
 아래에서 위 순서: `body`, `face`, `bottom`, `top`, `shoes`, `hat`, `accessory`. 페이즈 2는 `body`·`face` 만 쓴다.
 
 - body: 외형 단계 1~4 (`stage1` ~ `stage4`). 단계가 오를수록 키가 커진다.
-- face: 표정 `normal`·`sleepy`·`asleep`.
+- face: 표정 `normal`·`sleepy`·`asleep`. face 는 종류마다 따로 있고, 한 종류 안에서는 4개 단계가 공유한다. 한 종류의 4개 단계는 머리·눈 위치를 같게 유지한다.
 
 ## 파일 이름
 
-`assets/sprites/<레이어>/<이름>_<동작>.png`
+`assets/sprites/<종류>/<레이어>/<이름>_<동작>.png` (종류: `chick`·`jelly`·`acorn`, 결정 0011)
 
-- 예: `body/stage1_run.png`, `face/sleepy_idle.png`
+- 예: `chick/body/stage1_run.png`, `acorn/face/sleepy_idle.png`
 - 경로는 `lib/avatar/ui/sprite_sheet.dart` 의 `bodySheet`·`faceSheet` 가 만든다.
 
 ## 기준점

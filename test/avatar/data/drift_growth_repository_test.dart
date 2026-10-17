@@ -1,6 +1,9 @@
+import 'dart:math';
+
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:runmagochi/avatar/data/drift_growth_repository.dart';
+import 'package:runmagochi/avatar/domain/growth_rules.dart';
 import 'package:runmagochi/run/data/app_database.dart';
 
 void main() {
@@ -12,6 +15,57 @@ void main() {
     repo = DriftGrowthRepository(db);
   });
   tearDown(() => db.close());
+
+  test('종류는 처음 한 번 정해지고 다시 불러도 같다', () async {
+    final first = await DriftGrowthRepository(
+      db,
+      random: Random(1),
+    ).avatarKind();
+    expect(AvatarKind.values, contains(first));
+    expect(await repo.avatarKind(), first);
+    expect(await repo.avatarName(), '러니'); // 이름 조회가 종류를 덮지 않는다
+    expect(await repo.avatarKind(), first);
+  });
+
+  test('이름을 먼저 불러도 종류는 한 번 정해져 유지된다', () async {
+    await repo.avatarName();
+    final k = await repo.avatarKind();
+    expect(await repo.avatarKind(), k);
+    expect((await db.select(db.avatars).get()).single.kind, k.name);
+  });
+
+  test('저장값 default 는 한 번 무작위로 정해진 뒤 바뀌지 않는다', () async {
+    final now = DateTime.now().toUtc();
+    await db
+        .into(db.avatars)
+        .insert(
+          AvatarsCompanion.insert(
+            id: 'a1',
+            name: '러니',
+            createdAt: now,
+            updatedAt: now,
+          ),
+        );
+    expect((await db.select(db.avatars).get()).single.kind, 'default');
+    final k = await repo.avatarKind();
+    expect(AvatarKind.values, contains(k));
+    for (var i = 0; i < 5; i++) {
+      expect(await repo.avatarKind(), k);
+    }
+    expect((await db.select(db.avatars).get()).single.kind, k.name);
+  });
+
+  test('여러 시드로 세 종류가 모두 나온다', () async {
+    final seen = <AvatarKind>{};
+    for (var seed = 0; seed < 40; seed++) {
+      final d = AppDatabase(NativeDatabase.memory());
+      seen.add(
+        await DriftGrowthRepository(d, random: Random(seed)).avatarKind(),
+      );
+      await d.close();
+    }
+    expect(seen, AvatarKind.values.toSet());
+  });
 
   test('아바타 이름은 행이 없으면 러니로 만든다', () async {
     expect(await repo.avatarName(), '러니');

@@ -3,6 +3,7 @@ import 'growth_rules.dart';
 /// 홈·요약·아바타 화면이 보여 주는 성장 상태.
 class GrowthState {
   const GrowthState({
+    required this.kind,
     required this.name,
     required this.totalXp,
     required this.level,
@@ -17,6 +18,7 @@ class GrowthState {
     required this.runCount,
   });
 
+  final AvatarKind kind;
   final String name;
   final int totalXp;
   final LevelProgress level;

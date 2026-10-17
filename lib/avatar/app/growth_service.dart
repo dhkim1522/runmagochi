@@ -116,6 +116,7 @@ class GrowthService {
     }
 
     return GrowthState(
+      kind: await _growth.avatarKind(),
       name: await _growth.avatarName(),
       totalXp: totalXp,
       level: level,

@@ -242,6 +242,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             AvatarView(
+                              kind: g?.kind ?? AvatarKind.chick,
                               stage: g?.stage ?? 1,
                               mood: g?.mood ?? AvatarMood.normal,
                               action: AvatarAction.idle,

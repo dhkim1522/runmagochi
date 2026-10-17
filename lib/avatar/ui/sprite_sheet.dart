@@ -17,13 +17,13 @@ double fps(AvatarAction a) => switch (a) {
   AvatarAction.run => 10,
 };
 
-/// 몸 시트 경로. [stage] 는 외형 단계 1~4.
-String bodySheet(int stage, AvatarAction a) =>
-    'assets/sprites/body/stage${stage}_${a.name}.png';
+/// 몸 시트 경로. [kind] 폴더 아래. [stage] 는 외형 단계 1~4.
+String bodySheet(AvatarKind kind, int stage, AvatarAction a) =>
+    'assets/sprites/${kind.name}/body/stage${stage}_${a.name}.png';
 
 /// 표정 시트 경로.
-String faceSheet(AvatarMood m, AvatarAction a) =>
-    'assets/sprites/face/${m.name}_${a.name}.png';
+String faceSheet(AvatarKind kind, AvatarMood m, AvatarAction a) =>
+    'assets/sprites/${kind.name}/face/${m.name}_${a.name}.png';
 
 /// 겹치는 순서(아래 → 위). 페이즈 2는 body·face 만 쓴다.
 const spriteLayerOrder = [

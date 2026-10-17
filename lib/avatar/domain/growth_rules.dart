@@ -74,6 +74,9 @@ int? xpToNextStage(int totalXp) {
   return xpToReachLevel(stageStartLevels[stage]) - totalXp;
 }
 
+/// 아바타 종류. 처음 한 번 무작위로 정해 바꾸지 않는다 (결정 0011).
+enum AvatarKind { chick, jelly, acorn }
+
 enum AvatarMood { normal, sleepy, asleep }
 
 /// 마지막 러닝 시작일과 오늘의 현지 달력 날짜 차이로 표정을 정한다.

@@ -52,6 +52,7 @@ class AvatarScreen extends ConsumerWidget {
                   children: [
                     Center(
                       child: AvatarView(
+                        kind: g.kind,
                         stage: g.stage,
                         mood: g.mood,
                         action: AvatarAction.idle,
@@ -84,8 +85,8 @@ class AvatarScreen extends ConsumerWidget {
             const SizedBox(height: Gap.s3),
             for (var s = 1; s <= stageStartLevels.length; s++)
               Padding(
-                padding: const EdgeInsets.only(bottom: Gap.s3),
-                child: _StageRow(stage: s, currentStage: g.stage),
+                padding: const EdgeInsets.only(bottom: Gap.s3 - Borders.lip),
+                child: _StageRow(kind: g.kind, stage: s, currentStage: g.stage),
               ),
           ],
         ),
@@ -126,7 +127,12 @@ class _StageProgress extends StatelessWidget {
 }
 
 class _StageRow extends StatelessWidget {
-  const _StageRow({required this.stage, required this.currentStage});
+  const _StageRow({
+    required this.kind,
+    required this.stage,
+    required this.currentStage,
+  });
+  final AvatarKind kind;
   final int stage;
   final int currentStage;
 
@@ -152,6 +158,7 @@ class _StageRow extends StatelessWidget {
       child: FittedBox(
         fit: BoxFit.scaleDown,
         child: AvatarView(
+          kind: kind,
           stage: stage,
           mood: AvatarMood.normal,
           action: AvatarAction.idle,

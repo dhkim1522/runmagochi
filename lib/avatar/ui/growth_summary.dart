@@ -15,11 +15,13 @@ import 'weekly_goal_bar.dart';
 class GrowthSummary extends StatefulWidget {
   const GrowthSummary({
     super.key,
+    required this.kind,
     required this.gain,
     required this.distanceM,
     this.weekTargetM,
   });
 
+  final AvatarKind kind;
   final GrowthGain gain;
 
   /// 방금 달린 거리(미터).
@@ -55,11 +57,13 @@ class _GrowthSummaryState extends State<GrowthSummary>
     final g = widget.gain;
     if (g.stageUp) {
       precacheImage(
-        AssetImage(bodySheet(g.stageAfter, AvatarAction.idle)),
+        AssetImage(bodySheet(widget.kind, g.stageAfter, AvatarAction.idle)),
         context,
       );
       precacheImage(
-        AssetImage(faceSheet(AvatarMood.normal, AvatarAction.idle)),
+        AssetImage(
+          faceSheet(widget.kind, AvatarMood.normal, AvatarAction.idle),
+        ),
         context,
       );
     }
@@ -144,6 +148,7 @@ class _GrowthSummaryState extends State<GrowthSummary>
             key: const ValueKey('level-up-scale'),
             scale: scale,
             child: AvatarView(
+              kind: widget.kind,
               stage: stage,
               mood: AvatarMood.normal,
               action: AvatarAction.idle,

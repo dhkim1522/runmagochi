@@ -1,7 +1,10 @@
+import 'dart:math';
+
 import 'package:drift/drift.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../run/data/app_database.dart';
+import '../domain/growth_rules.dart';
 import 'growth_repository.dart';
 
 const _defaultName = '러니';
@@ -10,9 +13,11 @@ const _distance = 'distance';
 const _weeklyGoal = 'weeklyGoal';
 
 class DriftGrowthRepository implements GrowthRepository {
-  DriftGrowthRepository(this._db);
+  DriftGrowthRepository(this._db, {Random? random})
+    : _random = random ?? Random();
 
   final AppDatabase _db;
+  final Random _random;
   final _uuid = const Uuid();
 
   DateTime _now() => DateTime.now().toUtc();
@@ -27,29 +32,54 @@ class DriftGrowthRepository implements GrowthRepository {
     return DateTime(p[0], p[1], p[2]);
   }
 
-  @override
-  Future<String> avatarName() {
-    return _db.transaction(() async {
-      final row =
-          await (_db.select(_db.avatars)
-                ..where((a) => a.deletedAt.isNull())
-                ..limit(1))
-              .getSingleOrNull();
-      if (row != null) return row.name;
+  AvatarKind _pickKind() =>
+      AvatarKind.values[_random.nextInt(AvatarKind.values.length)];
+
+  /// 아바타 행을 돌려준다. 없으면 만들고, 종류가 모르는 값이면 한 번 정해 저장한다.
+  /// 반드시 트랜잭션 안에서 부른다.
+  Future<(Avatar, AvatarKind)> _ensureAvatar() async {
+    final row =
+        await (_db.select(_db.avatars)
+              ..where((a) => a.deletedAt.isNull())
+              ..limit(1))
+            .getSingleOrNull();
+    if (row == null) {
       final now = _now();
+      final kind = _pickKind();
+      final id = _uuid.v4();
       await _db
           .into(_db.avatars)
           .insert(
             AvatarsCompanion.insert(
-              id: _uuid.v4(),
+              id: id,
               name: _defaultName,
+              kind: Value(kind.name),
               createdAt: now,
               updatedAt: now,
             ),
           );
-      return _defaultName;
-    });
+      final created = await (_db.select(
+        _db.avatars,
+      )..where((a) => a.id.equals(id))).getSingle();
+      return (created, kind);
+    }
+    for (final k in AvatarKind.values) {
+      if (k.name == row.kind) return (row, k);
+    }
+    final kind = _pickKind();
+    await (_db.update(_db.avatars)..where((a) => a.id.equals(row.id))).write(
+      AvatarsCompanion(kind: Value(kind.name), updatedAt: Value(_now())),
+    );
+    return (row, kind);
   }
+
+  @override
+  Future<String> avatarName() =>
+      _db.transaction(() async => (await _ensureAvatar()).$1.name);
+
+  @override
+  Future<AvatarKind> avatarKind() =>
+      _db.transaction(() async => (await _ensureAvatar()).$2);
 
   @override
   Future<int> totalXp() async {

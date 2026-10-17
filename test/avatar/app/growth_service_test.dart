@@ -102,6 +102,11 @@ void main() {
   });
   tearDown(() => db.close());
 
+  test('load 는 저장된 종류를 상태에 채운다', () async {
+    final kind = await growth.avatarKind();
+    expect((await service.load()).kind, kind);
+  });
+
   test('5.02km 러닝 1건은 경험치 50, 레벨 1에서 2', () async {
     runs.add('a', DateTime(2026, 10, 13, 7), 5020);
     final gain = await service.sync();

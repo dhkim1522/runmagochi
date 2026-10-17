@@ -49,10 +49,13 @@ class _InRunScreenState extends ConsumerState<InRunScreen> {
     final c = AppColors.of(context);
     final t = AppText.of(context);
     // 로딩 중이거나 실패하면 1단계로 그린다.
-    final stage = ref.watch(growthStateProvider).value?.stage ?? 1;
+    final growth = ref.watch(growthStateProvider).value;
+    final stage = growth?.stage ?? 1;
+    final kind = growth?.kind ?? AvatarKind.chick;
 
     final avatarStage = _AvatarStage(
       child: AvatarView(
+        kind: kind,
         stage: stage,
         mood: AvatarMood.normal,
         action: actionFor(

@@ -13,11 +13,14 @@ import 'sprite_sheet.dart';
 class AvatarView extends StatefulWidget {
   const AvatarView({
     super.key,
+    required this.kind,
     required this.stage,
     required this.mood,
     required this.action,
     this.scale = 4,
   });
+
+  final AvatarKind kind;
 
   /// 외형 단계 1~4.
   final int stage;
@@ -91,8 +94,8 @@ class AvatarViewState extends State<AvatarView> {
   /// 현재 속성에 맞는 시트 경로로 레이어 이미지를 맞춘다.
   void _syncLayers() {
     final paths = {
-      'body': bodySheet(widget.stage, widget.action),
-      'face': faceSheet(widget.mood, widget.action),
+      'body': bodySheet(widget.kind, widget.stage, widget.action),
+      'face': faceSheet(widget.kind, widget.mood, widget.action),
     };
     for (final name in spriteLayerOrder) {
       final path = paths[name];

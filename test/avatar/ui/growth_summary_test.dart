@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:runmagochi/avatar/domain/growth_rules.dart';
 import 'package:runmagochi/avatar/domain/growth_state.dart';
 import 'package:runmagochi/avatar/ui/avatar_view.dart';
 import 'package:runmagochi/avatar/ui/growth_summary.dart';
@@ -30,7 +31,12 @@ Future<void> pumpIt(
     MaterialApp(
       theme: appLightTheme(),
       home: Scaffold(
-        body: GrowthSummary(gain: g, distanceM: 5020, weekTargetM: weekTargetM),
+        body: GrowthSummary(
+          kind: AvatarKind.chick,
+          gain: g,
+          distanceM: 5020,
+          weekTargetM: weekTargetM,
+        ),
       ),
     ),
   );

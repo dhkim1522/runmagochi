@@ -71,8 +71,12 @@ flutter:
   uses-material-design: true
 
   assets:
-    - assets/sprites/body/
-    - assets/sprites/face/
+    - assets/sprites/chick/body/
+    - assets/sprites/chick/face/
+    - assets/sprites/jelly/body/
+    - assets/sprites/jelly/face/
+    - assets/sprites/acorn/body/
+    - assets/sprites/acorn/face/
 
   fonts:
     # 둘 다 SIL OFL (assets/fonts/OFL-*.txt). 네트워크 없이 동작하도록 번들한다.

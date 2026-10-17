@@ -14,6 +14,7 @@ import '../../run/ui/fakes.dart';
 GrowthState stateFor(int totalXp) {
   final lv = levelFor(totalXp);
   return GrowthState(
+    kind: AvatarKind.chick,
     name: '러니',
     totalXp: totalXp,
     level: lv,

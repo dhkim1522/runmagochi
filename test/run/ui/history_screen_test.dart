@@ -132,7 +132,7 @@ void main() {
     // 첫 카드는 이번 주 합계, 이후가 러닝 카드.
     final a = tester.getRect(cards.at(1));
     final b = tester.getRect(cards.at(2));
-    expect(b.top - a.bottom, Gap.s3);
+    expect(b.top - a.bottom, Gap.s3 - Borders.lip);
     handle.dispose();
   });
 

@@ -1,7 +1,12 @@
+import '../domain/growth_rules.dart';
+
 /// 경험치·주간 목표·아바타 이름 저장소.
 abstract interface class GrowthRepository {
   /// 행이 없으면 '러니' 로 만든다.
   Future<String> avatarName();
+
+  /// 처음 정해진 종류. 없거나 모르는 값이면 한 번 무작위로 정해 저장한다.
+  Future<AvatarKind> avatarKind();
   Future<int> totalXp();
   Future<Set<String>> runIdsWithDistanceXp();
 

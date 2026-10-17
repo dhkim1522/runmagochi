@@ -2,6 +2,7 @@ import 'package:flutter/material.dart' hide Split;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../avatar/app/providers.dart';
+import '../../avatar/domain/growth_rules.dart';
 import '../../avatar/domain/growth_state.dart';
 import '../../avatar/ui/growth_summary.dart';
 import '../../core/format.dart';
@@ -41,12 +42,14 @@ class SummaryScreen extends ConsumerWidget {
     final Widget body;
     if (s != null) {
       final g = gain;
-      final weekTargetM = g == null
+      final growthState = g == null
           ? null
-          : ref.watch(growthStateProvider).value?.weekTargetM;
+          : ref.watch(growthStateProvider).value;
+      final weekTargetM = growthState?.weekTargetM;
       final growth = g == null
           ? null
           : GrowthSummary(
+              kind: growthState?.kind ?? AvatarKind.chick,
               gain: g,
               distanceM: s.distanceM,
               weekTargetM: weekTargetM,
