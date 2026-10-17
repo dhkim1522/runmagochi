@@ -11,6 +11,9 @@ import 'providers.dart';
 const Duration _flushInterval = Duration(seconds: 10);
 const Duration _tickInterval = Duration(seconds: 1);
 
+/// 위치 스트림이 오류나 종료로 끊긴 뒤 다시 구독하기까지 기다리는 시간.
+const Duration _resubscribeInterval = Duration(seconds: 5);
+
 const String _locationErrorMessage = '위치 신호를 받지 못하고 있어요';
 const String _saveErrorMessage = '기록 저장에 실패했어요. 자동으로 다시 시도해요';
 const String _endErrorMessage = '러닝 저장에 실패했어요. 다시 종료해 주세요';
@@ -46,6 +49,9 @@ class RunController extends Notifier<RunViewState> {
   StreamSubscription<LocationSample>? _subscription;
   Timer? _flushTimer;
   Timer? _tickTimer;
+
+  /// 끊긴 위치 구독을 다시 하려고 기다리는 타이머.
+  Timer? _resubscribeTimer;
 
   /// 아직 저장하지 않은 채택 점과 그 구간 번호.
   final List<(int, LocationSample)> _buffer = [];
@@ -98,6 +104,8 @@ class RunController extends Notifier<RunViewState> {
   void pause() {
     _requireNotEnding();
     _requireEngine().pause();
+    _resubscribeTimer?.cancel();
+    _resubscribeTimer = null;
     _publish();
     unawaited(_flushReportingError());
   }
@@ -105,6 +113,8 @@ class RunController extends Notifier<RunViewState> {
   void resume() {
     _requireNotEnding();
     _requireEngine().resume();
+    _resubscribeTimer?.cancel();
+    _resubscribeTimer = null;
     _subscribe();
     _startFlushTimer();
     _startTick();
@@ -184,15 +194,31 @@ class RunController extends Notifier<RunViewState> {
   RunEngine _requireEngine() => _engine ?? (throw StateError('진행 중인 러닝이 없다.'));
 
   void _subscribe() {
-    _subscription ??= ref
+    if (_subscription != null) return;
+    _subscription = ref
         .read(locationSourceProvider)
         .watch()
         .listen(
           _onSample,
           onError: (Object _) {
             state = _copyState(lastError: _locationErrorMessage);
+            _dropSubscription();
           },
+          onDone: _dropSubscription,
         );
+  }
+
+  /// 오류나 종료로 끊긴 구독을 버린다. 기록 중이면 잠시 뒤 다시 구독하고,
+  /// 일시정지 중이면 resume 이 다시 구독한다.
+  void _dropSubscription() {
+    unawaited(_subscription?.cancel());
+    _subscription = null;
+    if (_engine?.snapshot.state != RunState.recording) return;
+    _resubscribeTimer?.cancel();
+    _resubscribeTimer = Timer(_resubscribeInterval, () {
+      _resubscribeTimer = null;
+      _subscribe();
+    });
   }
 
   void _onSample(LocationSample sample) {
@@ -220,8 +246,10 @@ class RunController extends Notifier<RunViewState> {
   void _stopTimers() {
     _flushTimer?.cancel();
     _tickTimer?.cancel();
+    _resubscribeTimer?.cancel();
     _flushTimer = null;
     _tickTimer = null;
+    _resubscribeTimer = null;
   }
 
   /// 저장 실패를 lastError 에 남긴다. 실패한 점은 버퍼에 남는다.

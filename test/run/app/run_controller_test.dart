@@ -548,7 +548,7 @@ void main() {
     });
   });
 
-  test('위치 스트림 오류는 lastError 에 남기고 기록은 이어간다', () {
+  test('위치 스트림 오류는 lastError 에 남기고, 재시도 뒤 점이 오면 오류를 지운다', () {
     _run((async, controller, container, repository, location) {
       controller.start();
       async.flushMicrotasks();
@@ -557,6 +557,11 @@ void main() {
       location.controller.addError(Exception('GPS 꺼짐'));
       async.flushMicrotasks();
       expect(container.read(runControllerProvider).lastError, _locationError);
+      expect(location.listenCount, 1);
+
+      async.elapse(const Duration(seconds: 5));
+      expect(location.listenCount, 2);
+      expect(container.read(runControllerProvider).lastError, _locationError);
 
       stepTo(async, location, 6);
 
@@ -564,6 +569,84 @@ void main() {
       expect(state.lastError, isNull);
       expect(state.snapshot.state, RunState.recording);
       expect(state.snapshot.distanceM, closeTo(3, 0.01));
+    });
+  });
+
+  test('재시도 구독이 또 실패하면 5초마다 계속 다시 구독한다', () {
+    _run((async, controller, container, repository, location) {
+      controller.start();
+      async.flushMicrotasks();
+
+      location.controller.addError(Exception('GPS 꺼짐'));
+      async.flushMicrotasks();
+      async.elapse(const Duration(seconds: 5));
+      location.controller.addError(Exception('GPS 꺼짐'));
+      async.flushMicrotasks();
+      async.elapse(const Duration(seconds: 5));
+
+      expect(location.listenCount, 3);
+    });
+  });
+
+  test('오류 뒤 pause → resume 하면 바로 다시 구독하고 점을 받는다', () {
+    _run((async, controller, container, repository, location) {
+      controller.start();
+      async.flushMicrotasks();
+      location.controller.addError(Exception('GPS 꺼짐'));
+      async.flushMicrotasks();
+
+      controller.pause();
+      async.flushMicrotasks();
+      async.elapse(const Duration(seconds: 30));
+      expect(location.listenCount, 1);
+
+      controller.resume();
+      expect(location.listenCount, 2);
+      stepTo(async, location, 3);
+      stepTo(async, location, 6);
+
+      final state = container.read(runControllerProvider);
+      expect(state.lastError, isNull);
+      expect(state.snapshot.distanceM, closeTo(3, 0.01));
+    });
+  });
+
+  test('위치 스트림이 끝나도 기록 중이면 다시 구독한다', () {
+    _run((async, controller, container, repository, location) {
+      controller.start();
+      async.flushMicrotasks();
+      stepTo(async, location, 3);
+
+      // 닫은 스트림은 다시 구독해도 곧바로 done 이 오지만, 재시도는 계속된다.
+      location.controller.close();
+      async.flushMicrotasks();
+      expect(location.listenCount, 1);
+
+      async.elapse(const Duration(seconds: 5));
+      expect(location.listenCount, 2);
+    });
+  });
+
+  test('pause·end 뒤에는 재시도 타이머가 돌지 않는다', () {
+    _run((async, controller, container, repository, location) {
+      controller.start();
+      async.flushMicrotasks();
+      location.controller.addError(Exception('GPS 꺼짐'));
+      async.flushMicrotasks();
+
+      controller.pause();
+      async.flushMicrotasks();
+      async.elapse(const Duration(seconds: 30));
+      expect(location.listenCount, 1);
+
+      controller.resume();
+      expect(location.listenCount, 2);
+      location.controller.addError(Exception('GPS 꺼짐'));
+      async.flushMicrotasks();
+      controller.end();
+      async.flushMicrotasks();
+      async.elapse(const Duration(seconds: 30));
+      expect(location.listenCount, 2);
     });
   });
 
