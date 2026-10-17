@@ -57,7 +57,7 @@ flowchart TB
 | 엔티티 | 주요 필드 |
 | --- | --- |
 | Profile | 닉네임, 체중 |
-| Avatar | 이름, 종류 (레벨·경험치는 XpTxn 합계, 마지막 러닝은 Runs 에서 계산) |
+| Avatar | 이름, 종류(chick·jelly·acorn 중 무작위, 바뀌지 않음, 결정 0011) (레벨·경험치는 XpTxn 합계, 마지막 러닝은 Runs 에서 계산) |
 | Run | 시작·종료 시각, 거리(m), 움직인 시간(초), 평균 페이스, 칼로리, 이름, 압축 경로 |
 | RunPoint | runId, segment, 시각, 위도, 경도, 정확도, 속도 (러닝 중에만 존재) |
 | Split | runId, km 순번, 시간, 페이스 |

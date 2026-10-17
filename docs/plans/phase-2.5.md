@@ -30,7 +30,7 @@
 2. **러닝 중 가독성**: 거리 숫자가 다른 어떤 글자보다 크고, 배경과 대비가 충분하다(4.5:1 이상). 테스트는 Task 5.
 3. **색 리터럴 누수**: 화면 파일에 색 리터럴이 남지 않는다. 확인은 Task 7 의 grep 검사.
 4. **오프라인 글꼴**: 비행기 모드에서도 지정 글꼴로 그려진다(번들 글꼴). 확인은 Task 4.
-5. **스프라이트 정렬**: 4단계 body 와 공용 face 가 모든 프레임에서 어긋나지 않는다. 테스트는 Task 8.
+5. **스프라이트 정렬**: 4단계 body 와 공용 face 가 모든 프레임에서 어긋나지 않는다. 테스트는 Task 9.
 
 ---
 
@@ -38,12 +38,13 @@
 
 - [x] 1. 디자인 방향과 디자인 시스템 (사용자 승인)
 - [x] 2. 화면 시안 6개 (사용자 승인)
-- [ ] 3. 캐릭터 콘셉트 (사용자 승인)
+- [x] 3. 캐릭터 콘셉트 (사용자 승인) — 3종 모두 사용, 무작위 고정 (결정 0011)
 - [ ] 4. 앱 테마 적용
 - [ ] 5. 홈·러닝 중·일시정지 화면
 - [ ] 6. 요약·기록 화면
 - [ ] 7. 아바타 탭·주간 목표·권한 화면
-- [ ] 8. 캐릭터 스프라이트 완성
+- [ ] 8. 캐릭터 종류 3종 (무작위 고정)
+- [ ] 9. 캐릭터 스프라이트 완성 (3종)
 
 ### Task 1: 디자인 방향과 디자인 시스템
 
@@ -105,12 +106,29 @@
 - [ ] **Step 2:** 시안대로 구현. 테스트·분석 통과.
 - [ ] **Step 3:** 색 리터럴 검사: `grep -rnE "Color\(0x|Colors\.[a-z]" lib --include=*.dart | grep -v lib/core/theme.dart` 결과가 비어 있다(투명 `Colors.transparent` 만 예외). 커밋.
 
-### Task 8: 캐릭터 스프라이트 완성
+### Task 8: 캐릭터 종류 3종 (무작위 고정, 결정 0011)
 
-**Files:** Modify `tool/sprites/*`, `assets/sprites/body/*`, `assets/sprites/face/*`, `docs/specs/sprite-spec.md`(만드는 방법). Test: `test/avatar/ui/sprite_assets_test.dart`, 새 `test/tool/sprite_data_test.dart`
-- [ ] **Step 1:** 실패하는 테스트(`sprite_data_test`): 모든 프레임 격자가 32×32 이고 팔레트에 없는 문자가 없다. 4단계 모두 눈 영역(face 레이어가 칠하는 픽셀 좌표)이 body 의 머리 안쪽에 있다. 각 동작의 프레임끼리 서로 다르다(빈 애니메이션 방지). 발끝 최하단 불투명 픽셀이 y=29 다.
-- [ ] **Step 2:** Task 3 승인 콘셉트로 4단계 × (idle 2, walk 4, run 4) body 와 3표정 × 3동작 face 를 그린다. `fvm dart run tool/render_sprites.dart` 로 PNG 를 만든다.
-- [ ] **Step 3:** 테스트·분석 통과. 8배 확대 미리보기를 컨트롤러가 보고 확인한 뒤 커밋.
+**Files:** Modify `lib/avatar/domain/growth_rules.dart`(`enum AvatarKind { chick, jelly, acorn }`), `lib/avatar/data/growth_repository.dart`·`drift_growth_repository.dart`(`avatarKind()`), `lib/avatar/domain/growth_state.dart`(`kind`), `lib/avatar/app/growth_service.dart`, `lib/avatar/ui/sprite_sheet.dart`(경로에 종류), `lib/avatar/ui/avatar_view.dart`(`kind` 인자), 아바타를 그리는 화면들, `tool/gen_placeholder_sprites.dart`(종류별 임시 PNG), `pubspec.yaml`(에셋 폴더), `docs/specs/sprite-spec.md`. Test: 저장소·서비스·sprite_assets·avatar_view 테스트.
+
+**Interfaces:**
+- Produces: `enum AvatarKind { chick, jelly, acorn }`; `GrowthRepository.avatarKind()` — 행을 처음 만들 때 주입한 `Random` 으로 셋 중 하나를 고르고 저장, 이후 같은 값. 저장값이 `default` 등 모르는 값이면 한 번 무작위로 정해 저장; `GrowthState.kind`; `bodySheet(AvatarKind kind, int stage, AvatarAction a)` → `assets/sprites/<kind>/body/stage<n>_<action>.png`, `faceSheet(AvatarKind kind, AvatarMood m, AvatarAction a)` → `assets/sprites/<kind>/face/<mood>_<action>.png`; `AvatarView({required AvatarKind kind, ...})`.
+
+- [ ] **Step 1:** 실패하는 테스트: 고정 시드 `Random` 으로 만든 첫 아바타의 종류가 셋 중 하나이고 다시 불러도 같다. 저장값 `default` 는 한 번 정해진 뒤 바뀌지 않는다. 여러 시드로 세 종류가 모두 나온다. 경로 함수가 종류 폴더를 쓴다. 모든 종류 × 단계 × 동작, 종류 × 표정 × 동작 PNG 가 규격 크기로 있다.
+- [ ] **Step 2:** 구현. 임시 PNG 는 생성기로 종류마다 색만 다르게 만든다(작업 9 에서 실제 그림으로 교체). 기존 `assets/sprites/body`·`face` 는 지운다.
+- [ ] **Step 3:** 테스트·분석·빌드 통과, 커밋.
+
+### Task 9: 캐릭터 스프라이트 완성 (3종)
+
+**Files:** Create/Modify `tool/sprites/<kind>.dart`(종류별 그림 데이터), `tool/render_sprites.dart`(그림 데이터 → `assets/sprites/<kind>/...` PNG, `tool/gen_placeholder_sprites.dart` 대체), `assets/sprites/**`, `design/character/*.png`(8배 미리보기), `docs/specs/sprite-spec.md`(만드는 방법). Test: `test/avatar/ui/sprite_assets_test.dart`, 새 `test/tool/sprite_data_test.dart`
+
+형식은 작업 3 의 `tool/sprites/sprite_data.dart`(팔레트 + 줄 격자, 가운데·발끝 y=29 정렬)를 쓴다. 콘셉트는 `tool/sprites/concepts.dart` 의 1·4단계를 기준으로 2·3단계를 사이에 그린다.
+- 병아리: 1 알 → 2 껍데기를 쓴 아기 병아리 → 3 병아리 → 4 헤어밴드 병아리
+- 젤리: 1 새싹 젤리 → 2 잎이 둘인 젤리 → 3 큰 젤리 → 4 헤어밴드 젤리
+- 도토리: 1 작은 도토리 → 2 도토리 → 3 큰 도토리 → 4 헤어밴드 도토리
+
+- [ ] **Step 1:** 실패하는 테스트(`sprite_data_test`): 모든 프레임이 검사(`validateFrame`)를 통과한다. 같은 종류의 4단계 body 에서 face 가 칠하는 픽셀이 모두 body 의 불투명 픽셀 위에 있다(눈이 머리 밖으로 나가지 않음). 각 동작의 프레임끼리 서로 다르다. 걷기·달리기 프레임의 발끝 최하단 불투명 픽셀이 y=29 또는 y=28(달리기 공중 프레임) 이다.
+- [ ] **Step 2:** 종류마다 4단계 × (idle 2, walk 4, run 4) body 와 3표정(normal·sleepy·asleep) × 3동작 face 를 그린다. 1단계 알(병아리)은 걷기·달리기 때 통통 튀는 동작으로 대신한다. `fvm dart run tool/render_sprites.dart` 로 PNG 와 미리보기를 만든다.
+- [ ] **Step 3:** 테스트·분석 통과. 컨트롤러가 미리보기를 보고 확인한 뒤 커밋.
 
 ---
 
@@ -124,14 +142,14 @@
 
 ### E2E (에뮬레이터, `/e2e` 가 확인)
 - [ ] 홈·러닝 중·일시정지·요약·기록·아바타 탭이 `design/mockups/` 승인 시안과 같은 배치·색으로 보인다(스크린샷 대조)
-- [ ] 새 캐릭터가 홈(idle), 러닝 중(가상 러닝 중 run), 아바타 탭(4단계 미리보기)에 어긋남 없이 보인다
+- [ ] 무작위로 정해진 캐릭터가 홈(idle), 러닝 중(가상 러닝 중 run), 아바타 탭(4단계 미리보기)에 어긋남 없이 보이고, 앱을 다시 켜도 같은 종류다
 - [ ] 페이즈 2 E2E 5개 시나리오가 그대로 통과한다(가상 러닝 → 경험치 → 레벨 막대, 목표 변경 → 달성)
 - [ ] 시스템 다크 모드로 바꿔도 화면이 읽힌다
 
 ### 사람 확인
 - [x] 디자인 시스템 승인 (Task 1)
 - [x] 화면 시안 승인 (Task 2)
-- [ ] 캐릭터 콘셉트 승인 (Task 3)
+- [x] 캐릭터 콘셉트 승인 (Task 3)
 - [ ] 실기기에서 최종 모습 확인
 
 ## 자동 결정
