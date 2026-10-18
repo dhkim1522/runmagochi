@@ -321,6 +321,8 @@ ThemeData _build(AppColors c, Brightness brightness) {
     outlineVariant: c.line,
   );
   final text = AppText.withColor(c.ink);
+  // 글자 버튼은 primary-deep (양 테마 모두 surface 위 대비 4.5 이상, 테스트로 보장).
+  final textButtonColor = c.primaryDeep;
   return ThemeData(
     useMaterial3: true,
     brightness: brightness,
@@ -340,6 +342,20 @@ ThemeData _build(AppColors c, Brightness brightness) {
       labelLarge: text.label,
       labelMedium: text.label,
       labelSmall: text.caption,
+    ),
+    dialogTheme: DialogThemeData(
+      backgroundColor: c.surface,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(Radii.lg),
+      ),
+      titleTextStyle: text.title,
+      contentTextStyle: text.body,
+    ),
+    textButtonTheme: TextButtonThemeData(
+      style: TextButton.styleFrom(
+        foregroundColor: textButtonColor,
+        textStyle: text.label,
+      ),
     ),
     extensions: [c, text],
   );

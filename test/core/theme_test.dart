@@ -173,6 +173,21 @@ void _fontAndErrorTests() {
         ]);
       }
     });
+    test('다이얼로그: 모서리 radius-lg, 제목 title 스타일', () {
+      final d = t.dialogTheme;
+      expect(d.backgroundColor, t.extension<AppColors>()!.surface);
+      expect(
+        (d.shape! as RoundedRectangleBorder).borderRadius,
+        BorderRadius.circular(Radii.lg),
+      );
+      expect(d.titleTextStyle, tx.title);
+      expect(d.contentTextStyle, tx.body);
+    });
+    test('TextButton 글자색이 surface 위에서 대비 4.5 이상', () {
+      final c = t.extension<AppColors>()!;
+      final fg = t.textButtonTheme.style!.foregroundColor!.resolve({})!;
+      expect(_contrast(fg, c.surface), greaterThanOrEqualTo(4.5));
+    });
     test('onError 가 error 위에서 대비 4.5 이상', () {
       expect(
         _contrast(t.colorScheme.onError, t.colorScheme.error),
