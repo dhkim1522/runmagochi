@@ -68,4 +68,9 @@ abstract interface class RunRepository {
 
   /// 완료된 러닝의 `now` 가 속한 주(현지 월요일 0시 시작) 거리 합계와 횟수.
   Future<(double distanceM, int count)> weeklyTotal(DateTime now);
+
+  /// 완료된 러닝과 그 구간에 삭제 표시를 한다(한 트랜잭션). 목록·상세·합계에서 빠진다.
+  /// 이미 지운 러닝이면 아무 일도 없다. 진행 중이거나 없는 러닝이면 [StateError].
+  /// 경험치는 따로 무른다(`GrowthService.runRemoved`).
+  Future<void> deleteRun(String id);
 }

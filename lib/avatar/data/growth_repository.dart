@@ -10,8 +10,11 @@ abstract interface class GrowthRepository {
   Future<int> totalXp();
   Future<Set<String>> runIdsWithDistanceXp();
 
-  /// 이미 있으면 무시한다.
+  /// 살아 있는 행이 이미 있으면 무시한다. 무른 행이 있으면 [amount] 로 그 행을 살린다.
   Future<void> addDistanceXp(String runId, int amount);
+
+  /// 그 러닝의 거리 경험치 행에 삭제 표시를 한다. 없거나 이미 물렀으면 아무 일도 없다.
+  Future<void> revokeDistanceXp(String runId);
 
   /// 그 주 행, 없으면 이전 주 중 최근 행, 없으면 10000.
   Future<double> weeklyTarget(DateTime weekStart);
@@ -19,7 +22,12 @@ abstract interface class GrowthRepository {
   Future<bool> isWeekAchieved(DateTime weekStart);
 
   /// 한 트랜잭션으로 처리하고, 이미 달성이면 무시한다.
+  /// 전에 무른 보너스 행이 있으면 [bonusXp] 로 그 행을 살린다.
   Future<void> markWeekAchieved(DateTime weekStart, DateTime at, int bonusXp);
+
+  /// 달성 표시를 지우고 그 주 보너스 행에 삭제 표시를 한다(한 트랜잭션).
+  /// 목표 값은 남긴다. 달성하지 않은 주면 아무 일도 없다.
+  Future<void> unmarkWeekAchieved(DateTime weekStart);
 
   /// 최신순.
   Future<List<DateTime>> achievedWeeks();

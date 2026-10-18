@@ -305,4 +305,60 @@ void main() {
     final id = await repo.createActiveRun(DateTime(2026, 1, 5, 9));
     expect(await repo.getRun(id), isNull);
   });
+
+  group('deleteRun', () {
+    const twoSplits = [
+      Split(index: 1, distanceM: 1000, duration: Duration(minutes: 5)),
+      Split(index: 2, distanceM: 1000, duration: Duration(minutes: 5)),
+    ];
+
+    Future<DateTime?> deletedAtOf(String id) async => (await (db.select(
+      db.runs,
+    )..where((r) => r.id.equals(id))).getSingle()).deletedAt;
+
+    test('지운 러닝은 목록·상세·주간 합계에서 빠지고 구간도 삭제 표시된다', () async {
+      // 2026-01-05 는 월요일.
+      final a = await repo.createActiveRun(DateTime(2026, 1, 6, 9));
+      await repo.completeRun(
+        a,
+        summary(DateTime(2026, 1, 6, 9), distanceM: 2000, splits: twoSplits),
+      );
+      final b = await repo.createActiveRun(DateTime(2026, 1, 7, 9));
+      await repo.completeRun(
+        b,
+        summary(DateTime(2026, 1, 7, 9), distanceM: 3000, splits: twoSplits),
+      );
+
+      await repo.deleteRun(a);
+
+      expect((await repo.listRuns()).map((r) => r.id), [b]);
+      expect(await repo.getRun(a), isNull);
+      expect(await repo.getRun(b), isNotNull);
+      expect(await repo.weeklyTotal(DateTime(2026, 1, 8)), (3000.0, 1));
+      expect(await deletedAtOf(a), isNotNull);
+      final splits = await db.select(db.splits).get();
+      final ofA = splits.where((s) => s.runId == a).toList();
+      final ofB = splits.where((s) => s.runId == b).toList();
+      expect(ofA, hasLength(2));
+      expect(ofA.map((s) => s.deletedAt), everyElement(isNotNull));
+      expect(ofB.map((s) => s.deletedAt), everyElement(isNull));
+    });
+
+    test('이미 지운 러닝을 다시 지워도 아무 일도 없다', () async {
+      final a = await repo.createActiveRun(DateTime(2026, 1, 6, 9));
+      await repo.completeRun(a, summary(DateTime(2026, 1, 6, 9)));
+      await repo.deleteRun(a);
+      final first = await deletedAtOf(a);
+      await repo.deleteRun(a);
+      expect(await deletedAtOf(a), first);
+    });
+
+    test('진행 중 러닝이나 없는 러닝을 지우면 StateError 이고 그대로다', () async {
+      final active = await repo.createActiveRun(DateTime(2026, 1, 6, 9));
+      await expectLater(repo.deleteRun(active), throwsStateError);
+      expect((await repo.findActiveRun())?.id, active);
+      expect(await deletedAtOf(active), isNull);
+      await expectLater(repo.deleteRun('none'), throwsStateError);
+    });
+  });
 }

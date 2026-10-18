@@ -28,11 +28,54 @@ class GrowthService {
   Future<void> _tail = Future.value();
 
   /// 동시에 불러도 한 번에 하나씩 실행해 같은 보상을 두 번 알리지 않는다.
-  Future<GrowthGain> sync() {
-    final result = _tail.then((_) => _sync());
-    // 재예약은 sync 뒤, 다음 sync 앞에 직렬로 돌되 호출자는 기다리지 않는다.
+  Future<GrowthGain> sync() => _serial(_sync);
+
+  /// 저장소에서 지운 러닝의 거리 경험치를 무르고 그 주([runStartedAt] 이 속한 주)를
+  /// 다시 판정한다. 레벨이 내려갈 수 있다(결정 0016). sync 와 같은 줄에서 돈다.
+  Future<void> runRemoved(String runId, DateTime runStartedAt) =>
+      _serial(() => _runChanged(runId, runStartedAt));
+
+  /// 일을 앞선 sync·runRemoved 뒤에 하나씩 돌린다.
+  Future<T> _serial<T>(Future<T> Function() job) {
+    final result = _tail.then((_) => job());
+    // 재예약은 일 뒤, 다음 일 앞에 직렬로 돌되 호출자는 기다리지 않는다.
     _tail = result.then<void>((_) => _reschedule(), onError: (_) {});
     return result;
+  }
+
+  /// 러닝 하나가 지워지거나 바뀐 뒤 그 러닝의 거리 경험치와 그 주 달성을 맞춘다.
+  /// 러닝이 남아 있으면(바뀐 경우) 새 거리로 경험치를 다시 매기고, 없으면 무른다.
+  Future<void> _runChanged(String runId, DateTime runStartedAt) async {
+    await _growth.revokeDistanceXp(runId);
+    final detail = await _runs.getRun(runId);
+    if (detail != null) {
+      // 무른 행을 새 값으로 살린다.
+      await _growth.addDistanceXp(
+        runId,
+        distanceXp(detail.run.distanceM, detail.splits),
+      );
+    }
+    await _rejudgeWeek(weekStartOf(runStartedAt));
+  }
+
+  /// 그 주 거리로 달성을 양방향으로 다시 정한다. 목표 아래면 달성·보너스를 무른다.
+  Future<void> _rejudgeWeek(DateTime week) async {
+    if (await _awardWeekIfReached(week) > 0) return;
+    if (!await _growth.isWeekAchieved(week)) return;
+    final (distanceM, _) = await _runs.weeklyTotal(week);
+    if (distanceM < await _growth.weeklyTarget(week)) {
+      await _growth.unmarkWeekAchieved(week);
+    }
+  }
+
+  /// 아직 달성하지 않은 주가 목표에 닿았으면 달성으로 표시하고 받은 보너스를 돌려준다.
+  Future<int> _awardWeekIfReached(DateTime week) async {
+    if (await _growth.isWeekAchieved(week)) return 0;
+    final target = await _growth.weeklyTarget(week);
+    final (distanceM, _) = await _runs.weeklyTotal(week);
+    if (distanceM < target) return 0;
+    await _growth.markWeekAchieved(week, _clock(), weeklyGoalBonusXp);
+    return weeklyGoalBonusXp;
   }
 
   /// 알림을 현재 주 상태로 다시 예약한다. 실패해도 sync 를 깨뜨리지 않는다.
@@ -78,13 +121,7 @@ class GrowthService {
 
     var bonusSum = 0;
     for (final week in weeks) {
-      if (await _growth.isWeekAchieved(week)) continue;
-      final target = await _growth.weeklyTarget(week);
-      final (distanceM, _) = await _runs.weeklyTotal(week);
-      if (distanceM >= target) {
-        await _growth.markWeekAchieved(week, _clock(), weeklyGoalBonusXp);
-        bonusSum += weeklyGoalBonusXp;
-      }
+      bonusSum += await _awardWeekIfReached(week);
     }
 
     final levelAfter = levelFor(await _growth.totalXp()).level;

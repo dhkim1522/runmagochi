@@ -111,6 +111,9 @@ class _FakeRunRepository implements RunRepository {
 
   @override
   Future<(double, int)> weeklyTotal(DateTime now) => throw UnimplementedError();
+
+  @override
+  Future<void> deleteRun(String id) => throw UnimplementedError();
 }
 
 class _FakeProfileRepository implements ProfileRepository {

@@ -157,6 +157,21 @@ class FakeRepo implements RunRepository {
     return total;
   }
 
+  /// 지정하면 deleteRun 이 이 오류를 던진다.
+  Object? deleteError;
+  final List<String> deleted = [];
+
+  /// 목록·상세에서 빼고 주간 합계에서 그 거리와 1회를 뺀다.
+  @override
+  Future<void> deleteRun(String id) async {
+    if (deleteError != null) throw deleteError!;
+    deleted.add(id);
+    final item = runs.where((r) => r.id == id).firstOrNull;
+    runs = runs.where((r) => r.id != id).toList();
+    details = {...details}..remove(id);
+    if (item != null) total = (total.$1 - item.distanceM, total.$2 - 1);
+  }
+
   @override
   dynamic noSuchMethod(Invocation invocation) =>
       throw UnimplementedError('${invocation.memberName}');
@@ -204,6 +219,13 @@ class FakeGrowthService implements GrowthService {
     final hold = holdLoad;
     if (hold != null) await hold.future;
     return state;
+  }
+
+  final List<(String, DateTime)> removed = [];
+
+  @override
+  Future<void> runRemoved(String runId, DateTime runStartedAt) async {
+    removed.add((runId, runStartedAt));
   }
 
   @override

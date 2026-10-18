@@ -239,4 +239,24 @@ class DriftRunRepository implements RunRepository {
             .get();
     return (rows.fold<double>(0, (sum, r) => sum + r.distanceM), rows.length);
   }
+
+  @override
+  Future<void> deleteRun(String id) {
+    return _db.transaction(() async {
+      final run = await (_db.select(
+        _db.runs,
+      )..where((r) => r.id.equals(id))).getSingleOrNull();
+      if (run == null || run.status != _completed) {
+        throw StateError('완료된 러닝이 아니다: $id');
+      }
+      if (run.deletedAt != null) return;
+      final now = _now();
+      await (_db.update(_db.runs)..where((r) => r.id.equals(id))).write(
+        RunsCompanion(deletedAt: Value(now), updatedAt: Value(now)),
+      );
+      await (_db.update(_db.splits)
+            ..where((s) => s.runId.equals(id) & s.deletedAt.isNull()))
+          .write(SplitsCompanion(deletedAt: Value(now), updatedAt: Value(now)));
+    });
+  }
 }

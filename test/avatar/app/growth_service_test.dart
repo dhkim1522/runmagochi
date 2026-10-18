@@ -71,6 +71,10 @@ class FakeRunRepository implements RunRepository {
   @override
   Future<void> completeRun(String runId, RunSummary summary) =>
       throw UnimplementedError();
+
+  @override
+  Future<void> deleteRun(String id) async =>
+      runs.removeWhere((r) => r.run.id == id);
 }
 
 class FakeScheduler implements NotificationScheduler {
@@ -258,6 +262,125 @@ void main() {
       await pumpEventQueue();
       expect(scheduler.calls.length, greaterThanOrEqualTo(1));
       scheduler.hold!.complete();
+    });
+  });
+
+  group('러닝 삭제 (runRemoved)', () {
+    // 실제 흐름처럼 저장소에서 먼저 지운 뒤 runRemoved 를 부른다.
+    Future<void> remove(String id) async {
+      final startedAt = (await runs.getRun(id))!.run.startedAt;
+      await runs.deleteRun(id);
+      await service.runRemoved(id, startedAt);
+    }
+
+    test('목표 아래로 내려가면 그 러닝 경험치와 주 보너스를 무른다', () async {
+      runs.add('a', DateTime(2026, 10, 13, 7), 6000);
+      runs.add('b', DateTime(2026, 10, 15, 7), 5000);
+      await service.sync();
+      expect(await growth.totalXp(), 60 + 50 + 50);
+
+      await remove('b');
+
+      expect(await growth.totalXp(), 60);
+      final state = await service.load();
+      expect(state.weekAchieved, isFalse);
+      expect(state.weekDistanceM, 6000);
+      expect(state.runCount, 1);
+    });
+
+    test('다시 sync 해도 무른 경험치와 보너스를 다시 주지 않는다', () async {
+      runs.add('a', DateTime(2026, 10, 13, 7), 6000);
+      runs.add('b', DateTime(2026, 10, 15, 7), 5000);
+      await service.sync();
+      await remove('b');
+      final gain = await service.sync();
+      expect(gain.isEmpty, isTrue);
+      expect(await growth.totalXp(), 60);
+      expect(await growth.isWeekAchieved(DateTime(2026, 10, 12)), isFalse);
+    });
+
+    test('지운 뒤에도 목표 이상이면 주 보너스는 남는다', () async {
+      runs.add('a', DateTime(2026, 10, 13, 7), 11000);
+      runs.add('b', DateTime(2026, 10, 15, 7), 2000);
+      await service.sync();
+      expect(await growth.totalXp(), 110 + 20 + 50);
+
+      await remove('b');
+
+      expect(await growth.totalXp(), 110 + 50);
+      expect((await service.load()).weekAchieved, isTrue);
+    });
+
+    test('레벨이 내려갈 수 있다', () async {
+      runs.add('a', DateTime(2026, 10, 13, 7), 11000);
+      await service.sync();
+      expect((await service.load()).level.level, 3); // 160
+      await remove('a');
+      final state = await service.load();
+      expect(state.totalXp, 0);
+      expect(state.level.level, 1);
+    });
+
+    test('지난 주 러닝을 지우면 그 주를 다시 판정하고 이번 주는 그대로다', () async {
+      runs.add('old', DateTime(2026, 10, 6, 7), 11000);
+      runs.add('now', DateTime(2026, 10, 13, 7), 10000);
+      await service.sync();
+      expect((await service.load()).streakWeeks, 2);
+
+      await remove('old');
+
+      expect(await growth.isWeekAchieved(DateTime(2026, 10, 5)), isFalse);
+      expect(await growth.isWeekAchieved(DateTime(2026, 10, 12)), isTrue);
+      expect(await growth.totalXp(), 100 + 50);
+      expect((await service.load()).streakWeeks, 1);
+    });
+
+    test('그 주가 목표 이상인데 달성 표시가 빠져 있으면 달성으로 고친다', () async {
+      runs.add('a', DateTime(2026, 10, 13, 7), 11000);
+      runs.add('b', DateTime(2026, 10, 15, 7), 1000);
+      await growth.addDistanceXp('a', 110);
+      await growth.addDistanceXp('b', 10);
+
+      await remove('b');
+
+      expect(await growth.isWeekAchieved(DateTime(2026, 10, 12)), isTrue);
+      expect(await growth.totalXp(), 110 + 50);
+    });
+
+    test('지운 러닝을 다시 무르면 아무 일도 없다', () async {
+      runs.add('a', DateTime(2026, 10, 13, 7), 6000);
+      runs.add('b', DateTime(2026, 10, 15, 7), 5000);
+      await service.sync();
+      await remove('b');
+      await service.runRemoved('b', DateTime(2026, 10, 15, 7));
+      expect(await growth.totalXp(), 60);
+    });
+
+    test('sync 와 동시에 불러도 한 번에 하나씩 처리한다', () async {
+      runs.add('a', DateTime(2026, 10, 13, 7), 6000);
+      runs.add('b', DateTime(2026, 10, 15, 7), 5000);
+      await service.sync();
+      final startedAt = (await runs.getRun('b'))!.run.startedAt;
+      await runs.deleteRun('b');
+      await Future.wait([
+        service.sync(),
+        service.runRemoved('b', startedAt),
+        service.sync(),
+      ]);
+      expect(await growth.totalXp(), 60);
+      expect(await growth.isWeekAchieved(DateTime(2026, 10, 12)), isFalse);
+    });
+
+    test('지운 뒤 알림을 다시 예약한다', () async {
+      final scheduler = FakeScheduler();
+      service = GrowthService(runs, growth, () => now, scheduler: scheduler);
+      runs.add('a', DateTime(2026, 10, 13, 7), 6000);
+      await service.sync();
+      await pumpEventQueue();
+      expect(scheduler.calls.length, 1);
+      await remove('a');
+      await pumpEventQueue();
+      expect(scheduler.calls.length, 2);
     });
   });
 }

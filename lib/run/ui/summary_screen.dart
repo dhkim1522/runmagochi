@@ -10,6 +10,8 @@ import '../../core/ui/clay.dart';
 import '../app/providers.dart';
 import '../data/run_repository.dart';
 import '../domain/run_summary.dart';
+import 'history_screen.dart';
+import 'home_screen.dart';
 import 'route_painter.dart';
 
 final runDetailProvider = FutureProvider.autoDispose.family<RunDetail?, String>(
@@ -73,6 +75,7 @@ class SummaryScreen extends ConsumerWidget {
             data: (d) => d == null
                 ? const _Notice('기록을 찾을 수 없어요')
                 : _SummaryBody(
+                    footer: _DeleteRunButton(d.run),
                     name: d.run.name,
                     startedAt: d.run.startedAt,
                     distanceM: d.run.distanceM,
@@ -110,9 +113,77 @@ class SummaryScreen extends ConsumerWidget {
   }
 }
 
+/// 기록에서 연 상세의 "기록 삭제". 확인 뒤 지우고 경험치를 무른 다음 목록으로 돌아간다.
+class _DeleteRunButton extends ConsumerStatefulWidget {
+  const _DeleteRunButton(this.run);
+  final RunListItem run;
+
+  @override
+  ConsumerState<_DeleteRunButton> createState() => _DeleteRunButtonState();
+}
+
+class _DeleteRunButtonState extends ConsumerState<_DeleteRunButton> {
+  bool _busy = false;
+
+  Future<void> _delete() async {
+    final c = AppColors.of(context);
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('이 러닝을 지울까요?'),
+        content: const Text('기록과 이 러닝으로 받은 경험치가 함께 빠져요.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('취소'),
+          ),
+          TextButton(
+            style: TextButton.styleFrom(foregroundColor: c.danger),
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('삭제'),
+          ),
+        ],
+      ),
+    );
+    if (ok != true || !mounted) return;
+    setState(() => _busy = true);
+    final run = widget.run;
+    try {
+      // 이미 지운 러닝을 다시 지우는 것은 아무 일도 없으므로, 무르기에서 실패해도 다시 시도할 수 있다.
+      await ref.read(runRepositoryProvider).deleteRun(run.id);
+      await ref.read(growthServiceProvider).runRemoved(run.id, run.startedAt);
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _busy = false);
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('지우지 못했어요')));
+      return;
+    }
+    if (!mounted) return;
+    ref.invalidate(runListProvider);
+    ref.invalidate(weeklyTotalProvider);
+    ref.invalidate(growthStateProvider);
+    Navigator.of(context).pop();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final c = AppColors.of(context);
+    return Center(
+      child: TextButton(
+        style: TextButton.styleFrom(foregroundColor: c.danger),
+        onPressed: _busy ? null : _delete,
+        child: const Text('기록 삭제'),
+      ),
+    );
+  }
+}
+
 class _SummaryBody extends StatelessWidget {
   const _SummaryBody({
     this.growth,
+    this.footer,
     required this.name,
     required this.startedAt,
     required this.distanceM,
@@ -124,6 +195,9 @@ class _SummaryBody extends StatelessWidget {
   });
 
   final Widget? growth;
+
+  /// 목록 맨 아래에 붙는 동작(기록에서 연 상세의 기록 삭제).
+  final Widget? footer;
   final String name;
   final DateTime startedAt;
   final double distanceM;
@@ -258,6 +332,7 @@ class _SummaryBody extends StatelessWidget {
             ),
           ),
         ],
+        if (footer != null) ...[const SizedBox(height: Gap.s5), footer!],
       ],
     );
   }

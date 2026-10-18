@@ -128,6 +128,63 @@ void main() {
     await pump(tester, const SummaryScreen.forRun('none'));
     await tester.pumpAndSettle();
     expect(find.text('기록을 찾을 수 없어요'), findsOneWidget);
+    expect(find.text('기록 삭제'), findsNothing);
+  });
+
+  testWidgets('러닝 종료 직후 요약에는 기록 삭제가 없다', (tester) async {
+    tester.view.physicalSize = const Size(800, 2400);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    await pump(tester, SummaryScreen.fromSummary(_summary()));
+    expect(find.text('기록 삭제'), findsNothing);
+  });
+
+  testWidgets('forRun 은 글자 1.3배에서 기록 삭제까지 overflow 없이 그려진다', (tester) async {
+    tester.view.physicalSize = const Size(360, 640);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    final repo = FakeRepo(
+      (0, 0),
+      details: {
+        'a': RunDetail(
+          run: RunListItem(
+            id: 'a',
+            name: '아침 러닝',
+            startedAt: DateTime(2026, 10, 10, 7),
+            distanceM: 2500,
+            movingTime: const Duration(minutes: 16, seconds: 15),
+            avgPaceSecPerKm: 390,
+          ),
+          calories: 168,
+          route: const [],
+          splits: _splits,
+        ),
+      },
+    );
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          runRepositoryProvider.overrideWithValue(repo),
+          growthServiceProvider.overrideWithValue(
+            FakeGrowthService(growthState()),
+          ),
+        ],
+        child: MaterialApp(
+          theme: appLightTheme(),
+          builder: (context, child) => MediaQuery(
+            data: MediaQuery.of(
+              context,
+            ).copyWith(textScaler: const TextScaler.linear(1.3)),
+            child: child!,
+          ),
+          home: const SummaryScreen.forRun('a'),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(find.text('기록 삭제'), 200);
+    expect(find.text('기록 삭제'), findsOneWidget);
+    expect(tester.takeException(), isNull);
   });
 
   testWidgets('경로가 비어 있으면 안내 문구', (tester) async {

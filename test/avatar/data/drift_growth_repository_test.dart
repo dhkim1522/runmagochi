@@ -141,4 +141,80 @@ void main() {
       DateTime(2026, 10, 5),
     ]);
   });
+
+  group('경험치 무르기', () {
+    test('거리 경험치를 무르면 합계와 받은 러닝 목록에서 빠지고 행은 남는다', () async {
+      await repo.addDistanceXp('r1', 50);
+      await repo.addDistanceXp('r2', 30);
+      await repo.revokeDistanceXp('r1');
+      expect(await repo.totalXp(), 30);
+      expect(await repo.runIdsWithDistanceXp(), {'r2'});
+      final rows = await db.select(db.xpTxns).get();
+      expect(rows, hasLength(2));
+      expect(rows.singleWhere((r) => r.runId == 'r1').deletedAt, isNotNull);
+    });
+
+    test('없는 러닝이나 이미 무른 경험치를 무르면 아무 일도 없다', () async {
+      await repo.revokeDistanceXp('none');
+      await repo.addDistanceXp('r1', 50);
+      await repo.revokeDistanceXp('r1');
+      await repo.revokeDistanceXp('r1');
+      expect(await repo.totalXp(), 0);
+    });
+
+    test('무른 거리 경험치를 다시 넣으면 같은 행을 새 값으로 살린다', () async {
+      await repo.addDistanceXp('r1', 50);
+      await repo.revokeDistanceXp('r1');
+      await repo.addDistanceXp('r1', 40);
+      expect(await repo.totalXp(), 40);
+      expect(await repo.runIdsWithDistanceXp(), {'r1'});
+      final rows = await db.select(db.xpTxns).get();
+      expect(rows, hasLength(1));
+      expect(rows.single.deletedAt, isNull);
+      // 살아 있는 행은 여전히 무시한다.
+      await repo.addDistanceXp('r1', 99);
+      expect(await repo.totalXp(), 40);
+    });
+
+    test('주 달성을 취소하면 달성 표시와 보너스가 빠지고 목표는 남는다', () async {
+      final w = DateTime(2026, 10, 12);
+      final prev = DateTime(2026, 10, 5);
+      await repo.setWeeklyTarget(w, 8000);
+      await repo.markWeekAchieved(prev, DateTime(2026, 10, 6), 50);
+      await repo.markWeekAchieved(w, DateTime(2026, 10, 14), 50);
+      expect(await repo.totalXp(), 100);
+
+      await repo.unmarkWeekAchieved(w);
+
+      expect(await repo.isWeekAchieved(w), isFalse);
+      expect(await repo.isWeekAchieved(prev), isTrue);
+      expect(await repo.achievedWeeks(), [prev]);
+      expect(await repo.totalXp(), 50);
+      expect(await repo.weeklyTarget(w), 8000);
+    });
+
+    test('달성하지 않은 주를 취소해도 아무 일도 없다', () async {
+      final w = DateTime(2026, 10, 12);
+      await repo.unmarkWeekAchieved(w);
+      await repo.markWeekAchieved(w, DateTime(2026, 10, 14), 50);
+      await repo.unmarkWeekAchieved(w);
+      await repo.unmarkWeekAchieved(w);
+      expect(await repo.isWeekAchieved(w), isFalse);
+      expect(await repo.totalXp(), 0);
+    });
+
+    test('취소한 주를 다시 달성하면 보너스 행을 살린다', () async {
+      final w = DateTime(2026, 10, 12);
+      await repo.markWeekAchieved(w, DateTime(2026, 10, 14), 50);
+      await repo.unmarkWeekAchieved(w);
+      await repo.markWeekAchieved(w, DateTime(2026, 10, 16), 50);
+      expect(await repo.isWeekAchieved(w), isTrue);
+      expect(await repo.totalXp(), 50);
+      final bonus = await db.select(db.xpTxns).get();
+      expect(bonus, hasLength(1));
+      expect(bonus.single.deletedAt, isNull);
+      await repo.markWeekAchieved(w, DateTime(2026, 10, 17), 50);
+      expect(await repo.totalXp(), 50);
+    });
+  });
 }

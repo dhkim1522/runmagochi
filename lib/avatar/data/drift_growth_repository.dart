@@ -105,23 +105,75 @@ class DriftGrowthRepository implements GrowthRepository {
     return {for (final r in rows) r.runId!};
   }
 
-  @override
-  Future<void> addDistanceXp(String runId, int amount) async {
-    final now = _now();
-    await _db
-        .into(_db.xpTxns)
-        .insert(
-          XpTxnsCompanion.insert(
-            id: _uuid.v4(),
-            amount: amount,
-            reason: _distance,
-            runId: Value(runId),
-            createdAt: now,
-            updatedAt: now,
-          ),
-          mode: InsertMode.insertOrIgnore,
-        );
+  /// (runId, reason) 또는 (weekStart, reason) 로 찾은 경험치 행. 무른 행도 돌려준다.
+  /// 두 키가 유일하므로 무른 행을 지우지 않고 다시 살려 쓴다.
+  Future<XpTxn?> _xpRow(String reason, {String? runId, String? weekStart}) {
+    return (_db.select(_db.xpTxns)..where(
+          (t) =>
+              t.reason.equals(reason) &
+              (runId != null
+                  ? t.runId.equals(runId)
+                  : t.weekStart.equals(weekStart!)),
+        ))
+        .getSingleOrNull();
   }
+
+  /// 행이 없으면 넣고, 무른 행이면 [amount] 로 살리고, 살아 있으면 둔다.
+  /// 반드시 트랜잭션 안에서 부른다.
+  Future<void> _grantXp(
+    String reason,
+    int amount, {
+    String? runId,
+    String? weekStart,
+  }) async {
+    final now = _now();
+    final row = await _xpRow(reason, runId: runId, weekStart: weekStart);
+    if (row == null) {
+      await _db
+          .into(_db.xpTxns)
+          .insert(
+            XpTxnsCompanion.insert(
+              id: _uuid.v4(),
+              amount: amount,
+              reason: reason,
+              runId: Value(runId),
+              weekStart: Value(weekStart),
+              createdAt: now,
+              updatedAt: now,
+            ),
+          );
+    } else if (row.deletedAt != null) {
+      await (_db.update(_db.xpTxns)..where((t) => t.id.equals(row.id))).write(
+        XpTxnsCompanion(
+          amount: Value(amount),
+          deletedAt: const Value(null),
+          updatedAt: Value(now),
+        ),
+      );
+    }
+  }
+
+  /// 살아 있는 행에 삭제 표시를 한다. 반드시 트랜잭션 안에서 부른다.
+  Future<void> _revokeXp(String reason, {String? runId, String? weekStart}) {
+    final now = _now();
+    return (_db.update(_db.xpTxns)..where(
+          (t) =>
+              t.reason.equals(reason) &
+              t.deletedAt.isNull() &
+              (runId != null
+                  ? t.runId.equals(runId)
+                  : t.weekStart.equals(weekStart!)),
+        ))
+        .write(XpTxnsCompanion(deletedAt: Value(now), updatedAt: Value(now)));
+  }
+
+  @override
+  Future<void> addDistanceXp(String runId, int amount) =>
+      _db.transaction(() => _grantXp(_distance, amount, runId: runId));
+
+  @override
+  Future<void> revokeDistanceXp(String runId) =>
+      _db.transaction(() => _revokeXp(_distance, runId: runId));
 
   Future<WeeklyGoal?> _goalRow(String key) {
     return (_db.select(_db.weeklyGoals)
@@ -212,19 +264,25 @@ class DriftGrowthRepository implements GrowthRepository {
           ),
         );
       }
-      await _db
-          .into(_db.xpTxns)
-          .insert(
-            XpTxnsCompanion.insert(
-              id: _uuid.v4(),
-              amount: bonusXp,
-              reason: _weeklyGoal,
-              weekStart: Value(key),
-              createdAt: now,
-              updatedAt: now,
-            ),
-            mode: InsertMode.insertOrIgnore,
-          );
+      await _grantXp(_weeklyGoal, bonusXp, weekStart: key);
+    });
+  }
+
+  @override
+  Future<void> unmarkWeekAchieved(DateTime weekStart) {
+    return _db.transaction(() async {
+      final key = _key(weekStart);
+      final row = await _goalRow(key);
+      if (row?.achievedAt == null) return;
+      await (_db.update(
+        _db.weeklyGoals,
+      )..where((g) => g.id.equals(row!.id))).write(
+        WeeklyGoalsCompanion(
+          achievedAt: const Value(null),
+          updatedAt: Value(_now()),
+        ),
+      );
+      await _revokeXp(_weeklyGoal, weekStart: key);
     });
   }
 
