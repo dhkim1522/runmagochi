@@ -6,6 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:runmagochi/avatar/app/providers.dart';
 import 'package:runmagochi/avatar/domain/growth_rules.dart';
 import 'package:runmagochi/avatar/domain/growth_state.dart';
+import 'package:runmagochi/avatar/ui/weekly_goal_bar.dart';
 import 'package:runmagochi/avatar/ui/avatar_view.dart';
 import 'package:runmagochi/core/theme.dart';
 import 'package:runmagochi/core/ui/clay.dart';
@@ -486,7 +487,71 @@ void main() {
     );
     final after = tester.getRect(find.byType(AvatarView));
     expect(after.size, before.size);
-    // 세로 위치는 위쪽 주간 목표 카드(로딩 중 "이번 주 -") 높이에 따라 달라진다.
-    expect(after.center.dx, before.center.dx);
+    expect(after.center, before.center);
+  });
+
+  testWidgets('주간 목표 카드는 읽는 동안에도 읽은 뒤와 높이가 같다', (tester) async {
+    final g = FakeGrowthService(growthState())..holdLoad = Completer<void>();
+    await pumpHome(tester, FakeController(), growth: g);
+    await settle(tester);
+    expect(find.byType(WeeklyGoalSkeleton), findsOneWidget);
+    expect(find.text('이번 주 목표 -'), findsOneWidget);
+    final before = tester.getSize(find.byType(WeeklyGoalSkeleton)).height;
+
+    g.holdLoad!.complete();
+    await settle(tester);
+    expect(find.byType(WeeklyGoalSkeleton), findsNothing);
+    expect(tester.getSize(find.byType(WeeklyGoalBar)).height, before);
+  });
+
+  testWidgets('주간 목표 카드는 하나의 버튼 노드이고 탭하면 목표 창이 열린다', (tester) async {
+    await pumpHome(tester, FakeController());
+    await tester.pump();
+    final handle = tester.ensureSemantics();
+    expect(
+      tester.getSemantics(find.byType(WeeklyGoalBar)),
+      matchesSemantics(
+        label: '이번 주 목표 10km, 6.20km 달성',
+        isButton: true,
+        hasTapAction: true,
+        hasEnabledState: false,
+      ),
+    );
+    handle.dispose();
+    await tester.tap(find.byType(WeeklyGoalBar));
+    await settle(tester);
+    expect(find.byType(TextField), findsOneWidget);
+  });
+
+  testWidgets('카운트다운 숫자는 number-l(64) 크기다', (tester) async {
+    await pumpHome(tester, FakeController());
+    await tester.tap(find.text('시작'));
+    await tester.pump();
+    expect(tester.widget<Text>(find.text('3')).style!.fontSize, 64);
+    await tester.pump(const Duration(seconds: 4));
+    await settle(tester);
+  });
+
+  testWidgets('주간 목표 카드를 누르면 립이 눌린다', (tester) async {
+    await pumpHome(tester, FakeController());
+    await tester.pump();
+    double lip() => tester
+        .widget<ClayCard>(
+          find.descendant(
+            of: find.byType(WeeklyGoalBar),
+            matching: find.byType(ClayCard),
+          ),
+        )
+        .lipHeight;
+    expect(lip(), Borders.lip);
+    final g = await tester.startGesture(
+      tester.getCenter(find.byType(WeeklyGoalBar)),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 200));
+    expect(lip(), Borders.lipPressed);
+    await g.up();
+    await tester.pumpAndSettle();
+    expect(lip(), Borders.lip);
   });
 }

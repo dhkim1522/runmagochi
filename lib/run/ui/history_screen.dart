@@ -33,8 +33,8 @@ class HistoryScreen extends ConsumerWidget {
     final t = AppText.of(context);
     final (km, count) = weekly.when(
       data: (w) => (formatKm(w.$1), '러닝 ${w.$2}회'),
-      loading: () => ('-', ''),
-      error: (_, _) => ('-', ''),
+      loading: () => ('-', '러닝 -회'),
+      error: (_, _) => ('-', '러닝 -회'),
     );
     return SafeArea(
       child: Padding(

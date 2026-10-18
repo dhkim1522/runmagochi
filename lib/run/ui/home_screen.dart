@@ -218,17 +218,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     onChangeTarget: _changeTarget,
                   )
                 else
-                  ClayCard(
-                    padding: const EdgeInsets.symmetric(
-                      vertical: Gap.s4,
-                      horizontal: Gap.s5,
-                    ),
-                    child: Text(
-                      '이번 주 -',
-                      textAlign: TextAlign.center,
-                      style: t.heading,
-                    ),
-                  ),
+                  const WeeklyGoalSkeleton(),
                 const SizedBox(height: Gap.s4),
                 Expanded(
                   child: ClayCard(
@@ -295,7 +285,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             Positioned.fill(
               child: ColoredBox(
                 color: c.cream,
-                child: Center(child: Text('$_countdown', style: t.distanceXl)),
+                child: Center(child: Text('$_countdown', style: t.numberL)),
               ),
             ),
         ],

@@ -278,7 +278,7 @@ class _HoldToStopButtonState extends State<_HoldToStopButton>
         child: ClayCard(
           radius: Radii.pill,
           child: SizedBox(
-            height: 64 - 2 * Borders.thick,
+            height: ClayButton.height - 2 * Borders.thick,
             child: ClipRRect(
               borderRadius: BorderRadius.circular(Radii.pill),
               child: Stack(

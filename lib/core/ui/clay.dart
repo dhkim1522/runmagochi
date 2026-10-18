@@ -13,6 +13,8 @@ class ClayCard extends StatelessWidget {
     this.color,
     this.borderColor,
     this.lipColor,
+    this.lipHeight = Borders.lip,
+    this.reserveLip = true,
   });
 
   final Widget child;
@@ -22,11 +24,17 @@ class ClayCard extends StatelessWidget {
   final Color? borderColor;
   final Color? lipColor;
 
+  /// 립(그림자) 두께. 눌림 애니메이션에서만 줄인다(자리는 항상 Borders.lip).
+  final double lipHeight;
+
+  /// false 면 립 자리(아래 여백)를 만들지 않는다. 바깥([ClayPress])이 확보할 때.
+  final bool reserveLip;
+
   @override
   Widget build(BuildContext context) {
     final c = AppColors.of(context);
     return Padding(
-      padding: const EdgeInsets.only(bottom: Borders.lip),
+      padding: EdgeInsets.only(bottom: reserveLip ? Borders.lip : 0),
       child: DecoratedBox(
         decoration: BoxDecoration(
           color: color ?? c.surface,
@@ -38,7 +46,7 @@ class ClayCard extends StatelessWidget {
           boxShadow: [
             BoxShadow(
               color: lipColor ?? c.lineStrong,
-              offset: const Offset(0, Borders.lip),
+              offset: Offset(0, lipHeight),
             ),
           ],
         ),
@@ -142,6 +150,9 @@ class ClayButton extends StatefulWidget {
   final Color? foreground;
   final Color? lip;
 
+  /// 버튼 높이(립 제외).
+  static const double height = 64;
+
   /// 보조(일시정지·재개) 버튼: accent.
   factory ClayButton.accent(
     BuildContext context, {
@@ -175,25 +186,6 @@ class _ClayButtonState extends State<ClayButton> {
   Widget build(BuildContext context) {
     final c = AppColors.of(context);
     final enabled = widget.onPressed != null;
-    final lip = _pressed ? Borders.lipPressed : Borders.lip;
-    final button = AnimatedContainer(
-      duration: const Duration(milliseconds: 80),
-      height: 64,
-      alignment: Alignment.center,
-      decoration: BoxDecoration(
-        color: widget.background ?? c.primary,
-        borderRadius: BorderRadius.circular(Radii.pill),
-        boxShadow: [
-          BoxShadow(color: widget.lip ?? c.primaryDeep, offset: Offset(0, lip)),
-        ],
-      ),
-      child: Text(
-        widget.label,
-        style: AppText.of(
-          context,
-        ).button.copyWith(color: widget.foreground ?? c.onPrimary),
-      ),
-    );
     return Semantics(
       button: true,
       enabled: enabled,
@@ -208,14 +200,54 @@ class _ClayButtonState extends State<ClayButton> {
         onTap: widget.onPressed,
         child: Opacity(
           opacity: enabled ? 1 : 0.5,
-          // 립(그림자)이 차지하지 않는 높이를 항상 확보해 눌러도 레이아웃이 안 움직인다.
-          child: Padding(
-            padding: const EdgeInsets.only(bottom: Borders.lip),
-            child: Transform.translate(
-              offset: Offset(0, Borders.lip - lip),
-              child: button,
+          child: ClayPress(
+            pressed: _pressed,
+            builder: (context, lip) => Container(
+              height: ClayButton.height,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: widget.background ?? c.primary,
+                borderRadius: BorderRadius.circular(Radii.pill),
+                boxShadow: [
+                  BoxShadow(
+                    color: widget.lip ?? c.primaryDeep,
+                    offset: Offset(0, lip),
+                  ),
+                ],
+              ),
+              child: Text(
+                widget.label,
+                style: AppText.of(
+                  context,
+                ).button.copyWith(color: widget.foreground ?? c.onPrimary),
+              ),
             ),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+/// 눌림 애니메이션. 립 두께 하나를 80ms 로 움직이고, 같은 값으로 몸통을 내려
+/// 이동(Transform)과 립(그림자)이 함께 변한다. 립 자리는 항상 [Borders.lip] 만큼 확보해
+/// 눌러도 레이아웃이 안 움직인다. [builder] 는 현재 립 두께를 받아 그림자에 쓴다.
+class ClayPress extends StatelessWidget {
+  const ClayPress({super.key, required this.pressed, required this.builder});
+
+  final bool pressed;
+  final Widget Function(BuildContext context, double lip) builder;
+
+  @override
+  Widget build(BuildContext context) {
+    return TweenAnimationBuilder<double>(
+      tween: Tween<double>(end: pressed ? Borders.lipPressed : Borders.lip),
+      duration: const Duration(milliseconds: 80),
+      builder: (context, lip, _) => Padding(
+        padding: const EdgeInsets.only(bottom: Borders.lip),
+        child: Transform.translate(
+          offset: Offset(0, Borders.lip - lip),
+          child: builder(context, lip),
         ),
       ),
     );

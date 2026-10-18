@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
@@ -50,6 +51,7 @@ Future<void> pump(
 }
 
 void main() {
+  _loadingLayoutTests();
   testWidgets('기록 탭에 러닝 2개가 최신순으로 보이고 이번 주 합계가 보인다', (tester) async {
     final repo = FakeRepo(
       (8000, 2),
@@ -144,5 +146,32 @@ void main() {
       matchesSemantics(label: '기록', isHeader: true),
     );
     handle.dispose();
+  });
+}
+
+void _loadingLayoutTests() {
+  testWidgets('이번 주 카드는 불러오는 동안에도 불러온 뒤와 높이가 같다', (tester) async {
+    final repo = FakeRepo((8000, 2))..holdWeekly = Completer<void>();
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          runRepositoryProvider.overrideWithValue(repo),
+          runControllerProvider.overrideWith(() => FakeController()),
+          clockProvider.overrideWithValue(() => DateTime(2026, 10, 17)),
+        ],
+        child: MaterialApp(
+          theme: appLightTheme(),
+          home: const Scaffold(body: HistoryScreen()),
+        ),
+      ),
+    );
+    await tester.pump();
+    final card = find.byType(ClayCard).first;
+    final before = tester.getSize(card).height;
+    expect(find.text('러닝 -회'), findsOneWidget);
+    repo.holdWeekly!.complete();
+    await tester.pumpAndSettle();
+    expect(find.text('러닝 2회'), findsOneWidget);
+    expect(tester.getSize(card).height, before);
   });
 }

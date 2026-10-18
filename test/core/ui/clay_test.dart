@@ -9,6 +9,7 @@ Widget _wrap(Widget child) => MaterialApp(
 );
 
 void main() {
+  _pressSyncTests();
   testWidgets('ClayButton 은 높이 64 에 라벨이 보이고 탭하면 불린다', (tester) async {
     var taps = 0;
     await tester.pumpWidget(
@@ -17,7 +18,11 @@ void main() {
     expect(find.text('시작'), findsOneWidget);
     await tester.tap(find.text('시작'));
     expect(taps, 1);
-    expect(tester.getSize(find.byType(AnimatedContainer)).height, 64);
+    expect(ClayButton.height, 64);
+    expect(
+      tester.getSize(find.byType(Container).first).height,
+      ClayButton.height,
+    );
   });
 
   testWidgets('ClayButton 은 onPressed 가 null 이면 눌리지 않는다', (tester) async {
@@ -87,5 +92,41 @@ void main() {
       matchesSemantics(label: '기록', isHeader: true),
     );
     handle.dispose();
+  });
+}
+
+void _pressSyncTests() {
+  testWidgets('ClayButton 누름: 이동과 립이 같은 애니메이션으로 함께 변한다', (tester) async {
+    await tester.pumpWidget(_wrap(ClayButton(label: '시작', onPressed: () {})));
+    double lip() {
+      final box =
+          tester.widget<Container>(find.byType(Container).first).decoration
+              as BoxDecoration;
+      return box.boxShadow!.single.offset.dy;
+    }
+
+    double shift() => tester
+        .widget<Transform>(
+          find.descendant(
+            of: find.byType(ClayPress),
+            matching: find.byType(Transform),
+          ),
+        )
+        .transform
+        .getTranslation()
+        .y;
+
+    expect(lip(), Borders.lip);
+    expect(shift(), 0);
+    final g = await tester.startGesture(tester.getCenter(find.text('시작')));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 40));
+    // 중간 시점: 둘 다 끝값이 아니고, 이동 + 립 = 고정.
+    expect(lip(), inExclusiveRange(Borders.lipPressed, Borders.lip));
+    expect(shift() + lip(), closeTo(Borders.lip, 0.001));
+    await tester.pump(const Duration(milliseconds: 100));
+    expect(lip(), Borders.lipPressed);
+    expect(shift(), Borders.lip - Borders.lipPressed);
+    await g.up();
   });
 }

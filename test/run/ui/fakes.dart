@@ -142,6 +142,9 @@ class FakeRepo implements RunRepository {
   List<RunListItem> runs;
   Map<String, RunDetail> details;
 
+  /// 지정하면 weeklyTotal 이 이 Completer 가 끝날 때까지 기다린다.
+  Completer<void>? holdWeekly;
+
   @override
   Future<List<RunListItem>> listRuns() async => runs;
 
@@ -149,7 +152,10 @@ class FakeRepo implements RunRepository {
   Future<RunDetail?> getRun(String id) async => details[id];
 
   @override
-  Future<(double, int)> weeklyTotal(DateTime now) async => total;
+  Future<(double, int)> weeklyTotal(DateTime now) async {
+    await holdWeekly?.future;
+    return total;
+  }
 
   @override
   dynamic noSuchMethod(Invocation invocation) =>
