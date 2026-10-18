@@ -9,17 +9,19 @@ import '../../core/format.dart';
 import '../../core/theme.dart';
 import '../../core/ui/clay.dart';
 import '../app/providers.dart';
+import '../app/run_editor.dart';
 import '../data/run_repository.dart';
 import '../domain/run_summary.dart';
 import 'history_screen.dart';
 import 'home_screen.dart';
 import 'route_painter.dart';
+import 'trim_sheet.dart';
 
 final runDetailProvider = FutureProvider.autoDispose.family<RunDetail?, String>(
   (ref, id) => ref.read(runRepositoryProvider).getRun(id),
 );
 
-class SummaryScreen extends ConsumerWidget {
+class SummaryScreen extends ConsumerStatefulWidget {
   /// 러닝 종료 직후.
   const SummaryScreen.fromSummary(
     RunSummary this.summary, {
@@ -39,11 +41,67 @@ class SummaryScreen extends ConsumerWidget {
   final GrowthGain? gain;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final s = summary;
+  ConsumerState<SummaryScreen> createState() => _SummaryScreenState();
+}
+
+class _SummaryScreenState extends ConsumerState<SummaryScreen> {
+  /// 잘라내기로 바뀐 요약과 성장. 바뀌기 전에는 위젯 값이다.
+  late RunSummary? _summary = widget.summary;
+  late GrowthGain? _gain = widget.gain;
+  bool _busy = false;
+
+  Future<void> _openTrim() async {
+    final end = await showTrimSheet(context, _summary!);
+    if (end == null || !mounted) return;
+    await _trim(end);
+  }
+
+  Future<void> _trim(DateTime end) async {
+    setState(() => _busy = true);
+    final shown = _gain;
+    final RunSummary trimmed;
+    final GrowthGain? gain;
+    try {
+      (trimmed, gain) = await ref
+          .read(runEditorProvider)
+          .trimLastRun(end, shown: shown);
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _busy = false);
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('잘라내지 못했어요')));
+      return;
+    }
+    if (!mounted) return;
+    setState(() {
+      _busy = false;
+      _summary = trimmed;
+      // 경험치 계산이 실패하면 이전 값을 그대로 두고 다시 시도하게 한다.
+      if (gain != null) _gain = gain;
+    });
+    if (shown != null && gain == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('경험치를 다시 계산하지 못했어요'),
+          action: SnackBarAction(
+            label: '다시 시도',
+            onPressed: () {
+              if (mounted) _trim(end);
+            },
+          ),
+        ),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final s = _summary;
+    final runId = widget.runId;
     final Widget body;
     if (s != null) {
-      final g = gain;
+      final g = _gain;
       final growthState = g == null
           ? null
           : ref.watch(growthStateProvider).value;
@@ -105,9 +163,25 @@ class SummaryScreen extends ConsumerWidget {
       bottomNavigationBar: SafeArea(
         child: Padding(
           padding: const EdgeInsets.fromLTRB(Gap.s5, Gap.s2, Gap.s5, Gap.s4),
-          child: ClayButton(
-            label: '확인',
-            onPressed: () => Navigator.of(context).pop(),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              if (s != null) ...[
+                ClayButton(
+                  label: '끝부분 잘라내기',
+                  background: AppColors.of(context).surface,
+                  foreground: AppColors.of(context).ink,
+                  lip: AppColors.of(context).line,
+                  onPressed: _busy ? null : _openTrim,
+                ),
+                const SizedBox(height: Gap.s3),
+              ],
+              ClayButton(
+                label: '확인',
+                onPressed: () => Navigator.of(context).pop(),
+              ),
+            ],
           ),
         ),
       ),
