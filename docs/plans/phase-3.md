@@ -63,13 +63,13 @@
   - 테스트: 체중 70kg 저장 후 5km 러닝 종료 → 칼로리 = 70 × 5 × 1.036. 체중이 없으면 65kg 기준.
   - 확인: `fvm flutter test test/run/app`
 
-- [ ] 6. 러닝 삭제
+- [x] 6. 러닝 삭제
   - 파일: `lib/run/data/run_repository.dart`, `lib/run/data/drift_run_repository.dart`, `lib/avatar/data/growth_repository.dart`, `lib/avatar/data/drift_growth_repository.dart`, `lib/avatar/app/growth_service.dart`, `lib/run/ui/summary_screen.dart`(기록에서 연 상세), `lib/run/ui/history_screen.dart`, `docs/specs/game-rules.md`
   - 동작: 기록 상세에서 "삭제" → 확인 창 → `deletedAt` 표시. 목록·주간 합계에서 빠진다. 그 러닝의 거리 경험치를 무르고(경험치 행에 `deletedAt` 표시) 그 주 목표를 다시 판정한다. 목표 미달이 되면 그 주 보너스도 무른다. 레벨이 내려갈 수 있다(결정 0016).
   - 테스트: 저장소(삭제 후 목록·합계·상세에서 빠짐, 구간도 표시), 성장(삭제 후 총 경험치·주 달성 재판정, 다시 sync 해도 그대로), 위젯(확인 창 → 목록으로 돌아가 사라짐, 취소하면 그대로).
   - 확인: `fvm flutter test test/run test/avatar`
 
-- [ ] 7. 끝부분 잘라내기 계산
+- [x] 7. 끝부분 잘라내기 계산
   - 파일: `lib/run/domain/run_trim.dart`, `lib/run/domain/run_summary.dart`(구간별 점 보관), `lib/run/domain/run_engine.dart`(필요하면 재생 함수)
   - 동작: 원본 점(구간별)과 새 끝 시각을 받아, 그 시각 이후 점을 버리고 기록 엔진을 다시 돌려 거리·움직인 시간·평균 페이스·구간·칼로리·경로를 새로 만든다.
   - 테스트: 끝 시각 이후 점이 사라지고 결과가 같은 점으로 처음부터 계산한 값과 같다. 일시정지 구간이 있어도 맞다. 끝 시각이 시작보다 앞이거나 원래 끝보다 뒤면 거부한다.
