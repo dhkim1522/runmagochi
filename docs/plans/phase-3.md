@@ -88,7 +88,7 @@
   - 확인: `fvm flutter test test/run/ui`
   - 스킬: ui-ux-pro-max:ui-ux-pro-max
 
-- [ ] 10. 종료를 잊은 러닝 자동 종료
+- [x] 10. 종료를 잊은 러닝 자동 종료
   - 파일: `lib/run/app/run_controller.dart`, `lib/run/app/run_guard.dart`(판정 규칙), `lib/run/ui/in_run_screen.dart`, `lib/run/ui/home_screen.dart`(복원), `lib/avatar/data/notification_scheduler.dart`(즉시 알림), `docs/specs/run-engine.md`, `docs/decisions/0016-run-integrity.md`
   - 동작: 기록 중 20분 동안 받아들인 위치 점이 없거나, 시작부터 6시간이 지나면 자동으로 끝낸다. 끝 시각은 마지막으로 받아들인 점으로 당기고(Task 7 잘라내기 사용), "러닝을 자동으로 마쳤어요" 알림을 보낸다. 앱이 열려 있으면 요약 화면으로 간다. 강제 종료 뒤 다시 열었을 때 이미 조건을 넘었으면 이어서 기록을 묻지 않고 자동 종료한다.
   - 테스트: 가짜 시계로 19분 59초엔 계속, 20분엔 종료·끝 시각 = 마지막 점, 일시정지 중엔 20분 규칙 미적용(6시간은 적용), 6시간 상한, 복원 시 자동 종료, 알림 호출.
@@ -101,7 +101,7 @@
   - 확인: `fvm flutter test test/avatar`
   - 스킬: ui-ux-pro-max:ui-ux-pro-max
 
-- [ ] 12. 백업 파일 형식
+- [x] 12. 백업 파일 형식
   - 파일: `lib/backup/domain/backup_codec.dart`, `lib/backup/data/backup_repository.dart`, `lib/backup/data/drift_backup_repository.dart`, `docs/decisions/0015-backup.md`, `docs/architecture.md`
   - 형식: JSON, `{format: "runmagochi-backup", version: 1, schemaVersion: 3, exportedAt, tables: {...}}`. 진행 중 러닝과 RunPoint 는 넣지 않는다. 삭제 표시된 행은 넣는다.
   - 테스트: 내보내기 → 빈 DB 로 가져오기 → 모든 테이블 같음. 형식·버전이 다르거나 깨진 파일은 오류를 내고 기존 데이터가 그대로. 가져오기는 한 트랜잭션.
