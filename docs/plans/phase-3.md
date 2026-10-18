@@ -75,7 +75,7 @@
   - 테스트: 끝 시각 이후 점이 사라지고 결과가 같은 점으로 처음부터 계산한 값과 같다. 일시정지 구간이 있어도 맞다. 끝 시각이 시작보다 앞이거나 원래 끝보다 뒤면 거부한다.
   - 확인: `fvm flutter test test/run/domain`
 
-- [ ] 8. 잘라내기 저장과 경험치 재계산
+- [x] 8. 잘라내기 저장과 경험치 재계산
   - 파일: `lib/run/data/run_repository.dart`, `lib/run/data/drift_run_repository.dart`, `lib/run/app/run_controller.dart`(종료 요약에 runId), `lib/avatar/app/growth_service.dart`, `lib/avatar/data/*`
   - 동작: 완료된 러닝의 요약·구간·경로를 새 값으로 바꾸고, 그 러닝의 거리 경험치를 새 거리로 고친 뒤 그 주 목표를 다시 판정한다. 결과로 새 `GrowthGain` 을 돌려준다.
   - 테스트: 저장소(교체 후 상세·구간·합계), 성장(경험치 감소·주 달성 재판정·레벨 표시가 새 값과 맞음).
@@ -94,7 +94,7 @@
   - 테스트: 가짜 시계로 19분 59초엔 계속, 20분엔 종료·끝 시각 = 마지막 점, 일시정지 중엔 20분 규칙 미적용(6시간은 적용), 6시간 상한, 복원 시 자동 종료, 알림 호출.
   - 확인: `fvm flutter test test/run`
 
-- [ ] 11. 경험치에서 뺀 구간 표시
+- [x] 11. 경험치에서 뺀 구간 표시
   - 파일: `lib/avatar/domain/growth_rules.dart`(뺀 거리 계산), `lib/avatar/domain/growth_state.dart`, `lib/avatar/ui/growth_summary.dart`, `docs/specs/game-rules.md`
   - 동작: 1km 구간이 2분30초보다 빨라 경험치에서 뺀 거리가 있으면 요약에 "빠른 이동 1.2km는 경험치에서 뺐어요" 를 보인다. 없으면 아무것도 안 보인다.
   - 테스트: 도메인(뺀 거리 합), 위젯(문구 있음·없음, 글자 1.3배)
@@ -107,7 +107,7 @@
   - 테스트: 내보내기 → 빈 DB 로 가져오기 → 모든 테이블 같음. 형식·버전이 다르거나 깨진 파일은 오류를 내고 기존 데이터가 그대로. 가져오기는 한 트랜잭션.
   - 확인: `fvm flutter test test/backup`
 
-- [ ] 13. 백업 내보내기·가져오기 연결
+- [x] 13. 백업 내보내기·가져오기 연결
   - 파일: `pubspec.yaml`(`file_picker`), `lib/backup/data/backup_file_store.dart`(파일 저장·열기 인터페이스와 file_picker 구현), `lib/backup/app/backup_service.dart`, `lib/backup/app/providers.dart`
   - 동작: 내보내기는 `runmagochi-backup-YYYYMMDD.json` 이름으로 저장 위치를 고르게 한다. 가져오기는 파일을 고른 뒤 "지금 데이터가 모두 백업 내용으로 바뀌어요" 확인 → 전체를 바꾸고(합치지 않음) 성장 상태·알림 예약을 다시 계산한다. 러닝 중에는 가져오기를 막는다.
   - 테스트: 서비스(가짜 파일 저장소로 내보내기 내용, 가져오기 후 성장 상태 재계산, 러닝 중 거부, 사용자가 파일 선택을 취소하면 아무것도 안 함)
@@ -132,7 +132,7 @@
   - 확인: `fvm flutter test test/onboarding test/app_test.dart`
   - 스킬: ui-ux-pro-max:ui-ux-pro-max
 
-- [ ] 17. 베타 배포 준비
+- [x] 17. 베타 배포 준비
   - 파일: `android/app/build.gradle.kts`(릴리스 서명은 `android/key.properties` 가 있을 때만), `.gitignore`(`key.properties`, `*.jks`), `docs/beta.md`(설치 방법, 확인 부탁할 것, 의견 질문 목록), `HANDOFF.md`
   - 내용: 베타는 릴리스 APK 를 직접 공유한다(Play 내부 테스트는 페이즈 7). 서명 키 만드는 명령과 보관 방법(저장소에 넣지 않음, Mac·Windows 공유)을 적는다. 키가 없으면 디버그 서명으로 빌드된다.
   - 확인: `fvm flutter build apk --release` (키 없을 때도 실패하지 않음)
