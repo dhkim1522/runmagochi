@@ -84,6 +84,18 @@ class WeeklyGoals extends Table {
   ];
 }
 
+class Profiles extends Table {
+  TextColumn get id => text()();
+  RealColumn get weightKg => real().nullable()();
+  DateTimeColumn get onboardedAt => dateTime().nullable()();
+  DateTimeColumn get createdAt => dateTime()();
+  DateTimeColumn get updatedAt => dateTime()();
+  DateTimeColumn get deletedAt => dateTime().nullable()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
 class XpTxns extends Table {
   TextColumn get id => text()();
   IntColumn get amount => integer()();
@@ -104,14 +116,16 @@ class XpTxns extends Table {
   ];
 }
 
-@DriftDatabase(tables: [Runs, RunPoints, Splits, Avatars, WeeklyGoals, XpTxns])
+@DriftDatabase(
+  tables: [Runs, RunPoints, Splits, Avatars, WeeklyGoals, XpTxns, Profiles],
+)
 class AppDatabase extends _$AppDatabase {
   AppDatabase(super.executor);
 
   AppDatabase.production() : super(driftDatabase(name: 'runmagochi'));
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -122,6 +136,7 @@ class AppDatabase extends _$AppDatabase {
         await m.createTable(weeklyGoals);
         await m.createTable(xpTxns);
       }
+      if (from < 3) await m.createTable(profiles);
     },
   );
 
