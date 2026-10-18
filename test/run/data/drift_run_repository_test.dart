@@ -480,4 +480,21 @@ void main() {
       expect(await repo.deletedRunStarts({}), isEmpty);
     });
   });
+
+  test('completedRunRevisions 는 살아 있는 완료 러닝의 바뀐 시각이고 교체하면 바뀐다', () async {
+    var wall = DateTime.utc(2026, 1, 6, 0);
+    final timed = DriftRunRepository(db, now: () => wall);
+    final start = DateTime(2026, 1, 6, 9);
+    final a = await timed.createActiveRun(start);
+    await timed.completeRun(a, summary(start));
+    final b = await timed.createActiveRun(start);
+    await timed.completeRun(b, summary(start));
+    await timed.createActiveRun(start);
+    await timed.deleteRun(b);
+    expect(await timed.completedRunRevisions(), {a: wall.toLocal()});
+
+    wall = wall.add(const Duration(minutes: 1));
+    await timed.replaceCompletedRun(a, summary(start, distanceM: 500));
+    expect(await timed.completedRunRevisions(), {a: wall.toLocal()});
+  });
 }

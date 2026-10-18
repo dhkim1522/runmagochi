@@ -21,7 +21,8 @@ class RunEditor {
   /// [shown] 은 요약 화면이 지금 보여 주는 gain(종료 직후 sync 결과, 또는 앞선
   /// 잘라내기의 결과)이다. 돌려주는 gain 은 [shown] 에 이번 변화를 더한 것으로,
   /// 그대로 화면에 보여 주고 다음 잘라내기 때 [shown] 으로 넘긴다. [shown] 이
-  /// null 이거나 경험치 계산이 실패하면 null 이다(기록은 이미 바뀌었다). 같은
+  /// null 이거나 경험치 계산이 실패하면(Exception) null 이다. 기록은 이미 바뀌었고
+  /// 경험치는 다음 sync 가 새 거리로 고친다. 같은
   /// [newEnd] 로 다시 부르면 기록은 그대로이고 경험치 계산만 다시 한다.
   ///
   /// 끝낸 러닝이 없으면 [StateError], [newEnd] 가 범위 밖이면 [ArgumentError],
@@ -39,7 +40,7 @@ class RunEditor {
       delta = await _ref
           .read(growthServiceProvider)
           .runRevised(runId, trimmed.startedAt);
-    } catch (_) {
+    } on Exception {
       delta = null;
     }
     _ref.invalidate(growthStateProvider);

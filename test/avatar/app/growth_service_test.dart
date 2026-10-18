@@ -84,12 +84,21 @@ class FakeRunRepository implements RunRepository {
   }
 
   /// 잘라내기처럼 거리만 바꾼다(시작 시각은 그대로).
-  void revise(String id, double distanceM) {
+  /// [at] 은 저장소가 바꾼 시각(updatedAt). 없으면 아주 예전으로 둔다.
+  void revise(String id, double distanceM, {DateTime? at}) {
     final i = runs.indexWhere((r) => r.run.id == id);
     final old = runs[i].run;
     runs.removeAt(i);
     add(id, old.startedAt, distanceM);
+    if (at != null) revisedAt[id] = at;
   }
+
+  final Map<String, DateTime> revisedAt = {};
+
+  @override
+  Future<Map<String, DateTime>> completedRunRevisions() async => {
+    for (final r in runs) r.run.id: revisedAt[r.run.id] ?? DateTime(2000),
+  };
 
   @override
   Future<void> replaceCompletedRun(String runId, RunSummary summary) =>
@@ -440,6 +449,61 @@ void main() {
       await growth.addDistanceXp('unknown', 30);
       await service.sync();
       expect(await growth.totalXp(), 30);
+    });
+  });
+
+  group('바꾼 러닝 자가 복구 (sync)', () {
+    late DateTime wall;
+    setUp(() {
+      wall = DateTime.utc(2026, 10, 17, 3);
+      growth = DriftGrowthRepository(db, now: () => wall);
+      service = GrowthService(runs, growth, () => now);
+    });
+
+    test('잘라낸 뒤 runRevised 가 없었으면 다음 sync 가 경험치와 주를 고친다', () async {
+      runs.add('a', DateTime(2026, 10, 13, 7), 6000);
+      runs.add('b', DateTime(2026, 10, 15, 7), 5000);
+      await service.sync();
+      expect(await growth.totalXp(), 160);
+
+      wall = wall.add(const Duration(minutes: 1));
+      runs.revise('b', 3000, at: wall); // 기록만 바뀌고 runRevised 전에 실패했다.
+      wall = wall.add(const Duration(minutes: 1));
+      final gain = await service.sync();
+
+      expect(gain.isEmpty, isTrue);
+      expect(gain.levelBefore, gain.levelAfter);
+      expect(await growth.totalXp(), 90);
+      expect(await growth.isWeekAchieved(DateTime(2026, 10, 12)), isFalse);
+
+      // 다시 sync 해도 그대로다.
+      wall = wall.add(const Duration(minutes: 1));
+      final again = await service.sync();
+      expect(again.isEmpty, isTrue);
+      expect(await growth.totalXp(), 90);
+    });
+
+    test('runRevised 까지 끝났으면 sync 는 다시 매기지 않는다', () async {
+      runs.add('a', DateTime(2026, 10, 13, 7), 11000);
+      await service.sync();
+      wall = wall.add(const Duration(minutes: 1));
+      runs.revise('a', 10500, at: wall);
+      wall = wall.add(const Duration(minutes: 1));
+      await service.runRevised('a', DateTime(2026, 10, 13, 7));
+      final before = await growth.distanceXpUpdatedAts();
+      wall = wall.add(const Duration(minutes: 1));
+      await service.sync();
+      expect(await growth.distanceXpUpdatedAts(), before);
+      expect(await growth.totalXp(), 105 + 50);
+    });
+
+    test('달성 뒤 목표를 올려도 sync 는 그 주 보너스를 무르지 않는다', () async {
+      runs.add('a', DateTime(2026, 10, 13, 7), 11000);
+      await service.sync();
+      await growth.setWeeklyTarget(DateTime(2026, 10, 12), 20000);
+      await service.sync();
+      expect(await growth.isWeekAchieved(DateTime(2026, 10, 12)), isTrue);
+      expect(await growth.totalXp(), 110 + 50);
     });
   });
 

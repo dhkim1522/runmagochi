@@ -10,6 +10,10 @@ abstract interface class GrowthRepository {
   Future<int> totalXp();
   Future<Set<String>> runIdsWithDistanceXp();
 
+  /// 살아 있는 거리 경험치 행의 러닝 id → 그 행을 마지막으로 바꾼 시각(현지).
+  /// 기록을 바꾼 뒤 경험치를 다시 매기지 못한 러닝을 찾는 데 쓴다.
+  Future<Map<String, DateTime>> distanceXpUpdatedAts();
+
   /// 살아 있는 행이 이미 있으면 무시한다. 무른 행이 있으면 [amount] 로 그 행을 살린다.
   Future<void> addDistanceXp(String runId, int amount);
 

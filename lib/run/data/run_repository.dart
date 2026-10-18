@@ -84,4 +84,8 @@ abstract interface class RunRepository {
   /// [ids] 가운데 삭제 표시한 완료 러닝의 시작 시각(현지). 성장 자가 복구가
   /// 지운 러닝의 주를 다시 판정할 때 쓴다.
   Future<Map<String, DateTime>> deletedRunStarts(Set<String> ids);
+
+  /// 살아 있는 완료 러닝 id → 그 기록을 마지막으로 바꾼 시각(현지).
+  /// 기록을 바꾼 뒤 경험치를 다시 매기지 못한 러닝을 찾는 데 쓴다.
+  Future<Map<String, DateTime>> completedRunRevisions();
 }

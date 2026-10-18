@@ -217,4 +217,25 @@ void main() {
       expect(await repo.totalXp(), 50);
     });
   });
+
+  _distanceXpUpdatedAtsTests();
+}
+
+void _distanceXpUpdatedAtsTests() {
+  test('distanceXpUpdatedAts 는 살아 있는 거리 경험치 행의 바뀐 시각이고 되살리면 시각이 바뀐다', () async {
+    final db = AppDatabase(NativeDatabase.memory());
+    addTearDown(db.close);
+    var wall = DateTime.utc(2026, 10, 17, 3);
+    final repo = DriftGrowthRepository(db, now: () => wall);
+    await repo.addDistanceXp('a', 10);
+    await repo.addDistanceXp('b', 20);
+    await repo.markWeekAchieved(DateTime(2026, 10, 12), wall, 50);
+    await repo.revokeDistanceXp('b');
+    expect(await repo.distanceXpUpdatedAts(), {'a': wall.toLocal()});
+
+    wall = wall.add(const Duration(minutes: 1));
+    await repo.revokeDistanceXp('a');
+    await repo.addDistanceXp('a', 5);
+    expect(await repo.distanceXpUpdatedAts(), {'a': wall.toLocal()});
+  });
 }

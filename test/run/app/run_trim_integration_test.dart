@@ -43,31 +43,43 @@ class _AlwaysResumed implements AppLifecycle {
   Stream<AppLifecycleState> get changes => const Stream.empty();
 }
 
+/// [failRevise] 면 runRevised 가 실패하는 성장 서비스.
+class _FlakyGrowthService extends GrowthService {
+  _FlakyGrowthService(super.runs, super.growth, super.clock);
+
+  bool failRevise = false;
+
+  @override
+  Future<GrowthGain> runRevised(String runId, DateTime runStartedAt) {
+    if (failRevise) return Future.error(Exception('재계산 실패'));
+    return super.runRevised(runId, runStartedAt);
+  }
+}
+
 /// 실제 DB 위에서 러닝을 끝내고 요약 화면처럼 끝부분을 잘라낸다.
+/// 행 시각(updatedAt)도 가짜 시계를 따른다.
 class _Harness {
   _Harness(this.async) {
+    service = _FlakyGrowthService(runs, growth, clock);
     container = ProviderContainer(
       overrides: [
         appDatabaseProvider.overrideWithValue(db),
+        runRepositoryProvider.overrideWithValue(runs),
+        growthRepositoryProvider.overrideWithValue(growth),
         profileRepositoryProvider.overrideWithValue(DriftProfileRepository(db)),
         locationSourceProvider.overrideWithValue(location),
         clockProvider.overrideWithValue(clock),
         appLifecycleProvider.overrideWithValue(_AlwaysResumed()),
-        growthServiceProvider.overrideWith(
-          (ref) => GrowthService(
-            ref.watch(runRepositoryProvider),
-            ref.watch(growthRepositoryProvider),
-            clock,
-          ),
-        ),
+        growthServiceProvider.overrideWithValue(service),
       ],
     );
   }
 
   final FakeAsync async;
   final db = AppDatabase(NativeDatabase.memory());
-  late final runs = DriftRunRepository(db);
-  late final growth = DriftGrowthRepository(db);
+  late final runs = DriftRunRepository(db, now: clock);
+  late final growth = DriftGrowthRepository(db, now: clock);
+  late final _FlakyGrowthService service;
   final location = _FakeLocationSource();
   late final ProviderContainer container;
   double _meters = 0;
@@ -168,6 +180,40 @@ void main() {
       );
       expect(again.distanceM, trimmed.distanceM);
       expect(revisedAgain!.distanceXp, newXp);
+      expect(h.wait(h.growth.totalXp()), newXp);
+      h.close();
+    });
+  });
+
+  test('경험치 재계산이 실패하면 null 이고 다음 sync 가 경험치와 주를 고친다', () {
+    fakeAsync((async) {
+      final h = _Harness(async);
+      h.wait(h.growth.setWeeklyTarget(weekStartOf(_t0), 1000));
+      final (_, gain) = h.runAndEnd();
+      expect(gain.goalBonusXp, 50);
+
+      async.elapse(const Duration(seconds: 5));
+      h.service.failRevise = true;
+      final (trimmed, revised) = h.wait(
+        h.container
+            .read(runEditorProvider)
+            .trimLastRun(_t0.add(const Duration(seconds: 250)), shown: gain),
+      );
+      expect(revised, isNull);
+      expect(h.wait(h.growth.totalXp()), 12 + 50); // 아직 예전 값.
+
+      h.service.failRevise = false;
+      async.elapse(const Duration(seconds: 5));
+      final healed = h.wait(h.service.sync());
+      final newXp = distanceXp(trimmed.distanceM, trimmed.splits);
+      expect(healed.isEmpty, isTrue);
+      expect(h.wait(h.growth.totalXp()), newXp);
+      expect(h.wait(h.growth.isWeekAchieved(weekStartOf(_t0))), isFalse);
+
+      async.elapse(const Duration(seconds: 5));
+      final rows = h.wait(h.growth.distanceXpUpdatedAts());
+      expect(h.wait(h.service.sync()).isEmpty, isTrue);
+      expect(h.wait(h.growth.distanceXpUpdatedAts()), rows);
       expect(h.wait(h.growth.totalXp()), newXp);
       h.close();
     });

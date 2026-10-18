@@ -127,23 +127,39 @@ class GrowthService {
     }
   }
 
-  /// deleteRun 과 runRemoved 사이에 앱이 죽으면 지운 러닝의 경험치가 남는다.
-  /// 저장소가 지웠다고 확인한 러닝만 경험치를 무르고 그 주를 다시 판정한다.
-  /// 알림(gain)에는 넣지 않는다.
-  Future<void> _healDeletedRuns(List<RunListItem> liveRuns) async {
-    final live = {for (final r in liveRuns) r.id};
-    final orphans = (await _growth.runIdsWithDistanceXp()).difference(live);
-    if (orphans.isEmpty) return;
-    final deleted = await _runs.deletedRunStarts(orphans);
-    for (final MapEntry(key: runId, value: startedAt) in deleted.entries) {
-      await _runChanged(runId, startedAt);
+  /// 기록과 경험치 사이에 앱이 죽거나 실패해 어긋난 러닝을 고친다. 고친 러닝의
+  /// 주만 다시 판정하고 알림(gain)에는 넣지 않는다.
+  /// - 지운 러닝: deleteRun 과 runRemoved 사이에 죽으면 경험치가 남는다. 저장소가
+  ///   지웠다고 확인한 러닝만 경험치를 무른다.
+  /// - 바꾼 러닝: replaceCompletedRun 뒤 runRevised 가 실패하면 경험치가 예전
+  ///   거리 값으로 남는다. 기록을 바꾼 시각이 경험치 행을 바꾼 시각보다 늦으면
+  ///   새 거리로 다시 매긴다. 다시 매기면 경험치 행 시각이 지금으로 바뀌어 한 번만 한다.
+  Future<void> _healRuns(List<RunListItem> liveRuns) async {
+    final xpAt = await _growth.distanceXpUpdatedAts();
+    if (xpAt.isEmpty) return;
+    final live = {for (final r in liveRuns) r.id: r};
+    final orphans = xpAt.keys.where((id) => !live.containsKey(id)).toSet();
+    if (orphans.isNotEmpty) {
+      final deleted = await _runs.deletedRunStarts(orphans);
+      for (final MapEntry(key: runId, value: startedAt) in deleted.entries) {
+        await _runChanged(runId, startedAt);
+      }
+    }
+    final revisedAt = await _runs.completedRunRevisions();
+    for (final MapEntry(key: runId, value: at) in revisedAt.entries) {
+      final xpUpdatedAt = xpAt[runId];
+      final run = live[runId];
+      if (xpUpdatedAt == null || run == null || !at.isAfter(xpUpdatedAt)) {
+        continue;
+      }
+      await _runChanged(runId, run.startedAt);
     }
   }
 
   Future<GrowthGain> _sync() async {
     final runs = await _runs.listRuns(); // 최신순
     // 복구로 무른 경험치는 이번 gain 의 시작 레벨에 넣지 않는다.
-    await _healDeletedRuns(runs);
+    await _healRuns(runs);
     final xpBefore = await _growth.totalXp();
     final levelBefore = levelFor(xpBefore).level;
 

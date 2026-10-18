@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:drift/drift.dart';
 import 'package:uuid/uuid.dart';
 
+import '../../core/clock.dart';
 import '../../run/data/app_database.dart';
 import '../domain/growth_rules.dart';
 import 'growth_repository.dart';
@@ -13,14 +14,17 @@ const _distance = 'distance';
 const _weeklyGoal = 'weeklyGoal';
 
 class DriftGrowthRepository implements GrowthRepository {
-  DriftGrowthRepository(this._db, {Random? random})
-    : _random = random ?? Random();
+  /// [now] 는 행 시각(updatedAt 등)에 쓴다. 테스트에서만 바꾼다.
+  DriftGrowthRepository(this._db, {Random? random, Clock? now})
+    : _random = random ?? Random(),
+      _clock = now ?? DateTime.now;
 
   final AppDatabase _db;
   final Random _random;
+  final Clock _clock;
   final _uuid = const Uuid();
 
-  DateTime _now() => DateTime.now().toUtc();
+  DateTime _now() => _clock().toUtc();
 
   static String _key(DateTime d) =>
       '${d.year.toString().padLeft(4, '0')}-'
@@ -103,6 +107,19 @@ class DriftGrowthRepository implements GrowthRepository {
             ))
             .get();
     return {for (final r in rows) r.runId!};
+  }
+
+  @override
+  Future<Map<String, DateTime>> distanceXpUpdatedAts() async {
+    final rows =
+        await (_db.select(_db.xpTxns)..where(
+              (t) =>
+                  t.reason.equals(_distance) &
+                  t.runId.isNotNull() &
+                  t.deletedAt.isNull(),
+            ))
+            .get();
+    return {for (final r in rows) r.runId!: r.updatedAt.toLocal()};
   }
 
   /// (runId, reason) 또는 (weekStart, reason) 로 찾은 경험치 행. 무른 행도 돌려준다.

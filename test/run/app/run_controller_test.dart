@@ -122,6 +122,10 @@ class _FakeRunRepository implements RunRepository {
   @override
   Future<Map<String, DateTime>> deletedRunStarts(Set<String> ids) =>
       throw UnimplementedError();
+
+  @override
+  Future<Map<String, DateTime>> completedRunRevisions() =>
+      throw UnimplementedError();
 }
 
 class _FakeProfileRepository implements ProfileRepository {

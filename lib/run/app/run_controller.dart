@@ -200,14 +200,7 @@ class RunController extends Notifier<RunViewState> {
       await _repository.replaceCompletedRun(runId, trimmed);
       // 그 사이 새 러닝을 시작했으면 상태를 덮어쓰지 않는다.
       if (state.lastRunId == runId) {
-        state = RunViewState(
-          snapshot: state.snapshot,
-          lastSummary: trimmed,
-          lastError: state.lastError,
-          weightKg: state.weightKg,
-          autoEnded: state.autoEnded,
-          lastRunId: runId,
-        );
+        state = _copyState(lastSummary: trimmed);
       }
       return (runId, trimmed);
     } finally {
@@ -549,13 +542,14 @@ class RunController extends Notifier<RunViewState> {
   RunViewState _copyState({
     RunSnapshot? snapshot,
     String? runId,
+    RunSummary? lastSummary,
     String? lastError,
     bool clearError = false,
   }) {
     return RunViewState(
       snapshot: snapshot ?? state.snapshot,
       runId: runId ?? state.runId,
-      lastSummary: state.lastSummary,
+      lastSummary: lastSummary ?? state.lastSummary,
       lastError: clearError ? null : lastError ?? state.lastError,
       weightKg: _weightKg,
       autoEnded: state.autoEnded,

@@ -1,6 +1,7 @@
 import 'package:drift/drift.dart';
 import 'package:uuid/uuid.dart';
 
+import '../../core/clock.dart';
 import '../../core/week.dart';
 import '../domain/location_sample.dart';
 import '../domain/polyline_codec.dart';
@@ -12,13 +13,15 @@ const _active = 'active';
 const _completed = 'completed';
 
 class DriftRunRepository implements RunRepository {
-  DriftRunRepository(this._db);
+  /// [now] 는 행 시각(updatedAt 등)에 쓴다. 테스트에서만 바꾼다.
+  DriftRunRepository(this._db, {Clock? now}) : _clock = now ?? DateTime.now;
 
   final AppDatabase _db;
+  final Clock _clock;
   final _uuid = const Uuid();
 
   // DB에는 UTC 로 저장하고 읽을 때 현지 시각으로 돌려준다.
-  DateTime _now() => DateTime.now().toUtc();
+  DateTime _now() => _clock().toUtc();
 
   @override
   Future<String> createActiveRun(DateTime startedAt) async {
@@ -287,6 +290,14 @@ class DriftRunRepository implements RunRepository {
             ))
             .get();
     return {for (final r in rows) r.id: r.startedAt.toLocal()};
+  }
+
+  @override
+  Future<Map<String, DateTime>> completedRunRevisions() async {
+    final rows = await (_db.select(
+      _db.runs,
+    )..where((r) => r.status.equals(_completed) & r.deletedAt.isNull())).get();
+    return {for (final r in rows) r.id: r.updatedAt.toLocal()};
   }
 
   String _encodeRoute(RunSummary summary) => encodePolyline([
