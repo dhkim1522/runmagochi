@@ -5,6 +5,8 @@ import 'package:fake_async/fake_async.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter/widgets.dart' show AppLifecycleState;
+import 'package:runmagochi/profile/app/providers.dart';
+import 'package:runmagochi/profile/data/profile_repository.dart';
 import 'package:runmagochi/run/app/app_lifecycle.dart';
 import 'package:runmagochi/run/app/providers.dart';
 import 'package:runmagochi/run/app/run_controller.dart';
@@ -111,6 +113,19 @@ class _FakeRunRepository implements RunRepository {
   Future<(double, int)> weeklyTotal(DateTime now) => throw UnimplementedError();
 }
 
+class _FakeProfileRepository implements ProfileRepository {
+  _FakeProfileRepository(this.weight);
+  double? weight;
+  @override
+  Future<double?> weightKg() async => weight;
+  @override
+  Future<void> setWeightKg(double? kg) async => weight = kg;
+  @override
+  Future<bool> isOnboarded() async => false;
+  @override
+  Future<void> markOnboarded() async {}
+}
+
 class _FakeLocationSource implements LocationSource {
   final controller = StreamController<LocationSample>.broadcast();
   int listenCount = 0;
@@ -152,6 +167,7 @@ void _run(
   )
   body, {
   ActiveRun? activeRun,
+  double? weightKg,
 }) {
   fakeAsync((async) {
     final repository = _FakeRunRepository()..activeRun = activeRun;
@@ -160,6 +176,9 @@ void _run(
     final container = ProviderContainer(
       overrides: [
         runRepositoryProvider.overrideWithValue(repository),
+        profileRepositoryProvider.overrideWithValue(
+          _FakeProfileRepository(weightKg),
+        ),
         locationSourceProvider.overrideWithValue(location),
         appLifecycleProvider.overrideWithValue(lifecycle),
         clockProvider.overrideWithValue(() => _t0.add(async.elapsed)),
@@ -180,6 +199,8 @@ void _run(
 }
 
 void main() {
+  _weightTests();
+
   /// 1초를 보내고 그 시각에 [meters] 지점의 점을 보낸다.
   void stepTo(FakeAsync async, _FakeLocationSource location, double meters) {
     async.elapse(const Duration(seconds: 1));
@@ -866,4 +887,36 @@ void main() {
       });
     });
   });
+}
+
+void _weightTests() {
+  for (final (weight, basis) in [(70.0, 70.0), (null, 65.0)]) {
+    test('종료 칼로리는 체중 ${weight ?? '없음'} → ${basis}kg 기준', () {
+      _run(weightKg: weight, (
+        async,
+        controller,
+        container,
+        repository,
+        location,
+      ) {
+        controller.start();
+        async.flushMicrotasks();
+        for (var i = 1; i <= 200; i++) {
+          async.elapse(const Duration(seconds: 1));
+          location.controller.add(_sample(_t0.add(async.elapsed), i * 3.0));
+          async.flushMicrotasks();
+        }
+        // 진행 중 표시도 같은 체중을 쓴다.
+        expect(container.read(runControllerProvider).weightKg, basis);
+        RunSummary? summary;
+        controller.end().then((s) => summary = s);
+        async.flushMicrotasks();
+        expect(summary!.distanceM, greaterThan(500));
+        expect(
+          summary!.calories,
+          closeTo(basis * summary!.distanceM / 1000 * 1.036, 1e-9),
+        );
+      });
+    });
+  }
 }

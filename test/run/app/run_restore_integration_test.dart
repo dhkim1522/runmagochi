@@ -6,6 +6,8 @@ import 'package:fake_async/fake_async.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter/widgets.dart' show AppLifecycleState;
+import 'package:runmagochi/profile/app/providers.dart';
+import 'package:runmagochi/profile/data/drift_profile_repository.dart';
 import 'package:runmagochi/run/app/app_lifecycle.dart';
 import 'package:runmagochi/run/app/providers.dart';
 import 'package:runmagochi/run/data/app_database.dart';
@@ -46,6 +48,7 @@ class _Harness {
     container = ProviderContainer(
       overrides: [
         runRepositoryProvider.overrideWithValue(repository),
+        profileRepositoryProvider.overrideWithValue(DriftProfileRepository(db)),
         locationSourceProvider.overrideWithValue(location),
         clockProvider.overrideWithValue(clock),
         appLifecycleProvider.overrideWithValue(_AlwaysResumed()),

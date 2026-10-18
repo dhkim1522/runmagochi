@@ -60,5 +60,10 @@ String autoRunName(DateTime startedAt) {
 }
 
 /// 체중(kg) × 거리(km) × 1.036.
-double estimateCalories(double distanceM, {double weightKg = 65}) =>
-    weightKg * distanceM / 1000 * 1.036;
+/// 체중을 모를 때 칼로리 계산에 쓰는 기본 체중(kg).
+const double defaultWeightKg = 65;
+
+double estimateCalories(
+  double distanceM, {
+  double weightKg = defaultWeightKg,
+}) => weightKg * distanceM / 1000 * 1.036;

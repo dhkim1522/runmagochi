@@ -152,7 +152,8 @@ class _InRunScreenState extends ConsumerState<InRunScreen> {
                     ),
                     StatCard(
                       label: '칼로리',
-                      value: '${estimateCalories(snap.distanceM).round()}',
+                      value:
+                          '${estimateCalories(snap.distanceM, weightKg: view.weightKg).round()}',
                     ),
                   ]),
                   Expanded(child: Center(child: avatarStage)),

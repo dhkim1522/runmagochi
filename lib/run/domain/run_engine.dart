@@ -149,7 +149,7 @@ class RunEngine {
   /// 기록 중이나 일시정지 중에 끝낸다. 남은 거리가 1m 이상이면 마지막
   /// 구간으로 넣고 `RunEnded` 를 낸 뒤 `ended` 로 바꾸고 이벤트 스트림을
   /// 닫는다. `clock()` 은 한 번만 읽는다.
-  RunSummary end() {
+  RunSummary end({double weightKg = defaultWeightKg}) {
     if (_state != RunState.recording && _state != RunState.paused) {
       throw StateError('Cannot go from $_state to ${RunState.ended}');
     }
@@ -172,7 +172,7 @@ class RunEngine {
       distanceM: _distanceM,
       movingTime: movingTime,
       avgPaceSecPerKm: _pace(movingTime, _distanceM),
-      calories: estimateCalories(_distanceM),
+      calories: estimateCalories(_distanceM, weightKg: weightKg),
       name: autoRunName(startedAt),
       splits: splits,
       points: List.unmodifiable([for (final s in _segments) ...s]),

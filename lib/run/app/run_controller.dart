@@ -4,6 +4,7 @@ import 'package:flutter/widgets.dart' show AppLifecycleState;
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../profile/app/providers.dart';
 import '../data/run_repository.dart';
 import '../domain/location_sample.dart';
 import '../domain/run_engine.dart';
@@ -35,6 +36,7 @@ class RunViewState {
     this.runId,
     this.lastSummary,
     this.lastError,
+    this.weightKg = defaultWeightKg,
   });
 
   final RunSnapshot snapshot;
@@ -43,6 +45,9 @@ class RunViewState {
 
   /// 화면에 보일 마지막 오류 문구.
   final String? lastError;
+
+  /// 진행 중 칼로리 표시에 쓰는 체중(kg). 시작·복구 때 읽고 종료 때 다시 읽는다.
+  final double weightKg;
 }
 
 class RunController extends Notifier<RunViewState> {
@@ -76,6 +81,18 @@ class RunController extends Notifier<RunViewState> {
   /// completeRun 이 실패해 남은 요약. end 를 다시 부르면 이것으로 completeRun 만 한다.
   RunSummary? _pendingSummary;
 
+  double _weightKg = defaultWeightKg;
+
+  /// 저장된 체중. 없거나 읽지 못하면 기본 체중.
+  Future<double> _readWeight() async {
+    try {
+      return await ref.read(profileRepositoryProvider).weightKg() ??
+          defaultWeightKg;
+    } catch (_) {
+      return defaultWeightKg;
+    }
+  }
+
   RunRepository get _repository => ref.read(runRepositoryProvider);
 
   @override
@@ -97,13 +114,18 @@ class RunController extends Notifier<RunViewState> {
     try {
       final clock = ref.read(clockProvider);
       final runId = await _repository.createActiveRun(clock());
+      _weightKg = await _readWeight();
       final engine = RunEngine(clock: clock)..start();
       _engine = engine;
       _runId = runId;
       _subscribe();
       _startFlushTimer();
       _startTick();
-      state = RunViewState(snapshot: engine.snapshot, runId: runId);
+      state = RunViewState(
+        snapshot: engine.snapshot,
+        runId: runId,
+        weightKg: _weightKg,
+      );
     } finally {
       _starting = false;
     }
@@ -154,7 +176,9 @@ class RunController extends Notifier<RunViewState> {
           rethrow;
         }
         _flushClosed = true;
-        summary = _pendingSummary = engine.end();
+        // 설정에서 체중을 바꿨을 수 있으므로 종료 때 다시 읽는다.
+        _weightKg = await _readWeight();
+        summary = _pendingSummary = engine.end(weightKg: _weightKg);
         _publish();
       }
       try {
@@ -186,6 +210,7 @@ class RunController extends Notifier<RunViewState> {
       restoredMovingTime: active.movingTime,
     );
     _runId = active.id;
+    _weightKg = await _readWeight();
     _startFlushTimer();
     _publish();
     return true;
@@ -361,6 +386,7 @@ class RunController extends Notifier<RunViewState> {
       runId: runId ?? state.runId,
       lastSummary: state.lastSummary,
       lastError: clearError ? null : lastError ?? state.lastError,
+      weightKg: _weightKg,
     );
   }
 }
