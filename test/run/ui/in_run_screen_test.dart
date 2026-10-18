@@ -94,7 +94,8 @@ void main() {
     await tester.pump();
     expect(c.calls, ['pause']);
     expect(find.text('재개'), findsOneWidget);
-    expect(find.textContaining('kcal'), findsOneWidget);
+    expect(find.text('83'), findsOneWidget);
+    expect(find.textContaining('kcal'), findsNothing);
   });
 
   testWidgets('재개 버튼은 resume 을 부른다', (tester) async {
@@ -263,44 +264,48 @@ void main() {
   });
 
   group('글자 크기 1.3배', () {
-    for (final state in [RunState.recording, RunState.paused]) {
-      testWidgets('$state 에서 overflow 없이 그려진다', (tester) async {
-        tester.view.physicalSize = const Size(390, 844);
-        tester.view.devicePixelRatio = 1;
-        addTearDown(tester.view.reset);
-        final controller = FakeController(
-          initial: snap(
-            state,
-            distanceM: 5340,
-            movingTime: const Duration(minutes: 32, seconds: 9),
-            avg: 378,
-            current: 370,
-          ),
-        );
-        await tester.pumpWidget(
-          ProviderScope(
-            overrides: [
-              runControllerProvider.overrideWith(() => controller),
-              growthServiceProvider.overrideWithValue(
-                FakeGrowthService(growthState()),
+    for (final state in [RunState.recording, RunState.paused])
+      for (final size in [const Size(390, 844), const Size(360, 640)]) {
+        testWidgets(
+          '$state ${size.width.toInt()}x${size.height.toInt()} 에서 overflow 없이 그려진다',
+          (tester) async {
+            tester.view.physicalSize = size;
+            tester.view.devicePixelRatio = 1;
+            addTearDown(tester.view.reset);
+            final controller = FakeController(
+              initial: snap(
+                state,
+                distanceM: 5340,
+                movingTime: const Duration(minutes: 32, seconds: 9),
+                avg: 378,
+                current: 370,
               ),
-            ],
-            child: MaterialApp(
-              theme: appLightTheme(),
-              builder: (context, child) => MediaQuery(
-                data: MediaQuery.of(
-                  context,
-                ).copyWith(textScaler: const TextScaler.linear(1.3)),
-                child: child!,
+            );
+            await tester.pumpWidget(
+              ProviderScope(
+                overrides: [
+                  runControllerProvider.overrideWith(() => controller),
+                  growthServiceProvider.overrideWithValue(
+                    FakeGrowthService(growthState()),
+                  ),
+                ],
+                child: MaterialApp(
+                  theme: appLightTheme(),
+                  builder: (context, child) => MediaQuery(
+                    data: MediaQuery.of(
+                      context,
+                    ).copyWith(textScaler: const TextScaler.linear(1.3)),
+                    child: child!,
+                  ),
+                  home: const InRunScreen(),
+                ),
               ),
-              home: const InRunScreen(),
-            ),
-          ),
+            );
+            await settle(tester);
+            expect(tester.takeException(), isNull);
+          },
         );
-        await settle(tester);
-        expect(tester.takeException(), isNull);
-      });
-    }
+      }
   });
 
   group('러닝 중 아바타', () {

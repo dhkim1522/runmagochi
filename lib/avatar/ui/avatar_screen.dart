@@ -9,8 +9,17 @@ import '../domain/growth_rules.dart';
 import '../domain/growth_state.dart';
 import 'avatar_view.dart';
 
-/// 단계 이름. 인덱스 0 이 1단계.
-const _stageNames = ['알·새싹', '어린 러너', '러너', '마라토너'];
+/// 단계 이름. 1단계는 종류마다 다르고, 2~4단계는 모두 같다.
+const _laterStageNames = ['어린 러너', '러너', '마라토너'];
+
+String _stageName(AvatarKind kind, int stage) {
+  if (stage > 1) return _laterStageNames[stage - 2];
+  return switch (kind) {
+    AvatarKind.chick => '알',
+    AvatarKind.jelly => '새싹',
+    AvatarKind.acorn => '꼬마 도토리',
+  };
+}
 
 /// `Lv.1~4`, 마지막 단계는 `Lv.20~`.
 String _levelRange(int stage) {
@@ -179,7 +188,7 @@ class _StageRow extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('$stage단계 ${_stageNames[stage - 1]}', style: t.heading),
+                Text('$stage단계 ${_stageName(kind, stage)}', style: t.heading),
                 Text(
                   _levelRange(stage),
                   style: t.caption.copyWith(color: c.inkMuted),

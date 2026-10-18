@@ -198,46 +198,50 @@ void main() {
     expect(find.textContaining('경험치'), findsNothing);
   });
 
-  testWidgets('글자 크기 1.3배, 레벨업 요약이 overflow 없이 그려진다', (tester) async {
-    tester.view.physicalSize = const Size(390, 844);
-    tester.view.devicePixelRatio = 1;
-    addTearDown(tester.view.reset);
-    await tester.pumpWidget(
-      ProviderScope(
-        overrides: [
-          runRepositoryProvider.overrideWithValue(FakeRepo((0, 0))),
-          growthServiceProvider.overrideWithValue(
-            FakeGrowthService(growthState()),
-          ),
-        ],
-        child: MaterialApp(
-          theme: appLightTheme(),
-          builder: (context, child) => MediaQuery(
-            data: MediaQuery.of(
-              context,
-            ).copyWith(textScaler: const TextScaler.linear(1.3)),
-            child: child!,
-          ),
-          home: SummaryScreen.fromSummary(
-            _summary(),
-            gain: const GrowthGain(
-              distanceXp: 25,
-              goalBonusXp: 50,
-              levelBefore: 3,
-              levelAfter: 4,
-              stageBefore: 1,
-              stageAfter: 1,
+  for (final size in [const Size(390, 844), const Size(360, 640)])
+    testWidgets(
+      '글자 크기 1.3배, 레벨업 요약이 ${size.width.toInt()}x${size.height.toInt()} 에서 overflow 없이 그려진다',
+      (tester) async {
+        tester.view.physicalSize = size;
+        tester.view.devicePixelRatio = 1;
+        addTearDown(tester.view.reset);
+        await tester.pumpWidget(
+          ProviderScope(
+            overrides: [
+              runRepositoryProvider.overrideWithValue(FakeRepo((0, 0))),
+              growthServiceProvider.overrideWithValue(
+                FakeGrowthService(growthState()),
+              ),
+            ],
+            child: MaterialApp(
+              theme: appLightTheme(),
+              builder: (context, child) => MediaQuery(
+                data: MediaQuery.of(
+                  context,
+                ).copyWith(textScaler: const TextScaler.linear(1.3)),
+                child: child!,
+              ),
+              home: SummaryScreen.fromSummary(
+                _summary(),
+                gain: const GrowthGain(
+                  distanceXp: 25,
+                  goalBonusXp: 50,
+                  levelBefore: 3,
+                  levelAfter: 4,
+                  stageBefore: 1,
+                  stageAfter: 1,
+                ),
+              ),
             ),
           ),
-        ),
-      ),
+        );
+        for (var i = 0; i < 10; i++) {
+          await tester.pump(const Duration(milliseconds: 100));
+        }
+        expect(tester.takeException(), isNull);
+        expect(find.text('레벨 업!'), findsOneWidget);
+      },
     );
-    for (var i = 0; i < 10; i++) {
-      await tester.pump(const Duration(milliseconds: 100));
-    }
-    expect(tester.takeException(), isNull);
-    expect(find.text('레벨 업!'), findsOneWidget);
-  });
 
   testWidgets('제목은 헤더다', (tester) async {
     final handle = tester.ensureSemantics();

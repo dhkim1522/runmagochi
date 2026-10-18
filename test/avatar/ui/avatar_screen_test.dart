@@ -11,10 +11,10 @@ import 'package:runmagochi/core/ui/clay.dart';
 
 import '../../run/ui/fakes.dart';
 
-GrowthState stateFor(int totalXp) {
+GrowthState stateFor(int totalXp, [AvatarKind kind = AvatarKind.chick]) {
   final lv = levelFor(totalXp);
   return GrowthState(
-    kind: AvatarKind.chick,
+    kind: kind,
     name: '러니',
     totalXp: totalXp,
     level: lv,
@@ -34,12 +34,13 @@ Future<void> pumpIt(
   WidgetTester tester,
   int totalXp, {
   double textScale = 1.0,
+  AvatarKind kind = AvatarKind.chick,
 }) async {
   await tester.pumpWidget(
     ProviderScope(
       overrides: [
         growthServiceProvider.overrideWithValue(
-          FakeGrowthService(stateFor(totalXp)),
+          FakeGrowthService(stateFor(totalXp, kind)),
         ),
       ],
       child: MaterialApp(
@@ -61,6 +62,18 @@ Future<void> pumpIt(
 }
 
 void main() {
+  for (final (kind, name) in [
+    (AvatarKind.chick, '알'),
+    (AvatarKind.jelly, '새싹'),
+    (AvatarKind.acorn, '꼬마 도토리'),
+  ]) {
+    testWidgets('1단계 이름은 종류에 따라 다르다 ($kind)', (tester) async {
+      await pumpIt(tester, 600, kind: kind);
+      expect(find.text('1단계 $name'), findsOneWidget);
+      expect(find.text('2단계 어린 러너'), findsOneWidget);
+    });
+  }
+
   testWidgets('이름·레벨·누적 기록·다음 단계까지 남은 거리를 보여 준다', (tester) async {
     await pumpIt(tester, 348); // Lv.4, 다음 단계(500)까지 152
     expect(find.text('러니 Lv.4'), findsOneWidget);
@@ -71,7 +84,7 @@ void main() {
 
   testWidgets('단계 4행과 현재·잠김·달성 상태', (tester) async {
     await pumpIt(tester, 600); // Lv.5 → 2단계
-    expect(find.text('1단계 알·새싹'), findsOneWidget);
+    expect(find.text('1단계 알'), findsOneWidget);
     expect(find.text('2단계 어린 러너'), findsOneWidget);
     expect(find.text('3단계 러너'), findsOneWidget);
     expect(find.text('4단계 마라토너'), findsOneWidget);
