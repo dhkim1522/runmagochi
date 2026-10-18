@@ -146,7 +146,7 @@ class _SummaryBody extends StatelessWidget {
           style: t.caption.copyWith(color: c.inkMuted),
         ),
         const SizedBox(height: 2),
-        Text(name, style: t.heading.copyWith(fontSize: 22, height: 28 / 22)),
+        Text(name, style: t.titleS),
         const SizedBox(height: Gap.s5),
         Row(
           crossAxisAlignment: CrossAxisAlignment.baseline,
@@ -159,10 +159,7 @@ class _SummaryBody extends StatelessWidget {
               ),
             ),
             const SizedBox(width: Gap.s2),
-            Text(
-              'km',
-              style: t.heading.copyWith(fontSize: 22, color: c.primaryDeep),
-            ),
+            Text('km', style: t.titleS.copyWith(color: c.primaryDeep)),
           ],
         ),
         const SizedBox(height: Gap.s5),

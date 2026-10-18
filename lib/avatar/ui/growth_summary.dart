@@ -177,11 +177,7 @@ class _XpRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = AppColors.of(context);
     final t = AppText.of(context);
-    final xpStyle = t.heading.copyWith(
-      fontSize: 22,
-      height: 28 / 22,
-      color: c.success,
-    );
+    final xpStyle = t.titleS.copyWith(color: c.success);
     return ClayCard(
       radius: Radii.md,
       padding: const EdgeInsets.symmetric(vertical: 14, horizontal: Gap.s4),

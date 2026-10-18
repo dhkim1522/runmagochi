@@ -66,10 +66,7 @@ class HistoryScreen extends ConsumerWidget {
                       const SizedBox(width: Gap.s2),
                       Text(
                         'km',
-                        style: t.heading.copyWith(
-                          fontSize: 22,
-                          color: c.primaryDeep,
-                        ),
+                        style: t.titleS.copyWith(color: c.primaryDeep),
                       ),
                     ],
                   ),

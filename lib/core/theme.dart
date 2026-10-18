@@ -210,6 +210,7 @@ class AppText extends ThemeExtension<AppText> {
     required this.distanceXl,
     required this.numberL,
     required this.title,
+    required this.titleS,
     required this.stat,
     required this.button,
     required this.heading,
@@ -224,6 +225,7 @@ class AppText extends ThemeExtension<AppText> {
     distanceXl: _s(_display, 120, 120, FontWeight.w400, ink),
     numberL: _s(_display, 64, 68, FontWeight.w400, ink),
     title: _s(_display, 28, 34, FontWeight.w400, ink),
+    titleS: _s(_display, 22, 28, FontWeight.w400, ink),
     stat: _s(_display, 26, 30, FontWeight.w400, ink),
     button: _s(_display, 24, 28, FontWeight.w400, ink),
     heading: _s(_display, 18, 24, FontWeight.w400, ink),
@@ -236,6 +238,7 @@ class AppText extends ThemeExtension<AppText> {
   final TextStyle distanceXl;
   final TextStyle numberL;
   final TextStyle title;
+  final TextStyle titleS;
   final TextStyle stat;
   final TextStyle button;
   final TextStyle heading;
@@ -252,6 +255,7 @@ class AppText extends ThemeExtension<AppText> {
     TextStyle? distanceXl,
     TextStyle? numberL,
     TextStyle? title,
+    TextStyle? titleS,
     TextStyle? stat,
     TextStyle? button,
     TextStyle? heading,
@@ -264,6 +268,7 @@ class AppText extends ThemeExtension<AppText> {
       distanceXl: distanceXl ?? this.distanceXl,
       numberL: numberL ?? this.numberL,
       title: title ?? this.title,
+      titleS: titleS ?? this.titleS,
       stat: stat ?? this.stat,
       button: button ?? this.button,
       heading: heading ?? this.heading,
@@ -282,6 +287,7 @@ class AppText extends ThemeExtension<AppText> {
       distanceXl: l(distanceXl, other.distanceXl),
       numberL: l(numberL, other.numberL),
       title: l(title, other.title),
+      titleS: l(titleS, other.titleS),
       stat: l(stat, other.stat),
       button: l(button, other.button),
       heading: l(heading, other.heading),

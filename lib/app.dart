@@ -94,7 +94,7 @@ class _TabBar extends StatelessWidget {
   }
 }
 
-class _TabItem extends StatelessWidget {
+class _TabItem extends StatefulWidget {
   const _TabItem({
     required this.icon,
     required this.label,
@@ -108,36 +108,66 @@ class _TabItem extends StatelessWidget {
   final VoidCallback onTap;
 
   @override
+  State<_TabItem> createState() => _TabItemState();
+}
+
+class _TabItemState extends State<_TabItem> {
+  bool _focused = false;
+
+  @override
   Widget build(BuildContext context) {
     final c = AppColors.of(context);
-    final color = selected ? c.primaryDeep : c.inkMuted;
+    final color = widget.selected ? c.primaryDeep : c.inkMuted;
     final style = AppText.of(context).caption.copyWith(
       color: color,
-      fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+      fontWeight: widget.selected ? FontWeight.w700 : FontWeight.w500,
     );
+    // 키보드 포커스는 Tab 으로 받고 Enter·Space 로 선택한다 (ActivateIntent).
+    Widget content = ConstrainedBox(
+      constraints: const BoxConstraints(minHeight: 56),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: Gap.s2),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(widget.icon, size: 24, color: color),
+            const SizedBox(height: 2),
+            Text(widget.label, style: style),
+          ],
+        ),
+      ),
+    );
+    if (_focused) {
+      content = DecoratedBox(
+        key: const ValueKey('tab-focus-ring'),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(Radii.sm),
+          border: Border.all(color: c.primaryDeep, width: Borders.thick),
+        ),
+        child: content,
+      );
+    }
     return Semantics(
       button: true,
-      selected: selected,
-      label: label,
+      selected: widget.selected,
+      label: widget.label,
       excludeSemantics: true,
-      onTap: onTap,
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onTap: onTap,
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(minHeight: 56),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: Gap.s2),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(icon, size: 24, color: color),
-                const SizedBox(height: 2),
-                Text(label, style: style),
-              ],
-            ),
+      onTap: widget.onTap,
+      child: FocusableActionDetector(
+        onShowFocusHighlight: (v) => setState(() => _focused = v),
+        actions: {
+          ActivateIntent: CallbackAction<ActivateIntent>(
+            onInvoke: (_) {
+              widget.onTap();
+              return null;
+            },
           ),
+        },
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: widget.onTap,
+          child: content,
         ),
       ),
     );

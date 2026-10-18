@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -71,6 +72,7 @@ Map<String, Color> _colors(AppColors c) => {
 
 void main() {
   _fontAndErrorTests();
+  _titleSTests();
   final themes = {
     'light': (appLightTheme(), _light),
     'dark': (appDarkTheme(), _dark),
@@ -195,4 +197,33 @@ void _fontAndErrorTests() {
       );
     });
   }
+}
+
+void _titleSTests() {
+  group('글자 크기 22 토큰', () {
+    test('titleS 는 Jua 22 / 줄 높이 28', () {
+      for (final tx in [
+        AppText.withColor(AppColors.light.ink),
+        AppText.withColor(AppColors.dark.ink),
+      ]) {
+        expect(tx.titleS.fontSize, 22);
+        expect(tx.titleS.fontFamily, 'Jua');
+        expect(tx.titleS.height, closeTo(28 / 22, 1e-9));
+      }
+      final a = AppText.withColor(AppColors.light.ink);
+      expect(a.copyWith().titleS, a.titleS);
+      expect(a.lerp(a, 0.5).titleS.fontSize, 22);
+    });
+    test('theme.dart 밖 lib 코드에 fontSize: 22 가 없다', () {
+      final hits = <String>[];
+      for (final f in Directory('lib').listSync(recursive: true)) {
+        if (f is! File || !f.path.endsWith('.dart')) continue;
+        if (f.path.replaceAll(r'\', '/').endsWith('lib/core/theme.dart')) {
+          continue;
+        }
+        if (f.readAsStringSync().contains('fontSize: 22')) hits.add(f.path);
+      }
+      expect(hits, isEmpty);
+    });
+  });
 }

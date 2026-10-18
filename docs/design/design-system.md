@@ -30,7 +30,7 @@
 - 제목·숫자: **Jua** (둥근 한글 글꼴, SIL OFL). 숫자는 모두 Jua.
 - 본문·라벨: **Noto Sans KR** (SIL OFL).
 - 앱에서는 두 글꼴 파일을 함께 넣어 오프라인에서도 같은 모양으로 보인다.
-- 크기: `distance-xl` 120 (러닝 중 거리), `number-l` 64 (요약 거리·카운트다운), `title` 28 (아바타 이름·레벨), `stat` 26 (페이스·시간), `button` 24, `heading` 18 (카드 제목), `body` 16, `label` 14, `caption` 13. 13 아래로 쓰지 않는다.
+- 크기: `distance-xl` 120 (러닝 중 거리), `number-l` 64 (요약 거리·카운트다운), `title` 28 (아바타 이름·레벨), `title-s` 22 (요약 이름·km 단위·경험치 +·종료 안내), `stat` 26 (페이스·시간), `button` 24, `heading` 18 (카드 제목), `body` 16, `label` 14, `caption` 13. 13 아래로 쓰지 않는다.
 
 ## 컴포넌트 규칙
 
@@ -38,6 +38,7 @@
 - **카드**: `surface`, `border-thick` `line`, `radius-lg`(지표는 `radius-md`), 아래 립 `lip` `line-strong`. 안쪽 여백 `space-4` × `space-5`.
 - **진행 막대**: 높이 14(주간 목표)·10(레벨), `radius-pill`, 트랙 `surface-soft`.
 - **탭바**: 3개(러닝·기록·아바타). 선택 탭 `primary-deep` 굵게, 나머지 `ink-muted`. 위 구분선 `line` 2px.
+- **탭 포커스**: 탭은 키보드 Tab 으로 포커스를 받고 Enter·Space 로 선택한다. 포커스 표시는 `primary-deep` `border-thick` 윤곽(`radius-sm`).
 - **다이얼로그**: `surface`, `radius-lg`, 제목 `title`, 확인 버튼은 primary.
 - **아바타**: 정수 배율 확대, 보간 없음(`FilterQuality.none`). 무대는 `surface-soft` + `radius-xl`.
 

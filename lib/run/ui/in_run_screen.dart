@@ -134,10 +134,7 @@ class _InRunScreenState extends ConsumerState<InRunScreen> {
                           Text(formatKm(snap.distanceM), style: t.numberL),
                           Text(
                             'km',
-                            style: t.heading.copyWith(
-                              fontSize: 22,
-                              color: c.primaryDeep,
-                            ),
+                            style: t.titleS.copyWith(color: c.primaryDeep),
                           ),
                         ],
                       ),
@@ -298,10 +295,7 @@ class _HoldToStopButtonState extends State<_HoldToStopButton>
                       ),
                     ),
                   ),
-                  Text(
-                    '길게 눌러 종료',
-                    style: AppText.of(context).button.copyWith(fontSize: 22),
-                  ),
+                  Text('길게 눌러 종료', style: AppText.of(context).titleS),
                 ],
               ),
             ),
