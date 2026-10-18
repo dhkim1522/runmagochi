@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>첫 실행 2 이름 짓기</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Jua&amp;family=Noto+Sans+KR:wght@400;500;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#C2410C}a:hover{color:#9A3412}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; background: #FFF7ED; font-family: 'Noto Sans KR', sans-serif; color: #431407; display: flex; flex-direction: column; padding: 32px 20px 32px 20px; gap: 20px">
+<div style="display: flex; justify-content: center; gap: 8px" aria-label="3단계 중 2단계">
+<div style="width: 8px; height: 8px; border-radius: 999px; background: #FDBA74"></div>
+<div style="width: 28px; height: 8px; border-radius: 999px; background: #F97316"></div>
+<div style="width: 8px; height: 8px; border-radius: 999px; background: #FED7AA"></div>
+</div>
+<div style="font-family: 'Jua', sans-serif; font-size: 28px; line-height: 34px">이름을 지어 주세요</div>
+<div style="font-size: 16px; line-height: 24px; color: #9A3412">홈과 아바타 탭에서 이 이름으로 불러요. 설정에서 바꿀 수 있어요.</div>
+<div style="background: #FFEDD5; border: 3px solid #FED7AA; border-radius: 32px; height: 220px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; box-shadow: inset 0 -8px 0 #FED7AA">
+<svg width="112" height="112" viewBox="0 0 16 16" aria-hidden="true" style="image-rendering: pixelated">
+<rect x="5" y="3" width="6" height="1" fill="#FDE68A"></rect>
+<rect x="4" y="4" width="8" height="8" fill="#FEF3C7"></rect>
+<rect x="3" y="6" width="1" height="5" fill="#FDE68A"></rect>
+<rect x="12" y="6" width="1" height="5" fill="#FDE68A"></rect>
+<rect x="5" y="12" width="6" height="1" fill="#FDE68A"></rect>
+<rect x="6" y="7" width="1" height="1" fill="#431407"></rect>
+<rect x="9" y="7" width="1" height="1" fill="#431407"></rect>
+<rect x="7" y="9" width="2" height="1" fill="#F97316"></rect>
+</svg>
+<div style="font-family: 'Jua', sans-serif; font-size: 22px; line-height: 28px">삐약이</div>
+</div>
+<div style="display: flex; flex-direction: column; gap: 8px">
+<label for="petName" style="font-size: 14px; font-weight: 700">이름</label>
+<input id="petName" value="삐약이" maxlength="10" style="height: 56px; box-sizing: border-box; border: 3px solid #F97316; border-radius: 12px; background: #FFFFFF; padding: 0 16px; font-family: 'Noto Sans KR', sans-serif; font-size: 18px; color: #431407">
+<div style="display: flex; justify-content: space-between; font-size: 13px; font-weight: 500; color: #9A3412">
+<span>1~10자</span>
+<span>3/10</span>
+</div>
+</div>
+<div style="flex-grow: 1"></div>
+<div style="display: flex; gap: 12px">
+<button style="height: 64px; width: 112px; border: 3px solid #FED7AA; border-radius: 999px; background: #FFFFFF; color: #431407; font-family: 'Jua', sans-serif; font-size: 22px; box-shadow: 0 6px 0 #FDBA74">이전</button>
+<button style="height: 64px; flex-grow: 1; border: none; border-radius: 999px; background: #F97316; color: #1C0A00; font-family: 'Jua', sans-serif; font-size: 24px; box-shadow: 0 6px 0 #C2410C">다음</button>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

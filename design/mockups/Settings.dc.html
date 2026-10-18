@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>설정</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Jua&amp;family=Noto+Sans+KR:wght@400;500;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#C2410C}a:hover{color:#9A3412}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; background: {{cream}}; font-family: 'Noto Sans KR', sans-serif; color: {{ink}}; display: flex; flex-direction: column; padding: 16px 20px 24px 20px; gap: 16px">
+<div style="display: flex; align-items: center; gap: 4px; height: 56px">
+<button aria-label="뒤로" style="width: 48px; height: 48px; border: none; background: transparent; color: {{ink}}; display: flex; align-items: center; justify-content: center">
+<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"></path></svg>
+</button>
+<div style="font-family: 'Jua', sans-serif; font-size: 28px; line-height: 34px">설정</div>
+</div>
+<div style="font-size: 14px; font-weight: 700; color: {{muted}}; padding: 0 4px">내 정보</div>
+<div style="background: {{surface}}; border: 3px solid {{line}}; border-radius: 24px; box-shadow: 0 6px 0 {{lip}}; display: flex; flex-direction: column">
+<button style="min-height: 64px; border: none; background: transparent; color: {{ink}}; display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; font-family: 'Noto Sans KR', sans-serif; text-align: left">
+<span style="display: flex; flex-direction: column; gap: 2px"><span style="font-size: 16px; font-weight: 700">체중</span><span style="font-size: 13px; font-weight: 500; color: {{muted}}">칼로리 계산에만 써요</span></span>
+<span style="display: flex; align-items: center; gap: 4px; font-family: 'Jua', sans-serif; font-size: 20px; color: {{deep}}">65kg<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"></path></svg></span>
+</button>
+</div>
+<div style="font-size: 14px; font-weight: 700; color: {{muted}}; padding: 0 4px">러닝 · 아바타</div>
+<div style="background: {{surface}}; border: 3px solid {{line}}; border-radius: 24px; box-shadow: 0 6px 0 {{lip}}; display: flex; flex-direction: column">
+<button style="min-height: 60px; border: none; border-bottom: 2px solid {{line}}; background: transparent; color: {{ink}}; display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; font-family: 'Noto Sans KR', sans-serif">
+<span style="font-size: 16px; font-weight: 700">이번 주 목표</span>
+<span style="display: flex; align-items: center; gap: 4px; font-family: 'Jua', sans-serif; font-size: 20px; color: {{deep}}">10km<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"></path></svg></span>
+</button>
+<button style="min-height: 60px; border: none; background: transparent; color: {{ink}}; display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; font-family: 'Noto Sans KR', sans-serif">
+<span style="font-size: 16px; font-weight: 700">아바타 이름</span>
+<span style="display: flex; align-items: center; gap: 4px; font-family: 'Jua', sans-serif; font-size: 20px; color: {{deep}}">삐약이<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"></path></svg></span>
+</button>
+</div>
+<div style="font-size: 14px; font-weight: 700; color: {{muted}}; padding: 0 4px">백업</div>
+<div style="background: {{surface}}; border: 3px solid {{line}}; border-radius: 24px; box-shadow: 0 6px 0 {{lip}}; display: flex; flex-direction: column; padding: 16px; gap: 12px">
+<div style="font-size: 13px; font-weight: 500; line-height: 18px; color: {{muted}}">기기를 바꿀 때 백업 파일로 기록을 옮겨요. 가져오면 지금 데이터는 백업 내용으로 모두 바뀌어요.</div>
+<div style="display: flex; gap: 12px">
+<button style="height: 56px; flex-grow: 1; border: none; border-radius: 999px; background: {{accent}}; color: {{onAccent}}; font-family: 'Jua', sans-serif; font-size: 20px; box-shadow: 0 6px 0 {{accentDeep}}">내보내기</button>
+<button style="height: 56px; flex-grow: 1; border: 3px solid {{line}}; border-radius: 999px; background: {{surface}}; color: {{ink}}; font-family: 'Jua', sans-serif; font-size: 20px; box-shadow: 0 6px 0 {{lip}}">가져오기</button>
+</div>
+</div>
+<div style="font-size: 14px; font-weight: 700; color: {{muted}}; padding: 0 4px">정보</div>
+<div style="background: {{surface}}; border: 3px solid {{line}}; border-radius: 24px; box-shadow: 0 6px 0 {{lip}}; display: flex; flex-direction: column">
+<button style="min-height: 56px; border: none; border-bottom: 2px solid {{line}}; background: transparent; color: {{ink}}; display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; font-family: 'Noto Sans KR', sans-serif">
+<span style="font-size: 16px; font-weight: 700">오픈소스 라이선스</span>
+<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"></path></svg>
+</button>
+<div style="min-height: 52px; display: flex; align-items: center; justify-content: space-between; padding: 12px 16px">
+<span style="font-size: 16px; font-weight: 700">버전</span>
+<span style="font-size: 14px; font-weight: 500; color: {{muted}}">0.3.0 베타</span>
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"dark":{"editor":"boolean","default":false},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+renderVals() {
+const d = this.props.dark ?? false;
+return d
+? { cream: '#1C1410', surface: '#2A1F18', line: '#5A3B24', lip: '#120C08', ink: '#FFEDD5', muted: '#FDBA74', deep: '#FB923C', accent: '#60A5FA', onAccent: '#0B1220', accentDeep: '#3B82F6' }
+: { cream: '#FFF7ED', surface: '#FFFFFF', line: '#FED7AA', lip: '#FDBA74', ink: '#431407', muted: '#9A3412', deep: '#C2410C', accent: '#2563EB', onAccent: '#FFFFFF', accentDeep: '#1E40AF' };
+}
+}
+</script>
+</body>
+</html>
