@@ -176,6 +176,7 @@ class RunEngine {
       name: autoRunName(startedAt),
       splits: splits,
       points: List.unmodifiable([for (final s in _segments) ...s]),
+      segments: segments,
     );
     _events.add(RunEnded(summary));
     _transition(_state, RunState.ended, at: now);

@@ -28,6 +28,7 @@ class RunSummary {
     required this.name,
     required this.splits,
     required this.points,
+    this._segments,
   });
 
   final DateTime startedAt;
@@ -39,6 +40,13 @@ class RunSummary {
   final String name;
   final List<Split> splits;
   final List<LocationSample> points;
+
+  final List<List<LocationSample>>? _segments;
+
+  /// 일시정지·재개로 나뉜 기록 구간별 점. 끝부분 잘라내기에 쓴다.
+  /// 구간 정보 없이 만든 요약은 [points] 전체를 한 구간으로 본다.
+  List<List<LocationSample>> get segments =>
+      _segments ?? (points.isEmpty ? const [] : [points]);
 }
 
 const _weekdayNames = ['월', '화', '수', '목', '금', '토', '일'];
