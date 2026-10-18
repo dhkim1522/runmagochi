@@ -140,10 +140,10 @@
 ## 완료 기준
 
 ### 자동 확인
-- [ ] `fvm flutter test` 전체 통과
-- [ ] `fvm dart analyze` 문제 0
-- [ ] `fvm flutter build apk --debug`, `fvm flutter build apk --release` 성공
-- [ ] 화면 파일에 색 리터럴·`fontSize: 22` 없음 (grep 테스트)
+- [x] `fvm flutter test` 전체 통과 (540건)
+- [x] `fvm dart analyze` 문제 0
+- [x] `fvm flutter build apk --debug`, `fvm flutter build apk --release` 성공 (릴리스 64.3MB, 디버그 서명)
+- [x] 화면 파일에 색 리터럴·`fontSize: 22` 없음 (grep 테스트)
 
 ### E2E (에뮬레이터, `/e2e` 가 확인)
 - [ ] 앱 데이터를 지운 첫 실행: 캐릭터 소개 → 이름 짓기 → 주간 목표 → 홈에 정한 이름·목표가 보인다. 다시 켜면 홈부터.
