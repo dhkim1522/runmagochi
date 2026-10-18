@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+
 import '../../core/clock.dart';
 import '../../core/week.dart';
 import '../../run/data/run_repository.dart';
@@ -126,8 +128,9 @@ class GrowthService {
         weekAchieved: await _growth.isWeekAchieved(thisWeek),
       );
       await scheduler.replaceAll(plan).timeout(rescheduleTimeout);
-    } catch (_) {
-      // 알림은 부가 기능이다.
+    } catch (e) {
+      // 알림은 부가 기능이다. 화면에는 알리지 않고 로그만 남긴다.
+      debugPrint('알림: 다시 예약 실패 $e');
     }
   }
 

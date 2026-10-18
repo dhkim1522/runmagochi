@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:flutter/widgets.dart' show AppLifecycleState;
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -372,9 +373,11 @@ class RunController extends Notifier<RunViewState> {
                   '${formatKm(summary.distanceM)}km 기록을 저장했어요. '
                   '요약에서 확인하세요.',
             )
-            .catchError((Object _) {}),
+            .catchError((Object e) => debugPrint('알림: 자동 종료 알림 실패 $e')),
       );
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('알림: 자동 종료 알림 실패 $e');
+    }
   }
 
   void _requireNoRun() {
