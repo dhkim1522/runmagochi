@@ -198,7 +198,7 @@ void main() {
     expect(find.textContaining('경험치'), findsNothing);
   });
 
-  for (final size in [const Size(390, 844), const Size(360, 640)])
+  for (final size in [const Size(390, 844), const Size(360, 640)]) {
     testWidgets(
       '글자 크기 1.3배, 레벨업 요약이 ${size.width.toInt()}x${size.height.toInt()} 에서 overflow 없이 그려진다',
       (tester) async {
@@ -242,6 +242,7 @@ void main() {
         expect(find.text('레벨 업!'), findsOneWidget);
       },
     );
+  }
 
   testWidgets('제목은 헤더다', (tester) async {
     final handle = tester.ensureSemantics();

@@ -35,10 +35,16 @@ class AvatarView extends StatefulWidget {
 }
 
 @visibleForTesting
-class AvatarViewState extends State<AvatarView> {
+class AvatarViewState extends State<AvatarView> with WidgetsBindingObserver {
   /// 스프라이트 fps 간격으로만 프레임을 넘긴다 (vsync 마다 그리지 않는다).
   Timer? _timer;
   int _frame = 0;
+
+  /// 탭이 보이는 중인가(TickerMode).
+  bool _visible = true;
+
+  /// 앱이 앞에 있는가. 백그라운드·화면 꺼짐이면 배터리를 위해 멈춘다.
+  bool _foreground = true;
 
   /// 레이어 이름 → (경로, 스트림, 리스너, 이미지)
   final Map<String, _Layer> _layers = {};
@@ -50,6 +56,9 @@ class AvatarViewState extends State<AvatarView> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    final life = WidgetsBinding.instance.lifecycleState;
+    _foreground = life == null || life == AppLifecycleState.resumed;
     _syncLayers();
   }
 
@@ -57,7 +66,20 @@ class AvatarViewState extends State<AvatarView> {
   void didChangeDependencies() {
     super.didChangeDependencies();
     // 가려진 탭(TickerMode 꺼짐)에서는 멈추고, 다시 보이면 이어서 돈다.
-    if (TickerMode.valuesOf(context).enabled) {
+    _visible = TickerMode.valuesOf(context).enabled;
+    _sync();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    // 앱이 백그라운드·화면 꺼짐이면 멈추고, 다시 앞으로 오면 이어서 돈다.
+    _foreground = state == AppLifecycleState.resumed;
+    _sync();
+  }
+
+  /// 보이고 앞에 있을 때만 타이머가 돈다.
+  void _sync() {
+    if (_visible && _foreground) {
       _start();
     } else {
       _stop();
@@ -71,7 +93,7 @@ class AvatarViewState extends State<AvatarView> {
       // 동작이 바뀌면 경과 시간을 0부터 다시 센다.
       _stop();
       _frame = 0;
-      if (TickerMode.valuesOf(context).enabled) _start();
+      _sync();
     }
     _syncLayers();
   }
@@ -113,6 +135,7 @@ class AvatarViewState extends State<AvatarView> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _stop();
     for (final l in _layers.values) {
       l.dispose();

@@ -75,6 +75,23 @@ void main() {
     expect(_frame(tester), 1);
   });
 
+  testWidgets('앱이 백그라운드면 프레임이 멈추고 앞으로 오면 이어서 돈다', (tester) async {
+    addTearDown(
+      () => tester.binding.handleAppLifecycleStateChanged(
+        AppLifecycleState.resumed,
+      ),
+    );
+    await tester.pumpWidget(_wrap());
+    await tester.pump(const Duration(milliseconds: 100));
+    expect(_frame(tester), 1);
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
+    await tester.pump(const Duration(seconds: 1));
+    expect(_frame(tester), 1);
+    expect(tester.hasRunningAnimations, isFalse);
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    await tester.pump(const Duration(milliseconds: 100));
+    expect(_frame(tester), 2);
+  });
   testWidgets('크기는 32 × scale 정사각형', (tester) async {
     await tester.pumpWidget(_wrap());
     expect(tester.getSize(find.byType(AvatarView)), const Size(128, 128));

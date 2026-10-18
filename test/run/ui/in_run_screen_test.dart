@@ -264,7 +264,7 @@ void main() {
   });
 
   group('글자 크기 1.3배', () {
-    for (final state in [RunState.recording, RunState.paused])
+    for (final state in [RunState.recording, RunState.paused]) {
       for (final size in [const Size(390, 844), const Size(360, 640)]) {
         testWidgets(
           '$state ${size.width.toInt()}x${size.height.toInt()} 에서 overflow 없이 그려진다',
@@ -306,6 +306,7 @@ void main() {
           },
         );
       }
+    }
   });
 
   group('러닝 중 아바타', () {
