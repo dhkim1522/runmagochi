@@ -158,106 +158,114 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         value == null ? '입력 안 함' : '${_kgLabel(value)}kg',
       _ => '-',
     };
-    return Scaffold(
-      body: SafeArea(
-        child: ListView(
-          padding: const EdgeInsets.fromLTRB(Gap.s5, Gap.s4, Gap.s5, Gap.s6),
-          children: [
-            Row(
-              children: [
-                Semantics(
-                  container: true,
-                  button: true,
-                  label: '뒤로',
-                  excludeSemantics: true,
-                  onTap: () => Navigator.of(context).maybePop(),
-                  child: IconButton(
-                    key: const ValueKey('settings-back'),
-                    onPressed: () => Navigator.of(context).maybePop(),
-                    constraints: const BoxConstraints.tightFor(
-                      width: 48,
-                      height: 48,
-                    ),
-                    icon: Icon(Icons.chevron_left, size: 32, color: c.ink),
-                  ),
-                ),
-                const SizedBox(width: Gap.s1),
-                const Flexible(child: ScreenTitle('설정')),
-              ],
-            ),
-            const _SectionLabel('내 정보'),
-            _RowsCard(
-              children: [
-                _SettingsRow(
-                  title: '체중',
-                  subtitle: '칼로리 계산에만 써요',
-                  value: weightLabel,
-                  onTap: weight.hasValue
-                      ? () => _editWeight(weight.value)
-                      : null,
-                ),
-              ],
-            ),
-            const _SectionLabel('러닝 · 아바타'),
-            _RowsCard(
-              children: [
-                _SettingsRow(
-                  title: '이번 주 목표',
-                  value: g == null
-                      ? '-'
-                      : '${WeeklyGoalBar.targetLabel(g.weekTargetM)}km',
-                  onTap: g == null ? null : () => _editTarget(g.weekTargetM),
-                ),
-                _SettingsRow(
-                  title: '아바타 이름',
-                  value: g?.name ?? '-',
-                  onTap: g == null ? null : () => _editName(g.name),
-                ),
-              ],
-            ),
-            const _SectionLabel('백업'),
-            ClayCard(
-              padding: const EdgeInsets.all(Gap.s4),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
+    final VoidCallback? back = _backupBusy
+        ? null
+        : () => Navigator.of(context).maybePop();
+    // 백업 작업 중에는 나가지 못하게 한다. 가져오기 뒤 화면 상태를 다시 읽어야 한다.
+    return PopScope(
+      canPop: !_backupBusy,
+      child: Scaffold(
+        body: SafeArea(
+          child: ListView(
+            padding: const EdgeInsets.fromLTRB(Gap.s5, Gap.s4, Gap.s5, Gap.s6),
+            children: [
+              Row(
                 children: [
-                  Text(
-                    '기기를 바꿀 때 백업 파일로 기록을 옮겨요. 가져오면 지금 데이터는 백업 내용으로 모두 바뀌어요.',
-                    style: t.caption.copyWith(color: c.inkMuted),
+                  Semantics(
+                    container: true,
+                    button: true,
+                    label: '뒤로',
+                    excludeSemantics: true,
+                    enabled: back != null,
+                    onTap: back,
+                    child: IconButton(
+                      key: const ValueKey('settings-back'),
+                      onPressed: back,
+                      constraints: const BoxConstraints.tightFor(
+                        width: 48,
+                        height: 48,
+                      ),
+                      icon: Icon(Icons.chevron_left, size: 32, color: c.ink),
+                    ),
                   ),
-                  const SizedBox(height: Gap.s3),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: ClayButton.accent(
-                          context,
-                          label: '내보내기',
-                          onPressed: _backupBusy ? null : _export,
-                        ),
-                      ),
-                      const SizedBox(width: Gap.s3),
-                      Expanded(
-                        child: ClayButton(
-                          label: '가져오기',
-                          onPressed: _backupBusy ? null : _import,
-                          background: c.surfaceSoft,
-                          foreground: c.ink,
-                          lip: c.lineStrong,
-                        ),
-                      ),
-                    ],
+                  const SizedBox(width: Gap.s1),
+                  const Flexible(child: ScreenTitle('설정')),
+                ],
+              ),
+              const _SectionLabel('내 정보'),
+              _RowsCard(
+                children: [
+                  _SettingsRow(
+                    title: '체중',
+                    subtitle: '칼로리 계산에만 써요',
+                    value: weightLabel,
+                    onTap: weight.hasValue
+                        ? () => _editWeight(weight.value)
+                        : null,
                   ),
                 ],
               ),
-            ),
-            const _SectionLabel('정보'),
-            _RowsCard(
-              children: [
-                _SettingsRow(title: '오픈소스 라이선스', onTap: _openLicenses),
-                _SettingsRow(title: '버전', detail: appVersion),
-              ],
-            ),
-          ],
+              const _SectionLabel('러닝 · 아바타'),
+              _RowsCard(
+                children: [
+                  _SettingsRow(
+                    title: '이번 주 목표',
+                    value: g == null
+                        ? '-'
+                        : '${WeeklyGoalBar.targetLabel(g.weekTargetM)}km',
+                    onTap: g == null ? null : () => _editTarget(g.weekTargetM),
+                  ),
+                  _SettingsRow(
+                    title: '아바타 이름',
+                    value: g?.name ?? '-',
+                    onTap: g == null ? null : () => _editName(g.name),
+                  ),
+                ],
+              ),
+              const _SectionLabel('백업'),
+              ClayCard(
+                padding: const EdgeInsets.all(Gap.s4),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Text(
+                      '기기를 바꿀 때 백업 파일로 기록을 옮겨요. 가져오면 지금 데이터는 백업 내용으로 모두 바뀌어요.',
+                      style: t.caption.copyWith(color: c.inkMuted),
+                    ),
+                    const SizedBox(height: Gap.s3),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: ClayButton.accent(
+                            context,
+                            label: '내보내기',
+                            onPressed: _backupBusy ? null : _export,
+                          ),
+                        ),
+                        const SizedBox(width: Gap.s3),
+                        Expanded(
+                          child: ClayButton(
+                            label: '가져오기',
+                            onPressed: _backupBusy ? null : _import,
+                            background: c.surfaceSoft,
+                            foreground: c.ink,
+                            lip: c.lineStrong,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              const _SectionLabel('정보'),
+              _RowsCard(
+                children: [
+                  _SettingsRow(title: '오픈소스 라이선스', onTap: _openLicenses),
+                  _SettingsRow(title: '버전', detail: appVersion),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );

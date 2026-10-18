@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -62,9 +64,13 @@ class _Backup implements BackupService {
     return exportResult;
   }
 
+  /// 지정하면 import 가 이 Completer 가 끝날 때까지 기다린다.
+  Completer<void>? holdImport;
+
   @override
   Future<BackupResult> import() async {
     imports++;
+    await holdImport?.future;
     return importResult;
   }
 
@@ -414,6 +420,45 @@ void main() {
       expect(find.text('말랑이'), findsOneWidget);
       expect(find.text('5km'), findsOneWidget);
       expect(find.text('58kg'), findsOneWidget);
+    });
+
+    testWidgets('가져오는 동안 뒤로 갈 수 없고, 끝나면 화면 상태를 다시 읽는다', (tester) async {
+      final env = SettingsEnv();
+      final hold = env.backup.holdImport = Completer<void>();
+      await pumpSettings(tester, env: env);
+      final loads = env.growth.loads;
+      env.growth.state = growthState(name: '말랑이');
+      await openImport(tester);
+      await tester.tap(
+        find.descendant(
+          of: find.byType(AlertDialog),
+          matching: find.text('가져오기'),
+        ),
+      );
+      await settle(tester);
+      expect(env.backup.imports, 1);
+
+      // 시스템 뒤로 가기도, 화면의 뒤로 버튼도 막힌다.
+      await tester.binding.handlePopRoute();
+      await settle(tester);
+      expect(find.byType(SettingsScreen), findsOneWidget);
+      expect(
+        tester
+            .widget<IconButton>(find.byKey(const ValueKey('settings-back')))
+            .onPressed,
+        isNull,
+      );
+
+      hold.complete();
+      await settle(tester);
+      expect(env.growth.loads, greaterThan(loads));
+      expect(find.text('백업을 가져왔어요'), findsOneWidget);
+      expect(find.text('말랑이'), findsOneWidget);
+
+      // 끝나면 다시 뒤로 갈 수 있다.
+      await tester.binding.handlePopRoute();
+      await settle(tester);
+      expect(find.byType(SettingsScreen), findsNothing);
     });
 
     testWidgets('가져오기가 러닝 중이라 막히면 알린다', (tester) async {

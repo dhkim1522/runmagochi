@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -46,8 +48,12 @@ class FakeOnboardingGrowthRepo implements GrowthRepository {
   @override
   Future<String> avatarName() async => name;
 
+  /// 지정하면 setAvatarName 이 이 Completer 가 끝날 때까지 기다린다.
+  Completer<void>? holdName;
+
   @override
   Future<void> setAvatarName(String n) async {
+    await holdName?.future;
     if (nameFails) throw StateError('name failed');
     if (validateAvatarName(n) != null) throw ArgumentError(n);
     names.add(n.trim());
@@ -333,6 +339,43 @@ void main() {
       findText('목표를 채우면 말랑이 경험치 +50 을 받아요. 매일 달리지 않아도 돼요.'),
       findsOneWidget,
     );
+  });
+
+  testWidgets('3장 안내 문구는 이모지(ZWJ 묶음)가 든 이름을 그대로 쓴다', (tester) async {
+    const name = '👩‍💻코딩';
+    await pumpOnboarding(tester);
+    await next(tester);
+    await tester.enterText(find.byType(TextField), name);
+    await tester.pump();
+    await next(tester);
+    final sentence = find.byWidgetPredicate(
+      (w) =>
+          w is Text &&
+          (w.data?.replaceAll(wordJoiner, '').startsWith('목표를 채우면') ?? false),
+    );
+    // 단어 잇기 문자를 빼지 않은 그린 글자 그대로에 이름이 들어 있다.
+    expect(tester.widget<Text>(sentence).data, contains(name));
+    expect(
+      findText('목표를 채우면 $name이 경험치 +50 을 받아요. 매일 달리지 않아도 돼요.'),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('저장하는 동안 시스템 뒤로 가기는 장을 바꾸지 않는다', (tester) async {
+    final e = await pumpOnboarding(tester);
+    await goToGoal(tester);
+    final hold = e.repo.holdName = Completer<void>();
+    await tester.tap(findText('시작하기'));
+    await tester.pump();
+    await tester.binding.handlePopRoute();
+    await settle(tester);
+    expect(findText('이번 주 목표를 정해요'), findsOneWidget);
+    expect(e.finished, 0);
+
+    hold.complete();
+    await settle(tester);
+    expect(e.finished, 1);
+    expect(e.repo.names, ['삐약이']);
   });
 
   testWidgets('시작하기: 이름·목표를 저장하고 완료를 한 번 표시한다', (tester) async {

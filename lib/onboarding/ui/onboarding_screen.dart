@@ -95,6 +95,8 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   String? get _nameError => validateAvatarName(_name.text);
 
   void _go(int page) {
+    // 저장 중에는 장을 바꾸지 않는다(끝나면 onFinished 가 불린다).
+    if (_saving) return;
     FocusScope.of(context).unfocus();
     setState(() => _page = page);
   }
@@ -125,10 +127,10 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   @override
   Widget build(BuildContext context) {
     return PopScope(
-      // 1장에서는 기본 동작(앱 나가기), 2·3장에서는 앞 장으로.
-      canPop: _page == 0,
+      // 1장에서는 기본 동작(앱 나가기), 2·3장에서는 앞 장으로. 저장 중에는 막는다.
+      canPop: _page == 0 && !_saving,
       onPopInvokedWithResult: (didPop, _) {
-        if (!didPop && _page > 0) _go(_page - 1);
+        if (!didPop && _page > 0 && !_saving) _go(_page - 1);
       },
       child: Scaffold(
         body: SafeArea(
@@ -528,9 +530,13 @@ class _GoalPage extends StatelessWidget {
         children: [
           const ScreenTitle('이번 주 목표를 정해요'),
           const SizedBox(height: Gap.s2),
+          // 사용자가 지은 이름은 keepAll 에 넣지 않는다(이모지 묶음이 깨진다).
           _KeepAllText(
             '목표를 채우면 $name${subjectParticle(name)} 경험치 +$weeklyGoalBonusXp 을 받아요. '
             '매일 달리지 않아도 돼요.',
+            display:
+                '${keepAll('목표를 채우면')} $name$wordJoiner${subjectParticle(name)} '
+                '${keepAll('경험치 +$weeklyGoalBonusXp 을 받아요. 매일 달리지 않아도 돼요.')}',
             style: t.body.copyWith(color: c.inkMuted),
           ),
           const SizedBox(height: Gap.s5),
@@ -702,15 +708,23 @@ class _LoadError extends StatelessWidget {
 
 /// 띄어쓰기에서만 줄을 바꾸는 글자([keepAll]). 스크린 리더는 원문을 읽는다.
 class _KeepAllText extends StatelessWidget {
-  const _KeepAllText(this.text, {required this.style, this.textAlign});
+  const _KeepAllText(
+    this.text, {
+    required this.style,
+    this.textAlign,
+    this.display,
+  });
 
   final String text;
   final TextStyle style;
   final TextAlign? textAlign;
 
+  /// 그릴 글자를 직접 만든 경우(일부에만 [keepAll]). 없으면 `keepAll(text)`.
+  final String? display;
+
   @override
   Widget build(BuildContext context) => Text(
-    keepAll(text),
+    display ?? keepAll(text),
     semanticsLabel: text,
     style: style,
     textAlign: textAlign,
