@@ -168,7 +168,8 @@ void main() {
     }
   }
 
-  final lastPoint = _t0.add(const Duration(seconds: 5));
+  const lastPointOffset = Duration(seconds: 5);
+  final lastPoint = _t0.add(lastPointOffset);
   final fiveDistance = [
     for (var i = 1; i < 5; i++) _dist(i * 3.0, (i + 1) * 3.0),
   ].reduce((a, b) => a + b);
@@ -177,7 +178,9 @@ void main() {
     _run((env) {
       runFiveSamples(env);
       env.async.elapse(
-        const Duration(minutes: 19, seconds: 64) - env.async.elapsed,
+        lastPointOffset +
+            const Duration(minutes: 19, seconds: 59) -
+            env.async.elapsed,
       );
       expect(env.view.snapshot.state, RunState.recording);
       expect(env.repo.completed, isEmpty);
@@ -328,6 +331,8 @@ void main() {
   });
 
   group('복원', () {
+    // 마지막 점은 시작 4초 뒤.
+    const lastPointOffset = Duration(seconds: 4);
     ActiveRun active(DateTime startedAt) => ActiveRun(
       id: _runId,
       startedAt: startedAt,
@@ -335,34 +340,15 @@ void main() {
         [
           _sample(startedAt, 0),
           _sample(startedAt.add(const Duration(seconds: 2)), 4),
-          _sample(startedAt.add(const Duration(seconds: 4)), 8),
+          _sample(startedAt.add(lastPointOffset), 8),
         ],
       ],
       movingTime: const Duration(seconds: 4),
     );
 
-    test('마지막 점 뒤 20분이 지났으면 묻지 않고 끝낸다', () {
-      final startedAt = _t0.subtract(const Duration(minutes: 20, seconds: 4));
-      _run(activeRun: active(startedAt), (env) {
-        bool? restored;
-        env.controller.restoreIfAny().then((r) => restored = r);
-        env.async.flushMicrotasks();
-
-        expect(restored, isFalse);
-        final summary = env.repo.completed.single.$2;
-        expect(summary.endedAt, startedAt.add(const Duration(seconds: 4)));
-        expect(summary.movingTime, const Duration(seconds: 4));
-        expect(summary.distanceM, closeTo(_dist(0, 4) + _dist(4, 8), 1e-9));
-        expect(env.view.autoEnded, isTrue);
-        expect(env.view.lastSummary, same(summary));
-        expect(env.view.runId, isNull);
-        expect(env.notifier.shown.single.$1, _title);
-      });
-    });
-
-    test('19분 59초면 그대로 복원한다', () {
+    test('마지막 점 뒤 30분이어도 6시간 전이면 그대로 복원한다 (20분 규칙 미적용)', () {
       final startedAt = _t0.subtract(
-        const Duration(minutes: 19, seconds: 59 + 4),
+        lastPointOffset + const Duration(minutes: 30),
       );
       _run(activeRun: active(startedAt), (env) {
         bool? restored;
@@ -373,25 +359,45 @@ void main() {
         expect(env.repo.completed, isEmpty);
         expect(env.view.snapshot.state, RunState.paused);
         expect(env.view.autoEnded, isFalse);
+        expect(env.notifier.shown, isEmpty);
         env.controller.end();
         env.async.flushMicrotasks();
       });
     });
 
-    test('시작 6시간이 지났으면 끝낸다', () {
-      final startedAt = _t0.subtract(const Duration(hours: 6));
-      _run(
-        activeRun: active(startedAt),
-        // 20분 규칙은 빼고 6시간만 본다.
-        config: const RunGuardConfig(idle: Duration(hours: 100)),
-        (env) {
-          env.controller.restoreIfAny();
-          env.async.flushMicrotasks();
-          final summary = env.repo.completed.single.$2;
-          expect(summary.endedAt, startedAt.add(const Duration(seconds: 4)));
-          expect(env.view.autoEnded, isTrue);
-        },
+    test('시작 5시간 59분 59초면 그대로 복원한다', () {
+      final startedAt = _t0.subtract(
+        const Duration(hours: 5, minutes: 59, seconds: 59),
       );
+      _run(activeRun: active(startedAt), (env) {
+        bool? restored;
+        env.controller.restoreIfAny().then((r) => restored = r);
+        env.async.flushMicrotasks();
+
+        expect(restored, isTrue);
+        expect(env.repo.completed, isEmpty);
+        env.controller.end();
+        env.async.flushMicrotasks();
+      });
+    });
+
+    test('시작 6시간이 지났으면 묻지 않고 마지막 점으로 끝낸다', () {
+      final startedAt = _t0.subtract(const Duration(hours: 6));
+      _run(activeRun: active(startedAt), (env) {
+        bool? restored;
+        env.controller.restoreIfAny().then((r) => restored = r);
+        env.async.flushMicrotasks();
+
+        expect(restored, isFalse);
+        final summary = env.repo.completed.single.$2;
+        expect(summary.endedAt, startedAt.add(lastPointOffset));
+        expect(summary.movingTime, const Duration(seconds: 4));
+        expect(summary.distanceM, closeTo(_dist(0, 4) + _dist(4, 8), 1e-9));
+        expect(env.view.autoEnded, isTrue);
+        expect(env.view.lastSummary, same(summary));
+        expect(env.view.runId, isNull);
+        expect(env.notifier.shown.single.$1, _title);
+      });
     });
   });
 }

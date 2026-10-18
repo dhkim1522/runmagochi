@@ -12,7 +12,7 @@ final growthRepositoryProvider = Provider<GrowthRepository>(
 );
 
 final notificationSchedulerProvider = Provider<NotificationScheduler>(
-  (ref) => LocalNotificationScheduler(),
+  (ref) => ref.watch(localNotificationSchedulerProvider),
 );
 
 final growthServiceProvider = Provider<GrowthService>(

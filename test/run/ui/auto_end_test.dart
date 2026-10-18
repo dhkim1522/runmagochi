@@ -48,10 +48,36 @@ class _AutoEndController extends FakeController {
   }
 }
 
+/// 자동 종료 저장이 실패한 뒤 사용자가 다시 끝내면 end 안에서 autoEnded 가 된다.
+class _AutoEndOnEndController extends FakeController {
+  @override
+  Future<RunSummary> end() async {
+    calls.add('end');
+    autoEndState();
+    return _summary;
+  }
+
+  void autoEndState() {
+    state = RunViewState(
+      snapshot: snap(RunState.idle),
+      lastSummary: _summary,
+      autoEnded: true,
+    );
+  }
+}
+
+class _PopCounter extends NavigatorObserver {
+  int pops = 0;
+
+  @override
+  void didPop(Route<dynamic> route, Route<dynamic>? previousRoute) => pops++;
+}
+
 Future<FakeGrowthService> _pumpHome(
   WidgetTester tester,
-  _AutoEndController controller,
-) async {
+  FakeController controller, {
+  NavigatorObserver? observer,
+}) async {
   final growth = FakeGrowthService(growthState());
   await tester.pumpWidget(
     ProviderScope(
@@ -64,6 +90,7 @@ Future<FakeGrowthService> _pumpHome(
       ],
       child: MaterialApp(
         theme: appLightTheme(),
+        navigatorObservers: [?observer],
         home: const Scaffold(body: HomeScreen()),
       ),
     ),
@@ -98,6 +125,33 @@ void main() {
     expect(screen.summary, same(_summary));
     expect(growth.syncs, greaterThan(syncsBefore));
     expect(c.calls, ['restore', 'start']);
+  });
+
+  testWidgets('직접 끝내는 중에 autoEnded 가 되어도 러닝 화면은 한 번만 닫힌다', (tester) async {
+    final c = _AutoEndOnEndController();
+    final pops = _PopCounter();
+    await _pumpHome(tester, c, observer: pops);
+    await tester.tap(find.text('시작'));
+    await tester.pump();
+    await tester.pump(const Duration(seconds: 3));
+    await _settle(tester);
+    await tester.tap(find.text('일시정지'));
+    await tester.pump();
+
+    final g = await tester.startGesture(
+      tester.getCenter(find.text('길게 눌러 종료')),
+    );
+    await tester.pump(); // 첫 프레임에서 타이머가 시작된다.
+    await tester.pump(const Duration(milliseconds: 1501));
+    await tester.pump();
+    await g.up();
+    await _settle(tester);
+
+    expect(pops.pops, 1);
+    expect(find.byType(InRunScreen), findsNothing);
+    final screen = tester.widget<SummaryScreen>(find.byType(SummaryScreen));
+    expect(screen.summary, same(_summary));
+    expect(find.byType(HomeScreen, skipOffstage: false), findsOneWidget);
   });
 
   testWidgets('복원한 러닝이 자동 종료되면 묻지 않고 요약을 연다', (tester) async {

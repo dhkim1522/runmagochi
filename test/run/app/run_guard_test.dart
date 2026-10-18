@@ -6,6 +6,7 @@ final _start = DateTime(2026, 10, 18, 7);
 DateTime _at(Duration d) => _start.add(d);
 
 void main() {
+  parseTests();
   test('기본값은 20분·6시간', () {
     expect(autoEndIdle, const Duration(minutes: 20));
     expect(autoEndMax, const Duration(hours: 6));
@@ -149,6 +150,29 @@ void main() {
       );
       expect(d?.reason, AutoEndReason.maxDuration);
       expect(d?.endAt, now);
+    });
+  });
+}
+
+void parseTests() {
+  group('runGuardConfigFromSeconds', () {
+    test('둘 다 비면 null', () {
+      expect(runGuardConfigFromSeconds(idleSec: '', maxSec: ''), isNull);
+    });
+
+    test('준 값만 초로 바꾸고 나머지는 기본값', () {
+      final c = runGuardConfigFromSeconds(idleSec: '30', maxSec: '');
+      expect(c?.idle, const Duration(seconds: 30));
+      expect(c?.max, autoEndMax);
+      final d = runGuardConfigFromSeconds(idleSec: '', maxSec: '120');
+      expect(d?.idle, autoEndIdle);
+      expect(d?.max, const Duration(minutes: 2));
+    });
+
+    test('숫자가 아니거나 0 이하면 기본값', () {
+      final c = runGuardConfigFromSeconds(idleSec: 'x', maxSec: '0');
+      expect(c?.idle, autoEndIdle);
+      expect(c?.max, autoEndMax);
     });
   });
 }

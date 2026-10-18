@@ -23,6 +23,9 @@ class InRunScreen extends ConsumerStatefulWidget {
 
 class _InRunScreenState extends ConsumerState<InRunScreen> {
   bool _ending = false;
+
+  /// 이미 pop 했다. 자동 종료와 직접 종료가 겹쳐도 한 번만 닫는다.
+  bool _closed = false;
   final _stopKey = GlobalKey<_HoldToStopButtonState>();
 
   Future<void> _end() async {
@@ -30,7 +33,7 @@ class _InRunScreenState extends ConsumerState<InRunScreen> {
     setState(() => _ending = true);
     try {
       await ref.read(runControllerProvider.notifier).end();
-      if (mounted) Navigator.of(context).pop();
+      _close();
     } catch (_) {
       // 실패 원인은 lastError 배너로 보인다.
       _stopKey.currentState?.reset();
@@ -38,13 +41,19 @@ class _InRunScreenState extends ConsumerState<InRunScreen> {
     }
   }
 
+  /// 러닝 화면을 한 번만 닫는다. 홈이 lastSummary 로 요약을 연다.
+  void _close() {
+    if (_closed || !mounted) return;
+    _closed = true;
+    Navigator.of(context).pop();
+  }
+
   @override
   Widget build(BuildContext context) {
-    // 종료를 잊어 자동으로 끝나면 직접 끝냈을 때처럼 닫는다. 홈이 요약을 연다.
+    // 종료를 잊어 자동으로 끝나면 직접 끝냈을 때처럼 닫는다. 사용자가 끝내는
+    // 중이면(_ending) 그 길이 닫는다.
     ref.listen(runControllerProvider, (prev, next) {
-      if (next.autoEnded && prev?.autoEnded != true && mounted) {
-        Navigator.of(context).pop();
-      }
+      if (next.autoEnded && prev?.autoEnded != true && !_ending) _close();
     });
     final view = ref.watch(runControllerProvider);
     final controller = ref.read(runControllerProvider.notifier);

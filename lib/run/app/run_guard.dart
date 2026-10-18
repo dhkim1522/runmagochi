@@ -59,3 +59,21 @@ DateTime? _latest(DateTime? a, DateTime? b) {
   if (b == null) return a;
   return a.isAfter(b) ? a : b;
 }
+
+/// 디버그 빌드의 `--dart-define` 초 값으로 만든 설정. 둘 다 비면 null.
+/// 숫자가 아니거나 0 이하인 값은 기본값을 쓴다.
+RunGuardConfig? runGuardConfigFromSeconds({
+  required String idleSec,
+  required String maxSec,
+}) {
+  if (idleSec.isEmpty && maxSec.isEmpty) return null;
+  Duration parse(String s, Duration fallback) {
+    final n = int.tryParse(s);
+    return n == null || n <= 0 ? fallback : Duration(seconds: n);
+  }
+
+  return RunGuardConfig(
+    idle: parse(idleSec, autoEndIdle),
+    max: parse(maxSec, autoEndMax),
+  );
+}

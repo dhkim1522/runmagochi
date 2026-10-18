@@ -228,10 +228,10 @@ class RunController extends Notifier<RunViewState> {
 
   /// 복구한 러닝이 있으면 true, 상태 paused. 위치 구독은 resume 때 한다.
   ///
-  /// 복구한 러닝이 이미 자동 종료 조건을 넘었으면 묻지 않고 끝내고 false 를
-  /// 돌려준다(상태 autoEnded, lastSummary 에 요약). 일시정지 여부는 저장하지
-  /// 않으므로 기록 중이던 것으로 보고 판정한다. 자동 종료 저장이 실패하면
-  /// 러닝을 남기고 true 를 돌려준다.
+  /// 복구한 러닝이 시작 6시간을 넘었으면 묻지 않고 끝내고 false 를 돌려준다
+  /// (상태 autoEnded, lastSummary 에 요약). 일시정지 여부를 저장하지 않아
+  /// 20분 규칙은 적용하지 않는다. 자동 종료 저장이 실패하면 러닝을 남기고
+  /// true 를 돌려준다.
   Future<bool> restoreIfAny() async {
     _requireNoRun();
     final active = await _repository.findActiveRun();
@@ -248,7 +248,8 @@ class RunController extends Notifier<RunViewState> {
     final decision = checkAutoEnd(
       now: ref.read(clockProvider)(),
       startedAt: active.startedAt,
-      recording: true,
+      // 일시정지 여부를 저장하지 않으므로 6시간 상한만 본다.
+      recording: false,
       lastPointAt: engine.lastPointAt,
       recordingSince: null,
       config: ref.read(runGuardConfigProvider),

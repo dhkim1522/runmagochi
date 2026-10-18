@@ -42,7 +42,12 @@ final runGuardConfigProvider = Provider<RunGuardConfig>(
   (_) => const RunGuardConfig(),
 );
 
+/// 주간 목표 알림과 러닝 자동 종료 알림이 같이 쓰는 알림 구현 하나.
+final localNotificationSchedulerProvider = Provider<LocalNotificationScheduler>(
+  (_) => LocalNotificationScheduler(),
+);
+
 /// 러닝 자동 종료 알림.
 final instantNotifierProvider = Provider<InstantNotifier>(
-  (_) => LocalNotificationScheduler(),
+  (ref) => ref.watch(localNotificationSchedulerProvider),
 );
