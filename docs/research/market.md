@@ -45,6 +45,12 @@
 | Tep | iOS | 걷기·달리기·라이딩 (GPS 여부 미확인) | 펫, 코인/토큰 | 미확인 | 2015 TechCrunch 기사 | 사실상 중단 추정 (자료가 2015) | [TechCrunch](https://techcrunch.com/2015/08/31/tep-is-an-adorable-fitness-tracking-app-that-works-like-a-tamagotchi), [사이트](https://gettep.com/) |
 | Run&Grow (Run Tracker) | iOS(Android 링크 있음) | **GPS 러닝**, km마다 | 정원 식물(펫 아님) | 무료로 소개(그 외 미확인) | 22개 평가, 4.53점 | 활성 (2026-07 업데이트) | [AppsHunter](https://appshunter.io/ios/app/run-tracker-run-and-grow/id6745428070), [AlternativeTo](https://www.alternativeto.net/software/runandgrow/about/) |
 | RunGarden - Run Tracker | iOS | 러닝 트래커(GPS 여부 미확인) | 식물 수집 | 미확인 | 미확인 | 미확인 | [App Store](https://apps.apple.com/app/id6752510405) |
+| Dragon Run - Hatch by Running | iPhone | **GPS 러닝**, 오프라인 기록 | 알 → 드래곤 부화(누적 5km), 꾸준히 달려야 행복 유지 | 미확인 | 3개 평가, 5.0점 | 활성 (v1.5.7, 2025-10 첫 출시, 개발자 Hendry Nugroho). Android 판 미확인 | [mwm.ai](https://mwm.ai/apps/dragon-run-hatch-by-running/6752803940) |
+| PetRunner: Metaverse Run Game | iPhone·Apple Watch | 정밀 위치 사용 표시, 걸음 케이던스·심박(GPS 경로 기록 여부 미확인) | 달리며 모은 자원으로 펫을 먹임, 성장 여부 미확인 | 무료 + 구독(평생 $14.99, 연 $9.99) | 평점 없음 | v4.1, 2025-07 (이후 미확인) | [App Store](https://apps.apple.com/us/app/petrunner-metaverse-run-game/id1611942599) |
+| Tiny Pets World | iPhone | 달리기·걷기로 펫 건강 유지(방식 미확인, 위치 사용 표시) | 펫 꾸미기·보상 | 무료 + IAP | 평점 없음 | v1.0.3, 2023-11. 오래됨 | [App Store](https://apps.apple.com/by/app/tiny-pets-world/id6449694456) |
+| StepPals - Walking App | iPhone·Apple Watch | 걸음 | 목표를 놓치면 펫 체력 감소(성장은 설명 없음) | 무료 + 구독(주 $2.99~평생 $54.99) | 4.3점(118개) | 활성 (v1.1.27) | [App Store](https://apps.apple.com/app/id6747041627) |
+| Steppet: Step Tracker Pet | Android(AppBrain 표기) | 걸음(GPS 아님) | 동반 펫 | 무료 | 미확인 | 2026-06 업데이트(AppBrain). Play 원본 페이지 미확인 | [AppBrain](https://www.appbrain.com/appstore/steppet-step-tracker-pet/ios-6766063712) |
+| FitPet: Step Pet Tracker | Android | 걸음(이름 기준, 상세 미확인) | 펫 | 무료 | 미확인 | 미확인 (개발사 Vanta Labs) | [AppBrain](https://www.appbrain.com/app/fitpet-step-pet-tracker/com.vantalabs.fitpet) |
 
 #### B. 근접
 
@@ -63,6 +69,8 @@
 | Motera / Run an Empire | 미확인 | GPS 러닝 | 영역(루프) 점령 | 미확인 | 미확인 | [Motera](https://www.motera.app/best-gamified-running-app) |
 | Runnory | iOS·Wear OS | 심박 | XP, 유물, 리더보드 | 월 2회 무료 후 구독 | 출시 전 | [Runnory](https://runnory.com/blog/best-gamified-running-apps-2026) |
 | 캐시워크 | iOS·Android | 걸음 | 캐시 적립 | 광고 | 국내 누적 2,900만~3,000만, DAU 약 330만 | [FN뉴스](https://www.fnnews.com/news/202606011647367427) |
+| SRUN - Run with your partner | iPhone·Apple Watch | GPS 러닝 | 가상 페이서(과거의 나), 배지, 주간 진행, 스트릭. 성장하는 캐릭터는 설명에 없음 | 무료 + 구독(월 $1.99, 연 $14.99, 평생 $44.99) | 3개 평가, 5.0점 | [App Store](https://apps.apple.com/us/app/srun-run-with-your-partner/id6751200407) |
+| Runova | iPhone | GPS 러닝 | XP, 배지, 등급(실버~마스터), 펫 없음 | 무료 체험 + 구독 | 출시 직후(2026-07-05), 평점 없음 | [mwm.ai](https://mwm.ai/ko/apps/running-tracker-runova/6781545514) |
 
 참고(미집계): San Run - 도트 러닝 아케이드 게임, 달리기 선수 키우기 - 방치형 게임. 둘 다 실제 움직임 측정이 없다.
 
@@ -89,6 +97,14 @@
   - GPS 러닝 + 성장: Run&Grow·RunGarden(성장하는 것은 식물이며 캐릭터가 아님)
   - 펫 성장 + 러닝: VirtuPet(GPS 경로 기록 여부가 사이트와 스토어 설명이 상충), Tep(2015, 사실상 중단 추정)
 - **혼잡도 판단(추정)**: 걸음 수 + 펫 칸은 신생 앱이 매달 나올 만큼 붐빈다(대부분 iOS, 평점 수 적음). GPS 러닝 + 도트 펫 칸은 확인된 범위에서 비어 있으나 진입 장벽이 낮아 곧 채워질 수 있다. 스토어 검색이 불완전하므로 확정은 아니다.
+
+### 1.5 재확인 (페이즈 3 착수, 2026-10-18)
+
+- **조사**: 결정 0012 에 따른 1차 재확인. 영·한 검색어 약 15개(GPS 러닝 + 펫, 러닝 캐릭터 키우기, 달리기 펫 육성, 2026 신작 등)와 개별 앱 페이지 확인 10여 건. Play 스토어 검색 페이지는 앱 이름·개발자만 보여 줘서 설명 확인은 못 했다. Reddit 글은 이번에도 검색되지 않았다.
+- **새로 찾은 앱**: A 에 6개, B 에 2개를 1.3 표에 더했다. 이 중 **GPS 러닝 + 동물형 캐릭터 성장은 Dragon Run(iPhone) 하나**다. 알이 누적 5km 에 드래곤으로 부화한다. 평가 3개, 2025-10 출시의 소형 앱이고 Android 판은 찾지 못했다. PetRunner 와 Tiny Pets World 는 위치를 쓰지만 GPS 기록·성장 여부를 확인하지 못했다. 나머지는 걸음 기반(StepPals, Steppet, FitPet) 또는 펫 없는 러닝 앱(SRUN, Runova)이다.
+- **미확인 후보**: Play 검색 결과에 "Pet Hunter GPS Running Game", "RunningPet" 이름이 보였으나 설명·링크를 확인하지 못해 표에 넣지 않았다. 페이즈 7 재확인 때 Play 에서 직접 열어 본다.
+- **Android 의 GPS 러닝 + 펫 성장 앱은 이번에도 찾지 못했다.** Run&Grow(식물)가 여전히 같은 칸의 활성 앱이며 Android 업데이트는 확인하지 못했다.
+- **0012 영향**: 결론은 유지된다. 다만 "GPS 러닝 + 펫 칸이 비어 있다"는 표현은 "iPhone 에 소형 선행 앱(Dragon Run)이 있고 Android 는 비어 있다"로 약해진다. 신생 앱이 이 칸을 채우는 중이라 진입 장벽이 낮다는 판단이 맞았고, 차별점은 그림 품질·첫 만남·벌 없는 톤이라는 0012 의 방향이 더 중요해졌다. 1.4 집계는 그대로 두고, 이번 추가분은 이 절에서만 센다.
 
 ## 2. 경쟁 지형 (핵심 A·B 심층)
 
