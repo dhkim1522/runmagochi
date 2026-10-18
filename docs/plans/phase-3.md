@@ -34,12 +34,12 @@
 
 ## 작업
 
-- [ ] 1. 경쟁 앱 재확인
+- [x] 1. 경쟁 앱 재확인
   - 파일: `docs/research/market.md`
   - 내용: Play 스토어·웹에서 A 범주(GPS 러닝 + 캐릭터 성장, 걸음 펫)를 다시 찾아 새 앱·변경점을 반영한다(결정 0012). 겹치는 앱이 새로 나왔으면 차별점 영향을 적는다.
   - 확인: 문서 갱신일과 새로 본 앱 목록
 
-- [ ] 2. 잔여 정리 A: 글자 크기 22 토큰, 탭 키보드 포커스
+- [x] 2. 잔여 정리 A: 글자 크기 22 토큰, 탭 키보드 포커스
   - 파일: `lib/core/theme.dart`, `docs/design/tokens.json`, `docs/design/design-system.md`, 22 를 쓰는 화면 5곳(`growth_summary`·`history_screen`·`in_run_screen` 2곳·`summary_screen` 2곳), `lib/app.dart`
   - 테스트: `AppText` 에 22 크기 토큰(`titleS`)이 있고 화면 파일에 `fontSize: 22` 가 없다(grep 테스트). 탭에 키보드 포커스를 주면 포커스 표시가 보이고 Enter·Space 로 탭이 바뀐다(위젯 테스트).
   - 확인: `fvm flutter test test/core test/app_test.dart`
