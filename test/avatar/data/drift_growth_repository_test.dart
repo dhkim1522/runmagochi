@@ -219,6 +219,31 @@ void main() {
   });
 
   _distanceXpUpdatedAtsTests();
+
+  group('아바타 이름 바꾸기', () {
+    test('앞뒤 공백을 빼고 저장하고 다시 읽으면 바뀐 이름이다', () async {
+      final kind = await repo.avatarKind();
+      await repo.setAvatarName('  삐약이 ');
+      expect(await repo.avatarName(), '삐약이');
+      expect(await repo.avatarKind(), kind); // 종류는 그대로
+      expect(await db.select(db.avatars).get(), hasLength(1));
+    });
+
+    test('행이 없으면 만들고 그 이름으로 저장한다', () async {
+      await repo.setAvatarName('토리');
+      final rows = await db.select(db.avatars).get();
+      expect(rows, hasLength(1));
+      expect(rows.single.name, '토리');
+      expect(AvatarKind.values.map((k) => k.name), contains(rows.single.kind));
+    });
+
+    test('비었거나 10자를 넘으면 ArgumentError 이고 이름은 그대로다', () async {
+      await repo.setAvatarName('러니');
+      await expectLater(repo.setAvatarName('   '), throwsArgumentError);
+      await expectLater(repo.setAvatarName('가나다라마바사아자차카'), throwsArgumentError);
+      expect(await repo.avatarName(), '러니');
+    });
+  });
 }
 
 void _distanceXpUpdatedAtsTests() {

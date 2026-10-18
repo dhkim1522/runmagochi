@@ -36,7 +36,7 @@ class BackupFailed extends BackupResult {
 /// 백업 내보내기·가져오기 흐름 (결정 0015).
 ///
 /// 가져오기는 기존 데이터를 모두 백업 내용으로 바꾼다. 화면(설정)은 [import] 를 부르기 전에
-/// "지금 데이터가 모두 백업 내용으로 바뀌어요" 확인을 먼저 받고, 성공하면 `refreshAfterImport` 로
+/// "지금 데이터가 모두 백업 내용으로 바뀌어요" 확인을 먼저 받고, 성공하면 `refreshAfterImport`(lib/backup/ui) 로
 /// 화면 상태를 다시 읽는다.
 class BackupService {
   BackupService(

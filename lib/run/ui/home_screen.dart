@@ -6,8 +6,10 @@ import '../../avatar/domain/growth_rules.dart';
 import '../../avatar/domain/growth_state.dart';
 import '../../avatar/ui/avatar_view.dart';
 import '../../avatar/ui/weekly_goal_bar.dart';
+import '../../avatar/ui/weekly_target_change.dart';
 import '../../core/theme.dart';
 import '../../core/ui/clay.dart';
+import '../../settings/ui/settings_screen.dart';
 import '../app/permission_gate.dart';
 import '../app/providers.dart';
 import '../domain/run_summary.dart';
@@ -170,42 +172,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     return ok == true;
   }
 
-  Future<void> _changeTarget(double targetM) async {
-    GrowthGain? gain;
-    try {
-      gain = await ref.read(growthServiceProvider).setWeeklyTarget(targetM);
-    } catch (_) {
-      _toast('목표를 바꾸지 못했어요');
-    }
-    if (!mounted) return;
-    ref.invalidate(growthStateProvider);
-    final g = gain;
-    if (g == null) return;
-    // 목표 보너스 말고도 아직 반영하지 않은 러닝 경험치로 레벨이 오를 수 있다.
-    if (g.leveledUp) {
-      await showDialog<void>(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: const Text('레벨 업!'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text('Lv.${g.levelBefore} 에서 Lv.${g.levelAfter} 로'),
-              if (g.stageUp) const Text('새 외형 단계!'),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('확인'),
-            ),
-          ],
-        ),
-      );
-    } else if (g.goalBonusXp > 0) {
-      _toast('이번 주 목표 달성 · 경험치 +${g.goalBonusXp}');
-    }
-  }
+  Future<void> _changeTarget(double targetM) =>
+      changeWeeklyTarget(context, ref, targetM);
+
+  Future<void> _openSettings() => Navigator.of(
+    context,
+  ).push(MaterialPageRoute<void>(builder: (_) => const SettingsScreen()));
 
   @override
   Widget build(BuildContext context) {
@@ -234,58 +206,72 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   const WeeklyGoalSkeleton(),
                 const SizedBox(height: Gap.s4),
                 Expanded(
-                  child: ClayCard(
-                    radius: Radii.xl,
-                    color: c.surfaceSoft,
-                    lipColor: c.line,
-                    child: Center(
-                      child: FittedBox(
-                        fit: BoxFit.scaleDown,
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            // 종류를 읽기 전에는 같은 크기의 빈자리만 둔다.
-                            if (g == null)
-                              const AvatarSlot(scale: 4)
-                            else
-                              AvatarView(
-                                kind: g.kind,
-                                stage: g.stage,
-                                mood: g.mood,
-                                action: AvatarAction.idle,
-                                scale: 4,
-                              ),
-                            const SizedBox(height: Gap.s3),
-                            Text(
-                              g == null ? '-' : '${g.name} Lv.${g.level.level}',
-                              style: t.title,
+                  child: Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      ClayCard(
+                        radius: Radii.xl,
+                        color: c.surfaceSoft,
+                        lipColor: c.line,
+                        child: Center(
+                          child: FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                // 종류를 읽기 전에는 같은 크기의 빈자리만 둔다.
+                                if (g == null)
+                                  const AvatarSlot(scale: 4)
+                                else
+                                  AvatarView(
+                                    kind: g.kind,
+                                    stage: g.stage,
+                                    mood: g.mood,
+                                    action: AvatarAction.idle,
+                                    scale: 4,
+                                  ),
+                                const SizedBox(height: Gap.s3),
+                                Text(
+                                  g == null
+                                      ? '-'
+                                      : '${g.name} Lv.${g.level.level}',
+                                  style: t.title,
+                                ),
+                                const SizedBox(height: Gap.s3),
+                                SizedBox(
+                                  width: 220,
+                                  child: ClayBar(
+                                    value: g == null
+                                        ? 0
+                                        : g.level.xpIntoLevel /
+                                              g.level.xpForNext,
+                                    height: 10,
+                                    fill: c.accent,
+                                    track: c.surface,
+                                  ),
+                                ),
+                                const SizedBox(height: Gap.s3),
+                                Text(
+                                  nextLevelKm == null
+                                      ? '-'
+                                      : '다음 레벨까지 ${nextLevelKm.toStringAsFixed(1)}km',
+                                  style: t.label.copyWith(
+                                    color: c.inkMuted,
+                                    fontWeight: FontWeight.w400,
+                                  ),
+                                ),
+                              ],
                             ),
-                            const SizedBox(height: Gap.s3),
-                            SizedBox(
-                              width: 220,
-                              child: ClayBar(
-                                value: g == null
-                                    ? 0
-                                    : g.level.xpIntoLevel / g.level.xpForNext,
-                                height: 10,
-                                fill: c.accent,
-                                track: c.surface,
-                              ),
-                            ),
-                            const SizedBox(height: Gap.s3),
-                            Text(
-                              nextLevelKm == null
-                                  ? '-'
-                                  : '다음 레벨까지 ${nextLevelKm.toStringAsFixed(1)}km',
-                              style: t.label.copyWith(
-                                color: c.inkMuted,
-                                fontWeight: FontWeight.w400,
-                              ),
-                            ),
-                          ],
+                          ),
                         ),
                       ),
-                    ),
+                      // 설정은 무대 오른쪽 위 톱니로 연다. 겹쳐 두어 홈 배치는 그대로다.
+                      Positioned(
+                        top: Gap.s2,
+                        right: Gap.s2,
+                        child: _SettingsButton(onPressed: _openSettings),
+                      ),
+                    ],
                   ),
                 ),
                 const SizedBox(height: Gap.s4),
@@ -302,6 +288,29 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               ),
             ),
         ],
+      ),
+    );
+  }
+}
+
+/// 홈 오른쪽 위 설정 버튼(48×48). 스크린 리더에는 "설정" 버튼으로 읽힌다.
+class _SettingsButton extends StatelessWidget {
+  const _SettingsButton({required this.onPressed});
+
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      button: true,
+      label: '설정',
+      excludeSemantics: true,
+      onTap: onPressed,
+      child: IconButton(
+        key: const ValueKey('home-settings'),
+        onPressed: onPressed,
+        constraints: const BoxConstraints.tightFor(width: 48, height: 48),
+        icon: Icon(Icons.settings_outlined, color: AppColors.of(context).ink),
       ),
     );
   }

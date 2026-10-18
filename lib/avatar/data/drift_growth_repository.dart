@@ -5,6 +5,7 @@ import 'package:uuid/uuid.dart';
 
 import '../../core/clock.dart';
 import '../../run/data/app_database.dart';
+import '../domain/avatar_name.dart';
 import '../domain/growth_rules.dart';
 import 'growth_repository.dart';
 
@@ -80,6 +81,18 @@ class DriftGrowthRepository implements GrowthRepository {
   @override
   Future<String> avatarName() =>
       _db.transaction(() async => (await _ensureAvatar()).$1.name);
+
+  @override
+  Future<void> setAvatarName(String name) async {
+    final error = validateAvatarName(name);
+    if (error != null) throw ArgumentError.value(name, 'name', error);
+    await _db.transaction(() async {
+      final (row, _) = await _ensureAvatar();
+      await (_db.update(_db.avatars)..where((a) => a.id.equals(row.id))).write(
+        AvatarsCompanion(name: Value(name.trim()), updatedAt: Value(_now())),
+      );
+    });
+  }
 
   @override
   Future<AvatarKind> avatarKind() =>

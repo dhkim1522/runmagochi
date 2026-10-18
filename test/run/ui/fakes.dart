@@ -268,9 +268,10 @@ GrowthState growthState({
   bool weekAchieved = false,
   int streakWeeks = 0,
   AvatarKind kind = AvatarKind.chick,
+  String name = '러니',
 }) => GrowthState(
   kind: kind,
-  name: '러니',
+  name: name,
   totalXp: 25 * level * (level - 1) + xpIntoLevel,
   level: LevelProgress(
     level: level,

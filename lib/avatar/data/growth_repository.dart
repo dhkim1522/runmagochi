@@ -5,6 +5,10 @@ abstract interface class GrowthRepository {
   /// 행이 없으면 '러니' 로 만든다.
   Future<String> avatarName();
 
+  /// 앞뒤 공백을 빼고 저장한다. 규칙(`validateAvatarName`)에 맞지 않으면 [ArgumentError].
+  /// 아바타 행이 없으면 [avatarName] 처럼 만든 뒤 바꾼다.
+  Future<void> setAvatarName(String name);
+
   /// 처음 정해진 종류. 없거나 모르는 값이면 한 번 무작위로 정해 저장한다.
   Future<AvatarKind> avatarKind();
   Future<int> totalXp();

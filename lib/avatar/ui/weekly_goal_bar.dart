@@ -38,12 +38,8 @@ class _WeeklyGoalBarState extends State<WeeklyGoalBar> {
   }
 
   Future<void> _edit() async {
-    final km = await showDialog<double>(
-      context: context,
-      builder: (_) =>
-          _TargetDialog(initial: WeeklyGoalBar.targetLabel(widget.targetM)),
-    );
-    if (km != null) widget.onChangeTarget(km * 1000);
+    final m = await showWeeklyTargetDialog(context, widget.targetM);
+    if (m != null) widget.onChangeTarget(m);
   }
 
   @override
@@ -144,6 +140,27 @@ class WeeklyGoalSkeleton extends StatelessWidget {
   }
 }
 
+/// 주간 목표로 고를 수 있는 범위(km). docs/specs/game-rules.md
+const int weeklyTargetMinKm = 3;
+const int weeklyTargetMaxKm = 200;
+
+/// 입력 글자가 [weeklyTargetMinKm]~[weeklyTargetMaxKm] km 이면 그 km, 아니면 null.
+double? parseWeeklyTargetKm(String text) {
+  final v = double.tryParse(text.trim());
+  if (v == null || !v.isFinite) return null;
+  if (v < weeklyTargetMinKm || v > weeklyTargetMaxKm) return null;
+  return v;
+}
+
+/// 주간 목표를 바꾸는 창. 지금 목표 [targetM] 으로 열고, 저장하면 새 목표를 미터로,
+/// 취소하면 null 을 돌려준다. 홈 목표 카드와 설정이 같이 쓴다.
+Future<double?> showWeeklyTargetDialog(BuildContext context, double targetM) {
+  return showDialog<double>(
+    context: context,
+    builder: (_) => _TargetDialog(initial: WeeklyGoalBar.targetLabel(targetM)),
+  );
+}
+
 class _TargetDialog extends StatefulWidget {
   const _TargetDialog({required this.initial});
   final String initial;
@@ -163,12 +180,7 @@ class _TargetDialogState extends State<_TargetDialog> {
     super.dispose();
   }
 
-  /// 1~200 km 이면 값, 아니면 null.
-  double? get _km {
-    final v = double.tryParse(_controller.text.trim());
-    if (v == null || !v.isFinite || v < 1 || v > 200) return null;
-    return v;
-  }
+  double? get _km => parseWeeklyTargetKm(_controller.text);
 
   @override
   Widget build(BuildContext context) {
@@ -178,9 +190,9 @@ class _TargetDialogState extends State<_TargetDialog> {
         controller: _controller,
         autofocus: true,
         keyboardType: const TextInputType.numberWithOptions(decimal: true),
-        decoration: const InputDecoration(
+        decoration: InputDecoration(
           suffixText: 'km',
-          helperText: '1~200',
+          helperText: '$weeklyTargetMinKm~$weeklyTargetMaxKm',
         ),
         onChanged: (_) => setState(() {}),
       ),
@@ -190,7 +202,9 @@ class _TargetDialogState extends State<_TargetDialog> {
           child: const Text('취소'),
         ),
         FilledButton(
-          onPressed: _km == null ? null : () => Navigator.of(context).pop(_km),
+          onPressed: _km == null
+              ? null
+              : () => Navigator.of(context).pop(_km! * 1000),
           child: const Text('저장'),
         ),
       ],

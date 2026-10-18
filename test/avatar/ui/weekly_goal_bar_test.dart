@@ -31,6 +31,7 @@ FilledButton _save(WidgetTester tester) =>
     tester.widget<FilledButton>(find.widgetWithText(FilledButton, '저장'));
 
 void main() {
+  dialogTests();
   testWidgets('목표와 달성 거리, 진행 막대가 보인다', (tester) async {
     await _pump(tester);
     expect(find.text('이번 주 목표 10km'), findsOneWidget);
@@ -77,16 +78,16 @@ void main() {
     expect(changed, [12500]);
   });
 
-  testWidgets('빈 값, 0, 범위 밖이면 저장 버튼이 꺼진다', (tester) async {
+  testWidgets('빈 값, 0, 3 미만, 200 초과면 저장 버튼이 꺼진다 (3~200km)', (tester) async {
     final changed = await _pump(tester);
     await tester.tap(find.text('이번 주 목표 10km'));
     await tester.pumpAndSettle();
-    for (final bad in ['', '0', '0.5', '201', 'abc']) {
+    for (final bad in ['', '0', '1', '2', '2.9', '201', 'abc']) {
       await tester.enterText(find.byType(TextField), bad);
       await tester.pump();
       expect(_save(tester).onPressed, isNull, reason: '"$bad"');
     }
-    for (final ok in ['1', '200']) {
+    for (final ok in ['3', '200']) {
       await tester.enterText(find.byType(TextField), ok);
       await tester.pump();
       expect(_save(tester).onPressed, isNotNull, reason: '"$ok"');
@@ -102,5 +103,40 @@ void main() {
     await tester.pumpAndSettle();
     expect(changed, isEmpty);
     expect(find.byType(AlertDialog), findsNothing);
+  });
+}
+
+void dialogTests() {
+  testWidgets('showWeeklyTargetDialog 는 지금 목표로 열리고 저장한 값을 미터로 돌려준다', (
+    tester,
+  ) async {
+    double? result = -1;
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: appLightTheme(),
+        home: Builder(
+          builder: (context) => TextButton(
+            onPressed: () async =>
+                result = await showWeeklyTargetDialog(context, 12500),
+            child: const Text('열기'),
+          ),
+        ),
+      ),
+    );
+    await tester.tap(find.text('열기'));
+    await tester.pumpAndSettle();
+    expect(find.text('12.5'), findsOneWidget);
+    expect(find.text('3~200'), findsOneWidget);
+    await tester.enterText(find.byType(TextField), '3');
+    await tester.pump();
+    await tester.tap(find.text('저장'));
+    await tester.pumpAndSettle();
+    expect(result, 3000);
+
+    await tester.tap(find.text('열기'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('취소'));
+    await tester.pumpAndSettle();
+    expect(result, isNull);
   });
 }
