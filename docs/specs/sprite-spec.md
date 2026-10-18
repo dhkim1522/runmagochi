@@ -37,6 +37,12 @@ face 레이어는 4개 외형 단계가 모두 공유한다. 그래서 어느 �
 
 정수 배율로 키우고 `FilterQuality.none` 으로 그린다.
 
-## 임시 스프라이트
+## 만드는 방법
 
-`tool/gen_placeholder_sprites.dart` 가 단순 도형으로 만든 임시 파일이다. `fvm dart run tool/gen_placeholder_sprites.dart` 로 다시 만든다. 실제 에셋이 나오면 파일만 교체한다.
+그림은 코드 안의 데이터다(작업 9, 페이즈 6 실제 아트 전까지).
+
+- `tool/sprites/<kind>.dart` (chick·jelly·acorn): 단계별 기본 그림(몸 + 장비, 눈 없음)과 표정 그림. 한 글자가 한 픽셀이고 색은 `tool/sprites/pet_art.dart` 의 팔레트에서 찾는다.
+- `tool/sprites/pet_art.dart`: 자세표로 기본 그림에서 idle·walk·run 프레임을 만든다. 머리가 움직인 만큼 face 프레임도 같이 움직이므로 4단계가 face 를 함께 쓸 수 있다. 1단계 알(병아리)은 걷기·달리기 대신 통통 튄다.
+- 장비(결정 0013): 1단계 없음, 2단계 러닝화, 3단계 + 손목 밴드, 4단계 + 헤어밴드 + 완주 메달.
+- 다시 만들기: `fvm dart run tool/render_sprites.dart` — `assets/sprites/**` 시트와 `design/character/<kind>.png` 8배 미리보기(줄 = 단계, 칸 = idle·walk·run 프레임, 마지막 줄 = 표정)를 쓴다.
+- 검사: `test/tool/sprite_data_test.dart` (프레임 형식, face 가 4단계 몸 위에 있음, 프레임끼리 다름, 발끝 y=29·공중 y=28, 단계별 장비).
