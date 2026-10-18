@@ -45,20 +45,20 @@
   - 확인: `fvm flutter test test/core test/app_test.dart`
   - 스킬: ui-ux-pro-max:ui-ux-pro-max
 
-- [ ] 3. 잔여 정리 B: 홈 로딩 한 줄 점프, 다크 모드 캐릭터 윤곽
+- [x] 3. 잔여 정리 B: 홈 로딩 한 줄 점프, 다크 모드 캐릭터 윤곽
   - 파일: `lib/run/ui/home_screen.dart`, `lib/avatar/ui/weekly_goal_bar.dart`, `lib/avatar/ui/avatar_view.dart`, `lib/core/theme.dart`
   - 테스트: 연속 달성 기록이 있는 상태로 홈을 열 때 로딩 전후 목표 카드 높이가 같다. 다크 테마에서 아바타 뒤에 밝은 윤곽(테마 토큰 색)이 그려지고 라이트 테마에서는 없다.
   - 방법: 로딩 중에도 연속 달성 줄 자리를 잡고(지난 상태가 있으면 그 값을 유지), 다크 모드는 스프라이트 실루엣을 1px 밝은 색으로 뒤에 깔아 윤곽을 만든다.
   - 확인: `fvm flutter test test/run/ui/home_screen_test.dart test/avatar/ui`
   - 스킬: ui-ux-pro-max:ui-ux-pro-max
 
-- [ ] 4. 프로필 저장소 (스키마 v3)
+- [x] 4. 프로필 저장소 (스키마 v3)
   - 파일: `lib/run/data/app_database.dart`(+ `.g.dart`), `lib/profile/data/profile_repository.dart`, `lib/profile/data/drift_profile_repository.dart`, `lib/profile/app/providers.dart`, `docs/architecture.md`
   - 테이블: `Profiles`(체중 kg nullable, 첫 실행 완료 시각 nullable, 공통 필드). 행은 하나.
   - 테스트: 행이 없으면 체중 null·첫 실행 미완료. 체중 저장·읽기, 첫 실행 완료 표시. v2 → v3 마이그레이션 뒤 기존 러닝·경험치·아바타 유지(`migration_test` 확장).
   - 확인: `fvm flutter test test/profile test/run/data`
 
-- [ ] 5. 체중을 칼로리에 연결
+- [x] 5. 체중을 칼로리에 연결
   - 파일: `lib/run/app/run_controller.dart`, `lib/run/app/providers.dart`
   - 테스트: 체중 70kg 저장 후 5km 러닝 종료 → 칼로리 = 70 × 5 × 1.036. 체중이 없으면 65kg 기준.
   - 확인: `fvm flutter test test/run/app`
