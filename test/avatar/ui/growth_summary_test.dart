@@ -108,4 +108,22 @@ void main() {
     await tester.pump(const Duration(milliseconds: 350));
     expect(scaleNow(), closeTo(1, 0.001));
   });
+
+  testWidgets('종류를 모르면 아바타 대신 같은 크기의 빈 자리를 둔다', (tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: appLightTheme(),
+        home: Scaffold(
+          body: GrowthSummary(
+            kind: null,
+            gain: gain(stageAfter: 2),
+            distanceM: 5020,
+          ),
+        ),
+      ),
+    );
+    await settle(tester);
+    expect(find.byType(AvatarView), findsNothing);
+    expect(tester.getSize(find.byType(AvatarSlot)), const Size(192, 192));
+  });
 }

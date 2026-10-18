@@ -241,13 +241,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            AvatarView(
-                              kind: g?.kind ?? AvatarKind.chick,
-                              stage: g?.stage ?? 1,
-                              mood: g?.mood ?? AvatarMood.normal,
-                              action: AvatarAction.idle,
-                              scale: 4,
-                            ),
+                            // 종류를 읽기 전에는 같은 크기의 빈자리만 둔다.
+                            if (g == null)
+                              const AvatarSlot(scale: 4)
+                            else
+                              AvatarView(
+                                kind: g.kind,
+                                stage: g.stage,
+                                mood: g.mood,
+                                action: AvatarAction.idle,
+                                scale: 4,
+                              ),
                             const SizedBox(height: Gap.s3),
                             Text(
                               g == null ? '-' : '${g.name} Lv.${g.level.level}',

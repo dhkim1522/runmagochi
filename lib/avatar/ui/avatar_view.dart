@@ -197,3 +197,18 @@ class _AvatarPainter extends CustomPainter {
   bool shouldRepaint(_AvatarPainter old) =>
       old.frame != frame || !listEquals(old.images, images);
 }
+
+/// 아바타 종류를 아직 모를 때(성장 상태를 읽는 중) 두는 빈자리.
+///
+/// [AvatarView] 와 같은 `32 × scale` 정사각형이라, 다 읽고 아바타로 바뀌어도
+/// 배치가 움직이지 않고, 다른 종류(병아리)가 잠깐 보였다 바뀌지도 않는다.
+class AvatarSlot extends StatelessWidget {
+  const AvatarSlot({super.key, this.scale = 4});
+
+  /// 정수 배율.
+  final int scale;
+
+  @override
+  Widget build(BuildContext context) =>
+      SizedBox.square(dimension: (spriteFramePx * scale).toDouble());
+}

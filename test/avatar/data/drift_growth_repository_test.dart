@@ -27,6 +27,20 @@ void main() {
     expect(await repo.avatarKind(), first);
   });
 
+  test('새 DB 에서 이름·종류를 동시에 불러도 아바타는 한 줄이고 종류가 같다', () async {
+    final r = await Future.wait<Object>([
+      repo.avatarName(),
+      repo.avatarKind(),
+      repo.avatarKind(),
+    ]);
+    expect(await db.select(db.avatars).get(), hasLength(1));
+    expect(r[1], r[2]);
+    expect(
+      (await db.select(db.avatars).get()).single.kind,
+      (r[1] as AvatarKind).name,
+    );
+  });
+
   test('이름을 먼저 불러도 종류는 한 번 정해져 유지된다', () async {
     await repo.avatarName();
     final k = await repo.avatarKind();

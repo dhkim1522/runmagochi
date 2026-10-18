@@ -468,4 +468,25 @@ void main() {
     expect(find.byType(ClayBar), findsNWidgets(2));
     expect(find.widgetWithText(ClayButton, '시작'), findsOneWidget);
   });
+
+  testWidgets('종류를 읽기 전에는 병아리 대신 같은 크기의 빈 아바타 자리를 둔다', (tester) async {
+    final g = FakeGrowthService(growthState(kind: AvatarKind.acorn))
+      ..holdLoad = Completer<void>();
+    await pumpHome(tester, FakeController(), growth: g);
+    await settle(tester);
+    expect(find.byType(AvatarView), findsNothing);
+    final before = tester.getRect(find.byType(AvatarSlot));
+
+    g.holdLoad!.complete();
+    await settle(tester);
+    expect(find.byType(AvatarSlot), findsNothing);
+    expect(
+      tester.widget<AvatarView>(find.byType(AvatarView)).kind,
+      AvatarKind.acorn,
+    );
+    final after = tester.getRect(find.byType(AvatarView));
+    expect(after.size, before.size);
+    // 세로 위치는 위쪽 주간 목표 카드(로딩 중 "이번 주 -") 높이에 따라 달라진다.
+    expect(after.center.dx, before.center.dx);
+  });
 }

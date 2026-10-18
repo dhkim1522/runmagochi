@@ -21,7 +21,8 @@ class GrowthSummary extends StatefulWidget {
     this.weekTargetM,
   });
 
-  final AvatarKind kind;
+  /// 아바타 종류. 아직 모르면 null 이고 같은 크기의 빈자리를 둔다.
+  final AvatarKind? kind;
   final GrowthGain gain;
 
   /// 방금 달린 거리(미터).
@@ -55,15 +56,14 @@ class _GrowthSummaryState extends State<GrowthSummary>
     super.didChangeDependencies();
     // 외형이 바뀌는 순간 새 단계 시트가 비어 보이지 않게 미리 읽어 둔다.
     final g = widget.gain;
-    if (g.stageUp) {
+    final kind = widget.kind;
+    if (kind != null && g.stageUp) {
       precacheImage(
-        AssetImage(bodySheet(widget.kind, g.stageAfter, AvatarAction.idle)),
+        AssetImage(bodySheet(kind, g.stageAfter, AvatarAction.idle)),
         context,
       );
       precacheImage(
-        AssetImage(
-          faceSheet(widget.kind, AvatarMood.normal, AvatarAction.idle),
-        ),
+        AssetImage(faceSheet(kind, AvatarMood.normal, AvatarAction.idle)),
         context,
       );
     }
@@ -144,16 +144,19 @@ class _GrowthSummaryState extends State<GrowthSummary>
           final scale = g.leveledUp ? 1 + 0.3 * math.sin(math.pi * t) : 1.0;
           // 절반이 지나면 이전 단계에서 새 단계로 바뀐다.
           final stage = g.stageUp && t < 0.5 ? g.stageBefore : g.stageAfter;
+          final kind = widget.kind;
           return Transform.scale(
             key: const ValueKey('level-up-scale'),
             scale: scale,
-            child: AvatarView(
-              kind: widget.kind,
-              stage: stage,
-              mood: AvatarMood.normal,
-              action: AvatarAction.idle,
-              scale: 6,
-            ),
+            child: kind == null
+                ? const AvatarSlot(scale: 6)
+                : AvatarView(
+                    kind: kind,
+                    stage: stage,
+                    mood: AvatarMood.normal,
+                    action: AvatarAction.idle,
+                    scale: 6,
+                  ),
           );
         },
       ),

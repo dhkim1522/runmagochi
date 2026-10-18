@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
@@ -20,6 +21,7 @@ Future<FakeController> open(
   RunSnapshot? initial,
   String? error,
   Object? endError,
+  FakeGrowthService? growth,
 }) async {
   final controller = FakeController(
     initial: initial ?? snap(RunState.paused, distanceM: 2910),
@@ -31,7 +33,7 @@ Future<FakeController> open(
       overrides: [
         runControllerProvider.overrideWith(() => controller),
         growthServiceProvider.overrideWithValue(
-          FakeGrowthService(growthState()),
+          growth ?? FakeGrowthService(growthState()),
         ),
       ],
       child: MaterialApp(
@@ -343,5 +345,19 @@ void main() {
       expect(dist, greaterThan(size("6'25\"")));
       expect(dist, greaterThan(size("6'10\"")));
     });
+  });
+
+  testWidgets('종류를 읽기 전에는 병아리 대신 같은 크기의 빈 아바타 자리를 둔다', (tester) async {
+    final g = FakeGrowthService(growthState(kind: AvatarKind.jelly))
+      ..holdLoad = Completer<void>();
+    await open(tester, growth: g);
+    expect(find.byType(AvatarView), findsNothing);
+    final before = tester.getRect(find.byType(AvatarSlot));
+
+    g.holdLoad!.complete();
+    await settle(tester);
+    expect(find.byType(AvatarSlot), findsNothing);
+    expect(avatar(tester).kind, AvatarKind.jelly);
+    expect(tester.getRect(find.byType(AvatarView)), before);
   });
 }

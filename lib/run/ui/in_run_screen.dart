@@ -48,22 +48,22 @@ class _InRunScreenState extends ConsumerState<InRunScreen> {
     final paused = snap.state == RunState.paused || ended;
     final c = AppColors.of(context);
     final t = AppText.of(context);
-    // 로딩 중이거나 실패하면 1단계로 그린다.
+    // 종류를 읽기 전(또는 실패)에는 같은 크기의 빈자리만 둔다.
     final growth = ref.watch(growthStateProvider).value;
-    final stage = growth?.stage ?? 1;
-    final kind = growth?.kind ?? AvatarKind.chick;
 
     final avatarStage = _AvatarStage(
-      child: AvatarView(
-        kind: kind,
-        stage: stage,
-        mood: AvatarMood.normal,
-        action: actionFor(
-          paused: paused,
-          currentPaceSecPerKm: snap.currentPaceSecPerKm,
-        ),
-        scale: 3,
-      ),
+      child: growth == null
+          ? const AvatarSlot(scale: 3)
+          : AvatarView(
+              kind: growth.kind,
+              stage: growth.stage,
+              mood: AvatarMood.normal,
+              action: actionFor(
+                paused: paused,
+                currentPaceSecPerKm: snap.currentPaceSecPerKm,
+              ),
+              scale: 3,
+            ),
     );
 
     return PopScope(
