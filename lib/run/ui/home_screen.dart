@@ -10,6 +10,7 @@ import '../../core/theme.dart';
 import '../../core/ui/clay.dart';
 import '../app/permission_gate.dart';
 import '../app/providers.dart';
+import '../domain/run_summary.dart';
 import 'in_run_screen.dart';
 import 'permission_screen.dart';
 import 'summary_screen.dart';
@@ -44,7 +45,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     } catch (_) {
       return;
     }
-    if (!restored || !mounted) return;
+    if (!mounted) return;
+    if (!restored) {
+      // 복원한 러닝이 이미 자동 종료 조건을 넘어 끝났으면 요약을 연다.
+      final view = ref.read(runControllerProvider);
+      final summary = view.lastSummary;
+      if (view.autoEnded && summary != null) await _openSummary(summary);
+      return;
+    }
     final resume = await showDialog<bool>(
       context: context,
       barrierDismissible: false,
@@ -87,6 +95,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       ref.invalidate(growthStateProvider);
       return;
     }
+    await _openSummary(after);
+  }
+
+  /// 성장을 반영하고 [summary] 의 요약 화면을 연다.
+  Future<void> _openSummary(RunSummary summary) async {
     // invalidate 보다 먼저 sync 해야 이번 러닝의 gain 을 이쪽이 받는다
     // (provider 도 sync 하는데, 먼저 돌면 gain 이 그쪽에서 소모된다).
     GrowthGain? gain;
@@ -99,7 +112,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     ref.invalidate(growthStateProvider);
     await Navigator.of(context).push(
       MaterialPageRoute<void>(
-        builder: (_) => SummaryScreen.fromSummary(after, gain: gain),
+        builder: (_) => SummaryScreen.fromSummary(summary, gain: gain),
       ),
     );
   }

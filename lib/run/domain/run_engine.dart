@@ -118,6 +118,17 @@ class RunEngine {
   int get segmentIndex =>
       _segmentPending ? _segments.length : _segments.length - 1;
 
+  RunState get state => _state;
+
+  /// 시작 시각. 시작 전이면 null.
+  DateTime? get startedAt => _startedAt;
+
+  /// 이번 기록 구간을 시작·재개한 시각. 기록 중이 아니면 null.
+  DateTime? get recordingSince => _recordingSince;
+
+  /// 마지막으로 받아들인 점(복원한 점 포함)의 시각. 없으면 null.
+  DateTime? get lastPointAt => _lastAccepted?.time;
+
   List<List<LocationSample>> get segments => List.unmodifiable([
     for (final segment in _segments) List<LocationSample>.unmodifiable(segment),
   ]);

@@ -4,12 +4,15 @@ import 'package:flutter/widgets.dart' show AppLifecycleState;
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/format.dart';
 import '../../profile/app/providers.dart';
 import '../data/run_repository.dart';
 import '../domain/location_sample.dart';
 import '../domain/run_engine.dart';
 import '../domain/run_summary.dart';
+import '../domain/run_trim.dart';
 import 'providers.dart';
+import 'run_guard.dart';
 
 const Duration _flushInterval = Duration(seconds: 10);
 const Duration _tickInterval = Duration(seconds: 1);
@@ -20,6 +23,7 @@ const Duration _resubscribeInterval = Duration(seconds: 5);
 const String _locationErrorMessage = '위치 신호를 받지 못하고 있어요';
 const String _saveErrorMessage = '기록 저장에 실패했어요. 자동으로 다시 시도해요';
 const String _endErrorMessage = '러닝 저장에 실패했어요. 다시 종료해 주세요';
+const String _autoEndTitle = '러닝을 자동으로 마쳤어요';
 
 const RunSnapshot _idleSnapshot = RunSnapshot(
   state: RunState.idle,
@@ -37,6 +41,7 @@ class RunViewState {
     this.lastSummary,
     this.lastError,
     this.weightKg = defaultWeightKg,
+    this.autoEnded = false,
   });
 
   final RunSnapshot snapshot;
@@ -48,6 +53,9 @@ class RunViewState {
 
   /// 진행 중 칼로리 표시에 쓰는 체중(kg). 시작·복구 때 읽고 종료 때 다시 읽는다.
   final double weightKg;
+
+  /// [lastSummary] 가 종료를 잊어 자동으로 끝낸 러닝이다 (결정 0016).
+  final bool autoEnded;
 }
 
 class RunController extends Notifier<RunViewState> {
@@ -80,6 +88,9 @@ class RunController extends Notifier<RunViewState> {
 
   /// completeRun 이 실패해 남은 요약. end 를 다시 부르면 이것으로 completeRun 만 한다.
   RunSummary? _pendingSummary;
+
+  /// [_pendingSummary] 가 자동 종료로 만든 요약이다.
+  bool _pendingAutoEnd = false;
 
   double _weightKg = defaultWeightKg;
 
@@ -157,7 +168,11 @@ class RunController extends Notifier<RunViewState> {
   /// 마지막 저장이 실패하면 러닝은 그대로 남아 resume 이나 end 를 다시 부를 수
   /// 있다. completeRun 이 실패하면 상태는 ended 가 되고, 다시 부르면 남은
   /// 요약으로 completeRun 만 다시 한다.
-  Future<RunSummary> end() async {
+  Future<RunSummary> end() => _finish(null);
+
+  /// [auto] 가 있으면 끝 시각을 [AutoEndDecision.endAt] 으로 당기고, 저장에
+  /// 성공하면 autoEnded 로 표시하고 알림을 띄운다.
+  Future<RunSummary> _finish(AutoEndDecision? auto) async {
     _requireNotEnding();
     final engine = _requireEngine();
     final runId = _runId!;
@@ -178,7 +193,13 @@ class RunController extends Notifier<RunViewState> {
         _flushClosed = true;
         // 설정에서 체중을 바꿨을 수 있으므로 종료 때 다시 읽는다.
         _weightKg = await _readWeight();
-        summary = _pendingSummary = engine.end(weightKg: _weightKg);
+        final wasRecording = engine.state == RunState.recording;
+        summary = engine.end(weightKg: _weightKg);
+        if (auto != null) {
+          summary = _endAt(summary, auto.endAt, trim: wasRecording);
+        }
+        _pendingSummary = summary;
+        _pendingAutoEnd = auto != null;
         _publish();
       }
       try {
@@ -187,11 +208,18 @@ class RunController extends Notifier<RunViewState> {
         state = _copyState(lastError: _endErrorMessage);
         rethrow;
       }
+      final autoEnded = _pendingAutoEnd;
       _engine = null;
       _runId = null;
       _pendingSummary = null;
+      _pendingAutoEnd = false;
       _flushClosed = false;
-      state = RunViewState(snapshot: _idleSnapshot, lastSummary: summary);
+      state = RunViewState(
+        snapshot: _idleSnapshot,
+        lastSummary: summary,
+        autoEnded: autoEnded,
+      );
+      if (autoEnded) _notifyAutoEnd(summary);
       return summary;
     } finally {
       _ending = false;
@@ -199,11 +227,16 @@ class RunController extends Notifier<RunViewState> {
   }
 
   /// 복구한 러닝이 있으면 true, 상태 paused. 위치 구독은 resume 때 한다.
+  ///
+  /// 복구한 러닝이 이미 자동 종료 조건을 넘었으면 묻지 않고 끝내고 false 를
+  /// 돌려준다(상태 autoEnded, lastSummary 에 요약). 일시정지 여부는 저장하지
+  /// 않으므로 기록 중이던 것으로 보고 판정한다. 자동 종료 저장이 실패하면
+  /// 러닝을 남기고 true 를 돌려준다.
   Future<bool> restoreIfAny() async {
     _requireNoRun();
     final active = await _repository.findActiveRun();
     if (active == null) return false;
-    _engine = RunEngine(
+    final engine = _engine = RunEngine(
       clock: ref.read(clockProvider),
       startedAt: active.startedAt,
       restoredSegments: active.segments,
@@ -211,9 +244,97 @@ class RunController extends Notifier<RunViewState> {
     );
     _runId = active.id;
     _weightKg = await _readWeight();
-    _startFlushTimer();
     _publish();
+    final decision = checkAutoEnd(
+      now: ref.read(clockProvider)(),
+      startedAt: active.startedAt,
+      recording: true,
+      lastPointAt: engine.lastPointAt,
+      recordingSince: null,
+      config: ref.read(runGuardConfigProvider),
+    );
+    if (decision != null) {
+      try {
+        await _finish(decision);
+        return false;
+      } catch (_) {
+        // 실패 문구는 lastError 에 남았다. 사용자가 다시 끝낼 수 있게 둔다.
+      }
+    }
+    _startFlushTimer();
     return true;
+  }
+
+  /// 자동 종료 조건을 넘었으면 끝내기 시작하고 true.
+  bool _checkAutoEnd() {
+    final engine = _engine;
+    if (engine == null || _ending || _pendingSummary != null) return false;
+    final runState = engine.state;
+    if (runState != RunState.recording && runState != RunState.paused) {
+      return false;
+    }
+    final decision = checkAutoEnd(
+      now: ref.read(clockProvider)(),
+      startedAt: engine.startedAt!,
+      recording: runState == RunState.recording,
+      lastPointAt: engine.lastPointAt,
+      recordingSince: engine.recordingSince,
+      config: ref.read(runGuardConfigProvider),
+    );
+    if (decision == null) return false;
+    unawaited(_autoEnd(decision));
+    return true;
+  }
+
+  Future<void> _autoEnd(AutoEndDecision decision) async {
+    try {
+      await _finish(decision);
+    } catch (_) {
+      // 마지막 저장이 실패해 러닝이 남았으면 틱마다 다시 시도한다.
+      // completeRun 이 실패했으면(ended) 사용자가 다시 끝낸다.
+      if (_engine != null && _pendingSummary == null) {
+        _startFlushTimer();
+        _startTick();
+      }
+    }
+  }
+
+  /// [summary] 의 끝을 [endAt] 으로 당긴다. 기록 중에 끝낸 요약은 잘라내기로
+  /// 다시 계산한다. 일시정지 중에 끝낸 요약은 [endAt] 뒤에 점이 없고 움직인
+  /// 시간도 멈춰 있으므로 끝 시각만 바꾼다(잘라내기는 일시정지 시간까지
+  /// 움직인 시간에서 뺀다).
+  RunSummary _endAt(RunSummary summary, DateTime endAt, {required bool trim}) {
+    if (!endAt.isBefore(summary.endedAt)) return summary;
+    if (trim) return trimRunEnd(summary, endAt, weightKg: _weightKg);
+    return RunSummary(
+      startedAt: summary.startedAt,
+      endedAt: endAt,
+      distanceM: summary.distanceM,
+      movingTime: summary.movingTime,
+      avgPaceSecPerKm: summary.avgPaceSecPerKm,
+      calories: summary.calories,
+      name: summary.name,
+      splits: summary.splits,
+      points: summary.points,
+      segments: summary.segments,
+    );
+  }
+
+  /// 알림 실패는 러닝 저장과 상관없으므로 버린다.
+  void _notifyAutoEnd(RunSummary summary) {
+    try {
+      unawaited(
+        ref
+            .read(instantNotifierProvider)
+            .showNow(
+              title: _autoEndTitle,
+              body:
+                  '${formatKm(summary.distanceM)}km 기록을 저장했어요. '
+                  '요약에서 확인하세요.',
+            )
+            .catchError((Object _) {}),
+      );
+    } catch (_) {}
   }
 
   void _requireNoRun() {
@@ -273,6 +394,7 @@ class RunController extends Notifier<RunViewState> {
 
   void _onLifecycleChanged(AppLifecycleState lifecycleState) {
     if (lifecycleState != AppLifecycleState.resumed) return;
+    if (_checkAutoEnd()) return;
     if (!_resubscribePending || _subscription != null) return;
     if (_engine?.snapshot.state != RunState.recording) return;
     _resubscribeTimer?.cancel();
@@ -300,7 +422,9 @@ class RunController extends Notifier<RunViewState> {
   }
 
   void _startTick() {
-    _tickTimer ??= Timer.periodic(_tickInterval, (_) => _publish());
+    _tickTimer ??= Timer.periodic(_tickInterval, (_) {
+      if (!_checkAutoEnd()) _publish();
+    });
   }
 
   void _stopTimers() {
@@ -387,6 +511,7 @@ class RunController extends Notifier<RunViewState> {
       lastSummary: state.lastSummary,
       lastError: clearError ? null : lastError ?? state.lastError,
       weightKg: _weightKg,
+      autoEnded: state.autoEnded,
     );
   }
 }

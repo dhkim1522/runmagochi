@@ -40,6 +40,12 @@ class _InRunScreenState extends ConsumerState<InRunScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // 종료를 잊어 자동으로 끝나면 직접 끝냈을 때처럼 닫는다. 홈이 요약을 연다.
+    ref.listen(runControllerProvider, (prev, next) {
+      if (next.autoEnded && prev?.autoEnded != true && mounted) {
+        Navigator.of(context).pop();
+      }
+    });
     final view = ref.watch(runControllerProvider);
     final controller = ref.read(runControllerProvider.notifier);
     final snap = view.snapshot;
