@@ -4,8 +4,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:runmagochi/app.dart';
 import 'package:runmagochi/avatar/app/providers.dart';
+import 'package:runmagochi/avatar/domain/growth_rules.dart';
+import 'package:runmagochi/core/korean.dart';
+import 'package:runmagochi/onboarding/ui/onboarding_screen.dart';
+import 'package:runmagochi/profile/app/providers.dart';
+import 'package:runmagochi/run/app/permission_gate.dart';
 import 'package:runmagochi/run/app/providers.dart';
 
+import 'onboarding/onboarding_screen_test.dart' show FakeOnboardingGrowthRepo;
 import 'run/ui/fakes.dart';
 
 void main() {
@@ -15,6 +21,7 @@ void main() {
         overrides: [
           runControllerProvider.overrideWith(FakeController.new),
           runRepositoryProvider.overrideWithValue(FakeRepo((0, 0))),
+          profileRepositoryProvider.overrideWithValue(FakeProfile()),
           growthServiceProvider.overrideWithValue(
             FakeGrowthService(growthState(weekDistanceM: 0)),
           ),
@@ -22,7 +29,8 @@ void main() {
         child: const RunmagochiApp(),
       ),
     );
-    await tester.pump();
+    await tester.pump(); // 첫 실행 완료 여부
+    await tester.pump(); // 홈의 성장 상태
     expect(find.text('러닝'), findsOneWidget);
     expect(find.text('기록'), findsOneWidget);
     expect(find.text('아바타'), findsOneWidget);
@@ -36,6 +44,7 @@ void main() {
         overrides: [
           runControllerProvider.overrideWith(FakeController.new),
           runRepositoryProvider.overrideWithValue(FakeRepo((0, 0))),
+          profileRepositoryProvider.overrideWithValue(FakeProfile()),
           growthServiceProvider.overrideWithValue(
             FakeGrowthService(growthState(weekDistanceM: 0)),
           ),
@@ -73,6 +82,7 @@ void main() {
         overrides: [
           runControllerProvider.overrideWith(FakeController.new),
           runRepositoryProvider.overrideWithValue(FakeRepo((0, 0))),
+          profileRepositoryProvider.overrideWithValue(FakeProfile()),
           growthServiceProvider.overrideWithValue(
             FakeGrowthService(growthState(weekDistanceM: 0)),
           ),
@@ -132,5 +142,80 @@ void main() {
     await tester.sendKeyEvent(LogicalKeyboardKey.space);
     await tester.pump();
     expect(find.text('최근 러닝'), findsNothing);
+  });
+
+  group('첫 실행', () {
+    Widget app({
+      required FakeProfile profile,
+      required FakeOnboardingGrowthRepo repo,
+      required FakeGrowthService growth,
+      required FakeController controller,
+    }) => ProviderScope(
+      key: UniqueKey(),
+      overrides: [
+        runControllerProvider.overrideWith(() => controller),
+        runRepositoryProvider.overrideWithValue(FakeRepo((0, 0))),
+        permissionGateProvider.overrideWithValue(FakeGate(GateResult.ready)),
+        growthServiceProvider.overrideWithValue(growth),
+        growthRepositoryProvider.overrideWithValue(repo),
+        profileRepositoryProvider.overrideWithValue(profile),
+        clockProvider.overrideWithValue(() => DateTime(2026, 10, 17)),
+      ],
+      child: const RunmagochiApp(),
+    );
+
+    Future<void> settle(WidgetTester tester) async {
+      for (var i = 0; i < 10; i++) {
+        await tester.pump(const Duration(milliseconds: 100));
+      }
+    }
+
+    testWidgets('완료하지 않았으면 첫 실행 화면부터, 마치면 홈, 다시 켜면 바로 홈', (tester) async {
+      final profile = FakeProfile(onboarded: false);
+      final repo = FakeOnboardingGrowthRepo(kind: AvatarKind.acorn);
+      final growth = FakeGrowthService(growthState(weekDistanceM: 0));
+      final controller = FakeController();
+      await tester.pumpWidget(
+        app(
+          profile: profile,
+          repo: repo,
+          growth: growth,
+          controller: controller,
+        ),
+      );
+      // 읽는 동안에는 홈이 잠깐이라도 보이지 않는다.
+      expect(find.text('러닝'), findsNothing);
+      expect(find.byType(OnboardingScreen), findsNothing);
+      await settle(tester);
+
+      expect(find.byType(OnboardingScreen), findsOneWidget);
+      expect(find.text(keepAll('꼬마 도토리가 왔어요!')), findsOneWidget);
+      expect(find.text('러닝'), findsNothing);
+      expect(controller.calls, isNot(contains('restore')), reason: '홈은 아직 없다');
+
+      for (final label in ['다음', '다음', '시작하기']) {
+        await tester.tap(find.text(label));
+        await settle(tester);
+      }
+      expect(profile.marks, 1);
+      expect(repo.names, ['토리']);
+      expect(find.byType(OnboardingScreen), findsNothing);
+      expect(find.text('러닝'), findsOneWidget);
+      expect(find.text('0.00km 달성'), findsOneWidget);
+
+      // 다시 켠다.
+      await tester.pumpWidget(
+        app(
+          profile: profile,
+          repo: repo,
+          growth: growth,
+          controller: FakeController(),
+        ),
+      );
+      await tester.pump();
+      expect(find.byType(OnboardingScreen), findsNothing);
+      expect(find.text('러닝'), findsOneWidget);
+      expect(profile.marks, 1);
+    });
   });
 }

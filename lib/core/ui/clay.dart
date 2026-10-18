@@ -142,6 +142,7 @@ class ClayButton extends StatefulWidget {
     this.background,
     this.foreground,
     this.lip,
+    this.border,
   });
 
   final String label;
@@ -149,6 +150,28 @@ class ClayButton extends StatefulWidget {
   final Color? background;
   final Color? foreground;
   final Color? lip;
+
+  /// 주면 [Borders.thick] 테두리를 그린다. 없으면 테두리 없음.
+  final Color? border;
+
+  /// 보조(이전 등) 버튼: 흰 클레이(surface + line 테두리 + line-strong 립, ink 글자).
+  factory ClayButton.secondary(
+    BuildContext context, {
+    Key? key,
+    required String label,
+    required VoidCallback? onPressed,
+  }) {
+    final c = AppColors.of(context);
+    return ClayButton(
+      key: key,
+      label: label,
+      onPressed: onPressed,
+      background: c.surface,
+      foreground: c.ink,
+      lip: c.lineStrong,
+      border: c.line,
+    );
+  }
 
   /// 버튼 높이(립 제외).
   static const double height = 64;
@@ -208,6 +231,9 @@ class _ClayButtonState extends State<ClayButton> {
               decoration: BoxDecoration(
                 color: widget.background ?? c.primary,
                 borderRadius: BorderRadius.circular(Radii.pill),
+                border: widget.border == null
+                    ? null
+                    : Border.all(color: widget.border!, width: Borders.thick),
                 boxShadow: [
                   BoxShadow(
                     color: widget.lip ?? c.primaryDeep,

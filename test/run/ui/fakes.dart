@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:runmagochi/avatar/app/growth_service.dart';
 import 'package:runmagochi/avatar/domain/growth_rules.dart';
 import 'package:runmagochi/avatar/domain/growth_state.dart';
+import 'package:runmagochi/profile/data/profile_repository.dart';
 import 'package:runmagochi/run/app/permission_gate.dart';
 import 'package:runmagochi/run/app/run_controller.dart';
 import 'package:runmagochi/run/data/run_repository.dart';
@@ -288,3 +289,30 @@ GrowthState growthState({
   totalDistanceM: 0,
   runCount: 0,
 );
+
+/// 프로필 저장소 가짜. 기본은 첫 실행을 마친 상태다(홈부터 보인다).
+class FakeProfile implements ProfileRepository {
+  FakeProfile({this.onboarded = true});
+  bool onboarded;
+  int marks = 0;
+  double? weight;
+
+  /// true 면 markOnboarded 가 실패한다.
+  bool markFails = false;
+
+  @override
+  Future<bool> isOnboarded() async => onboarded;
+
+  @override
+  Future<void> markOnboarded() async {
+    if (markFails) throw StateError('mark failed');
+    marks++;
+    onboarded = true;
+  }
+
+  @override
+  Future<double?> weightKg() async => weight;
+
+  @override
+  Future<void> setWeightKg(double? kg) async => weight = kg;
+}

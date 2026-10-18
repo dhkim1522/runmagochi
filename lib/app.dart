@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'avatar/ui/avatar_screen.dart';
 import 'core/theme.dart';
+import 'onboarding/ui/onboarding_screen.dart';
+import 'profile/app/providers.dart';
 import 'run/ui/history_screen.dart';
 import 'run/ui/home_screen.dart';
 
@@ -15,8 +18,50 @@ class RunmagochiApp extends StatelessWidget {
       theme: appLightTheme(),
       darkTheme: appDarkTheme(),
       themeMode: ThemeMode.system,
-      home: const _HomeShell(),
+      home: const _OnboardingGate(),
     );
+  }
+}
+
+/// 첫 실행을 마쳤는지 읽어 첫 실행 화면 또는 홈을 보여 준다.
+/// 읽는 동안은 빈 크림 화면이라 홈이 잠깐 비치지 않는다. 홈(권한 안내·복구 창 포함)은
+/// 첫 실행을 마친 뒤에야 만든다.
+class _OnboardingGate extends ConsumerStatefulWidget {
+  const _OnboardingGate();
+
+  @override
+  ConsumerState<_OnboardingGate> createState() => _OnboardingGateState();
+}
+
+class _OnboardingGateState extends ConsumerState<_OnboardingGate> {
+  bool? _onboarded;
+
+  @override
+  void initState() {
+    super.initState();
+    _read();
+  }
+
+  Future<void> _read() async {
+    bool done;
+    try {
+      done = await ref.read(profileRepositoryProvider).isOnboarded();
+    } catch (_) {
+      // 읽지 못하면 사용자를 첫 실행에 가두지 않고 홈으로 보낸다.
+      done = true;
+    }
+    if (mounted) setState(() => _onboarded = done);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return switch (_onboarded) {
+      null => const Scaffold(),
+      false => OnboardingScreen(
+        onFinished: () => setState(() => _onboarded = true),
+      ),
+      true => const _HomeShell(),
+    };
   }
 }
 
