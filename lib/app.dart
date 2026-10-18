@@ -140,6 +140,7 @@ class _TabItemState extends State<_TabItem> {
     );
     if (_focused) {
       content = DecoratedBox(
+        position: DecorationPosition.foreground,
         key: const ValueKey('tab-focus-ring'),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(Radii.sm),

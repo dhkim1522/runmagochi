@@ -1,5 +1,5 @@
-import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:runmagochi/app.dart';
@@ -90,6 +90,15 @@ void main() {
       await tester.pump();
     }
 
+    Size size(String t) => tester.getSize(
+      find
+          .ancestor(of: find.text(t), matching: find.byType(GestureDetector))
+          .first,
+    );
+    final before = [
+      for (final t in ['러닝', '기록', '아바타']) size(t),
+    ];
+
     var found = false;
     for (var i = 0; i < 40 && !found; i++) {
       await tab();
@@ -97,6 +106,13 @@ void main() {
     }
     expect(found, isTrue, reason: '탭 키로 하단 탭에 포커스가 간다');
     expect(ring, findsOneWidget);
+    expect(
+      [
+        for (final t in ['러닝', '기록', '아바타']) size(t),
+      ],
+      before,
+      reason: '포커스 표시가 탭 크기를 바꾸지 않는다',
+    );
 
     // 포커스가 러닝 탭에 있다면 다음(기록)으로 옮겨 Enter.
     await tab();
