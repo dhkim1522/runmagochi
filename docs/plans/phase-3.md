@@ -1,6 +1,6 @@
 # 페이즈 3 구현 계획
 
-- 상태: 실행
+- 상태: 검증
 - 모드: 수동
 - 범위: docs/roadmap.md 페이즈 3 완성도 (Android, 결정 0014)
 
@@ -119,13 +119,13 @@
   - 확인: 사용자 승인
   - 스킬: ui-ux-pro-max:ui-ux-pro-max
 
-- [ ] 15. 설정 화면
+- [x] 15. 설정 화면
   - 파일: `lib/settings/ui/settings_screen.dart`, `lib/run/ui/home_screen.dart`(설정 들어가는 버튼), `lib/avatar/data/growth_repository.dart`(이름 바꾸기)
   - 테스트: 위젯(체중 입력 검증 30~200kg, 저장 후 다시 열면 값 유지, 주간 목표 변경이 홈에 반영, 이름 변경이 아바타 탭에 반영, 백업 버튼이 서비스 호출, 가져오기 확인 창, 글자 1.3배)
   - 확인: `fvm flutter test test/settings`
   - 스킬: ui-ux-pro-max:ui-ux-pro-max
 
-- [ ] 16. 첫 실행 화면
+- [x] 16. 첫 실행 화면
   - 파일: `lib/onboarding/ui/onboarding_screen.dart`, `lib/app.dart`(첫 실행 미완료면 첫 실행 화면부터)
   - 동작: 무작위로 정해진 캐릭터(1단계)를 보여 주고, 이름(기본값 종류별 추천, 1~10자)과 주간 목표(3·5·10·15·20km 중 고르기, 기본 10km, 최소 3km)를 정한 뒤 홈으로 간다. 완료는 한 번만 표시하고 다시 켜면 홈부터. 기존 사용자(러닝이 있음)도 한 번 보지만 목표는 지금 값이 기본으로 선택된다.
   - 테스트: 위젯(3장 이동, 빈 이름 거부, 완료 후 저장값, 다시 열면 홈, 뒤로 가기, 글자 1.3배)
