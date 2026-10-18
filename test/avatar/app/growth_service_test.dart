@@ -6,6 +6,7 @@ import 'package:runmagochi/avatar/app/growth_service.dart';
 import 'package:runmagochi/avatar/data/drift_growth_repository.dart';
 import 'package:runmagochi/avatar/data/notification_scheduler.dart';
 import 'package:runmagochi/avatar/domain/growth_rules.dart';
+import 'package:runmagochi/avatar/domain/growth_state.dart';
 import 'package:runmagochi/avatar/domain/reminder_plan.dart';
 import 'package:runmagochi/core/week.dart';
 import 'package:runmagochi/run/data/app_database.dart';
@@ -72,9 +73,33 @@ class FakeRunRepository implements RunRepository {
   Future<void> completeRun(String runId, RunSummary summary) =>
       throw UnimplementedError();
 
+  /// 지운 러닝의 시작 시각.
+  final Map<String, DateTime> deleted = {};
+
   @override
-  Future<void> deleteRun(String id) async =>
-      runs.removeWhere((r) => r.run.id == id);
+  Future<void> deleteRun(String id) async {
+    final detail = await getRun(id);
+    if (detail != null) deleted[id] = detail.run.startedAt;
+    runs.removeWhere((r) => r.run.id == id);
+  }
+
+  /// 잘라내기처럼 거리만 바꾼다(시작 시각은 그대로).
+  void revise(String id, double distanceM) {
+    final i = runs.indexWhere((r) => r.run.id == id);
+    final old = runs[i].run;
+    runs.removeAt(i);
+    add(id, old.startedAt, distanceM);
+  }
+
+  @override
+  Future<void> replaceCompletedRun(String runId, RunSummary summary) =>
+      throw UnimplementedError();
+
+  @override
+  Future<Map<String, DateTime>> deletedRunStarts(Set<String> ids) async => {
+    for (final id in ids)
+      if (deleted.containsKey(id)) id: deleted[id]!,
+  };
 }
 
 class FakeScheduler implements NotificationScheduler {
@@ -381,6 +406,117 @@ void main() {
       await remove('a');
       await pumpEventQueue();
       expect(scheduler.calls.length, 2);
+    });
+  });
+
+  group('지운 러닝 자가 복구 (sync)', () {
+    test('runRemoved 전에 앱이 죽어도 다음 sync 가 경험치와 주 보너스를 무른다', () async {
+      runs.add('a', DateTime(2026, 10, 13, 7), 6000);
+      runs.add('b', DateTime(2026, 10, 15, 7), 5000);
+      await service.sync();
+      expect(await growth.totalXp(), 60 + 50 + 50);
+
+      await runs.deleteRun('b'); // runRemoved 를 부르기 전에 죽었다.
+      final gain = await service.sync();
+
+      expect(gain.isEmpty, isTrue);
+      expect(await growth.totalXp(), 60);
+      expect(await growth.isWeekAchieved(DateTime(2026, 10, 12)), isFalse);
+      expect(await growth.runIdsWithDistanceXp(), {'a'});
+    });
+
+    test('지난 주 러닝이면 그 주만 다시 판정한다', () async {
+      runs.add('old', DateTime(2026, 10, 6, 7), 11000);
+      runs.add('now', DateTime(2026, 10, 13, 7), 10000);
+      await service.sync();
+      await runs.deleteRun('old');
+      await service.sync();
+      expect(await growth.isWeekAchieved(DateTime(2026, 10, 5)), isFalse);
+      expect(await growth.isWeekAchieved(DateTime(2026, 10, 12)), isTrue);
+      expect(await growth.totalXp(), 100 + 50);
+    });
+
+    test('저장소가 지웠다고 확인하지 않은 경험치는 그대로 둔다', () async {
+      await growth.addDistanceXp('unknown', 30);
+      await service.sync();
+      expect(await growth.totalXp(), 30);
+    });
+  });
+
+  group('러닝 잘라내기 (runRevised)', () {
+    Future<GrowthGain> revise(String id, double distanceM) async {
+      final startedAt = (await runs.getRun(id))!.run.startedAt;
+      runs.revise(id, distanceM);
+      return service.runRevised(id, startedAt);
+    }
+
+    test('목표 아래로 내려가면 경험치가 새 거리 값이 되고 주 보너스를 무른다', () async {
+      runs.add('a', DateTime(2026, 10, 13, 7), 6000);
+      runs.add('b', DateTime(2026, 10, 15, 7), 5000);
+      await service.sync();
+      expect(await growth.totalXp(), 160); // 레벨 3
+
+      final delta = await revise('b', 3000);
+
+      expect(delta.distanceXp, -20);
+      expect(delta.goalBonusXp, -50);
+      expect(delta.levelBefore, 3);
+      expect(delta.levelAfter, 2);
+      expect(delta.stageBefore, stageForLevel(3));
+      expect(delta.stageAfter, stageForLevel(2));
+      expect(await growth.totalXp(), 90);
+      final state = await service.load();
+      expect(state.weekAchieved, isFalse);
+      expect(state.level.level, 2);
+      expect(state.weekDistanceM, 9000);
+    });
+
+    test('목표에 닿으면 주 보너스를 준다', () async {
+      runs.add('a', DateTime(2026, 10, 13, 7), 6000);
+      runs.add('b', DateTime(2026, 10, 15, 7), 3000);
+      await service.sync();
+
+      final delta = await revise('b', 5000);
+
+      expect(delta.distanceXp, 20);
+      expect(delta.goalBonusXp, 50);
+      expect(await growth.totalXp(), 160);
+      expect(await growth.isWeekAchieved(DateTime(2026, 10, 12)), isTrue);
+    });
+
+    test('목표 이상이 남으면 보너스는 그대로이고 거리 경험치만 준다', () async {
+      runs.add('a', DateTime(2026, 10, 13, 7), 11000);
+      await service.sync();
+      final delta = await revise('a', 10500);
+      expect(delta.distanceXp, -5);
+      expect(delta.goalBonusXp, 0);
+      expect(await growth.totalXp(), 105 + 50);
+    });
+
+    test('다시 sync 해도 바뀐 경험치를 또 주지 않는다', () async {
+      runs.add('a', DateTime(2026, 10, 13, 7), 11000);
+      await service.sync();
+      await revise('a', 5000);
+      final gain = await service.sync();
+      expect(gain.isEmpty, isTrue);
+      expect(await growth.totalXp(), 50);
+    });
+
+    test('sync 와 동시에 불러도 한 번에 하나씩 처리한다', () async {
+      runs.add('a', DateTime(2026, 10, 13, 7), 6000);
+      runs.add('b', DateTime(2026, 10, 15, 7), 5000);
+      await service.sync();
+      final startedAt = (await runs.getRun('b'))!.run.startedAt;
+      runs.revise('b', 3000);
+      final results = await Future.wait([
+        service.sync(),
+        service.runRevised('b', startedAt),
+        service.sync(),
+      ]);
+      final delta = results[1];
+      expect(delta.distanceXp, -20);
+      expect(delta.goalBonusXp, -50);
+      expect(await growth.totalXp(), 90);
     });
   });
 }

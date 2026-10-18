@@ -228,6 +228,25 @@ class FakeGrowthService implements GrowthService {
     removed.add((runId, runStartedAt));
   }
 
+  final List<(String, DateTime)> revised = [];
+
+  /// runRevised 가 돌려줄 변화. 없으면 빈 변화(레벨 1 그대로).
+  GrowthGain? revisedGain;
+
+  @override
+  Future<GrowthGain> runRevised(String runId, DateTime runStartedAt) async {
+    revised.add((runId, runStartedAt));
+    return revisedGain ??
+        const GrowthGain(
+          distanceXp: 0,
+          goalBonusXp: 0,
+          levelBefore: 1,
+          levelAfter: 1,
+          stageBefore: 1,
+          stageAfter: 1,
+        );
+  }
+
   @override
   Future<GrowthGain> setWeeklyTarget(double targetM) async {
     targets.add(targetM);

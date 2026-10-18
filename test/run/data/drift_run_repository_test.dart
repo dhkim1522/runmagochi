@@ -361,4 +361,123 @@ void main() {
       await expectLater(repo.deleteRun('none'), throwsStateError);
     });
   });
+
+  group('replaceCompletedRun', () {
+    const twoSplits = [
+      Split(index: 1, distanceM: 1000, duration: Duration(minutes: 5)),
+      Split(index: 2, distanceM: 1000, duration: Duration(minutes: 6)),
+    ];
+    final start = DateTime(2026, 1, 6, 9);
+
+    Future<String> completed() async {
+      final id = await repo.createActiveRun(start);
+      await repo.completeRun(
+        id,
+        summary(
+          start,
+          distanceM: 2500,
+          splits: twoSplits,
+          points: [
+            sample(start.add(const Duration(seconds: 1)), 37.5, 127.0),
+            sample(start.add(const Duration(seconds: 2)), 37.51, 127.01),
+            sample(start.add(const Duration(seconds: 3)), 37.52, 127.02),
+          ],
+        ),
+      );
+      return id;
+    }
+
+    RunSummary trimmed() => RunSummary(
+      startedAt: start,
+      endedAt: start.add(const Duration(minutes: 4)),
+      distanceM: 1200,
+      movingTime: const Duration(minutes: 4),
+      avgPaceSecPerKm: 200,
+      calories: 30.5,
+      name: '다른 이름',
+      splits: const [
+        Split(index: 1, distanceM: 1000, duration: Duration(minutes: 3)),
+      ],
+      points: [
+        sample(start.add(const Duration(seconds: 1)), 37.5, 127.0),
+        sample(start.add(const Duration(seconds: 2)), 37.51, 127.01),
+      ],
+    );
+
+    test('요약 값·경로·구간을 새 값으로 바꾸고 이름·시작은 그대로다', () async {
+      final id = await completed();
+      await repo.replaceCompletedRun(id, trimmed());
+
+      final detail = (await repo.getRun(id))!;
+      expect(detail.run.distanceM, 1200);
+      expect(detail.run.movingTime, const Duration(minutes: 4));
+      expect(detail.run.avgPaceSecPerKm, 200);
+      expect(detail.run.name, '테스트 러닝');
+      expect(detail.run.startedAt, start);
+      expect(detail.calories, 30.5);
+      expect(detail.route, hasLength(2));
+      expect(detail.route.first.$1, closeTo(37.5, 1e-5));
+      expect(detail.route.last.$1, closeTo(37.51, 1e-5));
+      expect(detail.splits.map((s) => s.duration), [
+        const Duration(minutes: 3),
+      ]);
+      final row = await (db.select(
+        db.runs,
+      )..where((r) => r.id.equals(id))).getSingle();
+      expect(row.endedAt!.toLocal(), start.add(const Duration(minutes: 4)));
+      expect((await repo.listRuns()).single.distanceM, 1200);
+      expect(await repo.weeklyTotal(DateTime(2026, 1, 8)), (1200.0, 1));
+    });
+
+    test('예전 구간은 삭제 표시로 남고 새 구간만 살아 있다', () async {
+      final id = await completed();
+      await repo.replaceCompletedRun(id, trimmed());
+      final rows = await (db.select(
+        db.splits,
+      )..where((s) => s.runId.equals(id))).get();
+      expect(rows, hasLength(3));
+      expect(rows.where((s) => s.deletedAt != null), hasLength(2));
+      final live = rows.where((s) => s.deletedAt == null).toList();
+      expect(live.single.durationMs, const Duration(minutes: 3).inMilliseconds);
+    });
+
+    test('없거나 진행 중이거나 지운 러닝이면 StateError 이고 그대로다', () async {
+      await expectLater(
+        repo.replaceCompletedRun('none', trimmed()),
+        throwsStateError,
+      );
+      final active = await repo.createActiveRun(start);
+      await expectLater(
+        repo.replaceCompletedRun(active, trimmed()),
+        throwsStateError,
+      );
+      expect((await repo.findActiveRun())?.id, active);
+
+      final id = await completed();
+      await repo.deleteRun(id);
+      await expectLater(
+        repo.replaceCompletedRun(id, trimmed()),
+        throwsStateError,
+      );
+      final row = await (db.select(
+        db.runs,
+      )..where((r) => r.id.equals(id))).getSingle();
+      expect(row.distanceM, 2500);
+    });
+  });
+
+  group('deletedRunStarts', () {
+    test('주어진 id 중 지운 완료 러닝의 시작 시각만 돌려준다', () async {
+      final a = await repo.createActiveRun(DateTime(2026, 1, 6, 9));
+      await repo.completeRun(a, summary(DateTime(2026, 1, 6, 9)));
+      final b = await repo.createActiveRun(DateTime(2026, 1, 7, 9));
+      await repo.completeRun(b, summary(DateTime(2026, 1, 7, 9)));
+      await repo.deleteRun(a);
+
+      expect(await repo.deletedRunStarts({a, b, 'none'}), {
+        a: DateTime(2026, 1, 6, 9),
+      });
+      expect(await repo.deletedRunStarts({}), isEmpty);
+    });
+  });
 }

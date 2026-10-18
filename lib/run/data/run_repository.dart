@@ -73,4 +73,15 @@ abstract interface class RunRepository {
   /// 이미 지운 러닝이면 아무 일도 없다. 진행 중이거나 없는 러닝이면 [StateError].
   /// 경험치는 따로 무른다(`GrowthService.runRemoved`).
   Future<void> deleteRun(String id);
+
+  /// 완료된 러닝의 끝 시각·거리·움직인 시간·평균 페이스·칼로리·경로·구간을
+  /// [summary] 값으로 바꾼다(한 트랜잭션). 예전 구간에는 삭제 표시를 하고 새
+  /// 구간을 넣는다. 시작 시각·이름은 그대로다. 끝부분 잘라내기에 쓴다.
+  /// 지웠거나 진행 중이거나 없는 러닝이면 [StateError].
+  /// 경험치는 따로 다시 계산한다(`GrowthService.runRevised`).
+  Future<void> replaceCompletedRun(String runId, RunSummary summary);
+
+  /// [ids] 가운데 삭제 표시한 완료 러닝의 시작 시각(현지). 성장 자가 복구가
+  /// 지운 러닝의 주를 다시 판정할 때 쓴다.
+  Future<Map<String, DateTime>> deletedRunStarts(Set<String> ids);
 }

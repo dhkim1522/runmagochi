@@ -56,4 +56,16 @@ class GrowthGain {
   bool get leveledUp => levelAfter > levelBefore;
   bool get stageUp => stageAfter > stageBefore;
   bool get isEmpty => distanceXp == 0 && goalBonusXp == 0;
+
+  /// 이 gain 을 받은 러닝을 다시 계산한 변화 [delta](`GrowthService.runRevised`)
+  /// 를 더한 값. 경험치는 더하고, 레벨·단계는 이 gain 의 시작에서 [delta] 뒤
+  /// 지금 값으로 잇는다. 여러 번 고쳐도 이어서 부르면 된다.
+  GrowthGain revisedBy(GrowthGain delta) => GrowthGain(
+    distanceXp: distanceXp + delta.distanceXp,
+    goalBonusXp: goalBonusXp + delta.goalBonusXp,
+    levelBefore: levelBefore,
+    levelAfter: delta.levelAfter,
+    stageBefore: stageBefore,
+    stageAfter: delta.stageAfter,
+  );
 }

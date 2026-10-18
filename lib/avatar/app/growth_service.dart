@@ -35,6 +35,35 @@ class GrowthService {
   Future<void> runRemoved(String runId, DateTime runStartedAt) =>
       _serial(() => _runChanged(runId, runStartedAt));
 
+  /// 저장소에서 요약을 바꾼(끝부분 잘라내기) 러닝의 거리 경험치를 새 거리로
+  /// 다시 매기고 그 주를 양방향으로 다시 판정한다. 시작 시각은 그대로라는 전제다.
+  ///
+  /// 이 호출이 바꾼 만큼을 돌려준다: 거리 경험치 차이(음수 가능), 주 보너스
+  /// 차이(+50·0·−50), 호출 전·후 레벨과 단계. 요약 화면은 처음 받은 gain 에
+  /// `GrowthGain.revisedBy` 로 더해 보여 준다. 레벨이 내려갈 수 있다.
+  Future<GrowthGain> runRevised(String runId, DateTime runStartedAt) =>
+      _serial(() async {
+        final week = weekStartOf(runStartedAt);
+        final xpBefore = await _growth.totalXp();
+        final achievedBefore = await _growth.isWeekAchieved(week);
+        await _runChanged(runId, runStartedAt);
+        final xpAfter = await _growth.totalXp();
+        final achievedAfter = await _growth.isWeekAchieved(week);
+        final bonus =
+            ((achievedAfter ? 1 : 0) - (achievedBefore ? 1 : 0)) *
+            weeklyGoalBonusXp;
+        final levelBefore = levelFor(xpBefore).level;
+        final levelAfter = levelFor(xpAfter).level;
+        return GrowthGain(
+          distanceXp: xpAfter - xpBefore - bonus,
+          goalBonusXp: bonus,
+          levelBefore: levelBefore,
+          levelAfter: levelAfter,
+          stageBefore: stageForLevel(levelBefore),
+          stageAfter: stageForLevel(levelAfter),
+        );
+      });
+
   /// 일을 앞선 sync·runRemoved 뒤에 하나씩 돌린다.
   Future<T> _serial<T>(Future<T> Function() job) {
     final result = _tail.then((_) => job());
@@ -98,12 +127,27 @@ class GrowthService {
     }
   }
 
+  /// deleteRun 과 runRemoved 사이에 앱이 죽으면 지운 러닝의 경험치가 남는다.
+  /// 저장소가 지웠다고 확인한 러닝만 경험치를 무르고 그 주를 다시 판정한다.
+  /// 알림(gain)에는 넣지 않는다.
+  Future<void> _healDeletedRuns(List<RunListItem> liveRuns) async {
+    final live = {for (final r in liveRuns) r.id};
+    final orphans = (await _growth.runIdsWithDistanceXp()).difference(live);
+    if (orphans.isEmpty) return;
+    final deleted = await _runs.deletedRunStarts(orphans);
+    for (final MapEntry(key: runId, value: startedAt) in deleted.entries) {
+      await _runChanged(runId, startedAt);
+    }
+  }
+
   Future<GrowthGain> _sync() async {
+    final runs = await _runs.listRuns(); // 최신순
+    // 복구로 무른 경험치는 이번 gain 의 시작 레벨에 넣지 않는다.
+    await _healDeletedRuns(runs);
     final xpBefore = await _growth.totalXp();
     final levelBefore = levelFor(xpBefore).level;
 
     final known = await _growth.runIdsWithDistanceXp();
-    final runs = await _runs.listRuns(); // 최신순
     var distanceXpSum = 0;
     // 러닝이 있는 모든 주와 이번 주를 판정한다 (중간에 끊긴 보너스도 복구).
     final weeks = <DateTime>{

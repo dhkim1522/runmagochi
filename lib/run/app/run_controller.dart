@@ -42,6 +42,7 @@ class RunViewState {
     this.lastError,
     this.weightKg = defaultWeightKg,
     this.autoEnded = false,
+    this.lastRunId,
   });
 
   final RunSnapshot snapshot;
@@ -56,6 +57,9 @@ class RunViewState {
 
   /// [lastSummary] 가 종료를 잊어 자동으로 끝낸 러닝이다 (결정 0016).
   final bool autoEnded;
+
+  /// [lastSummary] 러닝의 저장소 id. 끝부분 잘라내기에 쓴다.
+  final String? lastRunId;
 }
 
 class RunController extends Notifier<RunViewState> {
@@ -170,6 +174,47 @@ class RunController extends Notifier<RunViewState> {
   /// 요약으로 completeRun 만 다시 한다.
   Future<RunSummary> end() => _finish(null);
 
+  /// 잘라내기가 진행 중.
+  bool _trimming = false;
+
+  /// 방금 끝낸 러닝([RunViewState.lastSummary])의 끝을 [newEnd] 로 앞당겨
+  /// 저장소에 바꿔 저장하고 lastSummary 를 바꾼 요약으로 바꾼다. 원본 점이
+  /// 메모리에 있는 동안(다음 러닝을 시작하기 전)만 된다. 체중은 종료 때 읽은
+  /// 값을 쓴다. 경험치는 바꾸지 않는다(`trimLastRun` 이 한다).
+  ///
+  /// 끝낸 러닝이 없거나 러닝 중이거나 잘라내는 중이면 [StateError], [newEnd]
+  /// 가 시작 앞이거나 끝 뒤면 [ArgumentError]. 저장이 실패하면 그대로 던지고
+  /// lastSummary 는 바뀌지 않는다.
+  Future<(String runId, RunSummary summary)> trimLastSummary(
+    DateTime newEnd,
+  ) async {
+    final summary = state.lastSummary;
+    final runId = state.lastRunId;
+    if (summary == null || runId == null || _runId != null || _starting) {
+      throw StateError('잘라낼 수 있는 끝낸 러닝이 없다.');
+    }
+    if (_trimming) throw StateError('이미 잘라내는 중이다.');
+    _trimming = true;
+    try {
+      final trimmed = trimRunEnd(summary, newEnd, weightKg: _weightKg);
+      await _repository.replaceCompletedRun(runId, trimmed);
+      // 그 사이 새 러닝을 시작했으면 상태를 덮어쓰지 않는다.
+      if (state.lastRunId == runId) {
+        state = RunViewState(
+          snapshot: state.snapshot,
+          lastSummary: trimmed,
+          lastError: state.lastError,
+          weightKg: state.weightKg,
+          autoEnded: state.autoEnded,
+          lastRunId: runId,
+        );
+      }
+      return (runId, trimmed);
+    } finally {
+      _trimming = false;
+    }
+  }
+
   /// [auto] 가 있으면 끝 시각을 [AutoEndDecision.endAt] 으로 당기고, 저장에
   /// 성공하면 autoEnded 로 표시하고 알림을 띄운다.
   Future<RunSummary> _finish(AutoEndDecision? auto) async {
@@ -218,6 +263,7 @@ class RunController extends Notifier<RunViewState> {
         snapshot: _idleSnapshot,
         lastSummary: summary,
         autoEnded: autoEnded,
+        lastRunId: runId,
       );
       if (autoEnded) _notifyAutoEnd(summary);
       return summary;
@@ -513,6 +559,7 @@ class RunController extends Notifier<RunViewState> {
       lastError: clearError ? null : lastError ?? state.lastError,
       weightKg: _weightKg,
       autoEnded: state.autoEnded,
+      lastRunId: state.lastRunId,
     );
   }
 }

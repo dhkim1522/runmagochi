@@ -142,31 +142,14 @@ class DriftRunRepository implements RunRepository {
               avgPaceSecPerKm: Value(summary.avgPaceSecPerKm),
               calories: Value(summary.calories),
               name: Value(summary.name),
-              encodedRoute: Value(
-                encodePolyline([
-                  for (final p in summary.points) (p.latitude, p.longitude),
-                ]),
-              ),
+              encodedRoute: Value(_encodeRoute(summary)),
               updatedAt: Value(now),
             ),
           );
       if (updated == 0) {
         throw StateError('진행 중인 러닝이 아니다: $runId');
       }
-      await _db.batch((b) {
-        b.insertAll(_db.splits, [
-          for (final s in summary.splits)
-            SplitsCompanion.insert(
-              id: _uuid.v4(),
-              runId: runId,
-              idx: s.index,
-              distanceM: s.distanceM,
-              durationMs: s.duration.inMilliseconds,
-              createdAt: now,
-              updatedAt: now,
-            ),
-        ]);
-      });
+      await _insertSplits(runId, summary.splits, now);
       await (_db.delete(
         _db.runPoints,
       )..where((p) => p.runId.equals(runId))).go();
@@ -257,6 +240,73 @@ class DriftRunRepository implements RunRepository {
       await (_db.update(_db.splits)
             ..where((s) => s.runId.equals(id) & s.deletedAt.isNull()))
           .write(SplitsCompanion(deletedAt: Value(now), updatedAt: Value(now)));
+    });
+  }
+
+  @override
+  Future<void> replaceCompletedRun(String runId, RunSummary summary) {
+    return _db.transaction(() async {
+      final now = _now();
+      final updated =
+          await (_db.update(_db.runs)..where(
+                (r) =>
+                    r.id.equals(runId) &
+                    r.status.equals(_completed) &
+                    r.deletedAt.isNull(),
+              ))
+              .write(
+                RunsCompanion(
+                  endedAt: Value(summary.endedAt.toUtc()),
+                  distanceM: Value(summary.distanceM),
+                  movingTimeS: Value(summary.movingTime.inSeconds),
+                  avgPaceSecPerKm: Value(summary.avgPaceSecPerKm),
+                  calories: Value(summary.calories),
+                  encodedRoute: Value(_encodeRoute(summary)),
+                  updatedAt: Value(now),
+                ),
+              );
+      if (updated == 0) {
+        throw StateError('완료된 러닝이 아니다: $runId');
+      }
+      await (_db.update(_db.splits)
+            ..where((s) => s.runId.equals(runId) & s.deletedAt.isNull()))
+          .write(SplitsCompanion(deletedAt: Value(now), updatedAt: Value(now)));
+      await _insertSplits(runId, summary.splits, now);
+    });
+  }
+
+  @override
+  Future<Map<String, DateTime>> deletedRunStarts(Set<String> ids) async {
+    if (ids.isEmpty) return const {};
+    final rows =
+        await (_db.select(_db.runs)..where(
+              (r) =>
+                  r.id.isIn(ids) &
+                  r.status.equals(_completed) &
+                  r.deletedAt.isNotNull(),
+            ))
+            .get();
+    return {for (final r in rows) r.id: r.startedAt.toLocal()};
+  }
+
+  String _encodeRoute(RunSummary summary) => encodePolyline([
+    for (final p in summary.points) (p.latitude, p.longitude),
+  ]);
+
+  Future<void> _insertSplits(String runId, List<Split> splits, DateTime now) {
+    return _db.batch((b) {
+      b.insertAll(_db.splits, [
+        for (final s in splits)
+          SplitsCompanion.insert(
+            id: _uuid.v4(),
+            runId: runId,
+            idx: s.index,
+            distanceM: s.distanceM,
+            durationMs: s.duration.inMilliseconds,
+            createdAt: now,
+            updatedAt: now,
+          ),
+      ]);
     });
   }
 }
