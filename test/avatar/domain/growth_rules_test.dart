@@ -79,4 +79,23 @@ void main() {
       AvatarAction.run,
     );
   });
+
+  group('excludedFastDistanceM', () {
+    Split sp(int i, double m, int sec) =>
+        Split(index: i, distanceM: m, duration: Duration(seconds: sec));
+
+    test('빠른 1km 구간 거리만 합한다', () {
+      final splits = [sp(1, 1000, 140), sp(2, 1000, 300), sp(3, 1000, 100)];
+      expect(excludedFastDistanceM(splits), 2000);
+    });
+    test('정확히 150초/km 와 1km 미만 마지막 구간은 뺀 거리에 안 든다', () {
+      expect(excludedFastDistanceM([sp(1, 1000, 150), sp(2, 500, 60)]), 0);
+    });
+    test('구간이 없으면 0', () => expect(excludedFastDistanceM([]), 0));
+    test('distanceXp 와 같은 기준이다', () {
+      final splits = [sp(1, 1000, 140), sp(2, 1000, 300)];
+      expect(distanceXp(2000, splits), 10);
+      expect(excludedFastDistanceM(splits), 1000);
+    });
+  });
 }

@@ -19,6 +19,7 @@ class GrowthSummary extends StatefulWidget {
     required this.gain,
     required this.distanceM,
     this.weekTargetM,
+    this.excludedM = 0,
   });
 
   /// 아바타 종류. 아직 모르면 null 이고 같은 크기의 빈자리를 둔다.
@@ -30,6 +31,9 @@ class GrowthSummary extends StatefulWidget {
 
   /// 이번 주 목표(미터). 모르면 null.
   final double? weekTargetM;
+
+  /// 속도 검사로 경험치에서 뺀 거리(미터). 0 이면 안내를 보이지 않는다.
+  final double excludedM;
 
   @override
   State<GrowthSummary> createState() => _GrowthSummaryState();
@@ -88,6 +92,13 @@ class _GrowthSummaryState extends State<GrowthSummary>
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         _XpRow('달린 거리 ${formatKm(widget.distanceM)}km', '경험치 +${g.distanceXp}'),
+        if (widget.excludedM > 0) ...[
+          const SizedBox(height: Gap.s2),
+          Text(
+            '빠른 이동 ${formatKm(widget.excludedM)}km는 경험치에서 뺐어요',
+            style: t.caption.copyWith(color: c.inkMuted),
+          ),
+        ],
         if (g.goalBonusXp > 0) ...[
           const SizedBox(height: Gap.s3),
           _XpRow(goalLabel, '경험치 +${g.goalBonusXp}', merged: true),

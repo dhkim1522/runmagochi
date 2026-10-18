@@ -2,6 +2,7 @@ import 'package:flutter/material.dart' hide Split;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../avatar/app/providers.dart';
+import '../../avatar/domain/growth_rules.dart';
 import '../../avatar/domain/growth_state.dart';
 import '../../avatar/ui/growth_summary.dart';
 import '../../core/format.dart';
@@ -54,6 +55,7 @@ class SummaryScreen extends ConsumerWidget {
               gain: g,
               distanceM: s.distanceM,
               weekTargetM: weekTargetM,
+              excludedM: excludedFastDistanceM(s.splits),
             );
       body = _SummaryBody(
         growth: growth,

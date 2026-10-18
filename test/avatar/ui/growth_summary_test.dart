@@ -126,4 +126,45 @@ void main() {
     expect(find.byType(AvatarView), findsNothing);
     expect(tester.getSize(find.byType(AvatarSlot)), const Size(192, 192));
   });
+
+  group('빠른 이동 안내', () {
+    Future<void> pumpExcluded(
+      WidgetTester tester,
+      double excludedM, {
+      double scale = 1.0,
+    }) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: appLightTheme(),
+          home: MediaQuery(
+            data: MediaQueryData(textScaler: TextScaler.linear(scale)),
+            child: Scaffold(
+              body: GrowthSummary(
+                kind: AvatarKind.chick,
+                gain: gain(),
+                distanceM: 5020,
+                excludedM: excludedM,
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
+    testWidgets('뺀 거리가 있으면 한 줄 안내가 보인다', (tester) async {
+      await pumpExcluded(tester, 1200);
+      expect(find.text('빠른 이동 1.20km는 경험치에서 뺐어요'), findsOneWidget);
+    });
+
+    testWidgets('0 이면 아무것도 안 보인다', (tester) async {
+      await pumpExcluded(tester, 0);
+      expect(find.textContaining('빠른 이동'), findsNothing);
+    });
+
+    testWidgets('글자 1.3배에서 넘치지 않는다', (tester) async {
+      await pumpExcluded(tester, 1200, scale: 1.3);
+      expect(tester.takeException(), isNull);
+      expect(find.textContaining('빠른 이동'), findsOneWidget);
+    });
+  });
 }
