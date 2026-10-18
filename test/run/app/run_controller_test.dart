@@ -124,6 +124,10 @@ class _FakeRunRepository implements RunRepository {
       throw UnimplementedError();
 
   @override
+  Future<Set<String>> existingRunIds(Set<String> ids) =>
+      throw UnimplementedError();
+
+  @override
   Future<Map<String, DateTime>> completedRunRevisions() =>
       throw UnimplementedError();
 }

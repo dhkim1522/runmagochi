@@ -64,6 +64,10 @@ class GrowthService {
         );
       });
 
+  /// [job] 을 sync·runRemoved·runRevised 와 같은 줄에서 돌린다. 도는 동안 성장
+  /// 계산이 끼어들지 않는다. 백업 가져오기처럼 DB 를 통째로 바꿀 때 쓴다.
+  Future<T> exclusive<T>(Future<T> Function() job) => _serial(job);
+
   /// 일을 앞선 sync·runRemoved 뒤에 하나씩 돌린다.
   Future<T> _serial<T>(Future<T> Function() job) {
     final result = _tail.then((_) => job());
@@ -131,6 +135,9 @@ class GrowthService {
   /// 주만 다시 판정하고 알림(gain)에는 넣지 않는다.
   /// - 지운 러닝: deleteRun 과 runRemoved 사이에 죽으면 경험치가 남는다. 저장소가
   ///   지웠다고 확인한 러닝만 경험치를 무른다.
+  /// - 없는 러닝: 저장소에 행이 아예 없는(진행 중·완료·삭제 어디에도 없는) 러닝의
+  ///   경험치도 무른다. 백업 가져오기처럼 DB 가 바뀌어 남은 경험치다. 시작 시각을
+  ///   몰라 주는 다시 판정하지 않는다(주 달성은 러닝 거리로만 정한다).
   /// - 바꾼 러닝: replaceCompletedRun 뒤 runRevised 가 실패하면 경험치가 예전
   ///   거리 값으로 남는다. 기록을 바꾼 시각이 경험치 행을 바꾼 시각보다 늦으면
   ///   새 거리로 다시 매긴다. 다시 매기면 경험치 행 시각이 지금으로 바뀌어 한 번만 한다.
@@ -143,6 +150,10 @@ class GrowthService {
       final deleted = await _runs.deletedRunStarts(orphans);
       for (final MapEntry(key: runId, value: startedAt) in deleted.entries) {
         await _runChanged(runId, startedAt);
+      }
+      final existing = await _runs.existingRunIds(orphans);
+      for (final runId in orphans.difference(existing)) {
+        await _growth.revokeDistanceXp(runId);
       }
     }
     final revisedAt = await _runs.completedRunRevisions();

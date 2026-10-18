@@ -15,40 +15,38 @@ class DriftBackupRepository implements BackupRepository {
 
   @override
   Future<String> exportJson(DateTime now) async {
-    final active = await (_db.select(
-      _db.runs,
-    )..where((r) => r.status.equals('active'))).get();
-    final activeIds = [for (final r in active) r.id];
-
-    final runs = await (_db.select(
-      _db.runs,
-    )..where((r) => r.status.equals('active').not())).get();
-    final splits = await (_db.select(
-      _db.splits,
-    )..where((s) => s.runId.isNotIn(activeIds))).get();
-    final xp = await (_db.select(
-      _db.xpTxns,
-    )..where((x) => x.runId.isNull() | x.runId.isNotIn(activeIds))).get();
-    final avatars = await _db.select(_db.avatars).get();
-    final goals = await _db.select(_db.weeklyGoals).get();
-    final profiles = await _db.select(_db.profiles).get();
-
     List<Map<String, Object?>> rows(Iterable<DataClass> l) => [
       for (final d in l) d.toJson(serializer: _ser).cast<String, Object?>(),
     ];
-    return BackupCodec.encode(
-      BackupData(
-        exportedAt: now,
-        tables: {
-          'runs': rows(runs),
-          'splits': rows(splits),
-          'avatars': rows(avatars),
-          'weeklyGoals': rows(goals),
-          'xpTxns': rows(xp),
-          'profiles': rows(profiles),
-        },
-      ),
-    );
+    // 모든 읽기를 한 트랜잭션에서 해 한 시점의 스냅샷을 만든다.
+    final tables = await _db.transaction(() async {
+      final active = await (_db.select(
+        _db.runs,
+      )..where((r) => r.status.equals('active'))).get();
+      final activeIds = [for (final r in active) r.id];
+
+      final runs = await (_db.select(
+        _db.runs,
+      )..where((r) => r.status.equals('active').not())).get();
+      final splits = await (_db.select(
+        _db.splits,
+      )..where((s) => s.runId.isNotIn(activeIds))).get();
+      final xp = await (_db.select(
+        _db.xpTxns,
+      )..where((x) => x.runId.isNull() | x.runId.isNotIn(activeIds))).get();
+      final avatars = await _db.select(_db.avatars).get();
+      final goals = await _db.select(_db.weeklyGoals).get();
+      final profiles = await _db.select(_db.profiles).get();
+      return {
+        'runs': rows(runs),
+        'splits': rows(splits),
+        'avatars': rows(avatars),
+        'weeklyGoals': rows(goals),
+        'xpTxns': rows(xp),
+        'profiles': rows(profiles),
+      };
+    });
+    return BackupCodec.encode(BackupData(exportedAt: now, tables: tables));
   }
 
   @override
@@ -79,6 +77,10 @@ class DriftBackupRepository implements BackupRepository {
       );
     } on Object {
       throw const BackupFormatException('백업 파일을 읽을 수 없어요. 데이터가 잘못됐어요');
+    }
+    // 내보내기는 진행 중 러닝을 담지 않는다. 손으로 만든 파일이면 되살아나지 않게 막는다.
+    if (runs.any((r) => r.status == 'active')) {
+      throw const BackupFormatException('백업 파일을 읽을 수 없어요. 진행 중 러닝이 들어 있어요');
     }
 
     await _db.transaction(() async {

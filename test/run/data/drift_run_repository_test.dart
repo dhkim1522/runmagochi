@@ -481,6 +481,18 @@ void main() {
     });
   });
 
+  test('existingRunIds 는 진행 중·완료·지운 러닝 id 를 모두 돌려주고 없는 id 는 뺀다', () async {
+    final a = await repo.createActiveRun(DateTime(2026, 1, 6, 9));
+    await repo.completeRun(a, summary(DateTime(2026, 1, 6, 9)));
+    final b = await repo.createActiveRun(DateTime(2026, 1, 7, 9));
+    await repo.completeRun(b, summary(DateTime(2026, 1, 7, 9)));
+    await repo.deleteRun(b);
+    final c = await repo.createActiveRun(DateTime(2026, 1, 8, 9));
+
+    expect(await repo.existingRunIds({a, b, c, 'none'}), {a, b, c});
+    expect(await repo.existingRunIds({}), isEmpty);
+  });
+
   test('completedRunRevisions 는 살아 있는 완료 러닝의 바뀐 시각이고 교체하면 바뀐다', () async {
     var wall = DateTime.utc(2026, 1, 6, 0);
     final timed = DriftRunRepository(db, now: () => wall);

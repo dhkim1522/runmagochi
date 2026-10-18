@@ -76,7 +76,9 @@ class BackupService {
       if (await _isRunActive()) return const BackupBlockedByRun();
       final json = await _files.pickJson();
       if (json == null) return const BackupCancelled();
-      await _repository.importJson(json);
+      // 도는 중인 성장 계산이 옛 DB 의 러닝 경험치를 새 DB 에 쓰지 않도록
+      // 성장 계산과 같은 줄에서 바꾼다.
+      await _growth.exclusive(() => _repository.importJson(json));
     } on BackupFormatException catch (e) {
       return BackupFailed(e.message);
     } catch (_) {

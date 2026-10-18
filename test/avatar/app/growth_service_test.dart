@@ -109,6 +109,18 @@ class FakeRunRepository implements RunRepository {
     for (final id in ids)
       if (deleted.containsKey(id)) id: deleted[id]!,
   };
+
+  /// 목록에 없지만 저장소에 행이 있는 러닝(진행 중 등).
+  final Set<String> otherIds = {};
+
+  @override
+  Future<Set<String>> existingRunIds(Set<String> ids) async => {
+    for (final id in ids)
+      if (otherIds.contains(id) ||
+          deleted.containsKey(id) ||
+          runs.any((r) => r.run.id == id))
+        id,
+  };
 }
 
 class FakeScheduler implements NotificationScheduler {
@@ -446,9 +458,29 @@ void main() {
     });
 
     test('저장소가 지웠다고 확인하지 않은 경험치는 그대로 둔다', () async {
-      await growth.addDistanceXp('unknown', 30);
+      runs.otherIds.add('kept'); // 목록에는 없지만 행은 있다(진행 중 등).
+      await growth.addDistanceXp('kept', 30);
       await service.sync();
       expect(await growth.totalXp(), 30);
+    });
+
+    test('저장소에 아예 없는 러닝의 경험치는 sync 가 무른다', () async {
+      runs.add('a', DateTime(2026, 10, 13, 7), 5020);
+      await service.sync();
+      await growth.addDistanceXp('ghost', 30);
+      final gain = await service.sync();
+      expect(gain.isEmpty, isTrue);
+      expect(await growth.totalXp(), 50);
+      expect(await growth.runIdsWithDistanceXp(), {'a'});
+    });
+
+    test('exclusive 는 앞선 sync 가 끝난 뒤에 돈다', () async {
+      runs.add('a', DateTime(2026, 10, 13, 7), 5020);
+      final s = service.sync();
+      // 앞선 sync 가 쓴 경험치를 이미 본다.
+      final seen = service.exclusive(() => growth.totalXp());
+      expect(await seen, 50);
+      await s;
     });
   });
 

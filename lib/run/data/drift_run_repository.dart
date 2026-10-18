@@ -293,6 +293,15 @@ class DriftRunRepository implements RunRepository {
   }
 
   @override
+  Future<Set<String>> existingRunIds(Set<String> ids) async {
+    if (ids.isEmpty) return const {};
+    final rows = await (_db.select(
+      _db.runs,
+    )..where((r) => r.id.isIn(ids))).get();
+    return {for (final r in rows) r.id};
+  }
+
+  @override
   Future<Map<String, DateTime>> completedRunRevisions() async {
     final rows = await (_db.select(
       _db.runs,

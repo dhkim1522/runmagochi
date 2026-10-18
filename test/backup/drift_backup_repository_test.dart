@@ -271,6 +271,52 @@ void main() {
       ((m['tables'] as Map)['avatars'] as List)[0].remove('name');
       return expectRejected(jsonEncode(m));
     });
+    test('진행 중 러닝이 들어 있음', () {
+      final m = parsed();
+      ((m['tables'] as Map)['runs'] as List)[0]['status'] = 'active';
+      return expectRejected(jsonEncode(m));
+    });
+  });
+
+  test('내보내기는 한 시점의 스냅샷이다 (도중에 생긴 진행 중 러닝의 구간이 섞이지 않는다)', () async {
+    await _seed(src);
+    final exporting = DriftBackupRepository(src).exportJson(_now);
+    // 내보내기가 첫 읽기를 하는 사이에 새 진행 중 러닝과 구간이 생긴다.
+    final writes = Future.wait([
+      src
+          .into(src.runs)
+          .insert(
+            RunsCompanion.insert(
+              id: 'rb',
+              startedAt: _t,
+              status: 'active',
+              createdAt: _t,
+              updatedAt: _t,
+            ),
+          ),
+      src
+          .into(src.splits)
+          .insert(
+            SplitsCompanion.insert(
+              id: 's-rb',
+              runId: 'rb',
+              idx: 0,
+              distanceM: 1000,
+              durationMs: 330000,
+              createdAt: _t,
+              updatedAt: _t,
+            ),
+          ),
+    ]);
+    final json = await exporting;
+    await writes;
+    final tables =
+        (jsonDecode(json) as Map<String, dynamic>)['tables']
+            as Map<String, dynamic>;
+    final runIds = {for (final r in tables['runs'] as List) r['id']};
+    for (final s in tables['splits'] as List) {
+      expect(runIds, contains(s['runId']), reason: '${s['id']}');
+    }
   });
 
   test('가져오기 중 제약 위반이 나면 롤백되어 기존 데이터가 그대로다', () async {
