@@ -92,13 +92,16 @@ class _WeeklyGoalBarState extends State<WeeklyGoalBar> {
                   fill: c.primary,
                   track: c.surfaceSoft,
                 ),
-                if (widget.streakWeeks > 0) ...[
-                  const SizedBox(height: 10),
-                  Text(
-                    '${widget.streakWeeks}주 연속 달성',
-                    style: t.caption.copyWith(color: c.inkMuted),
-                  ),
-                ],
+                const SizedBox(height: 10),
+                // 연속 달성 줄은 늘 한 줄을 차지한다 (0주면 도전 문구).
+                Text(
+                  widget.streakWeeks > 0
+                      ? '${widget.streakWeeks}주 연속 달성'
+                      : '첫 연속 달성에 도전해요',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: t.caption.copyWith(color: c.inkMuted),
+                ),
               ],
             ),
           ),
@@ -109,7 +112,7 @@ class _WeeklyGoalBarState extends State<WeeklyGoalBar> {
 }
 
 /// 성장 상태를 읽는 동안 [WeeklyGoalBar] 와 같은 구조·높이로 자리를 잡는 껍데기.
-/// 탭할 수 없고, 읽고 나서 카드가 커지거나 줄어 화면이 밀리지 않게 한다.
+/// 탭할 수 없고, 연속 달성 줄 자리까지 잡아 읽은 뒤에도 높이가 같다.
 class WeeklyGoalSkeleton extends StatelessWidget {
   const WeeklyGoalSkeleton({super.key});
 
@@ -131,6 +134,9 @@ class WeeklyGoalSkeleton extends StatelessWidget {
               fill: c.primary,
               track: c.surfaceSoft,
             ),
+            const SizedBox(height: 10),
+            // 연속 달성 줄 자리. 읽고 나서 한 줄이 늘어나 화면이 밀리지 않게 한다.
+            Text(' ', maxLines: 1, style: t.caption),
           ],
         ),
       ),

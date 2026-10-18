@@ -63,6 +63,7 @@ class AppColors extends ThemeExtension<AppColors> {
     required this.accentDeep,
     required this.success,
     required this.danger,
+    required this.spriteRim,
   });
 
   final Color cream;
@@ -80,6 +81,9 @@ class AppColors extends ThemeExtension<AppColors> {
   final Color accentDeep;
   final Color success;
   final Color danger;
+
+  /// 스프라이트 둘레 1픽셀 윤곽. 투명이면 그리지 않는다 (라이트).
+  final Color spriteRim;
 
   static AppColors of(BuildContext context) =>
       Theme.of(context).extension<AppColors>()!;
@@ -100,6 +104,7 @@ class AppColors extends ThemeExtension<AppColors> {
     accentDeep: Color(0xFF1E40AF),
     success: Color(0xFF15803D),
     danger: Color(0xFFB91C1C),
+    spriteRim: Color(0x00000000),
   );
 
   static const dark = AppColors(
@@ -118,6 +123,7 @@ class AppColors extends ThemeExtension<AppColors> {
     accentDeep: Color(0xFF3B82F6),
     success: Color(0xFF4ADE80),
     danger: Color(0xFFF87171),
+    spriteRim: Color(0xFFFFEDD5),
   );
 
   @override
@@ -137,6 +143,7 @@ class AppColors extends ThemeExtension<AppColors> {
     Color? accentDeep,
     Color? success,
     Color? danger,
+    Color? spriteRim,
   }) {
     return AppColors(
       cream: cream ?? this.cream,
@@ -154,6 +161,7 @@ class AppColors extends ThemeExtension<AppColors> {
       accentDeep: accentDeep ?? this.accentDeep,
       success: success ?? this.success,
       danger: danger ?? this.danger,
+      spriteRim: spriteRim ?? this.spriteRim,
     );
   }
 
@@ -177,6 +185,7 @@ class AppColors extends ThemeExtension<AppColors> {
       accentDeep: l(accentDeep, other.accentDeep),
       success: l(success, other.success),
       danger: l(danger, other.danger),
+      spriteRim: l(spriteRim, other.spriteRim),
     );
   }
 }

@@ -65,6 +65,7 @@ Future<void> settle(WidgetTester tester) async {
 }
 
 void main() {
+  streakHeightTest();
   testWidgets('아바타·레벨·주간 목표가 보인다', (tester) async {
     await pumpHome(
       tester,
@@ -553,5 +554,20 @@ void main() {
     await g.up();
     await tester.pumpAndSettle();
     expect(lip(), Borders.lip);
+  });
+}
+
+void streakHeightTest() {
+  testWidgets('연속 달성 기록이 있어도 목표 카드 높이가 읽기 전후로 같다', (tester) async {
+    final g = FakeGrowthService(growthState(streakWeeks: 3))
+      ..holdLoad = Completer<void>();
+    await pumpHome(tester, FakeController(), growth: g);
+    await settle(tester);
+    final before = tester.getSize(find.byType(WeeklyGoalSkeleton)).height;
+
+    g.holdLoad!.complete();
+    await settle(tester);
+    expect(find.text('3주 연속 달성'), findsOneWidget);
+    expect(tester.getSize(find.byType(WeeklyGoalBar)).height, before);
   });
 }

@@ -2,8 +2,10 @@ import 'dart:async';
 import 'dart:ui' as ui;
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart' show Theme;
 import 'package:flutter/widgets.dart';
 
+import '../../core/theme.dart';
 import '../domain/growth_rules.dart';
 import 'sprite_sheet.dart';
 
@@ -147,20 +149,51 @@ class AvatarViewState extends State<AvatarView> with WidgetsBindingObserver {
   @override
   Widget build(BuildContext context) {
     final size = (spriteFramePx * widget.scale).toDouble();
+    final images = [
+      for (final name in spriteLayerOrder) _layers[name]?.image?.image,
+    ];
+    final rim = rimColor;
     return SizedBox(
       width: size,
       height: size,
-      child: CustomPaint(
-        painter: _AvatarPainter(
-          images: [
-            for (final name in spriteLayerOrder) _layers[name]?.image?.image,
-          ],
-          frame: _frame,
-        ),
+      child: Stack(
+        // 윤곽이 1픽셀 번지는 만큼 자기 크기 밖으로 나가도 잘리지 않게 한다.
+        clipBehavior: Clip.none,
+        children: [
+          // 윤곽은 같은 프레임 이미지를 색만 바꿔 다시 그린다 (디코딩 없음).
+          if (rim != null)
+            Positioned.fill(
+              child: CustomPaint(
+                key: avatarRimKey,
+                painter: _AvatarPainter(
+                  images: images,
+                  frame: _frame,
+                  rim: rim,
+                  rimOffset: widget.scale.toDouble(),
+                ),
+              ),
+            ),
+          Positioned.fill(
+            child: CustomPaint(
+              painter: _AvatarPainter(images: images, frame: _frame),
+            ),
+          ),
+        ],
       ),
     );
   }
+
+  /// 윤곽 색. 테마 토큰이 투명(라이트)이면 null 이라 윤곽 층을 만들지 않는다.
+  @visibleForTesting
+  Color? get rimColor {
+    final rim = Theme.of(context).extension<AppColors>()?.spriteRim;
+    return rim == null || rim.a == 0 ? null : rim;
+  }
 }
+
+/// 다크 테마 아바타의 윤곽 층을 찾는 키 (테스트용).
+@visibleForTesting
+const avatarRimKey = ValueKey('avatar-rim');
 
 /// 시트 한 장의 로딩 상태.
 class _Layer {
@@ -193,17 +226,38 @@ class _Layer {
 }
 
 class _AvatarPainter extends CustomPainter {
-  _AvatarPainter({required this.images, required this.frame});
+  _AvatarPainter({
+    required this.images,
+    required this.frame,
+    this.rim,
+    this.rimOffset = 0,
+  });
 
   /// [spriteLayerOrder] 순서. 아직 없거나 로딩 전이면 null.
   final List<ui.Image?> images;
   final int frame;
 
+  /// 있으면 스프라이트 대신 이 색의 실루엣을 상하좌우로 [rimOffset] 만큼 밀어 그린다.
+  final Color? rim;
+  final double rimOffset;
+
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()..filterQuality = FilterQuality.none;
+    final rim = this.rim;
+    if (rim != null) {
+      paint.colorFilter = ColorFilter.mode(rim, BlendMode.srcIn);
+    }
     const f = spriteFramePx;
     final dst = Offset.zero & size;
+    final offsets = rim == null
+        ? const [Offset.zero]
+        : [
+            Offset(rimOffset, 0),
+            Offset(-rimOffset, 0),
+            Offset(0, rimOffset),
+            Offset(0, -rimOffset),
+          ];
     for (final img in images) {
       if (img == null) continue;
       final src = Rect.fromLTWH(
@@ -212,13 +266,18 @@ class _AvatarPainter extends CustomPainter {
         f.toDouble(),
         f.toDouble(),
       );
-      canvas.drawImageRect(img, src, dst, paint);
+      for (final o in offsets) {
+        canvas.drawImageRect(img, src, dst.shift(o), paint);
+      }
     }
   }
 
   @override
   bool shouldRepaint(_AvatarPainter old) =>
-      old.frame != frame || !listEquals(old.images, images);
+      old.frame != frame ||
+      old.rim != rim ||
+      old.rimOffset != rimOffset ||
+      !listEquals(old.images, images);
 }
 
 /// 아바타 종류를 아직 모를 때(성장 상태를 읽는 중) 두는 빈자리.

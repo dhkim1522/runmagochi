@@ -1,7 +1,8 @@
-import 'package:flutter/widgets.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:runmagochi/avatar/domain/growth_rules.dart';
 import 'package:runmagochi/avatar/ui/avatar_view.dart';
+import 'package:runmagochi/core/theme.dart';
 
 Widget _wrap({
   AvatarKind kind = AvatarKind.chick,
@@ -26,6 +27,7 @@ int _frame(WidgetTester t) =>
     t.state<AvatarViewState>(find.byType(AvatarView)).frameIndex;
 
 void main() {
+  rimTests();
   testWidgets('run 은 10fps 4프레임으로 순환한다', (tester) async {
     await tester.pumpWidget(_wrap());
     await tester.pump();
@@ -132,5 +134,50 @@ void main() {
     await tester.pumpWidget(_wrap());
     await tester.pumpWidget(const SizedBox());
     await tester.pump(const Duration(seconds: 1));
+  });
+}
+
+Widget _themed(ThemeData theme) => MaterialApp(
+  theme: theme,
+  home: const Scaffold(
+    body: Center(
+      child: AvatarView(
+        kind: AvatarKind.acorn,
+        stage: 1,
+        mood: AvatarMood.normal,
+        action: AvatarAction.idle,
+      ),
+    ),
+  ),
+);
+
+void rimTests() {
+  testWidgets('다크 테마에서는 테마 토큰 색의 윤곽 층이 뒤에 깔린다', (tester) async {
+    await tester.pumpWidget(_themed(appDarkTheme()));
+    await tester.pump();
+    expect(find.byKey(avatarRimKey), findsOneWidget);
+    expect(
+      tester.state<AvatarViewState>(find.byType(AvatarView)).rimColor,
+      AppColors.dark.spriteRim,
+    );
+    // 윤곽이 스프라이트보다 먼저(뒤에) 그려진다.
+    final painters = find.descendant(
+      of: find.byType(AvatarView),
+      matching: find.byType(CustomPaint),
+    );
+    expect(
+      tester.widget<CustomPaint>(painters.first).key,
+      avatarRimKey,
+    );
+  });
+
+  testWidgets('라이트 테마에서는 윤곽 층이 없다', (tester) async {
+    await tester.pumpWidget(_themed(appLightTheme()));
+    await tester.pump();
+    expect(find.byKey(avatarRimKey), findsNothing);
+    expect(
+      tester.state<AvatarViewState>(find.byType(AvatarView)).rimColor,
+      isNull,
+    );
   });
 }
