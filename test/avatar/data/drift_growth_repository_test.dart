@@ -1,5 +1,6 @@
 import 'dart:math';
 
+import 'package:drift/drift.dart' show Value;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:runmagochi/avatar/data/drift_growth_repository.dart';
@@ -99,47 +100,13 @@ void main() {
     expect(await repo.totalXp(), 0);
   });
 
-  test('주간 목표는 기본 10000, 이전 주 값을 이어받는다', () async {
-    expect(await repo.weeklyTarget(DateTime(2026, 10, 19)), 10000);
-    await repo.setWeeklyTarget(DateTime(2026, 10, 12), 12000);
-    expect(await repo.weeklyTarget(DateTime(2026, 10, 19)), 12000);
-    expect(await repo.weeklyTarget(DateTime(2026, 10, 5)), 10000);
-    await repo.setWeeklyTarget(DateTime(2026, 10, 12), 15000);
-    expect(await repo.weeklyTarget(DateTime(2026, 10, 12)), 15000);
-  });
-
-  test('markWeekAchieved 를 두 번 불러도 보너스는 한 번', () async {
-    final w = DateTime(2026, 10, 12);
-    expect(await repo.isWeekAchieved(w), isFalse);
-    await repo.markWeekAchieved(w, DateTime(2026, 10, 14, 7), 50);
-    await repo.markWeekAchieved(w, DateTime(2026, 10, 15, 7), 50);
-    expect(await repo.isWeekAchieved(w), isTrue);
+  test('이전 버전이 준 주간 보너스 행도 합계에 들어가고 거리 경험치와 따로 논다', () async {
+    await _insertWeeklyBonus(db, 50);
+    await repo.addDistanceXp('r1', 30);
+    expect(await repo.totalXp(), 80);
+    expect(await repo.runIdsWithDistanceXp(), {'r1'});
+    await repo.revokeDistanceXp('r1');
     expect(await repo.totalXp(), 50);
-    expect(await repo.weeklyTarget(w), 10000);
-  });
-
-  test('목표 행이 있는 주도 달성 처리되고 목표는 유지된다', () async {
-    final w = DateTime(2026, 10, 12);
-    await repo.setWeeklyTarget(w, 8000);
-    await repo.markWeekAchieved(w, DateTime(2026, 10, 14), 50);
-    expect(await repo.weeklyTarget(w), 8000);
-    expect(await repo.isWeekAchieved(w), isTrue);
-  });
-
-  test('달성한 주는 최신순으로 돌려준다', () async {
-    for (final d in [5, 19, 12]) {
-      await repo.markWeekAchieved(
-        DateTime(2026, 10, d),
-        DateTime(2026, 10, d),
-        50,
-      );
-    }
-    await repo.setWeeklyTarget(DateTime(2026, 10, 26), 9000);
-    expect(await repo.achievedWeeks(), [
-      DateTime(2026, 10, 19),
-      DateTime(2026, 10, 12),
-      DateTime(2026, 10, 5),
-    ]);
   });
 
   group('경험치 무르기', () {
@@ -174,47 +141,6 @@ void main() {
       // 살아 있는 행은 여전히 무시한다.
       await repo.addDistanceXp('r1', 99);
       expect(await repo.totalXp(), 40);
-    });
-
-    test('주 달성을 취소하면 달성 표시와 보너스가 빠지고 목표는 남는다', () async {
-      final w = DateTime(2026, 10, 12);
-      final prev = DateTime(2026, 10, 5);
-      await repo.setWeeklyTarget(w, 8000);
-      await repo.markWeekAchieved(prev, DateTime(2026, 10, 6), 50);
-      await repo.markWeekAchieved(w, DateTime(2026, 10, 14), 50);
-      expect(await repo.totalXp(), 100);
-
-      await repo.unmarkWeekAchieved(w);
-
-      expect(await repo.isWeekAchieved(w), isFalse);
-      expect(await repo.isWeekAchieved(prev), isTrue);
-      expect(await repo.achievedWeeks(), [prev]);
-      expect(await repo.totalXp(), 50);
-      expect(await repo.weeklyTarget(w), 8000);
-    });
-
-    test('달성하지 않은 주를 취소해도 아무 일도 없다', () async {
-      final w = DateTime(2026, 10, 12);
-      await repo.unmarkWeekAchieved(w);
-      await repo.markWeekAchieved(w, DateTime(2026, 10, 14), 50);
-      await repo.unmarkWeekAchieved(w);
-      await repo.unmarkWeekAchieved(w);
-      expect(await repo.isWeekAchieved(w), isFalse);
-      expect(await repo.totalXp(), 0);
-    });
-
-    test('취소한 주를 다시 달성하면 보너스 행을 살린다', () async {
-      final w = DateTime(2026, 10, 12);
-      await repo.markWeekAchieved(w, DateTime(2026, 10, 14), 50);
-      await repo.unmarkWeekAchieved(w);
-      await repo.markWeekAchieved(w, DateTime(2026, 10, 16), 50);
-      expect(await repo.isWeekAchieved(w), isTrue);
-      expect(await repo.totalXp(), 50);
-      final bonus = await db.select(db.xpTxns).get();
-      expect(bonus, hasLength(1));
-      expect(bonus.single.deletedAt, isNull);
-      await repo.markWeekAchieved(w, DateTime(2026, 10, 17), 50);
-      expect(await repo.totalXp(), 50);
     });
   });
 
@@ -254,7 +180,7 @@ void _distanceXpUpdatedAtsTests() {
     final repo = DriftGrowthRepository(db, now: () => wall);
     await repo.addDistanceXp('a', 10);
     await repo.addDistanceXp('b', 20);
-    await repo.markWeekAchieved(DateTime(2026, 10, 12), wall, 50);
+    await _insertWeeklyBonus(db, 50);
     await repo.revokeDistanceXp('b');
     expect(await repo.distanceXpUpdatedAts(), {'a': wall.toLocal()});
 
@@ -263,4 +189,21 @@ void _distanceXpUpdatedAtsTests() {
     await repo.addDistanceXp('a', 5);
     expect(await repo.distanceXpUpdatedAts(), {'a': wall.toLocal()});
   });
+}
+
+/// 이전 버전이 남긴 주간 목표 보너스 경험치 행을 직접 넣는다.
+Future<void> _insertWeeklyBonus(AppDatabase db, int amount) async {
+  final at = DateTime.utc(2026, 10, 14);
+  await db
+      .into(db.xpTxns)
+      .insert(
+        XpTxnsCompanion.insert(
+          id: 'weekly-bonus',
+          amount: amount,
+          reason: 'weeklyGoal',
+          weekStart: const Value('2026-10-12'),
+          createdAt: at,
+          updatedAt: at,
+        ),
+      );
 }

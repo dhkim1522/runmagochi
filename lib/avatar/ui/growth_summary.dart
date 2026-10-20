@@ -9,7 +9,6 @@ import '../domain/growth_rules.dart';
 import '../domain/growth_state.dart';
 import 'avatar_view.dart';
 import 'sprite_sheet.dart';
-import 'weekly_goal_bar.dart';
 
 /// 러닝 직후 요약 위쪽에 놓는 경험치 획득·레벨업 영역.
 class GrowthSummary extends StatefulWidget {
@@ -18,7 +17,6 @@ class GrowthSummary extends StatefulWidget {
     required this.kind,
     required this.gain,
     required this.distanceM,
-    this.weekTargetM,
     this.excludedM = 0,
   });
 
@@ -28,9 +26,6 @@ class GrowthSummary extends StatefulWidget {
 
   /// 방금 달린 거리(미터).
   final double distanceM;
-
-  /// 이번 주 목표(미터). 모르면 null.
-  final double? weekTargetM;
 
   /// 속도 검사로 경험치에서 뺀 거리(미터). 0 이면 안내를 보이지 않는다.
   final double excludedM;
@@ -84,10 +79,6 @@ class _GrowthSummaryState extends State<GrowthSummary>
     final c = AppColors.of(context);
     final t = AppText.of(context);
     final g = widget.gain;
-    final target = widget.weekTargetM;
-    final goalLabel = target == null
-        ? '이번 주 목표 달성'
-        : '이번 주 목표 ${WeeklyGoalBar.targetLabel(target)}km 달성';
     final rows = Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -101,7 +92,7 @@ class _GrowthSummaryState extends State<GrowthSummary>
         ],
         if (g.goalBonusXp > 0) ...[
           const SizedBox(height: Gap.s3),
-          _XpRow(goalLabel, '경험치 +${g.goalBonusXp}', merged: true),
+          _XpRow('목표 달성', '경험치 +${g.goalBonusXp}', merged: true),
         ],
       ],
     );

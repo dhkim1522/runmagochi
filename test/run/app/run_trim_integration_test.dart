@@ -11,7 +11,6 @@ import 'package:runmagochi/avatar/app/providers.dart';
 import 'package:runmagochi/avatar/data/drift_growth_repository.dart';
 import 'package:runmagochi/avatar/domain/growth_rules.dart';
 import 'package:runmagochi/avatar/domain/growth_state.dart';
-import 'package:runmagochi/core/week.dart';
 import 'package:runmagochi/profile/app/providers.dart';
 import 'package:runmagochi/profile/data/drift_profile_repository.dart';
 import 'package:runmagochi/run/app/app_lifecycle.dart';
@@ -132,16 +131,14 @@ class _Harness {
 }
 
 void main() {
-  test('잘라내면 저장된 기록·경험치·주 목표가 새 거리로 바뀐다', () {
+  test('잘라내면 저장된 기록·경험치가 새 거리로 바뀐다', () {
     fakeAsync((async) {
       final h = _Harness(async);
-      // 이번 주 목표를 1km 로 낮춰 1.2km 러닝이 목표에 닿게 한다.
-      h.wait(h.growth.setWeeklyTarget(weekStartOf(_t0), 1000));
       final (original, gain) = h.runAndEnd();
       final runId = h.container.read(runControllerProvider).lastRunId!;
       expect(original.distanceM, greaterThan(1000));
       expect(gain.distanceXp, 12);
-      expect(gain.goalBonusXp, 50);
+      expect(gain.goalBonusXp, 0);
 
       // 250초 지점으로 자르면 약 750m 이고 1km 를 채운 구간이 없다.
       final newEnd = _t0.add(const Duration(seconds: 250));
@@ -167,7 +164,6 @@ void main() {
 
       final newXp = distanceXp(trimmed.distanceM, trimmed.splits);
       expect(h.wait(h.growth.totalXp()), newXp);
-      expect(h.wait(h.growth.isWeekAchieved(weekStartOf(_t0))), isFalse);
       expect(revised, isNotNull);
       expect(revised!.distanceXp, newXp);
       expect(revised.goalBonusXp, 0);
@@ -185,12 +181,11 @@ void main() {
     });
   });
 
-  test('경험치 재계산이 실패하면 null 이고 다음 sync 가 경험치와 주를 고친다', () {
+  test('경험치 재계산이 실패하면 null 이고 다음 sync 가 경험치를 고친다', () {
     fakeAsync((async) {
       final h = _Harness(async);
-      h.wait(h.growth.setWeeklyTarget(weekStartOf(_t0), 1000));
       final (_, gain) = h.runAndEnd();
-      expect(gain.goalBonusXp, 50);
+      expect(gain.goalBonusXp, 0);
 
       async.elapse(const Duration(seconds: 5));
       h.service.failRevise = true;
@@ -200,7 +195,7 @@ void main() {
             .trimLastRun(_t0.add(const Duration(seconds: 250)), shown: gain),
       );
       expect(revised, isNull);
-      expect(h.wait(h.growth.totalXp()), 12 + 50); // 아직 예전 값.
+      expect(h.wait(h.growth.totalXp()), 12); // 아직 예전 값.
 
       h.service.failRevise = false;
       async.elapse(const Duration(seconds: 5));
@@ -208,7 +203,6 @@ void main() {
       final newXp = distanceXp(trimmed.distanceM, trimmed.splits);
       expect(healed.isEmpty, isTrue);
       expect(h.wait(h.growth.totalXp()), newXp);
-      expect(h.wait(h.growth.isWeekAchieved(weekStartOf(_t0))), isFalse);
 
       async.elapse(const Duration(seconds: 5));
       final rows = h.wait(h.growth.distanceXpUpdatedAts());

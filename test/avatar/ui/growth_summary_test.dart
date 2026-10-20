@@ -22,21 +22,12 @@ GrowthGain gain({
   stageAfter: stageAfter,
 );
 
-Future<void> pumpIt(
-  WidgetTester tester,
-  GrowthGain g, {
-  double? weekTargetM = 10000,
-}) async {
+Future<void> pumpIt(WidgetTester tester, GrowthGain g) async {
   await tester.pumpWidget(
     MaterialApp(
       theme: appLightTheme(),
       home: Scaffold(
-        body: GrowthSummary(
-          kind: AvatarKind.chick,
-          gain: g,
-          distanceM: 5020,
-          weekTargetM: weekTargetM,
-        ),
+        body: GrowthSummary(kind: AvatarKind.chick, gain: g, distanceM: 5020),
       ),
     ),
   );
@@ -73,14 +64,11 @@ void main() {
     expect(find.textContaining('목표'), findsNothing);
   });
 
-  testWidgets('주간 목표 보너스 행', (tester) async {
+  testWidgets('달성 보너스 행에 주간 목표 문구가 없다', (tester) async {
     await pumpIt(tester, gain(goalBonusXp: 50));
-    expect(find.text('이번 주 목표 10km 달성 · 경험치 +50'), findsOneWidget);
-  });
-
-  testWidgets('목표 km 를 모르면 km 를 뺀다', (tester) async {
-    await pumpIt(tester, gain(goalBonusXp: 50), weekTargetM: null);
-    expect(find.text('이번 주 목표 달성 · 경험치 +50'), findsOneWidget);
+    expect(find.text('목표 달성 · 경험치 +50'), findsOneWidget);
+    expect(find.textContaining('주간'), findsNothing);
+    expect(find.textContaining('이번 주'), findsNothing);
   });
 
   testWidgets('단계가 오르면 문구와 함께 아바타가 이전 단계에서 새 단계로 바뀐다', (tester) async {

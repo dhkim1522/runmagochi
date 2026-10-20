@@ -5,8 +5,6 @@ import '../../avatar/app/providers.dart';
 import '../../avatar/domain/growth_rules.dart';
 import '../../avatar/domain/growth_state.dart';
 import '../../avatar/ui/avatar_view.dart';
-import '../../avatar/ui/weekly_goal_bar.dart';
-import '../../avatar/ui/weekly_target_change.dart';
 import '../../core/theme.dart';
 import '../../core/ui/clay.dart';
 import '../../settings/ui/settings_screen.dart';
@@ -172,9 +170,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     return ok == true;
   }
 
-  Future<void> _changeTarget(double targetM) =>
-      changeWeeklyTarget(context, ref, targetM);
-
   Future<void> _openSettings() => Navigator.of(
     context,
   ).push(MaterialPageRoute<void>(builder: (_) => const SettingsScreen()));
@@ -195,16 +190,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                if (g != null)
-                  WeeklyGoalBar(
-                    targetM: g.weekTargetM,
-                    distanceM: g.weekDistanceM,
-                    streakWeeks: g.streakWeeks,
-                    onChangeTarget: _changeTarget,
-                  )
-                else
-                  const WeeklyGoalSkeleton(),
-                const SizedBox(height: Gap.s4),
                 Expanded(
                   child: Stack(
                     fit: StackFit.expand,

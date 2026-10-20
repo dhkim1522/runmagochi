@@ -4,11 +4,10 @@ import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:timezone/data/latest_all.dart' as tzdata;
 import 'package:timezone/timezone.dart' as tz;
 
-import '../domain/reminder_plan.dart';
-
-/// 주간 목표 알림 예약. 이전 예약을 모두 지우고 새로 예약한다.
+/// 예약된 알림 취소. 이전 버전이 예약해 둔 알림을 지우는 데 쓴다.
 abstract interface class NotificationScheduler {
-  Future<void> replaceAll(List<PlannedReminder> reminders);
+  /// 예약만 기다리는 알림을 모두 취소한다. 이미 띄운 알림은 그대로 둔다.
+  Future<void> cancelScheduled();
 }
 
 /// 바로 띄우는 알림. 예: 러닝 자동 종료.
@@ -36,19 +35,13 @@ class LocalNotificationScheduler
   LocalNotificationScheduler([FlutterLocalNotificationsPlugin? plugin])
     : _plugin = plugin ?? FlutterLocalNotificationsPlugin();
 
-  static const _channel = AndroidNotificationDetails(
-    'weekly_goal',
-    '주간 목표 알림',
-    channelDescription: '금요일 저녁에 이번 주 목표를 알려 줘요',
-  );
-
   static const _runChannel = AndroidNotificationDetails(
     'run_auto_end',
     '러닝 자동 종료 알림',
     channelDescription: '종료를 잊은 러닝을 자동으로 마치면 알려 줘요',
   );
 
-  /// 즉시 알림 번호. 주간 알림(0부터 차례로)과 겹치지 않게 둔다.
+  /// 즉시 알림 번호.
   static const _instantId = 1000;
 
   final FlutterLocalNotificationsPlugin _plugin;
@@ -80,26 +73,13 @@ class LocalNotificationScheduler
   }
 
   @override
-  Future<void> replaceAll(List<PlannedReminder> reminders) async {
+  Future<void> cancelScheduled() async {
     try {
       await _ensureInit();
+      // 예약 대기 중인 것만 지운다. 이미 띄운 알림은 남는다.
       await _plugin.cancelAllPendingNotifications();
-      for (var i = 0; i < reminders.length; i++) {
-        final r = reminders[i];
-        await _plugin.zonedSchedule(
-          id: i,
-          title: '러니',
-          body: r.body,
-          scheduledDate: tz.TZDateTime.from(r.at, tz.local),
-          notificationDetails: const NotificationDetails(
-            android: _channel,
-            iOS: DarwinNotificationDetails(),
-          ),
-          androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
-        );
-      }
     } catch (e, st) {
-      debugPrint('알림: 주간 알림 예약 실패 $e\n$st');
+      debugPrint('알림: 예약 취소 실패 $e\n$st');
       rethrow;
     }
   }

@@ -20,11 +20,10 @@ final growthServiceProvider = Provider<GrowthService>(
     ref.watch(runRepositoryProvider),
     ref.watch(growthRepositoryProvider),
     ref.watch(clockProvider),
-    scheduler: ref.watch(notificationSchedulerProvider),
   ),
 );
 
-/// sync 뒤 load. 러닝이 끝나거나 목표를 바꾼 뒤 invalidate 하면 다시 계산한다.
+/// sync 뒤 load. 러닝이 끝난 뒤 invalidate 하면 다시 계산한다.
 final growthStateProvider = FutureProvider<GrowthState>((ref) async {
   final service = ref.watch(growthServiceProvider);
   await service.sync();

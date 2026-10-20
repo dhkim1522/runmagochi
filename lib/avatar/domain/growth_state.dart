@@ -10,10 +10,6 @@ class GrowthState {
     required this.stage,
     required this.xpToNextStage,
     required this.mood,
-    required this.weekTargetM,
-    required this.weekDistanceM,
-    required this.weekAchieved,
-    required this.streakWeeks,
     required this.totalDistanceM,
     required this.runCount,
   });
@@ -27,10 +23,6 @@ class GrowthState {
   /// 다음 외형 단계까지 남은 경험치. 최고 단계면 null.
   final int? xpToNextStage;
   final AvatarMood mood;
-  final double weekTargetM;
-  final double weekDistanceM;
-  final bool weekAchieved;
-  final int streakWeeks;
   final double totalDistanceM;
   final int runCount;
 }

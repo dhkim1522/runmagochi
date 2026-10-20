@@ -22,8 +22,11 @@ void main() {
           runControllerProvider.overrideWith(FakeController.new),
           runRepositoryProvider.overrideWithValue(FakeRepo((0, 0))),
           profileRepositoryProvider.overrideWithValue(FakeProfile()),
+          notificationSchedulerProvider.overrideWithValue(
+            FakeNotificationScheduler(),
+          ),
           growthServiceProvider.overrideWithValue(
-            FakeGrowthService(growthState(weekDistanceM: 0)),
+            FakeGrowthService(growthState()),
           ),
         ],
         child: const RunmagochiApp(),
@@ -34,7 +37,6 @@ void main() {
     expect(find.text('러닝'), findsOneWidget);
     expect(find.text('기록'), findsOneWidget);
     expect(find.text('아바타'), findsOneWidget);
-    expect(find.text('0.00km 달성'), findsOneWidget);
   });
 
   testWidgets('탭을 누르면 화면이 바뀌고 선택 상태가 시맨틱에 드러난다', (tester) async {
@@ -45,8 +47,11 @@ void main() {
           runControllerProvider.overrideWith(FakeController.new),
           runRepositoryProvider.overrideWithValue(FakeRepo((0, 0))),
           profileRepositoryProvider.overrideWithValue(FakeProfile()),
+          notificationSchedulerProvider.overrideWithValue(
+            FakeNotificationScheduler(),
+          ),
           growthServiceProvider.overrideWithValue(
-            FakeGrowthService(growthState(weekDistanceM: 0)),
+            FakeGrowthService(growthState()),
           ),
         ],
         child: const RunmagochiApp(),
@@ -83,8 +88,11 @@ void main() {
           runControllerProvider.overrideWith(FakeController.new),
           runRepositoryProvider.overrideWithValue(FakeRepo((0, 0))),
           profileRepositoryProvider.overrideWithValue(FakeProfile()),
+          notificationSchedulerProvider.overrideWithValue(
+            FakeNotificationScheduler(),
+          ),
           growthServiceProvider.overrideWithValue(
-            FakeGrowthService(growthState(weekDistanceM: 0)),
+            FakeGrowthService(growthState()),
           ),
         ],
         child: const RunmagochiApp(),
@@ -146,6 +154,7 @@ void main() {
 
   group('첫 실행', () {
     Widget app({
+      FakeNotificationScheduler? scheduler,
       required FakeProfile profile,
       required FakeOnboardingGrowthRepo repo,
       required FakeGrowthService growth,
@@ -159,6 +168,9 @@ void main() {
         growthServiceProvider.overrideWithValue(growth),
         growthRepositoryProvider.overrideWithValue(repo),
         profileRepositoryProvider.overrideWithValue(profile),
+        notificationSchedulerProvider.overrideWithValue(
+          scheduler ?? FakeNotificationScheduler(),
+        ),
         clockProvider.overrideWithValue(() => DateTime(2026, 10, 17)),
       ],
       child: const RunmagochiApp(),
@@ -173,7 +185,7 @@ void main() {
     testWidgets('완료하지 않았으면 첫 실행 화면부터, 마치면 홈, 다시 켜면 바로 홈', (tester) async {
       final profile = FakeProfile(onboarded: false);
       final repo = FakeOnboardingGrowthRepo(kind: AvatarKind.acorn);
-      final growth = FakeGrowthService(growthState(weekDistanceM: 0));
+      final growth = FakeGrowthService(growthState());
       final controller = FakeController();
       await tester.pumpWidget(
         app(
@@ -193,7 +205,7 @@ void main() {
       expect(find.text('러닝'), findsNothing);
       expect(controller.calls, isNot(contains('restore')), reason: '홈은 아직 없다');
 
-      for (final label in ['다음', '다음', '시작하기']) {
+      for (final label in ['다음', '시작하기']) {
         await tester.tap(find.text(label));
         await settle(tester);
       }
@@ -201,7 +213,6 @@ void main() {
       expect(repo.names, ['토리']);
       expect(find.byType(OnboardingScreen), findsNothing);
       expect(find.text('러닝'), findsOneWidget);
-      expect(find.text('0.00km 달성'), findsOneWidget);
 
       // 다시 켠다.
       await tester.pumpWidget(
@@ -216,6 +227,37 @@ void main() {
       expect(find.byType(OnboardingScreen), findsNothing);
       expect(find.text('러닝'), findsOneWidget);
       expect(profile.marks, 1);
+    });
+
+    testWidgets('시작할 때 예약 알림 취소를 한 번만 부른다', (tester) async {
+      final scheduler = FakeNotificationScheduler();
+      await tester.pumpWidget(
+        app(
+          scheduler: scheduler,
+          profile: FakeProfile(),
+          repo: FakeOnboardingGrowthRepo(kind: AvatarKind.acorn),
+          growth: FakeGrowthService(growthState()),
+          controller: FakeController(),
+        ),
+      );
+      await settle(tester);
+      expect(scheduler.cancels, 1);
+    });
+
+    testWidgets('예약 알림 취소가 실패해도 앱은 홈을 보여 준다', (tester) async {
+      final scheduler = FakeNotificationScheduler()..fail = true;
+      await tester.pumpWidget(
+        app(
+          scheduler: scheduler,
+          profile: FakeProfile(),
+          repo: FakeOnboardingGrowthRepo(kind: AvatarKind.acorn),
+          growth: FakeGrowthService(growthState()),
+          controller: FakeController(),
+        ),
+      );
+      await settle(tester);
+      expect(scheduler.cancels, 1);
+      expect(find.text('러닝'), findsOneWidget);
     });
   });
 }

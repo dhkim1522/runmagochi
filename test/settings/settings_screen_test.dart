@@ -161,8 +161,8 @@ void main() {
     expect(find.text('체중'), findsOneWidget);
     expect(find.text('칼로리 계산에만 써요'), findsOneWidget);
     expect(find.text('입력 안 함'), findsOneWidget);
-    expect(find.text('이번 주 목표'), findsOneWidget);
-    expect(find.text('10km'), findsOneWidget);
+    expect(find.textContaining('주간 목표'), findsNothing);
+    expect(find.textContaining('이번 주 목표'), findsNothing);
     expect(find.text('아바타 이름'), findsOneWidget);
     expect(find.text('러니'), findsOneWidget);
     expect(
@@ -185,7 +185,6 @@ void main() {
       matchesSemantics(label: '설정', isHeader: true),
     );
     expect(find.bySemanticsLabel('체중, 65kg'), findsOneWidget);
-    expect(find.bySemanticsLabel('이번 주 목표, 10km'), findsOneWidget);
     expect(find.bySemanticsLabel('아바타 이름, 러니'), findsOneWidget);
     expect(find.bySemanticsLabel('뒤로'), findsOneWidget);
     expect(
@@ -260,35 +259,6 @@ void main() {
       await settle(tester);
       expect(env.profile.weight, 72);
       expect(find.text('72kg'), findsOneWidget);
-    });
-  });
-
-  group('주간 목표', () {
-    testWidgets('2km 는 저장할 수 없고 3km 는 저장된다', (tester) async {
-      final env = await pumpSettings(tester);
-      await tester.tap(find.text('이번 주 목표'));
-      await settle(tester);
-      await _type(tester, '2');
-      expect(_save(tester).onPressed, isNull);
-      await _type(tester, '3');
-      expect(_save(tester).onPressed, isNotNull);
-      await _tapSave(tester);
-      expect(env.growth.targets, [3000]);
-    });
-
-    testWidgets('바꾼 목표가 홈에 반영된다', (tester) async {
-      final env = await pumpSettings(tester, under: const HomeScreen());
-      expect(find.text('이번 주 목표 10km', skipOffstage: false), findsOneWidget);
-      await tester.tap(find.text('이번 주 목표'));
-      await settle(tester);
-      env.growth.state = growthState(weekTargetM: 15000);
-      await _type(tester, '15');
-      await _tapSave(tester);
-      expect(env.growth.targets, [15000]);
-      expect(find.text('15km'), findsOneWidget);
-      tester.state<NavigatorState>(find.byType(Navigator).first).pop();
-      await settle(tester);
-      expect(find.text('이번 주 목표 15km'), findsOneWidget);
     });
   });
 
@@ -404,7 +374,7 @@ void main() {
     testWidgets('확인하면 가져오고 화면 상태를 다시 읽는다', (tester) async {
       final env = await pumpSettings(tester);
       final loads = env.growth.loads;
-      env.growth.state = growthState(name: '말랑이', weekTargetM: 5000);
+      env.growth.state = growthState(name: '말랑이');
       env.profile.weight = 58;
       await openImport(tester);
       await tester.tap(
@@ -418,7 +388,6 @@ void main() {
       expect(env.growth.loads, greaterThan(loads));
       expect(find.text('백업을 가져왔어요'), findsOneWidget);
       expect(find.text('말랑이'), findsOneWidget);
-      expect(find.text('5km'), findsOneWidget);
       expect(find.text('58kg'), findsOneWidget);
     });
 

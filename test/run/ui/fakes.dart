@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:runmagochi/avatar/app/growth_service.dart';
+import 'package:runmagochi/avatar/data/notification_scheduler.dart';
 import 'package:runmagochi/avatar/domain/growth_rules.dart';
 import 'package:runmagochi/avatar/domain/growth_state.dart';
 import 'package:runmagochi/profile/data/profile_repository.dart';
@@ -178,6 +179,18 @@ class FakeRepo implements RunRepository {
       throw UnimplementedError('${invocation.memberName}');
 }
 
+/// 예약 알림 취소 호출을 세는 가짜. [fail] 이면 실패한다.
+class FakeNotificationScheduler implements NotificationScheduler {
+  int cancels = 0;
+  bool fail = false;
+
+  @override
+  Future<void> cancelScheduled() async {
+    cancels++;
+    if (fail) throw StateError('취소 실패');
+  }
+}
+
 class FakeGrowthService implements GrowthService {
   FakeGrowthService(this.state);
   GrowthState state;
@@ -186,13 +199,9 @@ class FakeGrowthService implements GrowthService {
 
   /// 지정하면 load 가 이 Completer 가 끝날 때까지 기다린다.
   Completer<void>? holdLoad;
-  final List<double> targets = [];
 
   /// 지정하면 다음 sync 한 번만 이 값을 돌려주고 비운다.
   GrowthGain? syncGain;
-
-  /// 지정하면 다음 setWeeklyTarget 한 번만 이 값을 돌려준다.
-  GrowthGain? targetGain;
 
   /// true 면 sync 가 실패한다.
   bool syncFails = false;
@@ -249,14 +258,6 @@ class FakeGrowthService implements GrowthService {
   }
 
   @override
-  Future<GrowthGain> setWeeklyTarget(double targetM) async {
-    targets.add(targetM);
-    final g = targetGain;
-    targetGain = null;
-    return g ?? await sync();
-  }
-
-  @override
   dynamic noSuchMethod(Invocation invocation) =>
       throw UnimplementedError('${invocation.memberName}');
 }
@@ -264,10 +265,6 @@ class FakeGrowthService implements GrowthService {
 GrowthState growthState({
   int level = 3,
   int xpIntoLevel = 58,
-  double weekTargetM = 10000,
-  double weekDistanceM = 6200,
-  bool weekAchieved = false,
-  int streakWeeks = 0,
   AvatarKind kind = AvatarKind.chick,
   String name = '러니',
 }) => GrowthState(
@@ -282,10 +279,6 @@ GrowthState growthState({
   stage: 1,
   xpToNextStage: 100,
   mood: AvatarMood.normal,
-  weekTargetM: weekTargetM,
-  weekDistanceM: weekDistanceM,
-  weekAchieved: weekAchieved,
-  streakWeeks: streakWeeks,
   totalDistanceM: 0,
   runCount: 0,
 );

@@ -6,13 +6,10 @@ import '../../avatar/app/providers.dart';
 import '../../avatar/domain/avatar_name.dart';
 import '../../avatar/domain/growth_rules.dart';
 import '../../avatar/ui/avatar_view.dart';
-import '../../avatar/ui/weekly_goal_bar.dart';
 import '../../core/korean.dart';
 import '../../core/theme.dart';
 import '../../core/ui/clay.dart';
-import '../../core/week.dart';
 import '../../profile/app/providers.dart';
-import '../../run/app/providers.dart';
 
 /// 저장소의 기본 이름. 이 이름이면 아직 이름을 짓지 않은 것으로 보고 종류별 추천 이름을 채운다.
 const _defaultAvatarName = '러니';
@@ -31,13 +28,10 @@ String _suggestedName(AvatarKind kind) => switch (kind) {
   AvatarKind.acorn => '토리',
 };
 
-/// 3장 목표 카드(km, 설명).
-const _goals = [(3, '첫걸음'), (5, '가볍게'), (10, '추천'), (15, '꾸준히'), (20, '도전')];
+const _pageCount = 2;
 
-const _pageCount = 3;
-
-/// 첫 실행 화면: 1 캐릭터 소개 → 2 이름 짓기 → 3 주간 목표.
-/// 시작하기를 누르면 이름·목표를 저장하고 완료를 표시한 뒤 [onFinished] 를 부른다.
+/// 첫 실행 화면: 1 캐릭터 소개 → 2 이름 짓기.
+/// 시작하기를 누르면 이름을 저장하고 완료를 표시한 뒤 [onFinished] 를 부른다.
 class OnboardingScreen extends ConsumerStatefulWidget {
   const OnboardingScreen({super.key, required this.onFinished});
 
@@ -48,18 +42,14 @@ class OnboardingScreen extends ConsumerStatefulWidget {
 }
 
 class _Loaded {
-  const _Loaded(this.kind, this.targetKm);
+  const _Loaded(this.kind);
   final AvatarKind kind;
-
-  /// 지금 목표가 다섯 카드 중 하나면 그 km, 아니면 null.
-  final int? targetKm;
 }
 
 class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   final _name = TextEditingController();
   late Future<_Loaded> _load;
   int _page = 0;
-  int? _goalKm;
   bool _saving = false;
 
   @override
@@ -79,16 +69,8 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     final repo = ref.read(growthRepositoryProvider);
     final kind = await repo.avatarKind();
     final name = await repo.avatarName();
-    final targetM = await repo.weeklyTarget(
-      weekStartOf(ref.read(clockProvider)()),
-    );
-    final targetKm = _goals
-        .map((g) => g.$1)
-        .where((km) => km * 1000 == targetM)
-        .firstOrNull;
     _name.text = name == _defaultAvatarName ? _suggestedName(kind) : name;
-    _goalKm = targetKm;
-    return _Loaded(kind, targetKm);
+    return _Loaded(kind);
   }
 
   String get _trimmedName => _name.text.trim();
@@ -104,12 +86,8 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   Future<void> _finish() async {
     if (_saving) return;
     setState(() => _saving = true);
-    final km = _goalKm;
     try {
       await ref.read(growthRepositoryProvider).setAvatarName(_trimmedName);
-      if (km != null) {
-        await ref.read(growthServiceProvider).setWeeklyTarget(km * 1000.0);
-      }
       await ref.read(profileRepositoryProvider).markOnboarded();
     } catch (_) {
       if (!mounted) return;
@@ -127,7 +105,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   @override
   Widget build(BuildContext context) {
     return PopScope(
-      // 1장에서는 기본 동작(앱 나가기), 2·3장에서는 앞 장으로. 저장 중에는 막는다.
+      // 1장에서는 기본 동작(앱 나가기), 2장에서는 앞 장으로. 저장 중에는 막는다.
       canPop: _page == 0 && !_saving,
       onPopInvokedWithResult: (didPop, _) {
         if (!didPop && _page > 0 && !_saving) _go(_page - 1);
@@ -154,18 +132,13 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     final reduceMotion = MediaQuery.of(context).disableAnimations;
     final page = switch (_page) {
       0 => _IntroPage(kind: data.kind),
-      1 => _NamePage(
+      _ => _NamePage(
         kind: data.kind,
         controller: _name,
         error: _nameError,
         onSubmitted: () {
-          if (_nameError == null) _go(2);
+          if (_nameError == null) _finish();
         },
-      ),
-      _ => _GoalPage(
-        name: _trimmedName,
-        selectedKm: _goalKm,
-        onSelected: (km) => setState(() => _goalKm = km),
       ),
     };
     return Padding(
@@ -193,11 +166,10 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   Widget _buttons(BuildContext context) {
     final nextButton = switch (_page) {
       0 => ClayButton(label: '다음', onPressed: () => _go(1)),
-      1 => ClayButton(
-        label: '다음',
-        onPressed: _nameError == null ? () => _go(2) : null,
+      _ => ClayButton(
+        label: '시작하기',
+        onPressed: _saving || _nameError != null ? null : _finish,
       ),
-      _ => ClayButton(label: '시작하기', onPressed: _saving ? null : _finish),
     };
     if (_page == 0) return nextButton;
     return Row(
@@ -461,7 +433,7 @@ class _NamePage extends StatelessWidget {
             child: TextField(
               controller: controller,
               style: t.body,
-              textInputAction: TextInputAction.next,
+              textInputAction: TextInputAction.done,
               // 넘게 쳐도 막지 않고 안내한다(오류 문구 + 다음 막기).
               maxLengthEnforcement: MaxLengthEnforcement.none,
               inputFormatters: [
@@ -498,188 +470,6 @@ class _NamePage extends StatelessWidget {
   }
 }
 
-class _GoalPage extends StatelessWidget {
-  const _GoalPage({
-    required this.name,
-    required this.selectedKm,
-    required this.onSelected,
-  });
-
-  final String name;
-  final int? selectedKm;
-  final ValueChanged<int> onSelected;
-
-  Widget _cell(int i) {
-    if (i >= _goals.length) return const SizedBox.shrink();
-    final (km, sub) = _goals[i];
-    return _GoalCard(
-      km: km,
-      sublabel: sub,
-      selected: km == selectedKm,
-      onTap: () => onSelected(km),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final c = AppColors.of(context);
-    final t = AppText.of(context);
-    return _PageScroll(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          const ScreenTitle('이번 주 목표를 정해요'),
-          const SizedBox(height: Gap.s2),
-          // 사용자가 지은 이름은 keepAll 에 넣지 않는다(이모지 묶음이 깨진다).
-          _KeepAllText(
-            '목표를 채우면 $name${subjectParticle(name)} 경험치 +$weeklyGoalBonusXp 을 받아요. '
-            '매일 달리지 않아도 돼요.',
-            display:
-                '${keepAll('목표를 채우면')} $name$wordJoiner${subjectParticle(name)} '
-                '${keepAll('경험치 +$weeklyGoalBonusXp 을 받아요. 매일 달리지 않아도 돼요.')}',
-            style: t.body.copyWith(color: c.inkMuted),
-          ),
-          const SizedBox(height: Gap.s5),
-          // 3열 격자. 남는 칸은 빈 자리로 채워 폭을 맞춘다.
-          Semantics(
-            label: '주간 목표',
-            container: true,
-            explicitChildNodes: true,
-            child: Column(
-              children: [
-                for (var row = 0; row * 3 < _goals.length; row++) ...[
-                  if (row > 0) const SizedBox(height: Gap.s3),
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      for (var col = 0; col < 3; col++) ...[
-                        if (col > 0) const SizedBox(width: Gap.s3),
-                        Expanded(child: _cell(row * 3 + col)),
-                      ],
-                    ],
-                  ),
-                ],
-              ],
-            ),
-          ),
-          const SizedBox(height: Gap.s4),
-          _KeepAllText(
-            '10km 는 주 3번 3km 남짓이에요. 목표는 홈과 설정에서 언제든 바꿀 수 있어요'
-            '(최소 ${weeklyTargetMinKm}km).',
-            style: t.caption.copyWith(color: c.inkMuted),
-          ),
-          const Spacer(),
-        ],
-      ),
-    );
-  }
-}
-
-/// 목표 선택 카드. 라디오처럼 읽히고(하나만 고름), 누르면 립만큼 내려앉는다.
-class _GoalCard extends StatefulWidget {
-  const _GoalCard({
-    required this.km,
-    required this.sublabel,
-    required this.selected,
-    required this.onTap,
-  });
-
-  final int km;
-  final String sublabel;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  State<_GoalCard> createState() => _GoalCardState();
-}
-
-class _GoalCardState extends State<_GoalCard> {
-  bool _pressed = false;
-  bool _focused = false;
-
-  void _set(bool v) {
-    if (_pressed != v) setState(() => _pressed = v);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final c = AppColors.of(context);
-    final t = AppText.of(context);
-    final selected = widget.selected;
-    return Semantics(
-      checked: selected,
-      inMutuallyExclusiveGroup: true,
-      label: '${widget.km}km, ${widget.sublabel}',
-      excludeSemantics: true,
-      onTap: widget.onTap,
-      child: FocusableActionDetector(
-        onShowFocusHighlight: (v) => setState(() => _focused = v),
-        actions: {
-          ActivateIntent: CallbackAction<ActivateIntent>(
-            onInvoke: (_) {
-              widget.onTap();
-              return null;
-            },
-          ),
-        },
-        child: GestureDetector(
-          behavior: HitTestBehavior.opaque,
-          onTapDown: (_) => _set(true),
-          onTapUp: (_) => _set(false),
-          onTapCancel: () => _set(false),
-          onTap: widget.onTap,
-          child: ClayPress(
-            pressed: _pressed,
-            builder: (context, lip) => ClayCard(
-              reserveLip: false,
-              lipHeight: lip,
-              radius: Radii.md,
-              color: selected ? c.surfaceSoft : c.surface,
-              borderColor: _focused
-                  ? c.primaryDeep
-                  : (selected ? c.primary : c.line),
-              lipColor: selected ? c.primaryDeep : c.lineStrong,
-              padding: const EdgeInsets.symmetric(
-                vertical: Gap.s2,
-                horizontal: Gap.s1,
-              ),
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(minHeight: 70),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    FittedBox(
-                      fit: BoxFit.scaleDown,
-                      child: Text('${widget.km}km', style: t.stat),
-                    ),
-                    const SizedBox(height: 2),
-                    FittedBox(
-                      fit: BoxFit.scaleDown,
-                      child: Text(
-                        widget.sublabel,
-                        style: t.caption.copyWith(
-                          color: selected ? c.primaryDeep : c.inkMuted,
-                          fontWeight: selected
-                              ? FontWeight.w700
-                              : FontWeight.w500,
-                          fontVariations: [
-                            FontVariation('wght', selected ? 700 : 500),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
 class _LoadError extends StatelessWidget {
   const _LoadError({required this.onRetry});
 
@@ -708,23 +498,15 @@ class _LoadError extends StatelessWidget {
 
 /// 띄어쓰기에서만 줄을 바꾸는 글자([keepAll]). 스크린 리더는 원문을 읽는다.
 class _KeepAllText extends StatelessWidget {
-  const _KeepAllText(
-    this.text, {
-    required this.style,
-    this.textAlign,
-    this.display,
-  });
+  const _KeepAllText(this.text, {required this.style, this.textAlign});
 
   final String text;
   final TextStyle style;
   final TextAlign? textAlign;
 
-  /// 그릴 글자를 직접 만든 경우(일부에만 [keepAll]). 없으면 `keepAll(text)`.
-  final String? display;
-
   @override
   Widget build(BuildContext context) => Text(
-    display ?? keepAll(text),
+    keepAll(text),
     semanticsLabel: text,
     style: style,
     textAlign: textAlign,

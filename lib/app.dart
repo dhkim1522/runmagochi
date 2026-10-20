@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'avatar/app/providers.dart';
 import 'avatar/ui/avatar_screen.dart';
 import 'core/theme.dart';
 import 'onboarding/ui/onboarding_screen.dart';
@@ -39,7 +40,16 @@ class _OnboardingGateState extends ConsumerState<_OnboardingGate> {
   @override
   void initState() {
     super.initState();
+    _cancelOldReminders();
     _read();
+  }
+
+  /// 이전 버전이 예약해 둔 주간 알림을 지운다. 기다리지 않고, 실패는 로그만 남긴다.
+  void _cancelOldReminders() {
+    ref
+        .read(notificationSchedulerProvider)
+        .cancelScheduled()
+        .catchError((Object e) => debugPrint('알림: 예약 취소 실패 $e'));
   }
 
   Future<void> _read() async {

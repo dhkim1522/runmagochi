@@ -105,14 +105,12 @@ class _SummaryScreenState extends ConsumerState<SummaryScreen> {
       final growthState = g == null
           ? null
           : ref.watch(growthStateProvider).value;
-      final weekTargetM = growthState?.weekTargetM;
       final growth = g == null
           ? null
           : GrowthSummary(
               kind: growthState?.kind,
               gain: g,
               distanceM: s.distanceM,
-              weekTargetM: weekTargetM,
               excludedM: excludedFastDistanceM(s.splits),
             );
       body = _SummaryBody(

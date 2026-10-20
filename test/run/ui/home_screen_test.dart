@@ -6,7 +6,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:runmagochi/avatar/app/providers.dart';
 import 'package:runmagochi/avatar/domain/growth_rules.dart';
 import 'package:runmagochi/avatar/domain/growth_state.dart';
-import 'package:runmagochi/avatar/ui/weekly_goal_bar.dart';
 import 'package:runmagochi/avatar/ui/avatar_view.dart';
 import 'package:runmagochi/core/theme.dart';
 import 'package:runmagochi/core/ui/clay.dart';
@@ -65,112 +64,18 @@ Future<void> settle(WidgetTester tester) async {
 }
 
 void main() {
-  streakHeightTest();
-  testWidgets('아바타·레벨·주간 목표가 보인다', (tester) async {
-    await pumpHome(
-      tester,
-      FakeController(),
-      growth: FakeGrowthService(growthState(streakWeeks: 2)),
-    );
+  testWidgets('아바타·레벨이 보이고 주간 목표는 없다', (tester) async {
+    await pumpHome(tester, FakeController());
     await tester.pump();
     expect(
       tester.widget<AvatarView>(find.byType(AvatarView)).action,
       AvatarAction.idle,
     );
-    expect(find.text('이번 주 목표 10km'), findsOneWidget);
-    expect(find.text('6.20km 달성'), findsOneWidget);
-    expect(find.text('2주 연속 달성'), findsOneWidget);
+    expect(find.textContaining('주간'), findsNothing);
+    expect(find.textContaining('이번 주'), findsNothing);
     expect(find.text('러니 Lv.3'), findsOneWidget);
     // 150 - 58 = 92 → 9.2km
     expect(find.text('다음 레벨까지 9.2km'), findsOneWidget);
-  });
-
-  testWidgets('목표를 15km 로 바꾸면 setWeeklyTarget(15000) 이 불리고 다시 읽는다', (
-    tester,
-  ) async {
-    final g = FakeGrowthService(growthState());
-    await pumpHome(tester, FakeController(), growth: g);
-    await tester.pump();
-    final before = g.loads;
-    await tester.tap(find.text('이번 주 목표 10km'));
-    await settle(tester);
-    await tester.enterText(find.byType(TextField), '15');
-    await tester.pump();
-    await tester.tap(find.text('저장'));
-    await settle(tester);
-    expect(g.targets, [15000]);
-    expect(g.loads, greaterThan(before));
-  });
-
-  Future<void> changeTarget(WidgetTester tester) async {
-    await tester.tap(find.text('이번 주 목표 10km'));
-    await settle(tester);
-    await tester.enterText(find.byType(TextField), '5');
-    await tester.pump();
-    await tester.tap(find.text('저장'));
-    await settle(tester);
-  }
-
-  testWidgets('목표를 낮춰 보너스만 받으면 스낵바로 알린다', (tester) async {
-    final g = FakeGrowthService(growthState())
-      ..targetGain = const GrowthGain(
-        distanceXp: 0,
-        goalBonusXp: 50,
-        levelBefore: 3,
-        levelAfter: 3,
-        stageBefore: 1,
-        stageAfter: 1,
-      );
-    await pumpHome(tester, FakeController(), growth: g);
-    await changeTarget(tester);
-    expect(find.text('이번 주 목표 달성 · 경험치 +50'), findsOneWidget);
-    expect(find.text('레벨 업!'), findsNothing);
-  });
-
-  testWidgets('목표를 낮춰 레벨이 오르면 레벨 업 다이얼로그', (tester) async {
-    final g = FakeGrowthService(growthState())
-      ..targetGain = const GrowthGain(
-        distanceXp: 0,
-        goalBonusXp: 50,
-        levelBefore: 4,
-        levelAfter: 5,
-        stageBefore: 1,
-        stageAfter: 2,
-      );
-    await pumpHome(tester, FakeController(), growth: g);
-    await changeTarget(tester);
-    expect(find.text('레벨 업!'), findsOneWidget);
-    expect(find.text('Lv.4 에서 Lv.5 로'), findsOneWidget);
-    expect(find.text('새 외형 단계!'), findsOneWidget);
-    await tester.tap(find.text('확인'));
-    await settle(tester);
-    expect(find.text('레벨 업!'), findsNothing);
-  });
-
-  testWidgets('목표 보너스 없이 밀린 러닝 경험치로 레벨이 올라도 다이얼로그', (tester) async {
-    final g = FakeGrowthService(growthState())
-      ..targetGain = const GrowthGain(
-        distanceXp: 30,
-        goalBonusXp: 0,
-        levelBefore: 1,
-        levelAfter: 2,
-        stageBefore: 1,
-        stageAfter: 1,
-      );
-    await pumpHome(tester, FakeController(), growth: g);
-    await changeTarget(tester);
-    expect(find.text('레벨 업!'), findsOneWidget);
-    expect(find.text('Lv.1 에서 Lv.2 로'), findsOneWidget);
-    expect(find.text('새 외형 단계!'), findsNothing);
-  });
-
-  testWidgets('보상이 없으면 아무것도 띄우지 않는다', (tester) async {
-    final g = FakeGrowthService(growthState());
-    await pumpHome(tester, FakeController(), growth: g);
-    await changeTarget(tester);
-    expect(g.targets, [5000]);
-    expect(find.byType(SnackBar), findsNothing);
-    expect(find.text('레벨 업!'), findsNothing);
   });
 
   testWidgets('시작 버튼 → 카운트다운 3 표시 → 3초 후 러닝 중 화면', (tester) async {
@@ -238,21 +143,16 @@ void main() {
 
   testWidgets('다시 읽는 동안에도 이전 값이 계속 보인다', (tester) async {
     final g = FakeGrowthService(growthState());
-    await pumpHome(tester, FakeController(), growth: g);
-    await tester.pump();
+    final c = FakeController(restore: true);
+    await pumpHome(tester, c, growth: g);
+    await settle(tester);
     expect(find.text('러니 Lv.3'), findsOneWidget);
 
     g.holdLoad = Completer<void>();
-    await tester.tap(find.text('이번 주 목표 10km'));
-    await settle(tester);
-    await tester.enterText(find.byType(TextField), '15');
-    await tester.pump();
-    await tester.tap(find.text('저장'));
+    await tester.tap(find.text('종료하고 저장'));
     await settle(tester);
     // load 가 아직 끝나지 않았다.
     expect(find.text('러니 Lv.3'), findsOneWidget);
-    expect(find.text('이번 주 목표 10km'), findsOneWidget);
-    expect(find.text('이번 주 -'), findsNothing);
 
     g.holdLoad!.complete();
     await settle(tester);
@@ -260,18 +160,18 @@ void main() {
   });
 
   testWidgets('복구 다이얼로그에서 종료하고 저장은 end 후 홈에 남는다', (tester) async {
-    final g = FakeGrowthService(growthState(weekDistanceM: 1000));
+    final g = FakeGrowthService(growthState(name: '콩떡'));
     final c = FakeController(restore: true);
     await pumpHome(tester, c, growth: g);
     await settle(tester);
-    expect(find.text('1.00km 달성'), findsOneWidget);
+    expect(find.text('콩떡 Lv.3'), findsOneWidget);
     final before = g.loads;
-    g.state = growthState(weekDistanceM: 7000);
+    g.state = growthState(name: '말랑이');
     await tester.tap(find.text('종료하고 저장'));
     await settle(tester);
     expect(c.calls, ['restore', 'end']);
     expect(find.byType(InRunScreen), findsNothing);
-    expect(find.text('7.00km 달성'), findsOneWidget);
+    expect(find.text('말랑이 Lv.3'), findsOneWidget);
     expect(g.loads, greaterThan(before));
     expect(find.text('기록 중이던 러닝이 있어요'), findsNothing);
     expect(find.text('시작'), findsOneWidget);
@@ -287,10 +187,10 @@ void main() {
   });
 
   testWidgets('러닝이 끝나 홈으로 돌아오면 성장 상태를 다시 읽는다', (tester) async {
-    final growth = FakeGrowthService(growthState(weekDistanceM: 1000));
+    final growth = FakeGrowthService(growthState(name: '콩떡'));
     final c = FakeController();
     await pumpHome(tester, c, growth: growth);
-    expect(find.text('1.00km 달성'), findsOneWidget);
+    expect(find.text('콩떡 Lv.3'), findsOneWidget);
 
     await tester.tap(find.text('시작'));
     await tester.pump();
@@ -299,7 +199,7 @@ void main() {
     await tester.tap(find.text('일시정지'));
     await tester.pump();
 
-    growth.state = growthState(weekDistanceM: 4230);
+    growth.state = growthState(name: '말랑이');
     final g = await tester.startGesture(
       tester.getCenter(find.text('길게 눌러 종료')),
     );
@@ -313,7 +213,7 @@ void main() {
     await tester.tap(find.text('확인'));
     await settle(tester);
     expect(find.byType(SummaryScreen), findsNothing);
-    expect(find.text('4.23km 달성'), findsOneWidget);
+    expect(find.text('말랑이 Lv.3'), findsOneWidget);
     expect(c.calls, ['restore', 'start', 'pause', 'end']);
     expect(c.state.snapshot.state, RunState.idle);
   });
@@ -432,7 +332,7 @@ void main() {
     expect(find.byType(SummaryScreen), findsOneWidget);
     expect(find.text('레벨 업!'), findsOneWidget);
     expect(find.text('Lv.3 에서 Lv.4 로'), findsOneWidget);
-    expect(find.text('이번 주 목표 10km 달성 · 경험치 +50'), findsOneWidget);
+    expect(find.text('목표 달성 · 경험치 +50'), findsOneWidget);
   });
 
   testWidgets('sync 가 실패해도 요약은 열리고 성장 영역만 빠진다', (tester) async {
@@ -452,7 +352,7 @@ void main() {
     await pumpHome(
       tester,
       FakeController(),
-      growth: FakeGrowthService(growthState(streakWeeks: 2)),
+      growth: FakeGrowthService(growthState()),
       textScale: 1.3,
     );
     await settle(tester);
@@ -460,14 +360,10 @@ void main() {
     expect(find.text('시작'), findsOneWidget);
   });
 
-  testWidgets('주간 목표 카드 안에 연속 달성이, 무대 안에 레벨 막대가 있다', (tester) async {
-    await pumpHome(
-      tester,
-      FakeController(),
-      growth: FakeGrowthService(growthState(streakWeeks: 2)),
-    );
+  testWidgets('무대 안에 레벨 막대가 하나 있다', (tester) async {
+    await pumpHome(tester, FakeController());
     await settle(tester);
-    expect(find.byType(ClayBar), findsNWidgets(2));
+    expect(find.byType(ClayBar), findsOneWidget);
     expect(find.widgetWithText(ClayButton, '시작'), findsOneWidget);
   });
 
@@ -491,37 +387,17 @@ void main() {
     expect(after.center, before.center);
   });
 
-  testWidgets('주간 목표 카드는 읽는 동안에도 읽은 뒤와 높이가 같다', (tester) async {
+  testWidgets('읽는 동안에도 시작 버튼과 무대 자리가 읽은 뒤와 같다', (tester) async {
     final g = FakeGrowthService(growthState())..holdLoad = Completer<void>();
     await pumpHome(tester, FakeController(), growth: g);
     await settle(tester);
-    expect(find.byType(WeeklyGoalSkeleton), findsOneWidget);
-    expect(find.text('이번 주 목표 -'), findsOneWidget);
-    final before = tester.getSize(find.byType(WeeklyGoalSkeleton)).height;
+    final button = tester.getRect(find.byType(ClayButton));
+    final stage = tester.getRect(find.byType(ClayCard).first);
 
     g.holdLoad!.complete();
     await settle(tester);
-    expect(find.byType(WeeklyGoalSkeleton), findsNothing);
-    expect(tester.getSize(find.byType(WeeklyGoalBar)).height, before);
-  });
-
-  testWidgets('주간 목표 카드는 하나의 버튼 노드이고 탭하면 목표 창이 열린다', (tester) async {
-    await pumpHome(tester, FakeController());
-    await tester.pump();
-    final handle = tester.ensureSemantics();
-    expect(
-      tester.getSemantics(find.byType(WeeklyGoalBar)),
-      matchesSemantics(
-        label: '이번 주 목표 10km, 6.20km 달성',
-        isButton: true,
-        hasTapAction: true,
-        hasEnabledState: false,
-      ),
-    );
-    handle.dispose();
-    await tester.tap(find.byType(WeeklyGoalBar));
-    await settle(tester);
-    expect(find.byType(TextField), findsOneWidget);
+    expect(tester.getRect(find.byType(ClayButton)), button);
+    expect(tester.getRect(find.byType(ClayCard).first), stage);
   });
 
   testWidgets('카운트다운 숫자는 number-l(64) 크기다', (tester) async {
@@ -531,43 +407,5 @@ void main() {
     expect(tester.widget<Text>(find.text('3')).style!.fontSize, 64);
     await tester.pump(const Duration(seconds: 4));
     await settle(tester);
-  });
-
-  testWidgets('주간 목표 카드를 누르면 립이 눌린다', (tester) async {
-    await pumpHome(tester, FakeController());
-    await tester.pump();
-    double lip() => tester
-        .widget<ClayCard>(
-          find.descendant(
-            of: find.byType(WeeklyGoalBar),
-            matching: find.byType(ClayCard),
-          ),
-        )
-        .lipHeight;
-    expect(lip(), Borders.lip);
-    final g = await tester.startGesture(
-      tester.getCenter(find.byType(WeeklyGoalBar)),
-    );
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 200));
-    expect(lip(), Borders.lipPressed);
-    await g.up();
-    await tester.pumpAndSettle();
-    expect(lip(), Borders.lip);
-  });
-}
-
-void streakHeightTest() {
-  testWidgets('연속 달성 기록이 있어도 목표 카드 높이가 읽기 전후로 같다', (tester) async {
-    final g = FakeGrowthService(growthState(streakWeeks: 3))
-      ..holdLoad = Completer<void>();
-    await pumpHome(tester, FakeController(), growth: g);
-    await settle(tester);
-    final before = tester.getSize(find.byType(WeeklyGoalSkeleton)).height;
-
-    g.holdLoad!.complete();
-    await settle(tester);
-    expect(find.text('3주 연속 달성'), findsOneWidget);
-    expect(tester.getSize(find.byType(WeeklyGoalBar)).height, before);
   });
 }

@@ -21,10 +21,6 @@ GrowthState stateFor(int totalXp, [AvatarKind kind = AvatarKind.chick]) {
     stage: stageForLevel(lv.level),
     xpToNextStage: xpToNextStage(totalXp),
     mood: AvatarMood.normal,
-    weekTargetM: 10000,
-    weekDistanceM: 0,
-    weekAchieved: false,
-    streakWeeks: 0,
     totalDistanceM: 34800,
     runCount: 12,
   );

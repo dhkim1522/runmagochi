@@ -5,8 +5,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../avatar/app/providers.dart';
 import '../../avatar/domain/avatar_name.dart';
 import '../../avatar/domain/growth_state.dart';
-import '../../avatar/ui/weekly_goal_bar.dart';
-import '../../avatar/ui/weekly_target_change.dart';
 import '../../backup/app/backup_service.dart';
 import '../../backup/app/providers.dart';
 import '../../backup/ui/refresh_after_import.dart';
@@ -30,7 +28,7 @@ String _kgLabel(double kg) {
   return r == r.roundToDouble() ? r.toInt().toString() : r.toStringAsFixed(1);
 }
 
-/// 설정: 체중, 이번 주 목표, 아바타 이름, 백업 내보내기·가져오기, 정보.
+/// 설정: 체중, 아바타 이름, 백업 내보내기·가져오기, 정보.
 /// 홈 오른쪽 위 톱니로 들어온다. 시안 design/mockups/Settings.dc.html
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
@@ -63,12 +61,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       _toast('체중을 저장하지 못했어요');
     }
     if (mounted) ref.invalidate(_weightProvider);
-  }
-
-  Future<void> _editTarget(double targetM) async {
-    final m = await showWeeklyTargetDialog(context, targetM);
-    if (m == null || !mounted) return;
-    await changeWeeklyTarget(context, ref, m);
   }
 
   Future<void> _editName(String current) async {
@@ -208,13 +200,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               const _SectionLabel('러닝 · 아바타'),
               _RowsCard(
                 children: [
-                  _SettingsRow(
-                    title: '이번 주 목표',
-                    value: g == null
-                        ? '-'
-                        : '${WeeklyGoalBar.targetLabel(g.weekTargetM)}km',
-                    onTap: g == null ? null : () => _editTarget(g.weekTargetM),
-                  ),
                   _SettingsRow(
                     title: '아바타 이름',
                     value: g?.name ?? '-',

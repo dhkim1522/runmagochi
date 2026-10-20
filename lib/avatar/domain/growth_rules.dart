@@ -1,8 +1,5 @@
 import '../../run/domain/run_summary.dart';
 
-/// 주간 목표 달성 보너스 경험치 (주마다 한 번).
-const int weeklyGoalBonusXp = 50;
-
 /// 1km 구간 페이스가 이보다 빠르면(초/km) 그 구간 거리는 경험치에서 뺀다.
 const double _minPaceSecPerKm = 150;
 
