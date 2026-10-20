@@ -90,7 +90,7 @@
   - 확인: `fvm flutter test test/run`
   - 스킬: ui-ux-pro-max:ui-ux-pro-max
 
-- [ ] 5. 러닝 중: 목표 진행과 달성 알림
+- [x] 5. 러닝 중: 목표 진행과 달성 알림
   - 파일: `lib/run/app/run_controller.dart`, `lib/run/ui/in_run_screen.dart`
   - 동작: 컨트롤러가 기록 거리가 목표 이상이 되는 첫 순간에 `RunViewState.goalReached = true` 로 바꾸고 `InstantNotifier.showNow(title: '목표 달성!', body: '<목표>km 목표를 채웠어요. 종료할 때까지 기록은 이어져요')` 를 한 번 부른다(실패는 버린다). 화면은 거리 아래에 "목표 5km" 와 진행 막대(`ClayBar`)를 보이고, 달성 뒤에는 "목표 달성!"(`success`)으로 바꾸며 `HapticFeedback.mediumImpact()` 를 한 번 한다.
   - 테스트: 목표 3km, 2.99km 까지 알림 0회·막대 진행, 3.00km 에서 알림 1회·상태 달성, 더 달려도 알림 1회 그대로. 복원한 러닝이 이미 목표를 넘었으면 다시 알리지 않는다. 360×640, 글자 1.3배에서 넘침 없음.
