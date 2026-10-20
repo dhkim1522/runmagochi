@@ -16,6 +16,7 @@ import 'package:runmagochi/run/domain/run_summary.dart';
 import 'package:runmagochi/run/ui/home_screen.dart';
 import 'package:runmagochi/run/ui/in_run_screen.dart';
 import 'package:runmagochi/run/ui/permission_screen.dart';
+import 'package:runmagochi/run/ui/run_goal_picker.dart';
 import 'package:runmagochi/run/ui/summary_screen.dart';
 
 import 'fakes.dart';
@@ -392,12 +393,12 @@ void main() {
     await pumpHome(tester, FakeController(), growth: g);
     await settle(tester);
     final button = tester.getRect(find.byType(ClayButton));
-    final stage = tester.getRect(find.byType(ClayCard).first);
+    final stage = tester.getRect(find.byKey(const ValueKey('home-stage')));
 
     g.holdLoad!.complete();
     await settle(tester);
     expect(tester.getRect(find.byType(ClayButton)), button);
-    expect(tester.getRect(find.byType(ClayCard).first), stage);
+    expect(tester.getRect(find.byKey(const ValueKey('home-stage'))), stage);
   });
 
   testWidgets('카운트다운 숫자는 number-l(64) 크기다', (tester) async {
@@ -407,5 +408,194 @@ void main() {
     expect(tester.widget<Text>(find.text('3')).style!.fontSize, 64);
     await tester.pump(const Duration(seconds: 4));
     await settle(tester);
+  });
+
+  group('오늘 목표 선택', () {
+    /// 선택된 칩은 primary 바탕이다.
+    Color? chipColor(WidgetTester tester, String label) {
+      final material = tester.widget<Material>(
+        find
+            .ancestor(of: find.text(label), matching: find.byType(Material))
+            .first,
+      );
+      return material.color;
+    }
+
+    Future<void> startAndWait(WidgetTester tester) async {
+      await tester.tap(find.text('시작'));
+      await tester.pump();
+      await tester.pump(const Duration(seconds: 3));
+      await settle(tester);
+    }
+
+    testWidgets('러닝이 없으면 3km 가 골라져 있다', (tester) async {
+      await pumpHome(tester, FakeController());
+      await settle(tester);
+      final primary = AppColors.of(
+        tester.element(find.byType(HomeScreen)),
+      ).primary;
+      expect(chipColor(tester, '3km'), primary);
+      expect(chipColor(tester, '5km'), isNot(primary));
+      expect(find.text('오늘 목표'), findsOneWidget);
+      expect(find.text('직접'), findsOneWidget);
+    });
+
+    testWidgets('최근 러닝 목표가 5km 면 5km 가 골라져 있다', (tester) async {
+      await pumpHome(
+        tester,
+        FakeController(),
+        repo: FakeRepo((0, 0))..lastGoal = 5000,
+      );
+      await settle(tester);
+      final primary = AppColors.of(
+        tester.element(find.byType(HomeScreen)),
+      ).primary;
+      expect(chipColor(tester, '5km'), primary);
+      expect(chipColor(tester, '3km'), isNot(primary));
+    });
+
+    testWidgets('최근 목표가 12km 면 직접 칩이 12km 를 보인다', (tester) async {
+      await pumpHome(
+        tester,
+        FakeController(),
+        repo: FakeRepo((0, 0))..lastGoal = 12000,
+      );
+      await settle(tester);
+      expect(find.text('12km'), findsOneWidget);
+      expect(find.text('직접'), findsNothing);
+    });
+
+    testWidgets('10km 를 누르고 시작하면 그 목표로 시작한다', (tester) async {
+      final c = FakeController();
+      await pumpHome(tester, c);
+      await settle(tester);
+      await tester.tap(find.text('10km'));
+      await tester.pump();
+      await startAndWait(tester);
+      expect(c.startGoals, [10000]);
+    });
+
+    testWidgets('고르지 않고 시작하면 기본 3km 로 시작한다', (tester) async {
+      final c = FakeController();
+      await pumpHome(tester, c);
+      await settle(tester);
+      await startAndWait(tester);
+      expect(c.startGoals, [3000]);
+    });
+
+    testWidgets('직접 입력 12 → 12km 로 시작한다', (tester) async {
+      final c = FakeController();
+      await pumpHome(tester, c);
+      await settle(tester);
+      await tester.tap(find.text('직접'));
+      await settle(tester);
+      await tester.enterText(find.byType(TextField), '12');
+      await tester.pump();
+      await tester.tap(find.text('저장'));
+      await settle(tester);
+      expect(find.text('12km'), findsOneWidget);
+      await startAndWait(tester);
+      expect(c.startGoals, [12000]);
+    });
+
+    for (final text in ['2', '101', '']) {
+      testWidgets('직접 입력 "$text" 는 저장할 수 없다', (tester) async {
+        await pumpHome(tester, FakeController());
+        await settle(tester);
+        await tester.tap(find.text('직접'));
+        await settle(tester);
+        await tester.enterText(find.byType(TextField), text);
+        await tester.pump();
+        final save = tester.widget<FilledButton>(
+          find.widgetWithText(FilledButton, '저장'),
+        );
+        expect(save.onPressed, isNull);
+        expect(find.textContaining('3~100km'), findsWidgets);
+      });
+    }
+
+    testWidgets('러닝이 끝나 돌아오면 최근 목표를 다시 보인다', (tester) async {
+      final repo = FakeRepo((0, 0))..lastGoal = 5000;
+      await pumpHome(tester, FakeController(), repo: repo);
+      await settle(tester);
+      await tester.tap(find.text('10km'));
+      await tester.pump();
+      await startAndWait(tester);
+      repo.lastGoal = 10000;
+      tester.state<NavigatorState>(find.byType(Navigator)).pop();
+      await settle(tester);
+      final primary = AppColors.of(
+        tester.element(find.byType(HomeScreen)),
+      ).primary;
+      expect(chipColor(tester, '10km'), primary);
+    });
+
+    testWidgets('칩은 높이 48 이상이고 버튼·선택 상태로 읽힌다', (tester) async {
+      await pumpHome(tester, FakeController());
+      await settle(tester);
+      final handle = tester.ensureSemantics();
+      final node = tester.getSemantics(find.bySemanticsLabel('목표 3km'));
+      expect(node.flagsCollection.isSelected, isNotNull);
+      expect(
+        tester.getSize(find.bySemanticsLabel('목표 5km')).height,
+        greaterThanOrEqualTo(48),
+      );
+      handle.dispose();
+    });
+
+    testWidgets('읽는 동안에도 선택 영역과 시작 버튼 자리가 같다', (tester) async {
+      final repo = FakeRepo((0, 0))
+        ..lastGoal = 5000
+        ..holdLastGoal = Completer<void>();
+      await pumpHome(tester, FakeController(), repo: repo);
+      await settle(tester);
+      final picker = tester.getRect(find.byType(RunGoalPicker));
+      final button = tester.getRect(find.byType(ClayButton));
+      repo.holdLastGoal!.complete();
+      await settle(tester);
+      expect(tester.getRect(find.byType(RunGoalPicker)), picker);
+      expect(tester.getRect(find.byType(ClayButton)), button);
+    });
+
+    for (final dark in [false, true]) {
+      testWidgets('360×640 글자 1.3배 ${dark ? '다크' : '라이트'} 에서 넘침 없이 그려진다', (
+        tester,
+      ) async {
+        tester.view.physicalSize = const Size(360, 640);
+        tester.view.devicePixelRatio = 1;
+        addTearDown(tester.view.reset);
+        await tester.pumpWidget(
+          ProviderScope(
+            overrides: [
+              runControllerProvider.overrideWith(() => FakeController()),
+              permissionGateProvider.overrideWithValue(
+                FakeGate(GateResult.ready),
+              ),
+              runRepositoryProvider.overrideWithValue(
+                FakeRepo((0, 0))..lastGoal = 12000,
+              ),
+              growthServiceProvider.overrideWithValue(
+                FakeGrowthService(growthState()),
+              ),
+              clockProvider.overrideWithValue(() => DateTime(2026, 10, 17)),
+            ],
+            child: MaterialApp(
+              theme: dark ? appDarkTheme() : appLightTheme(),
+              builder: (context, child) => MediaQuery(
+                data: MediaQuery.of(
+                  context,
+                ).copyWith(textScaler: const TextScaler.linear(1.3)),
+                child: child!,
+              ),
+              home: const Scaffold(body: HomeScreen()),
+            ),
+          ),
+        );
+        await settle(tester);
+        expect(tester.takeException(), isNull);
+        expect(find.text('12km'), findsOneWidget);
+        expect(find.text('시작'), findsOneWidget);
+      });
+    }
   });
 }

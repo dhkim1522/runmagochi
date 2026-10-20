@@ -44,6 +44,9 @@ class FakeController extends RunController {
   Object? endError;
   final List<String> calls = [];
 
+  /// start 로 받은 목표(m)들.
+  final List<double> startGoals = [];
+
   @override
   RunViewState build() => RunViewState(
     snapshot: _initial,
@@ -52,8 +55,9 @@ class FakeController extends RunController {
   );
 
   @override
-  Future<void> start() async {
+  Future<void> start({required double goalM}) async {
     calls.add('start');
+    startGoals.add(goalM);
     await Future<void>.delayed(Duration.zero);
     if (startError != null) throw startError!;
     state = RunViewState(
@@ -146,6 +150,18 @@ class FakeRepo implements RunRepository {
 
   /// 지정하면 weeklyTotal 이 이 Completer 가 끝날 때까지 기다린다.
   Completer<void>? holdWeekly;
+
+  /// 가장 최근에 시작한 러닝의 목표(m). null 이면 없다.
+  double? lastGoal;
+
+  /// 지정하면 lastGoalM 이 이 Completer 가 끝날 때까지 기다린다.
+  Completer<void>? holdLastGoal;
+
+  @override
+  Future<double?> lastGoalM() async {
+    await holdLastGoal?.future;
+    return lastGoal;
+  }
 
   @override
   Future<List<RunListItem>> listRuns() async => runs;

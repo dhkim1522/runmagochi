@@ -13,6 +13,7 @@ import '../app/providers.dart';
 import '../domain/run_summary.dart';
 import 'in_run_screen.dart';
 import 'permission_screen.dart';
+import 'run_goal_picker.dart';
 import 'summary_screen.dart';
 
 final weeklyTotalProvider = FutureProvider.autoDispose<(double, int)>(
@@ -30,6 +31,12 @@ class HomeScreen extends ConsumerStatefulWidget {
 class _HomeScreenState extends ConsumerState<HomeScreen> {
   int? _countdown;
   bool _starting = false;
+
+  /// 사용자가 고른 오늘 목표(m). null 이면 최근 러닝의 목표를 따른다.
+  double? _goalM;
+
+  double get _shownGoalM =>
+      _goalM ?? ref.read(lastRunGoalProvider).value ?? 3000;
 
   @override
   void initState() {
@@ -80,8 +87,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         _toast('저장하지 못했어요');
       }
       if (!mounted) return;
-      ref.invalidate(growthStateProvider);
+      _refreshAfterRun();
     }
+  }
+
+  /// 러닝이 끝나 홈으로 돌아오면 성장과 최근 목표를 다시 읽는다.
+  void _refreshAfterRun() {
+    ref.invalidate(growthStateProvider);
+    ref.invalidate(lastRunGoalProvider);
+    setState(() => _goalM = null);
   }
 
   Future<void> _openInRun() async {
@@ -90,11 +104,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       context,
     ).push(MaterialPageRoute<void>(builder: (_) => const InRunScreen()));
     if (!mounted) return;
+    _refreshAfterRun();
     final after = ref.read(runControllerProvider).lastSummary;
-    if (after == null || identical(after, before)) {
-      ref.invalidate(growthStateProvider);
-      return;
-    }
+    if (after == null || identical(after, before)) return;
     await _openSummary(after);
   }
 
@@ -136,7 +148,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       }
       setState(() => _countdown = null);
       try {
-        await ref.read(runControllerProvider.notifier).start();
+        await ref
+            .read(runControllerProvider.notifier)
+            .start(goalM: _shownGoalM);
       } catch (_) {
         _toast('러닝을 시작하지 못했어요');
         return;
@@ -179,6 +193,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final c = AppColors.of(context);
     final t = AppText.of(context);
     final GrowthState? g = ref.watch(growthStateProvider).value;
+    final goalM = _goalM ?? ref.watch(lastRunGoalProvider).value ?? 3000;
     final nextLevelKm = g == null
         ? null
         : (g.level.xpForNext - g.level.xpIntoLevel) / 10;
@@ -190,11 +205,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                RunGoalPicker(
+                  goalM: goalM,
+                  onChanged: (v) => setState(() => _goalM = v),
+                ),
+                const SizedBox(height: Gap.s2),
                 Expanded(
                   child: Stack(
                     fit: StackFit.expand,
                     children: [
                       ClayCard(
+                        key: const ValueKey('home-stage'),
                         radius: Radii.xl,
                         color: c.surfaceSoft,
                         lipColor: c.line,

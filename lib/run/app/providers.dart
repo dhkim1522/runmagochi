@@ -51,3 +51,8 @@ final localNotificationSchedulerProvider = Provider<LocalNotificationScheduler>(
 final instantNotifierProvider = Provider<InstantNotifier>(
   (ref) => ref.watch(localNotificationSchedulerProvider),
 );
+
+/// 홈 목표 선택의 초기값(m): 가장 최근에 시작한 러닝의 목표, 없으면 3km.
+final lastRunGoalProvider = FutureProvider.autoDispose<double>(
+  (ref) async => await ref.read(runRepositoryProvider).lastGoalM() ?? 3000,
+);

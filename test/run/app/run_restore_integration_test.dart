@@ -98,7 +98,7 @@ void main() {
   /// 2구간(200초 → 30초 일시정지 → 250초)을 달린다.
   void runTwoSegments(_Harness h) {
     final controller = h.container.read(runControllerProvider.notifier);
-    controller.start();
+    controller.start(goalM: 3000);
     h.async.flushMicrotasks();
     h.step(200);
     controller.pause();
@@ -126,6 +126,23 @@ void main() {
     expect(h.snapshot.state, RunState.recording);
     expect(h.snapshot.distanceM, closeTo(restored.distanceM + 12, 0.1));
   }
+
+  test('죽었다 복원한 러닝의 상태 goalM 은 시작 때 고른 값이다', () {
+    fakeAsync((async) {
+      final h = _Harness(async);
+      final controller = h.container.read(runControllerProvider.notifier);
+      controller.start(goalM: 10000);
+      async.flushMicrotasks();
+      h.step(20);
+      expect(h.container.read(runControllerProvider).goalM, 10000);
+
+      h.crash();
+      expect(h.container.read(runControllerProvider).goalM, isNull);
+      expect(restore(h), isTrue);
+      expect(h.container.read(runControllerProvider).goalM, 10000);
+      h.close();
+    });
+  });
 
   test('일시정지 중에 죽으면 거리·구간 기록·움직인 시간이 그대로 복원된다', () {
     fakeAsync((async) {

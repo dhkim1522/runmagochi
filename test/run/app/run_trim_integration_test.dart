@@ -114,7 +114,7 @@ class _Harness {
   /// 1200m 를 달리고 [idleAfter] 만큼 서 있다가 끝낸 뒤 sync 한다.
   (RunSummary, GrowthGain) runAndEnd({Duration idleAfter = Duration.zero}) {
     final controller = container.read(runControllerProvider.notifier);
-    wait(controller.start());
+    wait(controller.start(goalM: 3000));
     step(400);
     async.elapse(idleAfter);
     final summary = wait(controller.end());

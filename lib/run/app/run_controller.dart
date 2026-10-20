@@ -44,6 +44,7 @@ class RunViewState {
     this.weightKg = defaultWeightKg,
     this.autoEnded = false,
     this.lastRunId,
+    this.goalM,
   });
 
   final RunSnapshot snapshot;
@@ -61,6 +62,9 @@ class RunViewState {
 
   /// [lastSummary] 러닝의 저장소 id. 끝부분 잘라내기에 쓴다.
   final String? lastRunId;
+
+  /// 진행 중 러닝의 오늘 목표(m). 러닝 중·복원 때만 채우고 목표 없는 옛 러닝은 null.
+  final double? goalM;
 }
 
 class RunController extends Notifier<RunViewState> {
@@ -99,6 +103,9 @@ class RunController extends Notifier<RunViewState> {
 
   double _weightKg = defaultWeightKg;
 
+  /// 진행 중 러닝의 목표(m).
+  double? _goalM;
+
   /// 저장된 체중. 없거나 읽지 못하면 기본 체중.
   Future<double> _readWeight() async {
     try {
@@ -123,17 +130,18 @@ class RunController extends Notifier<RunViewState> {
     return const RunViewState(snapshot: _idleSnapshot);
   }
 
-  /// 이전 러닝의 lastSummary·lastError 는 지운다.
-  Future<void> start() async {
+  /// [goalM] 은 홈에서 고른 오늘 목표(m). 이전 러닝의 lastSummary·lastError 는 지운다.
+  Future<void> start({required double goalM}) async {
     _requireNoRun();
     _starting = true;
     try {
       final clock = ref.read(clockProvider);
-      final runId = await _repository.createActiveRun(clock(), goalM: 3000);
+      final runId = await _repository.createActiveRun(clock(), goalM: goalM);
       _weightKg = await _readWeight();
       final engine = RunEngine(clock: clock)..start();
       _engine = engine;
       _runId = runId;
+      _goalM = goalM;
       _subscribe();
       _startFlushTimer();
       _startTick();
@@ -141,6 +149,7 @@ class RunController extends Notifier<RunViewState> {
         snapshot: engine.snapshot,
         runId: runId,
         weightKg: _weightKg,
+        goalM: goalM,
       );
     } finally {
       _starting = false;
@@ -250,6 +259,7 @@ class RunController extends Notifier<RunViewState> {
       final autoEnded = _pendingAutoEnd;
       _engine = null;
       _runId = null;
+      _goalM = null;
       _pendingSummary = null;
       _pendingAutoEnd = false;
       _flushClosed = false;
@@ -283,6 +293,7 @@ class RunController extends Notifier<RunViewState> {
       restoredMovingTime: active.movingTime,
     );
     _runId = active.id;
+    _goalM = active.goalM;
     _weightKg = await _readWeight();
     _publish();
     final decision = checkAutoEnd(
@@ -557,6 +568,7 @@ class RunController extends Notifier<RunViewState> {
       weightKg: _weightKg,
       autoEnded: state.autoEnded,
       lastRunId: state.lastRunId,
+      goalM: _goalM,
     );
   }
 }
