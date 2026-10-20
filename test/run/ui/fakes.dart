@@ -34,6 +34,8 @@ class FakeController extends RunController {
     this.startError,
     this.endError,
     this.initialSummary,
+    this.initialGoalM,
+    this.initialGoalReached = false,
   }) : _initial = initial ?? snap(RunState.idle);
 
   final bool restore;
@@ -41,6 +43,8 @@ class FakeController extends RunController {
   final String? error;
   final Object? startError;
   final RunSummary? initialSummary;
+  final double? initialGoalM;
+  final bool initialGoalReached;
   Object? endError;
   final List<String> calls = [];
 
@@ -52,6 +56,16 @@ class FakeController extends RunController {
     snapshot: _initial,
     lastError: error,
     lastSummary: initialSummary,
+    goalM: initialGoalM,
+    goalReached: initialGoalReached,
+  );
+
+  /// 목표 달성 상태로 바꾼다(거리는 그대로).
+  void reachGoal() => state = RunViewState(
+    snapshot: state.snapshot,
+    runId: state.runId,
+    goalM: state.goalM,
+    goalReached: true,
   );
 
   @override
@@ -63,6 +77,7 @@ class FakeController extends RunController {
     state = RunViewState(
       snapshot: snap(RunState.recording, distanceM: 1230),
       runId: 'r',
+      goalM: goalM,
     );
   }
 
@@ -73,6 +88,8 @@ class FakeController extends RunController {
       snapshot: snap(RunState.paused, distanceM: 1230),
       runId: 'r',
       lastError: state.lastError,
+      goalM: state.goalM,
+      goalReached: state.goalReached,
     );
   }
 
@@ -83,6 +100,8 @@ class FakeController extends RunController {
       snapshot: snap(RunState.recording, distanceM: 1230),
       runId: 'r',
       lastError: state.lastError,
+      goalM: state.goalM,
+      goalReached: state.goalReached,
     );
   }
 

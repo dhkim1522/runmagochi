@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show HapticFeedback;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../avatar/app/providers.dart';
@@ -54,6 +55,10 @@ class _InRunScreenState extends ConsumerState<InRunScreen> {
     // 중이면(_ending) 그 길이 닫는다.
     ref.listen(runControllerProvider, (prev, next) {
       if (next.autoEnded && prev?.autoEnded != true && !_ending) _close();
+      // 목표를 처음 채운 순간에만 한 번 울린다. 복원처럼 이미 달성한 채 열면 울리지 않는다.
+      if (next.goalReached && prev?.goalReached == false) {
+        HapticFeedback.mediumImpact();
+      }
     });
     final view = ref.watch(runControllerProvider);
     final controller = ref.read(runControllerProvider.notifier);
@@ -127,6 +132,14 @@ class _InRunScreenState extends ConsumerState<InRunScreen> {
                               'km',
                               style: t.title.copyWith(color: c.primaryDeep),
                             ),
+                            if (view.goalM != null) ...[
+                              const SizedBox(height: Gap.s3),
+                              _GoalRow(
+                                goalM: view.goalM!,
+                                distanceM: snap.distanceM,
+                                reached: view.goalReached,
+                              ),
+                            ],
                             const SizedBox(height: Gap.s6),
                             avatarStage,
                           ],
@@ -151,6 +164,14 @@ class _InRunScreenState extends ConsumerState<InRunScreen> {
                             'km',
                             style: t.titleS.copyWith(color: c.primaryDeep),
                           ),
+                          if (view.goalM != null) ...[
+                            const SizedBox(height: Gap.s2),
+                            _GoalRow(
+                              goalM: view.goalM!,
+                              distanceM: snap.distanceM,
+                              reached: view.goalReached,
+                            ),
+                          ],
                         ],
                       ),
                     ),
@@ -190,6 +211,44 @@ class _InRunScreenState extends ConsumerState<InRunScreen> {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// 거리 아래의 오늘 목표 진행. 달성하면 "목표 달성!" 을 success 색으로 보인다.
+class _GoalRow extends StatelessWidget {
+  const _GoalRow({
+    required this.goalM,
+    required this.distanceM,
+    required this.reached,
+  });
+
+  final double goalM;
+  final double distanceM;
+  final bool reached;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = AppColors.of(context);
+    final t = AppText.of(context);
+    return SizedBox(
+      width: 200,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            reached ? '목표 달성!' : '목표 ${formatTargetKm(goalM)}km',
+            style: t.caption.copyWith(color: reached ? c.success : c.inkMuted),
+          ),
+          const SizedBox(height: Gap.s1),
+          ClayBar(
+            value: reached ? 1 : distanceM / goalM,
+            height: 10,
+            fill: c.primary,
+            track: c.surfaceSoft,
+          ),
+        ],
       ),
     );
   }

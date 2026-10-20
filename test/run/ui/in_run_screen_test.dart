@@ -3,6 +3,7 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:runmagochi/avatar/app/providers.dart';
@@ -22,11 +23,15 @@ Future<FakeController> open(
   String? error,
   Object? endError,
   FakeGrowthService? growth,
+  double? goalM,
+  bool goalReached = false,
 }) async {
   final controller = FakeController(
     initial: initial ?? snap(RunState.paused, distanceM: 2910),
     error: error,
     endError: endError,
+    initialGoalM: goalM,
+    initialGoalReached: goalReached,
   );
   await tester.pumpWidget(
     ProviderScope(
@@ -273,6 +278,7 @@ void main() {
             tester.view.devicePixelRatio = 1;
             addTearDown(tester.view.reset);
             final controller = FakeController(
+              initialGoalM: 5000,
               initial: snap(
                 state,
                 distanceM: 5340,
@@ -307,6 +313,90 @@ void main() {
         );
       }
     }
+  });
+
+  group('목표 진행', () {
+    ClayBar bar(WidgetTester tester) =>
+        tester.widget<ClayBar>(find.byType(ClayBar));
+
+    testWidgets('거리 아래에 목표와 진행 막대가 보인다', (tester) async {
+      await open(
+        tester,
+        initial: snap(RunState.recording, distanceM: 2500),
+        goalM: 5000,
+      );
+      expect(find.text('목표 5km'), findsOneWidget);
+      expect(bar(tester).value, closeTo(0.5, 1e-9));
+      expect(bar(tester).fill, AppColors.light.primary);
+      expect(bar(tester).track, AppColors.light.surfaceSoft);
+    });
+
+    testWidgets('목표가 없으면 목표 행이 없다', (tester) async {
+      await open(tester, initial: snap(RunState.recording, distanceM: 2500));
+      expect(find.byType(ClayBar), findsNothing);
+      expect(find.textContaining('목표'), findsNothing);
+    });
+
+    testWidgets('달성하면 목표 달성! 이 success 색이고 햅틱이 한 번 울린다', (tester) async {
+      final haptics = <MethodCall>[];
+      tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+        SystemChannels.platform,
+        (call) async {
+          if (call.method == 'HapticFeedback.vibrate') haptics.add(call);
+          return null;
+        },
+      );
+      addTearDown(
+        () => tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+          SystemChannels.platform,
+          null,
+        ),
+      );
+      final c = await open(
+        tester,
+        initial: snap(RunState.recording, distanceM: 5010),
+        goalM: 5000,
+      );
+      expect(haptics, isEmpty);
+      expect(find.text('목표 달성!'), findsNothing);
+
+      c.reachGoal();
+      await settle(tester);
+      expect(find.text('목표 달성!'), findsOneWidget);
+      expect(find.text('목표 5km'), findsNothing);
+      final style = tester
+          .renderObject<RenderParagraph>(find.text('목표 달성!'))
+          .text
+          .style!;
+      expect(style.color, AppColors.light.success);
+      expect(bar(tester).value, 1);
+      expect(haptics, hasLength(1));
+    });
+
+    testWidgets('이미 달성한 채로 열면 햅틱은 울리지 않는다', (tester) async {
+      final haptics = <MethodCall>[];
+      tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+        SystemChannels.platform,
+        (call) async {
+          if (call.method == 'HapticFeedback.vibrate') haptics.add(call);
+          return null;
+        },
+      );
+      addTearDown(
+        () => tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+          SystemChannels.platform,
+          null,
+        ),
+      );
+      await open(
+        tester,
+        initial: snap(RunState.recording, distanceM: 5010),
+        goalM: 5000,
+        goalReached: true,
+      );
+      expect(find.text('목표 달성!'), findsOneWidget);
+      expect(haptics, isEmpty);
+    });
   });
 
   group('러닝 중 아바타', () {
