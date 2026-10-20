@@ -3,18 +3,26 @@
 /// 기록 중 이 시간 동안 받아들인 위치 점이 없으면 끝낸다.
 const Duration autoEndIdle = Duration(minutes: 20);
 
+/// 시속 30km 를 넘는 빠른 이동이 이 시간 이어지면 끝낸다 (결정 0018).
+const Duration autoEndFast = Duration(seconds: 30);
+
 /// 시작부터 이 시간이 지나면 기록 중이든 일시정지 중이든 끝낸다.
 const Duration autoEndMax = Duration(hours: 6);
 
 /// 자동 종료 기준 시간. 테스트·E2E 에서 provider 로 줄인다.
 class RunGuardConfig {
-  const RunGuardConfig({this.idle = autoEndIdle, this.max = autoEndMax});
+  const RunGuardConfig({
+    this.idle = autoEndIdle,
+    this.max = autoEndMax,
+    this.fast = autoEndFast,
+  });
 
   final Duration idle;
   final Duration max;
+  final Duration fast;
 }
 
-enum AutoEndReason { idle, maxDuration }
+enum AutoEndReason { idle, maxDuration, fast }
 
 class AutoEndDecision {
   const AutoEndDecision(this.reason, this.endAt);
@@ -29,6 +37,8 @@ class AutoEndDecision {
 ///
 /// - 마지막 활동 = [lastPointAt](받아들인 마지막 점)과 [recordingSince]
 ///   (이번 기록 구간을 시작·재개한 시각) 중 늦은 쪽. 둘 다 없으면 [startedAt].
+/// - [recording] 이고 [fastSince] 가 있고 `now − fastSince ≥ fast` 면
+///   [beforeFastAt] ?? [recordingSince] ?? [startedAt] 에 끝낸다. 가장 먼저 본다.
 /// - [recording] 이고 `now − 마지막 활동 ≥ idle` 이면 마지막 활동 시각에 끝낸다.
 ///   일시정지 중에는 적용하지 않는다.
 /// - `now − startedAt ≥ max` 면 끝낸다. 점이 있으면 마지막 활동 시각, 없으면
@@ -39,8 +49,18 @@ AutoEndDecision? checkAutoEnd({
   required bool recording,
   required DateTime? lastPointAt,
   required DateTime? recordingSince,
+  DateTime? fastSince,
+  DateTime? beforeFastAt,
   RunGuardConfig config = const RunGuardConfig(),
 }) {
+  if (recording &&
+      fastSince != null &&
+      now.difference(fastSince) >= config.fast) {
+    return AutoEndDecision(
+      AutoEndReason.fast,
+      beforeFastAt ?? recordingSince ?? startedAt,
+    );
+  }
   final activity = _latest(lastPointAt, recordingSince) ?? startedAt;
   if (recording && now.difference(activity) >= config.idle) {
     return AutoEndDecision(AutoEndReason.idle, activity);
@@ -65,8 +85,9 @@ DateTime? _latest(DateTime? a, DateTime? b) {
 RunGuardConfig? runGuardConfigFromSeconds({
   required String idleSec,
   required String maxSec,
+  String fastSec = '',
 }) {
-  if (idleSec.isEmpty && maxSec.isEmpty) return null;
+  if (idleSec.isEmpty && maxSec.isEmpty && fastSec.isEmpty) return null;
   Duration parse(String s, Duration fallback) {
     final n = int.tryParse(s);
     return n == null || n <= 0 ? fallback : Duration(seconds: n);
@@ -75,5 +96,6 @@ RunGuardConfig? runGuardConfigFromSeconds({
   return RunGuardConfig(
     idle: parse(idleSec, autoEndIdle),
     max: parse(maxSec, autoEndMax),
+    fast: parse(fastSec, autoEndFast),
   );
 }

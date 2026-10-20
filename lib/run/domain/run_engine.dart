@@ -7,6 +7,9 @@ import 'run_summary.dart';
 
 const double _maxAccuracyM = 20;
 const double _maxSpeedMps = 7;
+
+/// 빠른 이동으로 보는 속도: 시속 30km (초속 8.33m).
+const double fastSpeedMps = 30 / 3.6;
 const Duration _currentPaceWindow = Duration(seconds: 30);
 const double _minPaceDistanceM = 10;
 const Duration _staleSampleTolerance = Duration(seconds: 2);
@@ -100,6 +103,12 @@ class RunEngine {
   double _distanceM = 0;
   LocationSample? _lastAccepted;
 
+  /// 정확도 거름을 통과한 직전 원시 점. 빠른 이동 속도를 잰다.
+  /// 일시정지·재개하면 비운다.
+  LocationSample? _lastRaw;
+  DateTime? _fastSince;
+  DateTime? _lastAcceptedBeforeFast;
+
   Duration _movingBase = Duration.zero;
   DateTime? _recordingSince;
 
@@ -128,6 +137,13 @@ class RunEngine {
 
   /// 마지막으로 받아들인 점(복원한 점 포함)의 시각. 없으면 null.
   DateTime? get lastPointAt => _lastAccepted?.time;
+
+  /// 빠른 이동(시속 30km 초과)이 이어지기 시작한 시각, 곧 그 연속의 첫 빠른
+  /// 점의 시각. 빠른 이동 중이 아니면 null.
+  DateTime? get fastSince => _fastSince;
+
+  /// [fastSince] 를 잡은 순간 마지막으로 받아들인 점의 시각. 없으면 null.
+  DateTime? get lastAcceptedBeforeFast => _lastAcceptedBeforeFast;
 
   List<List<LocationSample>> get segments => List.unmodifiable([
     for (final segment in _segments) List<LocationSample>.unmodifiable(segment),
@@ -202,6 +218,7 @@ class RunEngine {
     if (s.time.isBefore(_recordingSince!.subtract(_staleSampleTolerance))) {
       return false;
     }
+    _trackFast(s);
     final last = _lastAccepted;
     if (last != null) {
       final dt = s.time.difference(last.time);
@@ -213,6 +230,30 @@ class RunEngine {
     }
     _append(s);
     return true;
+  }
+
+  /// 직전 원시 점과의 속도로 빠른 이동 연속을 갱신한다. 거리 계산과 무관하다.
+  void _trackFast(LocationSample s) {
+    final prev = _lastRaw;
+    if (prev != null) {
+      final dt = s.time.difference(prev.time);
+      if (dt <= Duration.zero) return;
+      final seconds = dt.inMicroseconds / Duration.microsecondsPerSecond;
+      if (_distance(prev, s) / seconds > fastSpeedMps) {
+        if (_fastSince == null) {
+          _fastSince = s.time;
+          _lastAcceptedBeforeFast = _lastAccepted?.time;
+        }
+      } else {
+        _resetFast();
+      }
+    }
+    _lastRaw = s;
+  }
+
+  void _resetFast() {
+    _fastSince = null;
+    _lastAcceptedBeforeFast = null;
   }
 
   void _append(LocationSample s) {
@@ -261,6 +302,8 @@ class RunEngine {
       throw StateError('Cannot go from $_state to $to');
     }
     final now = at ?? _clock();
+    _lastRaw = null;
+    _resetFast();
     if (from == RunState.recording) {
       _movingBase += now.difference(_recordingSince!);
       _recordingSince = null;

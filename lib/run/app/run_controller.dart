@@ -25,6 +25,7 @@ const String _locationErrorMessage = '위치 신호를 받지 못하고 있어�
 const String _saveErrorMessage = '기록 저장에 실패했어요. 자동으로 다시 시도해요';
 const String _endErrorMessage = '러닝 저장에 실패했어요. 다시 종료해 주세요';
 const String _autoEndTitle = '러닝을 자동으로 마쳤어요';
+const String _autoEndFastTitle = '빠른 이동이 감지돼 러닝을 마쳤어요';
 const String _goalReachedTitle = '목표 달성!';
 
 const RunSnapshot _idleSnapshot = RunSnapshot(
@@ -103,8 +104,8 @@ class RunController extends Notifier<RunViewState> {
   /// completeRun 이 실패해 남은 요약. end 를 다시 부르면 이것으로 completeRun 만 한다.
   RunSummary? _pendingSummary;
 
-  /// [_pendingSummary] 가 자동 종료로 만든 요약이다.
-  bool _pendingAutoEnd = false;
+  /// [_pendingSummary] 가 자동 종료로 만든 요약이면 그 이유.
+  AutoEndReason? _pendingAutoEnd;
 
   double _weightKg = defaultWeightKg;
 
@@ -256,7 +257,7 @@ class RunController extends Notifier<RunViewState> {
           summary = _endAt(summary, auto.endAt, trim: wasRecording);
         }
         _pendingSummary = summary;
-        _pendingAutoEnd = auto != null;
+        _pendingAutoEnd = auto?.reason;
         _publish();
       }
       try {
@@ -265,13 +266,14 @@ class RunController extends Notifier<RunViewState> {
         state = _copyState(lastError: _endErrorMessage);
         rethrow;
       }
-      final autoEnded = _pendingAutoEnd;
+      final autoEndReason = _pendingAutoEnd;
+      final autoEnded = autoEndReason != null;
       _engine = null;
       _runId = null;
       _goalM = null;
       _goalReached = false;
       _pendingSummary = null;
-      _pendingAutoEnd = false;
+      _pendingAutoEnd = null;
       _flushClosed = false;
       state = RunViewState(
         snapshot: _idleSnapshot,
@@ -279,7 +281,7 @@ class RunController extends Notifier<RunViewState> {
         autoEnded: autoEnded,
         lastRunId: runId,
       );
-      if (autoEnded) _notifyAutoEnd(summary);
+      if (autoEndReason != null) _notifyAutoEnd(summary, autoEndReason);
       return summary;
     } finally {
       _ending = false;
@@ -344,6 +346,8 @@ class RunController extends Notifier<RunViewState> {
       recording: runState == RunState.recording,
       lastPointAt: engine.lastPointAt,
       recordingSince: engine.recordingSince,
+      fastSince: engine.fastSince,
+      beforeFastAt: engine.lastAcceptedBeforeFast,
       config: ref.read(runGuardConfigProvider),
     );
     if (decision == null) return false;
@@ -386,13 +390,15 @@ class RunController extends Notifier<RunViewState> {
   }
 
   /// 알림 실패는 러닝 저장과 상관없으므로 버린다.
-  void _notifyAutoEnd(RunSummary summary) {
+  void _notifyAutoEnd(RunSummary summary, AutoEndReason reason) {
     try {
       unawaited(
         ref
             .read(instantNotifierProvider)
             .showNow(
-              title: _autoEndTitle,
+              title: reason == AutoEndReason.fast
+                  ? _autoEndFastTitle
+                  : _autoEndTitle,
               body:
                   '${formatKm(summary.distanceM)}km 기록을 저장했어요. '
                   '요약에서 확인하세요.',

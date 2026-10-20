@@ -23,6 +23,7 @@ const _lat0 = 37.5;
 const _lng0 = 127.0;
 const _runId = 'run-1';
 const _title = '러닝을 자동으로 마쳤어요';
+const _fastTitle = '빠른 이동이 감지돼 러닝을 마쳤어요';
 final _t0 = DateTime(2026, 10, 18, 7);
 
 double _northOf(double meters) => _lat0 + meters / 6371000 * 180 / math.pi;
@@ -333,6 +334,77 @@ void main() {
       env.async.flushMicrotasks();
       expect(env.view.autoEnded, isFalse);
       expect(env.notifier.shown, isEmpty);
+    });
+  });
+
+  group('빠른 이동', () {
+    /// 시작 뒤 1~5초 3m/s, 6초부터 [fastUntil]초까지 10m/s 점. 5초 점이 15m.
+    void feedFast(_Env env, int fastUntil) {
+      runFiveSamples(env);
+      for (var i = 6; i <= fastUntil; i++) {
+        env.sampleAt(Duration(seconds: i), 15.0 + (i - 5) * 10);
+      }
+    }
+
+    test('초속 10m 점이 30초 이어지면 끝내고 끝 시각은 빨라지기 전 마지막 점', () {
+      _run((env) {
+        // 6초 점부터 시작해 35초 점이 29초째.
+        feedFast(env, 35);
+        expect(env.repo.completed, isEmpty);
+        expect(env.view.snapshot.state, RunState.recording);
+
+        env.async.elapse(const Duration(seconds: 1));
+        final summary = env.repo.completed.single.$2;
+        expect(summary.endedAt, lastPoint);
+        // 빠른 구간은 거리에 들어가지 않는다.
+        expect(summary.distanceM, closeTo(fiveDistance, 1e-9));
+        expect(summary.points, hasLength(5));
+        expect(env.view.autoEnded, isTrue);
+        expect(env.notifier.shown, [
+          (_fastTitle, '0.01km 기록을 저장했어요. 요약에서 확인하세요.'),
+        ]);
+      });
+    });
+
+    test('빠른 점 2개 뒤 초속 3m 점이 오면 다시 0부터 센다', () {
+      _run((env) {
+        feedFast(env, 7);
+        // 7초 점은 35m. 3m/s 점으로 연속이 끊긴다.
+        env.sampleAt(const Duration(seconds: 8), 38);
+        for (var i = 9; i <= 70; i++) {
+          env.sampleAt(Duration(seconds: i), 38.0 + (i - 8) * 3);
+        }
+        expect(env.repo.completed, isEmpty);
+        expect(env.view.snapshot.state, RunState.recording);
+        env.controller.end();
+        env.async.flushMicrotasks();
+      });
+    });
+
+    test('일시정지 중에는 세지 않고 재개하면 0부터 센다', () {
+      _run((env) {
+        feedFast(env, 7);
+        env.controller.pause();
+        env.async.elapse(const Duration(minutes: 2));
+        expect(env.view.snapshot.state, RunState.paused);
+        expect(env.repo.completed, isEmpty);
+
+        env.controller.resume();
+        env.async.elapse(const Duration(seconds: 29));
+        expect(env.repo.completed, isEmpty);
+        expect(env.view.snapshot.state, RunState.recording);
+        env.controller.end();
+        env.async.flushMicrotasks();
+      });
+    });
+
+    test('provider 로 줄인 기준을 따른다', () {
+      _run(config: const RunGuardConfig(fast: Duration(seconds: 3)), (env) {
+        feedFast(env, 8);
+        expect(env.repo.completed, isEmpty);
+        env.async.elapse(const Duration(seconds: 1));
+        expect(env.repo.completed.single.$2.endedAt, lastPoint);
+      });
     });
   });
 

@@ -13,6 +13,90 @@ void main() {
     const config = RunGuardConfig();
     expect(config.idle, autoEndIdle);
     expect(config.max, autoEndMax);
+    expect(autoEndFast, const Duration(seconds: 30));
+    expect(config.fast, autoEndFast);
+  });
+
+  group('빠른 이동 규칙', () {
+    final fastSince = _at(const Duration(minutes: 5));
+    final before = _at(const Duration(minutes: 4, seconds: 50));
+
+    AutoEndDecision? check(
+      Duration afterFast, {
+      bool recording = true,
+      DateTime? beforeFastAt,
+      DateTime? lastPointAt,
+    }) => checkAutoEnd(
+      now: fastSince.add(afterFast),
+      startedAt: _start,
+      recording: recording,
+      lastPointAt: lastPointAt ?? before,
+      recordingSince: _start,
+      fastSince: fastSince,
+      beforeFastAt: beforeFastAt,
+    );
+
+    test('29초면 계속, 30초면 종료하고 끝 시각은 빨라지기 전 점', () {
+      expect(check(const Duration(seconds: 29), beforeFastAt: before), isNull);
+      final d = check(const Duration(seconds: 30), beforeFastAt: before);
+      expect(d?.reason, AutoEndReason.fast);
+      expect(d?.endAt, before);
+    });
+
+    test('빨라지기 전 점이 없으면 기록 구간 시작 시각', () {
+      final d = check(const Duration(seconds: 30), lastPointAt: null);
+      expect(d?.endAt, _start);
+    });
+
+    test('기록 구간 시작 시각도 없으면 시작 시각', () {
+      final d = checkAutoEnd(
+        now: fastSince.add(const Duration(seconds: 30)),
+        startedAt: _start,
+        recording: true,
+        lastPointAt: null,
+        recordingSince: null,
+        fastSince: fastSince,
+      );
+      expect(d?.endAt, _start);
+    });
+
+    test('일시정지 중에는 적용하지 않는다', () {
+      expect(
+        check(
+          const Duration(minutes: 1),
+          recording: false,
+          beforeFastAt: before,
+        ),
+        isNull,
+      );
+    });
+
+    test('20분 규칙보다 먼저 본다', () {
+      final d = checkAutoEnd(
+        now: _at(const Duration(minutes: 40)),
+        startedAt: _start,
+        recording: true,
+        lastPointAt: _start,
+        recordingSince: _start,
+        fastSince: _at(const Duration(minutes: 39, seconds: 30)),
+        beforeFastAt: _at(const Duration(minutes: 1)),
+      );
+      expect(d?.reason, AutoEndReason.fast);
+    });
+
+    test('config.fast 로 줄인다', () {
+      final d = checkAutoEnd(
+        now: fastSince.add(const Duration(seconds: 5)),
+        startedAt: _start,
+        recording: true,
+        lastPointAt: before,
+        recordingSince: _start,
+        fastSince: fastSince,
+        beforeFastAt: before,
+        config: const RunGuardConfig(fast: Duration(seconds: 5)),
+      );
+      expect(d?.reason, AutoEndReason.fast);
+    });
   });
 
   group('기록 중 20분 규칙', () {
@@ -167,12 +251,26 @@ void parseTests() {
       final d = runGuardConfigFromSeconds(idleSec: '', maxSec: '120');
       expect(d?.idle, autoEndIdle);
       expect(d?.max, const Duration(minutes: 2));
+      expect(d?.fast, autoEndFast);
+      final e = runGuardConfigFromSeconds(
+        idleSec: '',
+        maxSec: '',
+        fastSec: '10',
+      );
+      expect(e?.fast, const Duration(seconds: 10));
+      expect(e?.idle, autoEndIdle);
     });
 
     test('숫자가 아니거나 0 이하면 기본값', () {
       final c = runGuardConfigFromSeconds(idleSec: 'x', maxSec: '0');
       expect(c?.idle, autoEndIdle);
       expect(c?.max, autoEndMax);
+      final f = runGuardConfigFromSeconds(
+        idleSec: '',
+        maxSec: '',
+        fastSec: '-3',
+      );
+      expect(f?.fast, autoEndFast);
     });
   });
 }
