@@ -38,7 +38,7 @@
 
 ## 작업
 
-- [ ] 1. 러닝 목표 저장 (스키마 v4)
+- [x] 1. 러닝 목표 저장 (스키마 v4)
   - 파일: `lib/run/data/app_database.dart`(+ `.g.dart`), `lib/run/data/run_repository.dart`, `lib/run/data/drift_run_repository.dart`, `lib/backup/domain/backup_codec.dart`, `lib/run/app/run_controller.dart`(호출부만), 관련 테스트
   - 스키마: `Runs.goalM` real nullable. `schemaVersion` 4, `from < 4` 이면 `addColumn(runs, runs.goalM)`.
   - 인터페이스:
