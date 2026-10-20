@@ -97,7 +97,7 @@
   - 확인: `fvm flutter test test/run`
   - 스킬: ui-ux-pro-max:ui-ux-pro-max
 
-- [ ] 6. 요약: 달성·미달 표시
+- [x] 6. 요약: 달성·미달 표시
   - 파일: `lib/avatar/ui/growth_summary.dart`, `lib/run/ui/summary_screen.dart`, `lib/run/ui/home_screen.dart`(요약 여는 곳)
   - 인터페이스: `GrowthSummary({..., required double? goalM, required bool achieved, ...})`(주간 목표 인자 대신). `SummaryScreen.fromSummary(summary, gain:, goalM:)`, 기록에서 여는 요약은 `RunListItem.goalM` 을 쓴다.
   - 표시:
