@@ -78,7 +78,7 @@
   - 테스트: 10km 목표로 5km → +50, 5km 목표로 5km → +75, 5km 목표로 7km → +95. 목표 없는 예전 러닝은 보너스 0. 빠른 구간을 빼면 미달 → 보너스 0. 지운 러닝은 경험치·레벨 유지, 다음 sync 도 유지. 잘라내 미달이 되면 보너스 행 삭제 표시와 gain 의 보너스 −25, 다시 같은 끝으로 부르면 차이 0. `setRunXp` 두 번 불러도 행이 두 개씩 생기지 않는다.
   - 확인: `fvm flutter test test/avatar test/run/ui/summary_screen_test.dart`
 
-- [ ] 4. 홈: 오늘 목표 고르고 시작
+- [x] 4. 홈: 오늘 목표 고르고 시작
   - 파일: `lib/run/ui/run_goal_picker.dart`(새 파일), `lib/run/ui/home_screen.dart`, `lib/run/app/run_controller.dart`, `lib/run/app/providers.dart`
   - 인터페이스:
     - `RunController.start({required double goalM})`, `RunViewState.goalM` (`double?`, 러닝 중·복원 때 채움)
