@@ -110,7 +110,7 @@
   - 확인: `fvm flutter test test/avatar/ui test/run/ui`
   - 스킬: ui-ux-pro-max:ui-ux-pro-max
 
-- [ ] 7. 빠른 이동 자동 종료
+- [x] 7. 빠른 이동 자동 종료
   - 파일: `lib/run/domain/run_engine.dart`, `lib/run/app/run_guard.dart`, `lib/run/app/run_controller.dart`, `lib/run/app/providers.dart`(dart-define), `docs/specs/run-engine.md`(검증 줄), `tool/fake_run.dart`(필요하면)
   - 엔진: 정확도 거름을 통과한 원시 점끼리 속도를 잰다. 시속 30km 초과 점이 오면 `fastSince`(그 연속의 첫 빠른 점 시각)와 `lastAcceptedBeforeFast`(그 순간의 마지막 받아들인 점 시각)를 잡고, 이하인 점이 오거나 일시정지·재개하면 둘 다 null 로 돌린다. 거리 계산은 바꾸지 않는다.
   - 규칙: `autoEndFast = Duration(seconds: 30)`, `RunGuardConfig.fast`, `AutoEndReason.fast`. `checkAutoEnd` 에 `fastSince`·`beforeFastAt` 인자를 더하고, 기록 중이고 `now − fastSince ≥ fast` 면 `beforeFastAt ?? recordingSince ?? startedAt` 에 끝낸다. 판정 순서는 빠른 이동 → 20분 → 6시간.
