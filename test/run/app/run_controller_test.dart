@@ -62,7 +62,13 @@ class _FakeRunRepository implements RunRepository {
   final log = <String>[];
 
   @override
-  Future<String> createActiveRun(DateTime startedAt) async {
+  Future<double?> lastGoalM() async => null;
+
+  @override
+  Future<String> createActiveRun(
+    DateTime startedAt, {
+    required double goalM,
+  }) async {
     log.add('createActiveRun');
     return _runId;
   }

@@ -24,7 +24,10 @@ class DriftRunRepository implements RunRepository {
   DateTime _now() => _clock().toUtc();
 
   @override
-  Future<String> createActiveRun(DateTime startedAt) async {
+  Future<String> createActiveRun(
+    DateTime startedAt, {
+    required double goalM,
+  }) async {
     final id = _uuid.v4();
     final now = _now();
     await _db
@@ -34,11 +37,22 @@ class DriftRunRepository implements RunRepository {
             id: id,
             startedAt: startedAt.toUtc(),
             status: _active,
+            goalM: Value(goalM),
             createdAt: now,
             updatedAt: now,
           ),
         );
     return id;
+  }
+
+  @override
+  Future<double?> lastGoalM() async {
+    final run =
+        await (_db.select(_db.runs)
+              ..orderBy([(r) => OrderingTerm.desc(r.startedAt)])
+              ..limit(1))
+            .getSingleOrNull();
+    return run?.goalM;
   }
 
   @override
@@ -125,6 +139,7 @@ class DriftRunRepository implements RunRepository {
       startedAt: run.startedAt.toLocal(),
       segments: bySegment.values.toList(),
       movingTime: Duration(seconds: run.movingTimeS),
+      goalM: run.goalM,
     );
   }
 
@@ -166,6 +181,7 @@ class DriftRunRepository implements RunRepository {
     distanceM: r.distanceM,
     movingTime: Duration(seconds: r.movingTimeS),
     avgPaceSecPerKm: r.avgPaceSecPerKm,
+    goalM: r.goalM,
   );
 
   @override

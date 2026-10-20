@@ -88,4 +88,31 @@ PRAGMA user_version = 2;
     expect((await db.select(db.xpTxns).get()).map((x) => x.amount), [30]);
     expect(await db.select(db.profiles).get(), isEmpty);
   });
+
+  test('스키마 3 DB 를 열면 goal_m 이 생기고 기존 러닝은 목표 null 로 남는다', () async {
+    final executor = NativeDatabase.memory(
+      setup: (raw) {
+        raw.execute('''
+CREATE TABLE runs (
+  id TEXT NOT NULL, started_at TEXT NOT NULL, ended_at TEXT NULL,
+  status TEXT NOT NULL, distance_m REAL NOT NULL DEFAULT 0,
+  moving_time_s INTEGER NOT NULL DEFAULT 0, avg_pace_sec_per_km REAL NULL,
+  calories REAL NOT NULL DEFAULT 0, name TEXT NOT NULL DEFAULT '',
+  encoded_route TEXT NULL, created_at TEXT NOT NULL, updated_at TEXT NOT NULL,
+  deleted_at TEXT NULL, PRIMARY KEY (id));
+INSERT INTO runs (id, started_at, status, distance_m, created_at, updated_at)
+VALUES ('r1', '2026-10-01T00:00:00.000Z', 'completed', 4200,
+  '2026-10-01T00:00:00.000Z', '2026-10-01T00:00:00.000Z');
+PRAGMA user_version = 3;
+''');
+      },
+    );
+    final db = AppDatabase(executor);
+    addTearDown(db.close);
+
+    final runs = await db.select(db.runs).get();
+    expect(runs.map((r) => r.id), ['r1']);
+    expect(runs.single.distanceM, 4200);
+    expect(runs.single.goalM, isNull);
+  });
 }

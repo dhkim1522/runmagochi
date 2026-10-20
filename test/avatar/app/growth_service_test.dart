@@ -58,7 +58,10 @@ class FakeRunRepository implements RunRepository {
   }
 
   @override
-  Future<String> createActiveRun(DateTime startedAt) =>
+  Future<double?> lastGoalM() async => null;
+
+  @override
+  Future<String> createActiveRun(DateTime startedAt, {required double goalM}) =>
       throw UnimplementedError();
   @override
   Future<void> appendPoints(

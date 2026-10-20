@@ -43,7 +43,7 @@ void main() {
 
   test('createActiveRun 후 findActiveRun이 같은 id와 점을 돌려준다', () async {
     final start = DateTime(2026, 1, 5, 9);
-    final id = await repo.createActiveRun(start);
+    final id = await repo.createActiveRun(start, goalM: 3000);
     final p = [
       sample(start.add(const Duration(seconds: 1)), 37.5, 127.0),
       sample(start.add(const Duration(seconds: 2)), 37.51, 127.01),
@@ -66,7 +66,7 @@ void main() {
 
   test('2구간 러닝이 구간 구조 그대로 복원된다', () async {
     final start = DateTime(2026, 1, 5, 9);
-    final id = await repo.createActiveRun(start);
+    final id = await repo.createActiveRun(start, goalM: 3000);
     DateTime t(int s) => start.add(Duration(seconds: s));
     // 구간 1을 먼저 저장해도 구간 번호 오름차순, 구간 안은 시간순이어야 한다.
     await repo.appendPoints(
@@ -89,7 +89,7 @@ void main() {
 
   test('저장된 구간 번호가 0부터 이어지지 않으면 findActiveRun은 StateError', () async {
     final start = DateTime(2026, 1, 5, 9);
-    final id = await repo.createActiveRun(start);
+    final id = await repo.createActiveRun(start, goalM: 3000);
     DateTime t(int s) => start.add(Duration(seconds: s));
     await repo.appendPoints(
       id,
@@ -107,7 +107,7 @@ void main() {
   });
 
   test('movingTime은 appendPoints 호출마다 갱신되고 빈 점 목록에서도 저장된다', () async {
-    final id = await repo.createActiveRun(DateTime(2026, 1, 5, 9));
+    final id = await repo.createActiveRun(DateTime(2026, 1, 5, 9), goalM: 3000);
     await repo.appendPoints(
       id,
       segmentIndex: 0,
@@ -131,7 +131,7 @@ void main() {
   });
 
   test('점 없는 진행 중 러닝은 빈 구간 목록을 돌려준다', () async {
-    final id = await repo.createActiveRun(DateTime(2026, 1, 5, 9));
+    final id = await repo.createActiveRun(DateTime(2026, 1, 5, 9), goalM: 3000);
     final active = (await repo.findActiveRun())!;
     expect(active.id, id);
     expect(active.segments, isEmpty);
@@ -146,7 +146,7 @@ void main() {
     'completeRun 후 findActiveRun은 null, RunPoints는 0행, route 점 수 = 원본 점 수',
     () async {
       final start = DateTime(2026, 1, 5, 9);
-      final id = await repo.createActiveRun(start);
+      final id = await repo.createActiveRun(start, goalM: 3000);
       final pts = [
         for (var i = 0; i < 5; i++)
           sample(start.add(Duration(seconds: i)), 37.5 + i * 0.001, 127.0),
@@ -182,7 +182,7 @@ void main() {
 
   test('거리 0 요약도 저장된다', () async {
     final start = DateTime(2026, 1, 5, 9);
-    final id = await repo.createActiveRun(start);
+    final id = await repo.createActiveRun(start, goalM: 3000);
     await repo.completeRun(id, summary(start, distanceM: 0));
     final detail = (await repo.getRun(id))!;
     expect(detail.run.distanceM, 0);
@@ -191,19 +191,66 @@ void main() {
     expect(await repo.listRuns(), hasLength(1));
   });
 
+  test('저장한 목표가 진행 중 복원·목록·상세에 같은 값으로 나온다', () async {
+    final start = DateTime(2026, 1, 5, 9);
+    final id = await repo.createActiveRun(start, goalM: 5000);
+    expect((await repo.findActiveRun())!.goalM, 5000);
+    await repo.completeRun(id, summary(start));
+    expect((await repo.listRuns()).single.goalM, 5000);
+    expect((await repo.getRun(id))!.run.goalM, 5000);
+  });
+
+  group('lastGoalM', () {
+    test('러닝이 없으면 null', () async {
+      expect(await repo.lastGoalM(), isNull);
+    });
+
+    test('시작이 가장 늦은 러닝의 목표(삭제·진행 중 포함)', () async {
+      await repo.createActiveRun(DateTime(2026, 1, 1, 9), goalM: 3000);
+      final b = await repo.createActiveRun(
+        DateTime(2026, 1, 3, 9),
+        goalM: 10000,
+      );
+      await repo.completeRun(b, summary(DateTime(2026, 1, 3, 9)));
+      await repo.createActiveRun(DateTime(2026, 1, 2, 9), goalM: 5000);
+      expect(await repo.lastGoalM(), 10000);
+      await (db.update(db.runs)..where((r) => r.id.equals(b))).write(
+        RunsCompanion(deletedAt: Value(DateTime.now().toUtc())),
+      );
+      expect(await repo.lastGoalM(), 10000);
+    });
+
+    test('가장 최근 러닝에 목표가 없으면 null', () async {
+      final now = DateTime.utc(2026, 1, 9);
+      await db
+          .into(db.runs)
+          .insert(
+            RunsCompanion.insert(
+              id: 'old',
+              startedAt: now,
+              status: 'completed',
+              createdAt: now,
+              updatedAt: now,
+            ),
+          );
+      await repo.createActiveRun(DateTime(2026, 1, 1, 9), goalM: 3000);
+      expect(await repo.lastGoalM(), isNull);
+    });
+  });
+
   test('listRuns는 최신순이고 진행 중·삭제된 러닝은 제외한다', () async {
-    final a = await repo.createActiveRun(DateTime(2026, 1, 1, 9));
+    final a = await repo.createActiveRun(DateTime(2026, 1, 1, 9), goalM: 3000);
     await repo.completeRun(a, summary(DateTime(2026, 1, 1, 9)));
-    final b = await repo.createActiveRun(DateTime(2026, 1, 3, 9));
+    final b = await repo.createActiveRun(DateTime(2026, 1, 3, 9), goalM: 3000);
     await repo.completeRun(b, summary(DateTime(2026, 1, 3, 9)));
-    final c = await repo.createActiveRun(DateTime(2026, 1, 2, 9));
+    final c = await repo.createActiveRun(DateTime(2026, 1, 2, 9), goalM: 3000);
     await repo.completeRun(c, summary(DateTime(2026, 1, 2, 9)));
-    final d = await repo.createActiveRun(DateTime(2026, 1, 4, 9));
+    final d = await repo.createActiveRun(DateTime(2026, 1, 4, 9), goalM: 3000);
     await repo.completeRun(d, summary(DateTime(2026, 1, 4, 9)));
     await (db.update(db.runs)..where((r) => r.id.equals(d))).write(
       RunsCompanion(deletedAt: Value(DateTime.now().toUtc())),
     );
-    await repo.createActiveRun(DateTime(2026, 1, 5, 9));
+    await repo.createActiveRun(DateTime(2026, 1, 5, 9), goalM: 3000);
     expect((await repo.listRuns()).map((r) => r.id), [b, c, a]);
   });
 
@@ -211,9 +258,9 @@ void main() {
     // 2026-01-05 는 월요일.
     final sunday = DateTime(2026, 1, 4, 23);
     final monday = DateTime(2026, 1, 5, 0, 30);
-    final id1 = await repo.createActiveRun(sunday);
+    final id1 = await repo.createActiveRun(sunday, goalM: 3000);
     await repo.completeRun(id1, summary(sunday, distanceM: 3000));
-    final id2 = await repo.createActiveRun(monday);
+    final id2 = await repo.createActiveRun(monday, goalM: 3000);
     await repo.completeRun(id2, summary(monday, distanceM: 2000));
 
     final (dist, count) = await repo.weeklyTotal(DateTime(2026, 1, 8, 12));
@@ -229,7 +276,7 @@ void main() {
 
   test('weeklyTotal은 다음 주 월요일 0시 이후 러닝을 포함하지 않는다', () async {
     final nextMonday = DateTime(2026, 1, 12, 0, 0, 1);
-    final id = await repo.createActiveRun(nextMonday);
+    final id = await repo.createActiveRun(nextMonday, goalM: 3000);
     await repo.completeRun(id, summary(nextMonday, distanceM: 1000));
     final (dist, count) = await repo.weeklyTotal(DateTime(2026, 1, 8));
     expect((dist, count), (0.0, 0));
@@ -237,7 +284,7 @@ void main() {
 
   test('완료된 러닝에 appendPoints 하면 던지고 점을 추가하지 않는다', () async {
     final start = DateTime(2026, 1, 5, 9);
-    final id = await repo.createActiveRun(start);
+    final id = await repo.createActiveRun(start, goalM: 3000);
     await repo.completeRun(id, summary(start));
     await expectLater(
       repo.appendPoints(
@@ -253,7 +300,7 @@ void main() {
 
   test('completeRun을 두 번 하면 두 번째에 던지고 Splits는 그대로다', () async {
     final start = DateTime(2026, 1, 5, 9);
-    final id = await repo.createActiveRun(start);
+    final id = await repo.createActiveRun(start, goalM: 3000);
     final s = summary(
       start,
       splits: const [
@@ -280,7 +327,7 @@ void main() {
 
   test('DB에는 UTC로 저장된다 (기기 시간대와 무관)', () async {
     final local = DateTime(2026, 1, 4, 23);
-    await repo.createActiveRun(local);
+    await repo.createActiveRun(local, goalM: 3000);
     final row = await db
         .customSelect('SELECT started_at FROM runs')
         .getSingle();
@@ -291,7 +338,7 @@ void main() {
 
   test('거리 0이고 점 1개, 구간 없는 요약도 저장된다', () async {
     final start = DateTime(2026, 1, 5, 9);
-    final id = await repo.createActiveRun(start);
+    final id = await repo.createActiveRun(start, goalM: 3000);
     await repo.completeRun(
       id,
       summary(start, distanceM: 0, points: [sample(start, 37.5, 127.0)]),
@@ -302,7 +349,7 @@ void main() {
   });
 
   test('getRun은 진행 중 러닝에 null', () async {
-    final id = await repo.createActiveRun(DateTime(2026, 1, 5, 9));
+    final id = await repo.createActiveRun(DateTime(2026, 1, 5, 9), goalM: 3000);
     expect(await repo.getRun(id), isNull);
   });
 
@@ -318,12 +365,18 @@ void main() {
 
     test('지운 러닝은 목록·상세·주간 합계에서 빠지고 구간도 삭제 표시된다', () async {
       // 2026-01-05 는 월요일.
-      final a = await repo.createActiveRun(DateTime(2026, 1, 6, 9));
+      final a = await repo.createActiveRun(
+        DateTime(2026, 1, 6, 9),
+        goalM: 3000,
+      );
       await repo.completeRun(
         a,
         summary(DateTime(2026, 1, 6, 9), distanceM: 2000, splits: twoSplits),
       );
-      final b = await repo.createActiveRun(DateTime(2026, 1, 7, 9));
+      final b = await repo.createActiveRun(
+        DateTime(2026, 1, 7, 9),
+        goalM: 3000,
+      );
       await repo.completeRun(
         b,
         summary(DateTime(2026, 1, 7, 9), distanceM: 3000, splits: twoSplits),
@@ -345,7 +398,10 @@ void main() {
     });
 
     test('이미 지운 러닝을 다시 지워도 아무 일도 없다', () async {
-      final a = await repo.createActiveRun(DateTime(2026, 1, 6, 9));
+      final a = await repo.createActiveRun(
+        DateTime(2026, 1, 6, 9),
+        goalM: 3000,
+      );
       await repo.completeRun(a, summary(DateTime(2026, 1, 6, 9)));
       await repo.deleteRun(a);
       final first = await deletedAtOf(a);
@@ -354,7 +410,10 @@ void main() {
     });
 
     test('진행 중 러닝이나 없는 러닝을 지우면 StateError 이고 그대로다', () async {
-      final active = await repo.createActiveRun(DateTime(2026, 1, 6, 9));
+      final active = await repo.createActiveRun(
+        DateTime(2026, 1, 6, 9),
+        goalM: 3000,
+      );
       await expectLater(repo.deleteRun(active), throwsStateError);
       expect((await repo.findActiveRun())?.id, active);
       expect(await deletedAtOf(active), isNull);
@@ -370,7 +429,7 @@ void main() {
     final start = DateTime(2026, 1, 6, 9);
 
     Future<String> completed() async {
-      final id = await repo.createActiveRun(start);
+      final id = await repo.createActiveRun(start, goalM: 3000);
       await repo.completeRun(
         id,
         summary(
@@ -446,7 +505,7 @@ void main() {
         repo.replaceCompletedRun('none', trimmed()),
         throwsStateError,
       );
-      final active = await repo.createActiveRun(start);
+      final active = await repo.createActiveRun(start, goalM: 3000);
       await expectLater(
         repo.replaceCompletedRun(active, trimmed()),
         throwsStateError,
@@ -468,9 +527,15 @@ void main() {
 
   group('deletedRunStarts', () {
     test('주어진 id 중 지운 완료 러닝의 시작 시각만 돌려준다', () async {
-      final a = await repo.createActiveRun(DateTime(2026, 1, 6, 9));
+      final a = await repo.createActiveRun(
+        DateTime(2026, 1, 6, 9),
+        goalM: 3000,
+      );
       await repo.completeRun(a, summary(DateTime(2026, 1, 6, 9)));
-      final b = await repo.createActiveRun(DateTime(2026, 1, 7, 9));
+      final b = await repo.createActiveRun(
+        DateTime(2026, 1, 7, 9),
+        goalM: 3000,
+      );
       await repo.completeRun(b, summary(DateTime(2026, 1, 7, 9)));
       await repo.deleteRun(a);
 
@@ -482,12 +547,12 @@ void main() {
   });
 
   test('existingRunIds 는 진행 중·완료·지운 러닝 id 를 모두 돌려주고 없는 id 는 뺀다', () async {
-    final a = await repo.createActiveRun(DateTime(2026, 1, 6, 9));
+    final a = await repo.createActiveRun(DateTime(2026, 1, 6, 9), goalM: 3000);
     await repo.completeRun(a, summary(DateTime(2026, 1, 6, 9)));
-    final b = await repo.createActiveRun(DateTime(2026, 1, 7, 9));
+    final b = await repo.createActiveRun(DateTime(2026, 1, 7, 9), goalM: 3000);
     await repo.completeRun(b, summary(DateTime(2026, 1, 7, 9)));
     await repo.deleteRun(b);
-    final c = await repo.createActiveRun(DateTime(2026, 1, 8, 9));
+    final c = await repo.createActiveRun(DateTime(2026, 1, 8, 9), goalM: 3000);
 
     expect(await repo.existingRunIds({a, b, c, 'none'}), {a, b, c});
     expect(await repo.existingRunIds({}), isEmpty);
@@ -497,11 +562,11 @@ void main() {
     var wall = DateTime.utc(2026, 1, 6, 0);
     final timed = DriftRunRepository(db, now: () => wall);
     final start = DateTime(2026, 1, 6, 9);
-    final a = await timed.createActiveRun(start);
+    final a = await timed.createActiveRun(start, goalM: 3000);
     await timed.completeRun(a, summary(start));
-    final b = await timed.createActiveRun(start);
+    final b = await timed.createActiveRun(start, goalM: 3000);
     await timed.completeRun(b, summary(start));
-    await timed.createActiveRun(start);
+    await timed.createActiveRun(start, goalM: 3000);
     await timed.deleteRun(b);
     expect(await timed.completedRunRevisions(), {a: wall.toLocal()});
 

@@ -14,6 +14,9 @@ class Runs extends Table {
   RealColumn get calories => real().withDefault(const Constant(0))();
   TextColumn get name => text().withDefault(const Constant(''))();
   TextColumn get encodedRoute => text().nullable()();
+
+  /// 시작 때 고른 오늘 목표 거리(m). 목표 없이 만든 예전 러닝은 null.
+  RealColumn get goalM => real().nullable()();
   DateTimeColumn get createdAt => dateTime()();
   DateTimeColumn get updatedAt => dateTime()();
   DateTimeColumn get deletedAt => dateTime().nullable()();
@@ -125,7 +128,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.production() : super(driftDatabase(name: 'runmagochi'));
 
   @override
-  int get schemaVersion => 3;
+  int get schemaVersion => 4;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -137,6 +140,7 @@ class AppDatabase extends _$AppDatabase {
         await m.createTable(xpTxns);
       }
       if (from < 3) await m.createTable(profiles);
+      if (from < 4) await m.addColumn(runs, runs.goalM);
     },
   );
 

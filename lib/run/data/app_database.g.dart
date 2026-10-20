@@ -116,6 +116,15 @@ class $RunsTable extends Runs with TableInfo<$RunsTable, Run> {
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _goalMMeta = const VerificationMeta('goalM');
+  @override
+  late final GeneratedColumn<double> goalM = GeneratedColumn<double>(
+    'goal_m',
+    aliasedName,
+    true,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _createdAtMeta = const VerificationMeta(
     'createdAt',
   );
@@ -161,6 +170,7 @@ class $RunsTable extends Runs with TableInfo<$RunsTable, Run> {
     calories,
     name,
     encodedRoute,
+    goalM,
     createdAt,
     updatedAt,
     deletedAt,
@@ -249,6 +259,12 @@ class $RunsTable extends Runs with TableInfo<$RunsTable, Run> {
         ),
       );
     }
+    if (data.containsKey('goal_m')) {
+      context.handle(
+        _goalMMeta,
+        goalM.isAcceptableOrUnknown(data['goal_m']!, _goalMMeta),
+      );
+    }
     if (data.containsKey('created_at')) {
       context.handle(
         _createdAtMeta,
@@ -320,6 +336,10 @@ class $RunsTable extends Runs with TableInfo<$RunsTable, Run> {
         DriftSqlType.string,
         data['${effectivePrefix}encoded_route'],
       ),
+      goalM: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}goal_m'],
+      ),
       createdAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}created_at'],
@@ -352,6 +372,9 @@ class Run extends DataClass implements Insertable<Run> {
   final double calories;
   final String name;
   final String? encodedRoute;
+
+  /// 시작 때 고른 오늘 목표 거리(m). 목표 없이 만든 예전 러닝은 null.
+  final double? goalM;
   final DateTime createdAt;
   final DateTime updatedAt;
   final DateTime? deletedAt;
@@ -366,6 +389,7 @@ class Run extends DataClass implements Insertable<Run> {
     required this.calories,
     required this.name,
     this.encodedRoute,
+    this.goalM,
     required this.createdAt,
     required this.updatedAt,
     this.deletedAt,
@@ -388,6 +412,9 @@ class Run extends DataClass implements Insertable<Run> {
     map['name'] = Variable<String>(name);
     if (!nullToAbsent || encodedRoute != null) {
       map['encoded_route'] = Variable<String>(encodedRoute);
+    }
+    if (!nullToAbsent || goalM != null) {
+      map['goal_m'] = Variable<double>(goalM);
     }
     map['created_at'] = Variable<DateTime>(createdAt);
     map['updated_at'] = Variable<DateTime>(updatedAt);
@@ -415,6 +442,9 @@ class Run extends DataClass implements Insertable<Run> {
       encodedRoute: encodedRoute == null && nullToAbsent
           ? const Value.absent()
           : Value(encodedRoute),
+      goalM: goalM == null && nullToAbsent
+          ? const Value.absent()
+          : Value(goalM),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
       deletedAt: deletedAt == null && nullToAbsent
@@ -439,6 +469,7 @@ class Run extends DataClass implements Insertable<Run> {
       calories: serializer.fromJson<double>(json['calories']),
       name: serializer.fromJson<String>(json['name']),
       encodedRoute: serializer.fromJson<String?>(json['encodedRoute']),
+      goalM: serializer.fromJson<double?>(json['goalM']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
       deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
@@ -458,6 +489,7 @@ class Run extends DataClass implements Insertable<Run> {
       'calories': serializer.toJson<double>(calories),
       'name': serializer.toJson<String>(name),
       'encodedRoute': serializer.toJson<String?>(encodedRoute),
+      'goalM': serializer.toJson<double?>(goalM),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
       'deletedAt': serializer.toJson<DateTime?>(deletedAt),
@@ -475,6 +507,7 @@ class Run extends DataClass implements Insertable<Run> {
     double? calories,
     String? name,
     Value<String?> encodedRoute = const Value.absent(),
+    Value<double?> goalM = const Value.absent(),
     DateTime? createdAt,
     DateTime? updatedAt,
     Value<DateTime?> deletedAt = const Value.absent(),
@@ -491,6 +524,7 @@ class Run extends DataClass implements Insertable<Run> {
     calories: calories ?? this.calories,
     name: name ?? this.name,
     encodedRoute: encodedRoute.present ? encodedRoute.value : this.encodedRoute,
+    goalM: goalM.present ? goalM.value : this.goalM,
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
     deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
@@ -513,6 +547,7 @@ class Run extends DataClass implements Insertable<Run> {
       encodedRoute: data.encodedRoute.present
           ? data.encodedRoute.value
           : this.encodedRoute,
+      goalM: data.goalM.present ? data.goalM.value : this.goalM,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
       deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
@@ -532,6 +567,7 @@ class Run extends DataClass implements Insertable<Run> {
           ..write('calories: $calories, ')
           ..write('name: $name, ')
           ..write('encodedRoute: $encodedRoute, ')
+          ..write('goalM: $goalM, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('deletedAt: $deletedAt')
@@ -551,6 +587,7 @@ class Run extends DataClass implements Insertable<Run> {
     calories,
     name,
     encodedRoute,
+    goalM,
     createdAt,
     updatedAt,
     deletedAt,
@@ -569,6 +606,7 @@ class Run extends DataClass implements Insertable<Run> {
           other.calories == this.calories &&
           other.name == this.name &&
           other.encodedRoute == this.encodedRoute &&
+          other.goalM == this.goalM &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt &&
           other.deletedAt == this.deletedAt);
@@ -585,6 +623,7 @@ class RunsCompanion extends UpdateCompanion<Run> {
   final Value<double> calories;
   final Value<String> name;
   final Value<String?> encodedRoute;
+  final Value<double?> goalM;
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
   final Value<DateTime?> deletedAt;
@@ -600,6 +639,7 @@ class RunsCompanion extends UpdateCompanion<Run> {
     this.calories = const Value.absent(),
     this.name = const Value.absent(),
     this.encodedRoute = const Value.absent(),
+    this.goalM = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.deletedAt = const Value.absent(),
@@ -616,6 +656,7 @@ class RunsCompanion extends UpdateCompanion<Run> {
     this.calories = const Value.absent(),
     this.name = const Value.absent(),
     this.encodedRoute = const Value.absent(),
+    this.goalM = const Value.absent(),
     required DateTime createdAt,
     required DateTime updatedAt,
     this.deletedAt = const Value.absent(),
@@ -636,6 +677,7 @@ class RunsCompanion extends UpdateCompanion<Run> {
     Expression<double>? calories,
     Expression<String>? name,
     Expression<String>? encodedRoute,
+    Expression<double>? goalM,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
     Expression<DateTime>? deletedAt,
@@ -652,6 +694,7 @@ class RunsCompanion extends UpdateCompanion<Run> {
       if (calories != null) 'calories': calories,
       if (name != null) 'name': name,
       if (encodedRoute != null) 'encoded_route': encodedRoute,
+      if (goalM != null) 'goal_m': goalM,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (deletedAt != null) 'deleted_at': deletedAt,
@@ -670,6 +713,7 @@ class RunsCompanion extends UpdateCompanion<Run> {
     Value<double>? calories,
     Value<String>? name,
     Value<String?>? encodedRoute,
+    Value<double?>? goalM,
     Value<DateTime>? createdAt,
     Value<DateTime>? updatedAt,
     Value<DateTime?>? deletedAt,
@@ -686,6 +730,7 @@ class RunsCompanion extends UpdateCompanion<Run> {
       calories: calories ?? this.calories,
       name: name ?? this.name,
       encodedRoute: encodedRoute ?? this.encodedRoute,
+      goalM: goalM ?? this.goalM,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       deletedAt: deletedAt ?? this.deletedAt,
@@ -726,6 +771,9 @@ class RunsCompanion extends UpdateCompanion<Run> {
     if (encodedRoute.present) {
       map['encoded_route'] = Variable<String>(encodedRoute.value);
     }
+    if (goalM.present) {
+      map['goal_m'] = Variable<double>(goalM.value);
+    }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
@@ -754,6 +802,7 @@ class RunsCompanion extends UpdateCompanion<Run> {
           ..write('calories: $calories, ')
           ..write('name: $name, ')
           ..write('encodedRoute: $encodedRoute, ')
+          ..write('goalM: $goalM, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('deletedAt: $deletedAt, ')
@@ -3777,6 +3826,7 @@ typedef $$RunsTableCreateCompanionBuilder =
       Value<double> calories,
       Value<String> name,
       Value<String?> encodedRoute,
+      Value<double?> goalM,
       required DateTime createdAt,
       required DateTime updatedAt,
       Value<DateTime?> deletedAt,
@@ -3794,6 +3844,7 @@ typedef $$RunsTableUpdateCompanionBuilder =
       Value<double> calories,
       Value<String> name,
       Value<String?> encodedRoute,
+      Value<double?> goalM,
       Value<DateTime> createdAt,
       Value<DateTime> updatedAt,
       Value<DateTime?> deletedAt,
@@ -3916,6 +3967,11 @@ class $$RunsTableFilterComposer extends Composer<_$AppDatabase, $RunsTable> {
 
   ColumnFilters<String> get encodedRoute => $composableBuilder(
     column: $table.encodedRoute,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get goalM => $composableBuilder(
+    column: $table.goalM,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -4068,6 +4124,11 @@ class $$RunsTableOrderingComposer extends Composer<_$AppDatabase, $RunsTable> {
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<double> get goalM => $composableBuilder(
+    column: $table.goalM,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
@@ -4128,6 +4189,9 @@ class $$RunsTableAnnotationComposer
     column: $table.encodedRoute,
     builder: (column) => column,
   );
+
+  GeneratedColumn<double> get goalM =>
+      $composableBuilder(column: $table.goalM, builder: (column) => column);
 
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
@@ -4256,6 +4320,7 @@ class $$RunsTableTableManager
                 Value<double> calories = const Value.absent(),
                 Value<String> name = const Value.absent(),
                 Value<String?> encodedRoute = const Value.absent(),
+                Value<double?> goalM = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<DateTime?> deletedAt = const Value.absent(),
@@ -4271,6 +4336,7 @@ class $$RunsTableTableManager
                 calories: calories,
                 name: name,
                 encodedRoute: encodedRoute,
+                goalM: goalM,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 deletedAt: deletedAt,
@@ -4288,6 +4354,7 @@ class $$RunsTableTableManager
                 Value<double> calories = const Value.absent(),
                 Value<String> name = const Value.absent(),
                 Value<String?> encodedRoute = const Value.absent(),
+                Value<double?> goalM = const Value.absent(),
                 required DateTime createdAt,
                 required DateTime updatedAt,
                 Value<DateTime?> deletedAt = const Value.absent(),
@@ -4303,6 +4370,7 @@ class $$RunsTableTableManager
                 calories: calories,
                 name: name,
                 encodedRoute: encodedRoute,
+                goalM: goalM,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 deletedAt: deletedAt,

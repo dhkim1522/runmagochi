@@ -43,7 +43,13 @@ class _Repo implements RunRepository {
   final completed = <(String, RunSummary)>[];
 
   @override
-  Future<String> createActiveRun(DateTime startedAt) async => _runId;
+  Future<double?> lastGoalM() async => null;
+
+  @override
+  Future<String> createActiveRun(
+    DateTime startedAt, {
+    required double goalM,
+  }) async => _runId;
 
   @override
   Future<void> appendPoints(

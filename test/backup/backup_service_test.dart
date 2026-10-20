@@ -208,7 +208,7 @@ void main() {
       points: const [],
     );
     Future<String> complete(RunRepository repo, DateTime at, double m) async {
-      final id = await repo.createActiveRun(at);
+      final id = await repo.createActiveRun(at, goalM: 3000);
       await repo.completeRun(id, summary(at, m));
       return id;
     }

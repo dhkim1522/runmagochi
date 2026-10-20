@@ -25,6 +25,7 @@ Future<void> _seed(AppDatabase db, {String suffix = ''}) async {
           avgPaceSecPerKm: const Value(331.25),
           deletedAt: Value(deletedAt),
           encodedRoute: const Value('_p~iF~ps|U'),
+          goalM: status == 'completed' ? const Value(5000) : const Value(null),
         ),
       );
   await run('r1$suffix', 'completed');
@@ -161,7 +162,7 @@ void main() {
     final m = jsonDecode(json) as Map<String, dynamic>;
     expect(m['format'], 'runmagochi-backup');
     expect(m['version'], 1);
-    expect(m['schemaVersion'], 3);
+    expect(m['schemaVersion'], 4);
     expect(m['exportedAt'], '2026-10-18T01:00:00.000Z');
     final tables = m['tables'] as Map<String, dynamic>;
     expect(tables.keys, isNot(contains('runPoints')));
@@ -198,6 +199,29 @@ void main() {
     // 두 번째 내보내기도 같은 내용이다.
     final again = await DriftBackupRepository(dst).exportJson(_now);
     expect(again, json);
+  });
+
+  test('v4 왕복에 러닝 목표가 유지된다', () async {
+    await _seed(src);
+    final json = await DriftBackupRepository(src).exportJson(_now);
+    await DriftBackupRepository(dst).importJson(json);
+    final runs = await dst.select(dst.runs).get();
+    expect(runs.map((r) => r.goalM), [5000, 5000]);
+  });
+
+  test('v3 백업 파일(goalM 없음)을 가져오면 목표가 null 이다', () async {
+    await _seed(src);
+    final m =
+        jsonDecode(await DriftBackupRepository(src).exportJson(_now))
+            as Map<String, dynamic>;
+    m['schemaVersion'] = 3;
+    for (final r in (m['tables'] as Map)['runs'] as List) {
+      (r as Map).remove('goalM');
+    }
+    await DriftBackupRepository(dst).importJson(jsonEncode(m));
+    final runs = await dst.select(dst.runs).get();
+    expect(runs, hasLength(2));
+    expect(runs.map((r) => r.goalM), [null, null]);
   });
 
   test('가져오면 기존 데이터를 모두 바꾼다 (진행 중 러닝·점 포함)', () async {
@@ -248,7 +272,7 @@ void main() {
       return expectRejected(jsonEncode(parsed()..['version'] = 2));
     });
     test('스키마 버전이 다름', () async {
-      await expectRejected(jsonEncode(parsed()..['schemaVersion'] = 4));
+      await expectRejected(jsonEncode(parsed()..['schemaVersion'] = 5));
       await expectRejected(jsonEncode(parsed()..['schemaVersion'] = 2));
     });
     test('테이블이 없음', () {

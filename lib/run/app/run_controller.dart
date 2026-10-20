@@ -129,7 +129,7 @@ class RunController extends Notifier<RunViewState> {
     _starting = true;
     try {
       final clock = ref.read(clockProvider);
-      final runId = await _repository.createActiveRun(clock());
+      final runId = await _repository.createActiveRun(clock(), goalM: 3000);
       _weightKg = await _readWeight();
       final engine = RunEngine(clock: clock)..start();
       _engine = engine;
