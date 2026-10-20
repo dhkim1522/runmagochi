@@ -60,7 +60,7 @@
   - 확인: `fvm dart analyze`, `fvm flutter test`
   - 스킬: ui-ux-pro-max:ui-ux-pro-max
 
-- [ ] 3. 러닝 보상: 달성 보너스, 삭제 유지, 잘라내기 재계산
+- [x] 3. 러닝 보상: 달성 보너스, 삭제 유지, 잘라내기 재계산
   - 파일: `lib/avatar/domain/growth_rules.dart`, `lib/avatar/data/growth_repository.dart`, `lib/avatar/data/drift_growth_repository.dart`, `lib/avatar/app/growth_service.dart`, `lib/run/ui/summary_screen.dart`(삭제 흐름), `lib/run/data/run_repository.dart`(주석)
   - 규칙:
     - `const int goalBonusXpPerKm = 5`
