@@ -12,6 +12,12 @@
     },
     "pixel-plugin": {
       "source": { "source": "github", "repo": "willibrandon/pixel-plugin" }
+    },
+    "impeccable": {
+      "source": { "source": "github", "repo": "pbakaus/impeccable" }
+    },
+    "taste-skill": {
+      "source": { "source": "github", "repo": "Leonxlnx/taste-skill" }
     }
   },
   "enabledPlugins": {
@@ -19,6 +25,8 @@
     "dart-flutter@dart-flutter": true,
     "ui-ux-pro-max@ui-ux-pro-max-skill": false,
     "pixel-plugin@pixel-plugin": false,
+    "impeccable@impeccable": false,
+    "taste-skill@taste-skill": false,
     "skill-creator@claude-plugins-official": false
   }
 }

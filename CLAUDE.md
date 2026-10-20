@@ -29,6 +29,7 @@
 - `design/wireframes/` — 화면 콘티 10개 (MVP 6개 + 후속 범위, HTML 원본·PNG)
 - `design/mockups/` — 승인된 화면 시안(페이즈 2.5, 말랑 클레이)과 구현 메모
 - `design/character/` — 캐릭터 콘셉트·3종 미리보기. 그림 데이터는 `tool/sprites/`, PNG 생성은 `fvm dart run tool/render_sprites.dart`
+- `design/references/` — 디자인 참고 이미지(Pinterest 무드보드). 방향 참고용이며 앱 에셋에 넣지 않는다
 
 ## 명령
 
