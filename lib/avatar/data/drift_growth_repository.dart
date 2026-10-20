@@ -11,6 +11,7 @@ import 'growth_repository.dart';
 
 const _defaultName = '러니';
 const _distance = 'distance';
+const _runGoal = 'runGoal';
 
 class DriftGrowthRepository implements GrowthRepository {
   /// [now] 는 행 시각(updatedAt 등)에 쓴다. 테스트에서만 바꾼다.
@@ -131,9 +132,9 @@ class DriftGrowthRepository implements GrowthRepository {
         .getSingleOrNull();
   }
 
-  /// 행이 없으면 넣고, 무른 행이면 [amount] 로 살리고, 살아 있으면 둔다.
+  /// 행이 없으면 넣고, 있으면(무른 행은 살려서) [amount] 로 맞춘다.
   /// 반드시 트랜잭션 안에서 부른다.
-  Future<void> _grantXp(String reason, int amount, String runId) async {
+  Future<void> _setXp(String reason, int amount, String runId) async {
     final now = _now();
     final row = await _xpRow(reason, runId);
     if (row == null) {
@@ -149,7 +150,7 @@ class DriftGrowthRepository implements GrowthRepository {
               updatedAt: now,
             ),
           );
-    } else if (row.deletedAt != null) {
+    } else {
       await (_db.update(_db.xpTxns)..where((t) => t.id.equals(row.id))).write(
         XpTxnsCompanion(
           amount: Value(amount),
@@ -173,10 +174,28 @@ class DriftGrowthRepository implements GrowthRepository {
   }
 
   @override
-  Future<void> addDistanceXp(String runId, int amount) =>
-      _db.transaction(() => _grantXp(_distance, amount, runId));
+  Future<int> runGoalXp(String runId) async {
+    final row = await _xpRow(_runGoal, runId);
+    return row == null || row.deletedAt != null ? 0 : row.amount;
+  }
 
   @override
-  Future<void> revokeDistanceXp(String runId) =>
-      _db.transaction(() => _revokeXp(_distance, runId));
+  Future<void> setRunXp(
+    String runId, {
+    required int distanceXp,
+    required int goalBonusXp,
+  }) => _db.transaction(() async {
+    await _setXp(_distance, distanceXp, runId);
+    if (goalBonusXp > 0) {
+      await _setXp(_runGoal, goalBonusXp, runId);
+    } else {
+      await _revokeXp(_runGoal, runId);
+    }
+  });
+
+  @override
+  Future<void> revokeRunXp(String runId) => _db.transaction(() async {
+    await _revokeXp(_distance, runId);
+    await _revokeXp(_runGoal, runId);
+  });
 }

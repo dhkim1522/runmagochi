@@ -187,7 +187,7 @@ class _SummaryScreenState extends ConsumerState<SummaryScreen> {
   }
 }
 
-/// 기록에서 연 상세의 "기록 삭제". 확인 뒤 지우고 경험치를 무른 다음 목록으로 돌아간다.
+/// 기록에서 연 상세의 "기록 삭제". 확인 뒤 지우고(받은 경험치는 그대로) 목록으로 돌아간다.
 class _DeleteRunButton extends ConsumerStatefulWidget {
   const _DeleteRunButton(this.run);
   final RunListItem run;
@@ -205,7 +205,7 @@ class _DeleteRunButtonState extends ConsumerState<_DeleteRunButton> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('이 러닝을 지울까요?'),
-        content: const Text('기록과 이 러닝으로 받은 경험치가 함께 빠져요.'),
+        content: const Text('기록에서 지워요. 받은 경험치는 그대로예요.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
@@ -223,9 +223,7 @@ class _DeleteRunButtonState extends ConsumerState<_DeleteRunButton> {
     setState(() => _busy = true);
     final run = widget.run;
     try {
-      // 이미 지운 러닝을 다시 지우는 것은 아무 일도 없으므로, 무르기에서 실패해도 다시 시도할 수 있다.
       await ref.read(runRepositoryProvider).deleteRun(run.id);
-      await ref.read(growthServiceProvider).runRemoved(run.id, run.startedAt);
     } catch (_) {
       if (!mounted) return;
       setState(() => _busy = false);

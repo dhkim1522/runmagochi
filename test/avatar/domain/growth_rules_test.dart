@@ -81,8 +81,11 @@ void main() {
   });
 
   group('excludedFastDistanceM', () {
-    Split sp(int i, double m, int sec) =>
-        Split(index: i, distanceM: m, duration: Duration(seconds: sec));
+    Split sp(int i, double m, int sec) => Split(
+      index: i,
+      distanceM: m,
+      duration: Duration(seconds: sec),
+    );
 
     test('빠른 1km 구간 거리만 합한다', () {
       final splits = [sp(1, 1000, 140), sp(2, 1000, 300), sp(3, 1000, 100)];
@@ -96,6 +99,35 @@ void main() {
       final splits = [sp(1, 1000, 140), sp(2, 1000, 300)];
       expect(distanceXp(2000, splits), 10);
       expect(excludedFastDistanceM(splits), 1000);
+    });
+  });
+
+  group('목표 달성', () {
+    Split fast(int i) => Split(
+      index: i,
+      distanceM: 1000,
+      duration: const Duration(seconds: 120),
+    );
+
+    test('보너스는 목표 km × 5', () {
+      expect(goalBonusXp(3000), 15);
+      expect(goalBonusXp(10000), 50);
+    });
+
+    test('거리가 목표 이상이면 달성', () {
+      expect(goalAchieved(distanceM: 5000, splits: [], goalM: 5000), isTrue);
+      expect(goalAchieved(distanceM: 4999, splits: [], goalM: 5000), isFalse);
+    });
+
+    test('빠른 구간 거리는 뺀다', () {
+      expect(
+        goalAchieved(distanceM: 5000, splits: [fast(1)], goalM: 5000),
+        isFalse,
+      );
+      expect(
+        goalAchieved(distanceM: 6000, splits: [fast(1)], goalM: 5000),
+        isTrue,
+      );
     });
   });
 }

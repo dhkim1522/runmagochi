@@ -27,6 +27,19 @@ int distanceXp(double distanceM, List<Split> splits) {
   return (counted / 10).round() ~/ 10;
 }
 
+/// 목표 1km 당 달성 보너스 경험치.
+const int goalBonusXpPerKm = 5;
+
+/// 오늘 목표를 채웠는가. 거리에서 빠른 구간 거리를 뺀 값이 [goalM] 이상이어야 한다.
+bool goalAchieved({
+  required double distanceM,
+  required List<Split> splits,
+  required double goalM,
+}) => distanceM - excludedFastDistanceM(splits) >= goalM;
+
+/// 목표를 채웠을 때 받는 보너스 경험치: 목표 km(반올림) × [goalBonusXpPerKm].
+int goalBonusXp(double goalM) => (goalM / 1000).round() * goalBonusXpPerKm;
+
 class LevelProgress {
   const LevelProgress({
     required this.level,

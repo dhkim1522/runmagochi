@@ -201,13 +201,12 @@ void _deleteTests() {
     await tester.tap(find.text('기록 삭제'));
     await tester.pumpAndSettle();
     expect(find.text('이 러닝을 지울까요?'), findsOneWidget);
-    expect(find.text('기록과 이 러닝으로 받은 경험치가 함께 빠져요.'), findsOneWidget);
+    expect(find.text('기록에서 지워요. 받은 경험치는 그대로예요.'), findsOneWidget);
 
     await tester.tap(find.text('삭제'));
     await tester.pumpAndSettle();
 
     expect(repo.deleted, ['a']);
-    expect(growth.removed, [('a', a.startedAt)]);
     expect(find.byType(SummaryScreen), findsNothing);
     expect(find.textContaining('목요일 저녁 러닝'), findsNothing);
     expect(find.textContaining('토요일 아침 러닝'), findsOneWidget);
@@ -226,7 +225,6 @@ void _deleteTests() {
     expect(find.text('이 러닝을 지울까요?'), findsNothing);
     expect(find.byType(SummaryScreen), findsOneWidget);
     expect(repo.deleted, isEmpty);
-    expect(growth.removed, isEmpty);
     await tester.tap(find.text('확인'));
     await tester.pumpAndSettle();
     expect(find.textContaining('목요일 저녁 러닝'), findsOneWidget);
@@ -241,7 +239,6 @@ void _deleteTests() {
     await tester.pumpAndSettle();
     expect(find.text('지우지 못했어요'), findsOneWidget);
     expect(find.byType(SummaryScreen), findsOneWidget);
-    expect(growth.removed, isEmpty);
   });
 
   testWidgets('삭제 동작은 이름 있는 버튼이다', (tester) async {

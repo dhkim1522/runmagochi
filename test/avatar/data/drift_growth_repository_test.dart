@@ -89,9 +89,9 @@ void main() {
   });
 
   test('같은 runId 로 거리 경험치를 두 번 넣어도 한 번만 쌓인다', () async {
-    await repo.addDistanceXp('r1', 50);
-    await repo.addDistanceXp('r1', 50);
-    await repo.addDistanceXp('r2', 30);
+    await repo.setRunXp('r1', distanceXp: 50, goalBonusXp: 0);
+    await repo.setRunXp('r1', distanceXp: 50, goalBonusXp: 0);
+    await repo.setRunXp('r2', distanceXp: 30, goalBonusXp: 0);
     expect(await repo.totalXp(), 80);
     expect(await repo.runIdsWithDistanceXp(), {'r1', 'r2'});
   });
@@ -102,18 +102,18 @@ void main() {
 
   test('이전 버전이 준 주간 보너스 행도 합계에 들어가고 거리 경험치와 따로 논다', () async {
     await _insertWeeklyBonus(db, 50);
-    await repo.addDistanceXp('r1', 30);
+    await repo.setRunXp('r1', distanceXp: 30, goalBonusXp: 0);
     expect(await repo.totalXp(), 80);
     expect(await repo.runIdsWithDistanceXp(), {'r1'});
-    await repo.revokeDistanceXp('r1');
+    await repo.revokeRunXp('r1');
     expect(await repo.totalXp(), 50);
   });
 
   group('경험치 무르기', () {
     test('거리 경험치를 무르면 합계와 받은 러닝 목록에서 빠지고 행은 남는다', () async {
-      await repo.addDistanceXp('r1', 50);
-      await repo.addDistanceXp('r2', 30);
-      await repo.revokeDistanceXp('r1');
+      await repo.setRunXp('r1', distanceXp: 50, goalBonusXp: 0);
+      await repo.setRunXp('r2', distanceXp: 30, goalBonusXp: 0);
+      await repo.revokeRunXp('r1');
       expect(await repo.totalXp(), 30);
       expect(await repo.runIdsWithDistanceXp(), {'r2'});
       final rows = await db.select(db.xpTxns).get();
@@ -122,25 +122,52 @@ void main() {
     });
 
     test('없는 러닝이나 이미 무른 경험치를 무르면 아무 일도 없다', () async {
-      await repo.revokeDistanceXp('none');
-      await repo.addDistanceXp('r1', 50);
-      await repo.revokeDistanceXp('r1');
-      await repo.revokeDistanceXp('r1');
+      await repo.revokeRunXp('none');
+      await repo.setRunXp('r1', distanceXp: 50, goalBonusXp: 0);
+      await repo.revokeRunXp('r1');
+      await repo.revokeRunXp('r1');
       expect(await repo.totalXp(), 0);
     });
 
     test('무른 거리 경험치를 다시 넣으면 같은 행을 새 값으로 살린다', () async {
-      await repo.addDistanceXp('r1', 50);
-      await repo.revokeDistanceXp('r1');
-      await repo.addDistanceXp('r1', 40);
+      await repo.setRunXp('r1', distanceXp: 50, goalBonusXp: 0);
+      await repo.revokeRunXp('r1');
+      await repo.setRunXp('r1', distanceXp: 40, goalBonusXp: 0);
       expect(await repo.totalXp(), 40);
       expect(await repo.runIdsWithDistanceXp(), {'r1'});
       final rows = await db.select(db.xpTxns).get();
       expect(rows, hasLength(1));
       expect(rows.single.deletedAt, isNull);
-      // 살아 있는 행은 여전히 무시한다.
-      await repo.addDistanceXp('r1', 99);
-      expect(await repo.totalXp(), 40);
+      // 살아 있는 행도 새 값으로 바뀐다.
+      await repo.setRunXp('r1', distanceXp: 99, goalBonusXp: 0);
+      expect(await repo.totalXp(), 99);
+    });
+  });
+
+  group('setRunXp 달성 보너스', () {
+    test('보너스가 있으면 runGoal 행이 생기고 두 번 불러도 행은 러닝마다 하나씩이다', () async {
+      await repo.setRunXp('r1', distanceXp: 50, goalBonusXp: 25);
+      await repo.setRunXp('r1', distanceXp: 50, goalBonusXp: 25);
+      expect(await repo.totalXp(), 75);
+      expect(await repo.runGoalXp('r1'), 25);
+      expect(await db.select(db.xpTxns).get(), hasLength(2));
+    });
+
+    test('보너스 0 이면 runGoal 행에 삭제 표시를 하고, 다시 주면 같은 행을 살린다', () async {
+      await repo.setRunXp('r1', distanceXp: 50, goalBonusXp: 25);
+      await repo.setRunXp('r1', distanceXp: 30, goalBonusXp: 0);
+      expect(await repo.totalXp(), 30);
+      expect(await repo.runGoalXp('r1'), 0);
+      await repo.setRunXp('r1', distanceXp: 50, goalBonusXp: 25);
+      expect(await repo.totalXp(), 75);
+      expect(await db.select(db.xpTxns).get(), hasLength(2));
+    });
+
+    test('revokeRunXp 는 거리·보너스 행을 모두 무른다', () async {
+      await repo.setRunXp('r1', distanceXp: 50, goalBonusXp: 25);
+      await repo.revokeRunXp('r1');
+      expect(await repo.totalXp(), 0);
+      expect(await repo.runIdsWithDistanceXp(), isEmpty);
     });
   });
 
@@ -178,15 +205,15 @@ void _distanceXpUpdatedAtsTests() {
     addTearDown(db.close);
     var wall = DateTime.utc(2026, 10, 17, 3);
     final repo = DriftGrowthRepository(db, now: () => wall);
-    await repo.addDistanceXp('a', 10);
-    await repo.addDistanceXp('b', 20);
+    await repo.setRunXp('a', distanceXp: 10, goalBonusXp: 0);
+    await repo.setRunXp('b', distanceXp: 20, goalBonusXp: 0);
     await _insertWeeklyBonus(db, 50);
-    await repo.revokeDistanceXp('b');
+    await repo.revokeRunXp('b');
     expect(await repo.distanceXpUpdatedAts(), {'a': wall.toLocal()});
 
     wall = wall.add(const Duration(minutes: 1));
-    await repo.revokeDistanceXp('a');
-    await repo.addDistanceXp('a', 5);
+    await repo.revokeRunXp('a');
+    await repo.setRunXp('a', distanceXp: 5, goalBonusXp: 0);
     expect(await repo.distanceXpUpdatedAts(), {'a': wall.toLocal()});
   });
 }

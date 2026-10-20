@@ -231,13 +231,6 @@ class FakeGrowthService implements GrowthService {
     return state;
   }
 
-  final List<(String, DateTime)> removed = [];
-
-  @override
-  Future<void> runRemoved(String runId, DateTime runStartedAt) async {
-    removed.add((runId, runStartedAt));
-  }
-
   final List<(String, DateTime)> revised = [];
 
   /// runRevised 가 돌려줄 변화. 없으면 빈 변화(레벨 1 그대로).
