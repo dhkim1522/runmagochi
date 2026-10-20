@@ -118,7 +118,7 @@
   - 테스트: 초속 10m 점이 30초 이어지면 끝, 끝 시각은 빨라지기 전 마지막 점. 29초면 계속. 빠른 점 2개 뒤 초속 3m 점이 오면 다시 0부터. 일시정지 중에는 세지 않는다. 끝난 요약의 거리에 빠른 구간이 없다. 알림 제목.
   - 확인: `fvm flutter test test/run`
 
-- [ ] 8. 시안·문서 반영
+- [x] 8. 시안·문서 반영
   - 파일: `design/mockups/README.md`, `docs/screens.md`, `docs/specs/run-engine.md`, `HANDOFF.md`
   - 내용: 구현한 홈(오늘 목표)·러닝 중(목표 진행)·요약(달성·미달) 화면을 에뮬레이터 스크린샷으로 떠 `design/mockups/README.md` 에 구현 메모를 더한다. 첫 실행 2장, 설정 변경을 반영한다. 시안 승인은 사람 확인으로 남긴다.
   - 확인: 문서에 주간 목표 화면 설명이 남아 있지 않다(`grep -rn "주간 목표" docs/screens.md design/mockups/README.md` 결과는 후속 범위 안내만).
