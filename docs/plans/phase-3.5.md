@@ -50,7 +50,7 @@
   - 테스트: 목표를 저장한 러닝이 목록·상세·진행 중 복원에 같은 목표로 나온다. `lastGoalM` 이 없음 → null, 여러 러닝 → 가장 최근 시작 러닝 값(지운 러닝 포함). v3 → v4 마이그레이션 뒤 기존 러닝 유지·목표 null(`migration_test` 확장). v3 백업 파일 가져오기 성공, v4 왕복에 목표 유지, v2 는 거부.
   - 확인: `fvm flutter test test/run/data test/backup`
 
-- [ ] 2. 주간 목표 제거
+- [x] 2. 주간 목표 제거
   - 파일: `lib/avatar/app/growth_service.dart`, `lib/avatar/domain/growth_state.dart`, `lib/avatar/data/growth_repository.dart`, `lib/avatar/data/drift_growth_repository.dart`, `lib/avatar/data/notification_scheduler.dart`, `lib/avatar/app/providers.dart`, `lib/run/ui/home_screen.dart`, `lib/run/ui/summary_screen.dart`, `lib/avatar/ui/growth_summary.dart`, `lib/onboarding/ui/onboarding_screen.dart`, `lib/settings/ui/settings_screen.dart`, `lib/app.dart` 또는 `lib/main.dart`(시작 때 알림 취소)
   - 지우는 파일: `lib/avatar/ui/weekly_goal_bar.dart`, `lib/avatar/ui/weekly_target_change.dart`, `lib/avatar/domain/reminder_plan.dart` 와 그 테스트
   - 지우는 것: `GrowthState` 의 `weekTargetM`·`weekDistanceM`·`weekAchieved`·`streakWeeks`, `GrowthService.setWeeklyTarget`·주 판정(`_rejudgeWeek`·`_awardWeekIfReached`)·재예약, 저장소의 `weeklyTarget`·`setWeeklyTarget`·`isWeekAchieved`·`markWeekAchieved`·`unmarkWeekAchieved`·`achievedWeeks`, `weeklyGoalBonusXp`
