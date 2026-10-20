@@ -8,10 +8,10 @@
 | --- | --- | --- | --- | --- |
 | [superpowers](https://github.com/obra/superpowers) | 아이디어 정리, 구현 계획, 테스트 먼저 작성(TDD), 코드 리뷰 흐름 | 모든 페이즈 | 켜짐 | `superpowers@claude-plugins-official` |
 | [dart-flutter](https://github.com/flutter/agent-plugins) | Flutter·Dart 공식 스킬과 Dart MCP 서버 | Flutter 프로젝트 생성부터 계속 | 켜짐 | `dart-flutter@dart-flutter` |
-| [ui-ux-pro-max](https://github.com/nextlevelbuilder/ui-ux-pro-max-skill) | 색상·글꼴·컴포넌트 규칙을 묶은 디자인 시스템 생성 | 페이즈 2.5 (기본 디자인), 페이즈 3 (나머지 화면), 페이즈 6 (디자인 완성) | 꺼짐 | `ui-ux-pro-max@ui-ux-pro-max-skill` |
-| [Impeccable](https://github.com/pbakaus/impeccable) | AI 티가 나는 디자인 패턴 점검, UX 리뷰(`critique`)·출시 전 마무리(`polish`) | 페이즈 6 (후보 시안 비교·전면 점검). 웹 대상이라 HTML 시안에 쓴다 | 꺼짐 | `impeccable@impeccable` |
-| [Taste Skill](https://github.com/Leonxlnx/taste-skill) | 아트 디렉션 20개 중 3개를 뽑아 디자인 방향 후보 제시 | 페이즈 6 (방향 후보 만들기). 웹 대상이라 HTML 시안에 쓴다 | 꺼짐 | `taste-skill@taste-skill` |
-| [pixel-plugin](https://github.com/willibrandon/pixel-plugin) | Aseprite 로 도트 그림·스프라이트 시트 제작 | 페이즈 6 (캐릭터·아이템 다듬기). 페이즈 2.5 캐릭터는 코드로 그린다 | 꺼짐 | `pixel-plugin@pixel-plugin` |
+| [ui-ux-pro-max](https://github.com/nextlevelbuilder/ui-ux-pro-max-skill) | 색상·글꼴·컴포넌트 규칙을 묶은 디자인 시스템 생성 | 페이즈 2.5 (기본 디자인), 페이즈 3 (나머지 화면), 페이즈 6-2 (UI/UX 개편) | 꺼짐 | `ui-ux-pro-max@ui-ux-pro-max-skill` |
+| [Impeccable](https://github.com/pbakaus/impeccable) | AI 티가 나는 디자인 패턴 점검, UX 리뷰(`critique`)·출시 전 마무리(`polish`) | 페이즈 6-2 (후보 시안 비교·전면 점검). 웹 대상이라 HTML 시안에 쓴다 | 꺼짐 | `impeccable@impeccable` |
+| [Taste Skill](https://github.com/Leonxlnx/taste-skill) | 아트 디렉션 20개 중 3개를 뽑아 디자인 방향 후보 제시 | 페이즈 6-2 (방향 후보 만들기). 웹 대상이라 HTML 시안에 쓴다 | 꺼짐 | `taste-skill@taste-skill` |
+| [pixel-plugin](https://github.com/willibrandon/pixel-plugin) | Aseprite 로 도트 그림·스프라이트 시트 제작 | 페이즈 6-1 (캐릭터 에셋). 페이즈 2.5 캐릭터는 코드로 그린다 | 꺼짐 | `pixel-plugin@pixel-plugin` |
 | [skill-creator](https://github.com/anthropics/claude-plugins-official/tree/main/plugins/skill-creator) | 반복 작업을 프로젝트 스킬로 만들고 검증 | 반복 작업을 스킬로 만들 때 | 꺼짐 | `skill-creator@claude-plugins-official` |
 
 ## 마켓플레이스
