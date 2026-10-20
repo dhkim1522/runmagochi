@@ -30,12 +30,13 @@ int distanceXp(double distanceM, List<Split> splits) {
 /// 목표 1km 당 달성 보너스 경험치.
 const int goalBonusXpPerKm = 5;
 
-/// 오늘 목표를 채웠는가. 거리에서 빠른 구간 거리를 뺀 값이 [goalM] 이상이어야 한다.
+/// 오늘 목표를 채웠는가. 거리에서 빠른 구간 거리를 뺀 값을 표시 단위(10m)로
+/// 반올림해 [goalM] 이상이어야 한다. 4,995m 가 "5.00km" 로 보이면 5km 목표를 채운 것이다.
 bool goalAchieved({
   required double distanceM,
   required List<Split> splits,
   required double goalM,
-}) => distanceM - excludedFastDistanceM(splits) >= goalM;
+}) => ((distanceM - excludedFastDistanceM(splits)) / 10).round() * 10 >= goalM;
 
 /// 목표를 채웠을 때 받는 보너스 경험치: 목표 km(반올림) × [goalBonusXpPerKm].
 int goalBonusXp(double goalM) => (goalM / 1000).round() * goalBonusXpPerKm;

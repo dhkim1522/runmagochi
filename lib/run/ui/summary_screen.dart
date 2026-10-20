@@ -26,19 +26,24 @@ class SummaryScreen extends ConsumerStatefulWidget {
   const SummaryScreen.fromSummary(
     RunSummary this.summary, {
     this.gain,
+    this.goalM,
     super.key,
   }) : runId = null;
 
   /// 기록 목록에서 연 상세. 성장 영역은 없다.
   const SummaryScreen.forRun(String this.runId, {super.key})
     : summary = null,
-      gain = null;
+      gain = null,
+      goalM = null;
 
   final RunSummary? summary;
   final String? runId;
 
   /// 이번 러닝으로 받은 성장. 없으면 성장 영역을 그리지 않는다.
   final GrowthGain? gain;
+
+  /// 이번 러닝의 오늘 목표(m). 목표 없는 예전 러닝은 null.
+  final double? goalM;
 
   @override
   ConsumerState<SummaryScreen> createState() => _SummaryScreenState();
@@ -112,6 +117,15 @@ class _SummaryScreenState extends ConsumerState<SummaryScreen> {
               gain: g,
               distanceM: s.distanceM,
               excludedM: excludedFastDistanceM(s.splits),
+              goalM: widget.goalM,
+              // 잘라낸 뒤의 거리·구간으로 다시 판정한다.
+              achieved:
+                  widget.goalM != null &&
+                  goalAchieved(
+                    distanceM: s.distanceM,
+                    splits: s.splits,
+                    goalM: widget.goalM!,
+                  ),
             );
       body = _SummaryBody(
         growth: growth,
@@ -133,6 +147,7 @@ class _SummaryScreenState extends ConsumerState<SummaryScreen> {
             data: (d) => d == null
                 ? const _Notice('기록을 찾을 수 없어요')
                 : _SummaryBody(
+                    goal: _detailGoal(d),
                     footer: _DeleteRunButton(d.run),
                     name: d.run.name,
                     startedAt: d.run.startedAt,
@@ -252,9 +267,28 @@ class _DeleteRunButtonState extends ConsumerState<_DeleteRunButton> {
   }
 }
 
+/// 기록에서 연 상세의 목표 결과. 목표 없는 예전 러닝은 줄이 없다.
+Widget? _detailGoal(RunDetail d) {
+  final goalM = d.run.goalM;
+  if (goalM == null) return null;
+  final achieved = goalAchieved(
+    distanceM: d.run.distanceM,
+    splits: d.splits,
+    goalM: goalM,
+  );
+  return GoalResult(
+    goalM: goalM,
+    distanceM: d.run.distanceM,
+    excludedM: excludedFastDistanceM(d.splits),
+    achieved: achieved,
+    bonusXp: achieved ? goalBonusXp(goalM) : 0,
+  );
+}
+
 class _SummaryBody extends StatelessWidget {
   const _SummaryBody({
     this.growth,
+    this.goal,
     this.footer,
     required this.name,
     required this.startedAt,
@@ -267,6 +301,9 @@ class _SummaryBody extends StatelessWidget {
   });
 
   final Widget? growth;
+
+  /// 기록에서 연 상세의 목표 결과 줄.
+  final Widget? goal;
 
   /// 목록 맨 아래에 붙는 동작(기록에서 연 상세의 기록 삭제).
   final Widget? footer;
@@ -287,6 +324,7 @@ class _SummaryBody extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(Gap.s5, 0, Gap.s5, Gap.s4),
       children: [
         if (growth != null) ...[growth!, const SizedBox(height: Gap.s5)],
+        if (goal != null) ...[goal!, const SizedBox(height: Gap.s5)],
         Text(
           formatRunDate(startedAt),
           style: t.caption.copyWith(color: c.inkMuted),

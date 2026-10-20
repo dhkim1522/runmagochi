@@ -116,7 +116,9 @@ void main() {
 
     test('거리가 목표 이상이면 달성', () {
       expect(goalAchieved(distanceM: 5000, splits: [], goalM: 5000), isTrue);
-      expect(goalAchieved(distanceM: 4999, splits: [], goalM: 5000), isFalse);
+      expect(goalAchieved(distanceM: 4999, splits: [], goalM: 5000), isTrue);
+      expect(goalAchieved(distanceM: 4995, splits: [], goalM: 5000), isTrue);
+      expect(goalAchieved(distanceM: 4994, splits: [], goalM: 5000), isFalse);
     });
 
     test('빠른 구간 거리는 뺀다', () {

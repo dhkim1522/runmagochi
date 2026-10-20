@@ -27,7 +27,13 @@ Future<void> pumpIt(WidgetTester tester, GrowthGain g) async {
     MaterialApp(
       theme: appLightTheme(),
       home: Scaffold(
-        body: GrowthSummary(kind: AvatarKind.chick, gain: g, distanceM: 5020),
+        body: GrowthSummary(
+          kind: AvatarKind.chick,
+          gain: g,
+          distanceM: 5020,
+          goalM: null,
+          achieved: false,
+        ),
       ),
     ),
   );
@@ -62,13 +68,6 @@ void main() {
     await pumpIt(tester, gain(distanceXp: 0));
     expect(find.text('경험치 +0'), findsOneWidget);
     expect(find.textContaining('목표'), findsNothing);
-  });
-
-  testWidgets('달성 보너스 행에 주간 목표 문구가 없다', (tester) async {
-    await pumpIt(tester, gain(goalBonusXp: 50));
-    expect(find.text('목표 달성 · 경험치 +50'), findsOneWidget);
-    expect(find.textContaining('주간'), findsNothing);
-    expect(find.textContaining('이번 주'), findsNothing);
   });
 
   testWidgets('단계가 오르면 문구와 함께 아바타가 이전 단계에서 새 단계로 바뀐다', (tester) async {
@@ -106,6 +105,8 @@ void main() {
             kind: null,
             gain: gain(stageAfter: 2),
             distanceM: 5020,
+            goalM: null,
+            achieved: false,
           ),
         ),
       ),
@@ -131,6 +132,8 @@ void main() {
                 kind: AvatarKind.chick,
                 gain: gain(),
                 distanceM: 5020,
+                goalM: null,
+                achieved: false,
                 excludedM: excludedM,
               ),
             ),
@@ -153,6 +156,105 @@ void main() {
       await pumpExcluded(tester, 1200, scale: 1.3);
       expect(tester.takeException(), isNull);
       expect(find.textContaining('빠른 이동'), findsOneWidget);
+    });
+  });
+
+  group('오늘 목표 결과', () {
+    Future<void> pumpGoal(
+      WidgetTester tester, {
+      required double distanceM,
+      required double? goalM,
+      required bool achieved,
+      double excludedM = 0,
+      int bonus = 0,
+      double scale = 1.0,
+    }) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: appLightTheme(),
+          home: MediaQuery(
+            data: MediaQueryData(textScaler: TextScaler.linear(scale)),
+            child: Scaffold(
+              body: GrowthSummary(
+                kind: AvatarKind.chick,
+                gain: gain(goalBonusXp: bonus),
+                distanceM: distanceM,
+                goalM: goalM,
+                achieved: achieved,
+                excludedM: excludedM,
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
+    testWidgets('달성이면 목표 줄과 보너스가 success 색으로 보인다', (tester) async {
+      await pumpGoal(
+        tester,
+        distanceM: 5020,
+        goalM: 5000,
+        achieved: true,
+        bonus: 25,
+      );
+      expect(find.text('목표 5km 달성'), findsOneWidget);
+      final bonus = tester.widget<Text>(find.text('보너스 +25'));
+      final ctx = tester.element(find.text('보너스 +25'));
+      expect(bonus.style!.color, AppColors.of(ctx).success);
+    });
+
+    testWidgets('미달이면 남은 거리를 보조 글자색으로 안내한다', (tester) async {
+      await pumpGoal(tester, distanceM: 5020, goalM: 10000, achieved: false);
+      final finder = find.text('목표 10km까지 4.98km 남았어요');
+      expect(finder, findsOneWidget);
+      final ctx = tester.element(finder);
+      expect(
+        tester.widget<Text>(finder).style!.color,
+        AppColors.of(ctx).inkMuted,
+      );
+      expect(find.textContaining('보너스'), findsNothing);
+    });
+
+    testWidgets('빠른 이동 때문에 미달이면 이유를 보인다', (tester) async {
+      await pumpGoal(
+        tester,
+        distanceM: 5020,
+        goalM: 5000,
+        achieved: false,
+        excludedM: 1000,
+      );
+      expect(find.text('빠른 이동을 빼면 목표에 못 미쳤어요'), findsOneWidget);
+      expect(find.textContaining('남았어요'), findsNothing);
+    });
+
+    testWidgets('목표가 없으면 목표 줄이 없다', (tester) async {
+      await pumpGoal(tester, distanceM: 5020, goalM: null, achieved: false);
+      expect(find.textContaining('목표'), findsNothing);
+      expect(find.textContaining('보너스'), findsNothing);
+    });
+
+    testWidgets('글자 1.3배 360x640 에서 넘치지 않는다', (tester) async {
+      tester.view.physicalSize = const Size(360, 640);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      await pumpGoal(
+        tester,
+        distanceM: 10020,
+        goalM: 10000,
+        achieved: true,
+        bonus: 50,
+        scale: 1.3,
+      );
+      expect(tester.takeException(), isNull);
+      await pumpGoal(
+        tester,
+        distanceM: 5020,
+        goalM: 10000,
+        achieved: false,
+        excludedM: 1200,
+        scale: 1.3,
+      );
+      expect(tester.takeException(), isNull);
     });
   });
 }

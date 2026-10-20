@@ -255,6 +255,51 @@ void main() {
     expect(find.textContaining('경험치'), findsNothing);
   });
 
+  group('기록 상세의 목표 줄', () {
+    FakeRepo repoWith(double? goalM) => FakeRepo(
+      (0, 0),
+      details: {
+        'a': RunDetail(
+          run: RunListItem(
+            id: 'a',
+            name: '아침 러닝',
+            startedAt: DateTime(2026, 10, 10, 7),
+            distanceM: 5020,
+            movingTime: const Duration(minutes: 30),
+            avgPaceSecPerKm: 360,
+            goalM: goalM,
+          ),
+          calories: 168,
+          route: const [],
+          splits: const [],
+        ),
+      },
+    );
+
+    testWidgets('달성이면 보너스가 보인다', (tester) async {
+      await pump(tester, const SummaryScreen.forRun('a'), repo: repoWith(5000));
+      await tester.pumpAndSettle();
+      expect(find.text('목표 5km 달성'), findsOneWidget);
+      expect(find.text('보너스 +25'), findsOneWidget);
+    });
+
+    testWidgets('미달이면 남은 거리가 보인다', (tester) async {
+      await pump(
+        tester,
+        const SummaryScreen.forRun('a'),
+        repo: repoWith(10000),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('목표 10km까지 4.98km 남았어요'), findsOneWidget);
+    });
+
+    testWidgets('목표 없는 예전 러닝은 목표 줄이 없다', (tester) async {
+      await pump(tester, const SummaryScreen.forRun('a'), repo: repoWith(null));
+      await tester.pumpAndSettle();
+      expect(find.textContaining('목표'), findsNothing);
+    });
+  });
+
   for (final size in [const Size(390, 844), const Size(360, 640)]) {
     testWidgets(
       '글자 크기 1.3배, 레벨업 요약이 ${size.width.toInt()}x${size.height.toInt()} 에서 overflow 없이 그려진다',

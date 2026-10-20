@@ -17,6 +17,8 @@ class GrowthSummary extends StatefulWidget {
     required this.kind,
     required this.gain,
     required this.distanceM,
+    required this.goalM,
+    required this.achieved,
     this.excludedM = 0,
   });
 
@@ -26,6 +28,12 @@ class GrowthSummary extends StatefulWidget {
 
   /// 방금 달린 거리(미터).
   final double distanceM;
+
+  /// 이 러닝의 오늘 목표(미터). 목표가 없는 예전 러닝은 null 이고 목표 줄을 그리지 않는다.
+  final double? goalM;
+
+  /// [goalM] 을 채웠는가. 호출하는 쪽이 지금 거리·구간으로 [goalAchieved] 를 계산해 넘긴다.
+  final bool achieved;
 
   /// 속도 검사로 경험치에서 뺀 거리(미터). 0 이면 안내를 보이지 않는다.
   final double excludedM;
@@ -90,9 +98,15 @@ class _GrowthSummaryState extends State<GrowthSummary>
             style: t.caption.copyWith(color: c.inkMuted),
           ),
         ],
-        if (g.goalBonusXp > 0) ...[
+        if (widget.goalM != null) ...[
           const SizedBox(height: Gap.s3),
-          _XpRow('목표 달성', '경험치 +${g.goalBonusXp}', merged: true),
+          GoalResult(
+            goalM: widget.goalM!,
+            distanceM: widget.distanceM,
+            excludedM: widget.excludedM,
+            achieved: widget.achieved,
+            bonusXp: g.goalBonusXp,
+          ),
         ],
       ],
     );
@@ -166,40 +180,66 @@ class _GrowthSummaryState extends State<GrowthSummary>
   }
 }
 
-/// 경험치 한 줄: 흰 카드, 값은 success 색 Jua 22.
-class _XpRow extends StatelessWidget {
-  const _XpRow(this.label, this.xp, {this.merged = false});
-  final String label;
-  final String xp;
+/// 오늘 목표 결과 한 줄. 달성이면 보너스, 미달이면 남은 거리나 빠른 이동 안내.
+class GoalResult extends StatelessWidget {
+  const GoalResult({
+    super.key,
+    required this.goalM,
+    required this.distanceM,
+    required this.excludedM,
+    required this.achieved,
+    required this.bonusXp,
+  });
 
-  /// true 면 라벨과 경험치를 한 문장으로 붙여 보인다.
-  final bool merged;
+  final double goalM;
+
+  /// 기록 거리(미터). 빠른 이동 거리를 빼기 전 값.
+  final double distanceM;
+
+  /// 속도 검사로 뺀 거리(미터).
+  final double excludedM;
+  final bool achieved;
+  final int bonusXp;
 
   @override
   Widget build(BuildContext context) {
     final c = AppColors.of(context);
     final t = AppText.of(context);
-    final xpStyle = t.titleS.copyWith(color: c.success);
+    final goal = formatTargetKm(goalM);
+    if (achieved) {
+      return _XpRow('목표 ${goal}km 달성', '보너스 +$bonusXp');
+    }
+    final String message;
+    if (distanceM >= goalM) {
+      message = '빠른 이동을 빼면 목표에 못 미쳤어요';
+    } else {
+      final remaining = goalM - (distanceM - excludedM);
+      message = '목표 ${goal}km까지 ${formatKm(remaining)}km 남았어요';
+    }
+    return Text(message, style: t.body.copyWith(color: c.inkMuted));
+  }
+}
+
+/// 경험치 한 줄: 흰 카드, 값은 success 색 Jua 22.
+class _XpRow extends StatelessWidget {
+  const _XpRow(this.label, this.xp);
+  final String label;
+  final String xp;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = AppColors.of(context);
+    final t = AppText.of(context);
     return ClayCard(
       radius: Radii.md,
       padding: const EdgeInsets.symmetric(vertical: 14, horizontal: Gap.s4),
-      child: merged
-          ? Text.rich(
-              TextSpan(
-                style: t.body,
-                children: [
-                  TextSpan(text: '$label · '),
-                  TextSpan(text: xp, style: xpStyle),
-                ],
-              ),
-            )
-          : Row(
-              children: [
-                Expanded(child: Text(label, style: t.body)),
-                const SizedBox(width: Gap.s2),
-                Text(xp, style: xpStyle),
-              ],
-            ),
+      child: Row(
+        children: [
+          Expanded(child: Text(label, style: t.body)),
+          const SizedBox(width: Gap.s2),
+          Text(xp, style: t.titleS.copyWith(color: c.success)),
+        ],
+      ),
     );
   }
 }

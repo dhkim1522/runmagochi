@@ -200,6 +200,33 @@ void main() {
     expect(find.text('종료를 늦게 눌렀다면 끝 시각을 앞으로 당겨요.'), findsNothing);
   });
 
+  testWidgets('잘라내 목표 미달이 되면 보너스 줄이 사라지고 남은 거리가 보인다', (tester) async {
+    await _pump(
+      tester,
+      SummaryScreen.fromSummary(
+        _summary(),
+        goalM: 50,
+        gain: const GrowthGain(
+          distanceXp: 7,
+          goalBonusXp: 25,
+          levelBefore: 1,
+          levelAfter: 1,
+          stageBefore: 1,
+          stageAfter: 1,
+        ),
+      ),
+    );
+    expect(find.textContaining('달성'), findsOneWidget);
+    expect(find.text('보너스 +25'), findsOneWidget);
+    await _openSheet(tester);
+    await _pullToStart(tester);
+    await tester.tap(find.text('잘라내기'));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('달성'), findsNothing);
+    expect(find.textContaining('보너스'), findsNothing);
+    expect(find.textContaining('남았어요'), findsOneWidget);
+  });
+
   testWidgets('취소하면 그대로다', (tester) async {
     final s = _summary();
     final log = await _pump(tester, SummaryScreen.fromSummary(s, gain: _gain));

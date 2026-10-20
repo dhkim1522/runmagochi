@@ -120,7 +120,11 @@ class FakeController extends RunController {
       splits: const [],
       points: const [],
     );
-    state = RunViewState(snapshot: snap(RunState.idle), lastSummary: summary);
+    state = RunViewState(
+      snapshot: snap(RunState.idle),
+      lastSummary: summary,
+      lastRunId: 'r',
+    );
     return summary;
   }
 

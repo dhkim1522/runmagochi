@@ -65,10 +65,7 @@ class _TrimSheetState extends State<TrimSheet> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Semantics(
-            header: true,
-            child: Text('끝부분 잘라내기', style: t.titleS),
-          ),
+          Semantics(header: true, child: Text('끝부분 잘라내기', style: t.titleS)),
           const SizedBox(height: Gap.s2),
           Text(
             '종료를 늦게 눌렀다면 끝 시각을 앞으로 당겨요.',

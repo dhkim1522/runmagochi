@@ -11,6 +11,7 @@ import 'package:runmagochi/core/theme.dart';
 import 'package:runmagochi/core/ui/clay.dart';
 import 'package:runmagochi/run/app/permission_gate.dart';
 import 'package:runmagochi/run/app/providers.dart';
+import 'package:runmagochi/run/data/run_repository.dart';
 import 'package:runmagochi/run/domain/run_engine.dart';
 import 'package:runmagochi/run/domain/run_summary.dart';
 import 'package:runmagochi/run/ui/home_screen.dart';
@@ -315,7 +316,27 @@ void main() {
   testWidgets('러닝을 끝내면 sync 한 번 후 요약에 gain 이 들어간다', (tester) async {
     final g = FakeGrowthService(growthState());
     final c = FakeController();
-    await pumpHome(tester, c, growth: g);
+    // 컨트롤러는 끝나면 목표를 비우므로 요약은 저장된 러닝의 목표를 읽는다.
+    final repo = FakeRepo(
+      (0, 0),
+      details: {
+        'r': RunDetail(
+          run: RunListItem(
+            id: 'r',
+            name: 'x',
+            startedAt: DateTime(2026),
+            distanceM: 0,
+            movingTime: Duration.zero,
+            avgPaceSecPerKm: null,
+            goalM: 3000,
+          ),
+          calories: 0,
+          route: const [],
+          splits: const [],
+        ),
+      },
+    );
+    await pumpHome(tester, c, growth: g, repo: repo);
     await startRun(tester);
     final before = g.syncs;
     // 러닝 중에 생긴 gain: 먼저 sync 한 쪽이 받는다.
@@ -333,7 +354,7 @@ void main() {
     expect(find.byType(SummaryScreen), findsOneWidget);
     expect(find.text('레벨 업!'), findsOneWidget);
     expect(find.text('Lv.3 에서 Lv.4 로'), findsOneWidget);
-    expect(find.text('목표 달성 · 경험치 +50'), findsOneWidget);
+    expect(find.text('목표 3km까지 3.00km 남았어요'), findsOneWidget);
   });
 
   testWidgets('sync 가 실패해도 요약은 열리고 성장 영역만 빠진다', (tester) async {

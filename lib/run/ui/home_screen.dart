@@ -121,10 +121,23 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       gain = null; // 성장 영역만 빼고 요약은 연다.
     }
     if (!mounted) return;
+    // 컨트롤러는 끝나면 목표를 비우므로 저장된 러닝에서 읽는다.
+    double? goalM;
+    final runId = ref.read(runControllerProvider).lastRunId;
+    if (runId != null) {
+      try {
+        goalM =
+            (await ref.read(runRepositoryProvider).getRun(runId))?.run.goalM;
+      } catch (_) {
+        goalM = null; // 목표 줄만 뺀다.
+      }
+    }
+    if (!mounted) return;
     ref.invalidate(growthStateProvider);
     await Navigator.of(context).push(
       MaterialPageRoute<void>(
-        builder: (_) => SummaryScreen.fromSummary(summary, gain: gain),
+        builder: (_) =>
+            SummaryScreen.fromSummary(summary, gain: gain, goalM: goalM),
       ),
     );
   }

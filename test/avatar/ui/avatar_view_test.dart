@@ -165,10 +165,7 @@ void rimTests() {
       of: find.byType(AvatarView),
       matching: find.byType(CustomPaint),
     );
-    expect(
-      tester.widget<CustomPaint>(painters.first).key,
-      avatarRimKey,
-    );
+    expect(tester.widget<CustomPaint>(painters.first).key, avatarRimKey);
   });
 
   testWidgets('라이트 테마에서는 윤곽 층이 없다', (tester) async {
