@@ -353,6 +353,8 @@ void main() {
         expect(env.repo.completed, isEmpty);
         expect(env.view.snapshot.state, RunState.recording);
 
+        // 36초 점이 오면 점 시각 차이가 30초.
+        env.sampleAt(const Duration(seconds: 36), 15.0 + 31 * 10);
         env.async.elapse(const Duration(seconds: 1));
         final summary = env.repo.completed.single.$2;
         expect(summary.endedAt, lastPoint);
@@ -363,6 +365,39 @@ void main() {
         expect(env.notifier.shown, [
           (_fastTitle, '0.01km 기록을 저장했어요. 요약에서 확인하세요.'),
         ]);
+      });
+    });
+
+    test('튀는 값 하나 뒤 점이 60초 없어도 끝내지 않는다', () {
+      _run((env) {
+        feedFast(env, 6);
+        env.async.elapse(const Duration(seconds: 60));
+        expect(env.repo.completed, isEmpty);
+        expect(env.view.snapshot.state, RunState.recording);
+        env.controller.end();
+        env.async.flushMicrotasks();
+      });
+    });
+
+    test('튀는 값 두 개 뒤 정확도 거름에 걸린 점만 60초 와도 끝내지 않는다', () {
+      _run((env) {
+        feedFast(env, 7);
+        for (var i = 8; i <= 67; i++) {
+          env.async.elapse(Duration(seconds: i) - env.async.elapsed);
+          env.location.controller.add(
+            LocationSample(
+              time: _t0.add(Duration(seconds: i)),
+              latitude: _northOf(500.0 + i * 10),
+              longitude: _lng0,
+              accuracy: 50,
+            ),
+          );
+          env.async.flushMicrotasks();
+        }
+        expect(env.repo.completed, isEmpty);
+        expect(env.view.snapshot.state, RunState.recording);
+        env.controller.end();
+        env.async.flushMicrotasks();
       });
     });
 
@@ -401,7 +436,9 @@ void main() {
     test('provider 로 줄인 기준을 따른다', () {
       _run(config: const RunGuardConfig(fast: Duration(seconds: 3)), (env) {
         feedFast(env, 8);
+        env.async.elapse(const Duration(seconds: 1));
         expect(env.repo.completed, isEmpty);
+        env.sampleAt(const Duration(seconds: 9), 15.0 + 40);
         env.async.elapse(const Duration(seconds: 1));
         expect(env.repo.completed.single.$2.endedAt, lastPoint);
       });

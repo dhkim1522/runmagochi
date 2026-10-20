@@ -347,6 +347,7 @@ class RunController extends Notifier<RunViewState> {
       lastPointAt: engine.lastPointAt,
       recordingSince: engine.recordingSince,
       fastSince: engine.fastSince,
+      fastLastAt: engine.fastLastAt,
       beforeFastAt: engine.lastAcceptedBeforeFast,
       config: ref.read(runGuardConfigProvider),
     );

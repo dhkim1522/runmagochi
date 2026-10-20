@@ -107,6 +107,7 @@ class RunEngine {
   /// 일시정지·재개하면 비운다.
   LocationSample? _lastRaw;
   DateTime? _fastSince;
+  DateTime? _fastLastAt;
   DateTime? _lastAcceptedBeforeFast;
 
   Duration _movingBase = Duration.zero;
@@ -141,6 +142,10 @@ class RunEngine {
   /// 빠른 이동(시속 30km 초과)이 이어지기 시작한 시각, 곧 그 연속의 첫 빠른
   /// 점의 시각. 빠른 이동 중이 아니면 null.
   DateTime? get fastSince => _fastSince;
+
+  /// 이 연속의 가장 최근 빠른 점의 시각. 빠른 이동 시간은 [fastSince] 부터
+  /// 이 시각까지로 재며 벽시계는 쓰지 않는다. 빠른 이동 중이 아니면 null.
+  DateTime? get fastLastAt => _fastLastAt;
 
   /// [fastSince] 를 잡은 순간 마지막으로 받아들인 점의 시각. 없으면 null.
   DateTime? get lastAcceptedBeforeFast => _lastAcceptedBeforeFast;
@@ -240,6 +245,7 @@ class RunEngine {
       if (dt <= Duration.zero) return;
       final seconds = dt.inMicroseconds / Duration.microsecondsPerSecond;
       if (_distance(prev, s) / seconds > fastSpeedMps) {
+        _fastLastAt = s.time;
         if (_fastSince == null) {
           _fastSince = s.time;
           _lastAcceptedBeforeFast = _lastAccepted?.time;
@@ -253,6 +259,7 @@ class RunEngine {
 
   void _resetFast() {
     _fastSince = null;
+    _fastLastAt = null;
     _lastAcceptedBeforeFast = null;
   }
 

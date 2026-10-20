@@ -336,6 +336,7 @@ void main() {
       expect(engine.lastAcceptedBeforeFast, t0.add(const Duration(seconds: 1)));
       engine.addSample(fast(3, 23));
       expect(engine.fastSince, t0.add(const Duration(seconds: 2)));
+      expect(engine.fastLastAt, t0.add(const Duration(seconds: 3)));
       expect(engine.snapshot.distanceM, closeTo(3, 0.01));
     });
 
@@ -373,10 +374,13 @@ void main() {
       expect(engine.fastSince, isNull);
     });
 
-    test('첫 점 전에 시작하면 받아들인 점이 없어 null', () {
+    test('빠른 점이 이어져도 정확도 거름에 걸린 점은 빠른 이동 시간을 늘리지 않는다', () {
       engine.start();
-      engine.addSample(fast(0, 0, accuracy: 5));
+      engine.addSample(fast(0, 0));
       engine.addSample(fast(1, 10));
+      engine.addSample(fast(40, 400, accuracy: 25));
+      expect(engine.fastSince, t0.add(const Duration(seconds: 1)));
+      expect(engine.fastLastAt, t0.add(const Duration(seconds: 1)));
       expect(engine.lastAcceptedBeforeFast, t0);
     });
   });

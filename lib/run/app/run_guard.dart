@@ -37,7 +37,8 @@ class AutoEndDecision {
 ///
 /// - 마지막 활동 = [lastPointAt](받아들인 마지막 점)과 [recordingSince]
 ///   (이번 기록 구간을 시작·재개한 시각) 중 늦은 쪽. 둘 다 없으면 [startedAt].
-/// - [recording] 이고 [fastSince] 가 있고 `now − fastSince ≥ fast` 면
+/// - [recording] 이고 `fastLastAt − fastSince ≥ fast` 면(점 시각으로 잰다.
+///   벽시계로 재면 점이 끊겼을 때 튀는 값 하나로 끝난다)
 ///   [beforeFastAt] ?? [recordingSince] ?? [startedAt] 에 끝낸다. 가장 먼저 본다.
 /// - [recording] 이고 `now − 마지막 활동 ≥ idle` 이면 마지막 활동 시각에 끝낸다.
 ///   일시정지 중에는 적용하지 않는다.
@@ -50,12 +51,14 @@ AutoEndDecision? checkAutoEnd({
   required DateTime? lastPointAt,
   required DateTime? recordingSince,
   DateTime? fastSince,
+  DateTime? fastLastAt,
   DateTime? beforeFastAt,
   RunGuardConfig config = const RunGuardConfig(),
 }) {
   if (recording &&
       fastSince != null &&
-      now.difference(fastSince) >= config.fast) {
+      fastLastAt != null &&
+      fastLastAt.difference(fastSince) >= config.fast) {
     return AutoEndDecision(
       AutoEndReason.fast,
       beforeFastAt ?? recordingSince ?? startedAt,

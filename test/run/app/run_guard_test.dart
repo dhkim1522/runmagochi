@@ -33,6 +33,7 @@ void main() {
       lastPointAt: lastPointAt ?? before,
       recordingSince: _start,
       fastSince: fastSince,
+      fastLastAt: fastSince.add(afterFast),
       beforeFastAt: beforeFastAt,
     );
 
@@ -56,8 +57,23 @@ void main() {
         lastPointAt: null,
         recordingSince: null,
         fastSince: fastSince,
+        fastLastAt: fastSince.add(const Duration(seconds: 30)),
       );
       expect(d?.endAt, _start);
+    });
+
+    test('now 가 한참 지나도 점 시각 차이가 짧으면 계속', () {
+      final d = checkAutoEnd(
+        now: fastSince.add(const Duration(minutes: 5)),
+        startedAt: _start,
+        recording: true,
+        lastPointAt: before,
+        recordingSince: _start,
+        fastSince: fastSince,
+        fastLastAt: fastSince.add(const Duration(seconds: 1)),
+        beforeFastAt: before,
+      );
+      expect(d, isNull);
     });
 
     test('일시정지 중에는 적용하지 않는다', () {
@@ -79,6 +95,7 @@ void main() {
         lastPointAt: _start,
         recordingSince: _start,
         fastSince: _at(const Duration(minutes: 39, seconds: 30)),
+        fastLastAt: _at(const Duration(minutes: 40)),
         beforeFastAt: _at(const Duration(minutes: 1)),
       );
       expect(d?.reason, AutoEndReason.fast);
@@ -92,6 +109,7 @@ void main() {
         lastPointAt: before,
         recordingSince: _start,
         fastSince: fastSince,
+        fastLastAt: fastSince.add(const Duration(seconds: 5)),
         beforeFastAt: before,
         config: const RunGuardConfig(fast: Duration(seconds: 5)),
       );
