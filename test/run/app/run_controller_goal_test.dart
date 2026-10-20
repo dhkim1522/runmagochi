@@ -85,6 +85,10 @@ class _Notifier implements InstantNotifier {
     if (fails) throw StateError('알림 실패');
     shown.add((title, body));
   }
+
+  @override
+  Future<void> showGoalReached({required String title, required String body}) =>
+      showNow(title: title, body: body);
 }
 
 void _run(
@@ -154,6 +158,28 @@ void main() {
       expect(container.read(runControllerProvider).goalReached, isTrue);
       expect(notifier.shown, hasLength(1));
     });
+  });
+
+  test('표시 단위(10m) 반올림: 4,995m 이상은 5km 목표를 채우고 4,994m 는 못 채운다', () {
+    for (final (meters, reached) in [(4994.0, false), (4995.5, true)]) {
+      _run((async, container, notifier, sampleAt) {
+        container.read(runControllerProvider.notifier).start(goalM: 5000);
+        async.flushMicrotasks();
+        sampleAt(const Duration(seconds: 1), 0);
+        for (var km = 1; km <= 4; km++) {
+          sampleAt(Duration(seconds: 1 + km * 400), km * 1000);
+        }
+        sampleAt(const Duration(seconds: 2001), meters);
+        final view = container.read(runControllerProvider);
+        expect(view.snapshot.distanceM, lessThan(5000));
+        expect(
+          view.goalReached,
+          reached,
+          reason: '${view.snapshot.distanceM} m',
+        );
+        expect(notifier.shown, hasLength(reached ? 1 : 0));
+      });
+    }
   });
 
   test('알림이 실패해도 달성 상태는 바뀌고 오류는 퍼지지 않는다', () {

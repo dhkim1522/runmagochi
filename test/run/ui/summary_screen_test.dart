@@ -231,6 +231,17 @@ void main() {
     expect(find.textContaining('경험치'), findsNothing);
   });
 
+  testWidgets('성장 반영에 실패해도(gain 없음) 목표 달성 줄은 보인다', (tester) async {
+    await pump(tester, SummaryScreen.fromSummary(_summary(), goalM: 2000));
+    expect(find.text('목표 2km 달성'), findsOneWidget);
+    expect(find.text('보너스 +10'), findsOneWidget);
+  });
+
+  testWidgets('성장 반영에 실패해도(gain 없음) 목표 미달 안내는 보인다', (tester) async {
+    await pump(tester, SummaryScreen.fromSummary(_summary(), goalM: 5000));
+    expect(find.text('목표 5km까지 2.50km 남았어요'), findsOneWidget);
+  });
+
   testWidgets('forRun 에는 성장 영역이 없다', (tester) async {
     final repo = FakeRepo(
       (0, 0),

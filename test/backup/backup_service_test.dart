@@ -81,9 +81,6 @@ class _HeldRuns implements RunRepository {
   @override
   Future<(double, int)> weeklyTotal(DateTime now) => _inner.weeklyTotal(now);
   @override
-  Future<Map<String, DateTime>> deletedRunStarts(Set<String> ids) =>
-      _inner.deletedRunStarts(ids);
-  @override
   Future<Set<String>> existingRunIds(Set<String> ids) =>
       _inner.existingRunIds(ids);
   @override

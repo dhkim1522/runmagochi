@@ -36,7 +36,11 @@ bool goalAchieved({
   required double distanceM,
   required List<Split> splits,
   required double goalM,
-}) => ((distanceM - excludedFastDistanceM(splits)) / 10).round() * 10 >= goalM;
+}) => distanceReachesGoal(distanceM - excludedFastDistanceM(splits), goalM);
+
+/// [countedM] 을 표시 단위(10m)로 반올림해 [goalM] 이상인가. 러닝 중 판정과 끝난 뒤 판정이 같다.
+bool distanceReachesGoal(double countedM, double goalM) =>
+    (countedM / 10).round() * 10 >= goalM;
 
 /// 목표를 채웠을 때 받는 보너스 경험치: 목표 km(반올림) × [goalBonusXpPerKm].
 int goalBonusXp(double goalM) => (goalM / 1000).round() * goalBonusXpPerKm;

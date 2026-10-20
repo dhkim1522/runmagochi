@@ -102,7 +102,7 @@ class Profiles extends Table {
 class XpTxns extends Table {
   TextColumn get id => text()();
   IntColumn get amount => integer()();
-  TextColumn get reason => text()(); // distance | weeklyGoal
+  TextColumn get reason => text()(); // distance | runGoal (weeklyGoal 은 예전 값)
   TextColumn get runId => text().nullable().references(Runs, #id)();
   TextColumn get weekStart => text().nullable()();
   DateTimeColumn get createdAt => dateTime()();

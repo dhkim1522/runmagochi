@@ -87,15 +87,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         _toast('저장하지 못했어요');
       }
       if (!mounted) return;
-      _refreshAfterRun();
+      final goalM = await _endedRunGoal();
+      if (!mounted) return;
+      _refreshAfterRun(goalM: goalM);
     }
   }
 
   /// 러닝이 끝나 홈으로 돌아오면 성장과 최근 목표를 다시 읽는다.
-  void _refreshAfterRun() {
+  /// [goalM] 은 방금 끝난 러닝의 목표. 칩이 다시 읽기 전 값으로 잠깐 바뀌지 않게 먼저 둔다.
+  void _refreshAfterRun({double? goalM}) {
     ref.invalidate(growthStateProvider);
     ref.invalidate(lastRunGoalProvider);
-    setState(() => _goalM = null);
+    setState(() => _goalM = goalM ?? _goalM);
   }
 
   Future<void> _openInRun() async {
@@ -104,10 +107,24 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       context,
     ).push(MaterialPageRoute<void>(builder: (_) => const InRunScreen()));
     if (!mounted) return;
-    _refreshAfterRun();
     final after = ref.read(runControllerProvider).lastSummary;
-    if (after == null || identical(after, before)) return;
+    if (after == null || identical(after, before)) {
+      _refreshAfterRun();
+      return;
+    }
+    // 성장은 요약이 sync 한 뒤에 다시 읽는다(_openSummary).
     await _openSummary(after);
+  }
+
+  /// 방금 끝난 러닝의 목표(m). 컨트롤러는 끝나면 목표를 비우므로 저장된 러닝에서 읽는다.
+  Future<double?> _endedRunGoal() async {
+    final runId = ref.read(runControllerProvider).lastRunId;
+    if (runId == null) return null;
+    try {
+      return (await ref.read(runRepositoryProvider).getRun(runId))?.run.goalM;
+    } catch (_) {
+      return null;
+    }
   }
 
   /// 성장을 반영하고 [summary] 의 요약 화면을 연다.
@@ -121,19 +138,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       gain = null; // 성장 영역만 빼고 요약은 연다.
     }
     if (!mounted) return;
-    // 컨트롤러는 끝나면 목표를 비우므로 저장된 러닝에서 읽는다.
-    double? goalM;
-    final runId = ref.read(runControllerProvider).lastRunId;
-    if (runId != null) {
-      try {
-        goalM =
-            (await ref.read(runRepositoryProvider).getRun(runId))?.run.goalM;
-      } catch (_) {
-        goalM = null; // 목표 줄만 뺀다.
-      }
-    }
+    final goalM = await _endedRunGoal(); // 못 읽으면 목표 줄만 뺀다.
     if (!mounted) return;
-    ref.invalidate(growthStateProvider);
+    _refreshAfterRun(goalM: goalM);
     await Navigator.of(context).push(
       MaterialPageRoute<void>(
         builder: (_) =>

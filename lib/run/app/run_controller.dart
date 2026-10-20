@@ -5,6 +5,7 @@ import 'package:flutter/widgets.dart' show AppLifecycleState;
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../avatar/domain/growth_rules.dart' show distanceReachesGoal;
 import '../../core/format.dart';
 import '../../profile/app/providers.dart';
 import '../data/run_repository.dart';
@@ -308,7 +309,8 @@ class RunController extends Notifier<RunViewState> {
     _goalM = active.goalM;
     // 이미 넘긴 목표는 알리지 않는다(사용자가 이미 알았거나 앱이 죽어 있었다).
     final goal = active.goalM;
-    _goalReached = goal != null && engine.snapshot.distanceM >= goal;
+    _goalReached =
+        goal != null && distanceReachesGoal(engine.snapshot.distanceM, goal);
     _weightKg = await _readWeight();
     _publish();
     final decision = checkAutoEnd(
@@ -569,7 +571,9 @@ class RunController extends Notifier<RunViewState> {
     final snapshot = engine.snapshot;
     final goal = _goalM;
     final reachedNow =
-        goal != null && !_goalReached && snapshot.distanceM >= goal;
+        goal != null &&
+        !_goalReached &&
+        distanceReachesGoal(snapshot.distanceM, goal);
     if (reachedNow) _goalReached = true;
     state = _copyState(snapshot: snapshot, runId: _runId, clearError: clear);
     if (reachedNow) _notifyGoalReached(goal);
@@ -581,7 +585,7 @@ class RunController extends Notifier<RunViewState> {
       unawaited(
         ref
             .read(instantNotifierProvider)
-            .showNow(
+            .showGoalReached(
               title: _goalReachedTitle,
               body: '${formatTargetKm(goalM)}km 목표를 채웠어요. 종료할 때까지 기록은 이어져요',
             )

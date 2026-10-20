@@ -203,6 +203,18 @@ void main() {
       expect(bonus.style!.color, AppColors.of(ctx).success);
     });
 
+    testWidgets('달성인데 이번 증가분 보너스가 0 이어도 목표 보너스를 보여 준다', (tester) async {
+      await pumpGoal(
+        tester,
+        distanceM: 5020,
+        goalM: 5000,
+        achieved: true,
+        bonus: 0,
+      );
+      expect(find.text('보너스 +25'), findsOneWidget);
+      expect(find.text('보너스 +0'), findsNothing);
+    });
+
     testWidgets('미달이면 남은 거리를 보조 글자색으로 안내한다', (tester) async {
       await pumpGoal(tester, distanceM: 5020, goalM: 10000, achieved: false);
       final finder = find.text('목표 10km까지 4.98km 남았어요');

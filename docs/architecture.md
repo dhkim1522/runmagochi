@@ -13,7 +13,7 @@ Flutter로 개발한다. 근거는 [결정 0004](decisions/0004-flutter.md).
 | 로컬 DB | `drift` (SQLite) | 마이그레이션·타입 안전 쿼리, 서버 동기화에 맞는 관계형 구조 |
 | 상태 관리 | `riverpod` (코드 생성 없이) | 기록 엔진의 이벤트 스트림을 화면에 연결 |
 | 아바타 렌더링 | 일반 위젯 + 스프라이트 시트 | 프레임을 Ticker 로 넘긴다. 게임 엔진 불필요 |
-| 로컬 알림 | `flutter_local_notifications` | 주간 목표 잔여 알림 |
+| 로컬 알림 | `flutter_local_notifications` | 러닝 자동 종료·목표 달성 즉시 알림 |
 
 배경 지도가 필요해지면 `maplibre_gl` 또는 `flutter_map` 에 OpenFreeMap 타일을 쓴다. Google Maps는 API 키와 Google Cloud 프로젝트가 필요해 쓰지 않는다.
 

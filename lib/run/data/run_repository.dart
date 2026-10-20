@@ -94,10 +94,6 @@ abstract interface class RunRepository {
   /// 경험치는 따로 다시 계산한다(`GrowthService.runRevised`).
   Future<void> replaceCompletedRun(String runId, RunSummary summary);
 
-  /// [ids] 가운데 삭제 표시한 완료 러닝의 시작 시각(현지). 성장 자가 복구가
-  /// 지운 러닝의 주를 다시 판정할 때 쓴다.
-  Future<Map<String, DateTime>> deletedRunStarts(Set<String> ids);
-
   /// [ids] 가운데 저장소에 행이 있는 러닝 id(진행 중·완료·삭제 표시 모두).
   /// 성장 자가 복구가 저장소에 아예 없는 러닝의 경험치를 찾는 데 쓴다.
   Future<Set<String>> existingRunIds(Set<String> ids);

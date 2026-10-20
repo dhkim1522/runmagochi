@@ -129,6 +129,10 @@ class _SummaryScreenState extends ConsumerState<SummaryScreen> {
             );
       body = _SummaryBody(
         growth: growth,
+        // 성장 반영에 실패해도 목표 결과는 보여 준다.
+        goal: g == null
+            ? _goalResult(widget.goalM, s.distanceM, s.splits)
+            : null,
         name: s.name,
         startedAt: s.startedAt,
         distanceM: s.distanceM,
@@ -268,18 +272,21 @@ class _DeleteRunButtonState extends ConsumerState<_DeleteRunButton> {
 }
 
 /// 기록에서 연 상세의 목표 결과. 목표 없는 예전 러닝은 줄이 없다.
-Widget? _detailGoal(RunDetail d) {
-  final goalM = d.run.goalM;
+Widget? _detailGoal(RunDetail d) =>
+    _goalResult(d.run.goalM, d.run.distanceM, d.splits);
+
+/// 저장된 거리·구간으로 다시 판정한 목표 결과 줄. 목표가 없으면 null.
+Widget? _goalResult(double? goalM, double distanceM, List<Split> splits) {
   if (goalM == null) return null;
   final achieved = goalAchieved(
-    distanceM: d.run.distanceM,
-    splits: d.splits,
+    distanceM: distanceM,
+    splits: splits,
     goalM: goalM,
   );
   return GoalResult(
     goalM: goalM,
-    distanceM: d.run.distanceM,
-    excludedM: excludedFastDistanceM(d.splits),
+    distanceM: distanceM,
+    excludedM: excludedFastDistanceM(splits),
     achieved: achieved,
     bonusXp: achieved ? goalBonusXp(goalM) : 0,
   );

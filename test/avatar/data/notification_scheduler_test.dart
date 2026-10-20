@@ -1,16 +1,67 @@
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:runmagochi/avatar/data/notification_scheduler.dart';
-import 'package:timezone/timezone.dart' as tz;
+
+class _FakeAndroid extends Fake
+    implements AndroidFlutterLocalNotificationsPlugin {
+  final deleted = <String>[];
+
+  @override
+  Future<void> deleteNotificationChannel({required String channelId}) async =>
+      deleted.add(channelId);
+}
+
+class _FakePlugin extends Fake implements FlutterLocalNotificationsPlugin {
+  final android = _FakeAndroid();
+  final shown = <(String, String?)>[]; // (제목, 채널 id)
+  var cancelled = 0;
+
+  @override
+  Future<bool?> initialize({
+    required InitializationSettings settings,
+    DidReceiveNotificationResponseCallback? onDidReceiveNotificationResponse,
+    DidReceiveBackgroundNotificationResponseCallback?
+    onDidReceiveBackgroundNotificationResponse,
+  }) async => true;
+
+  @override
+  Future<void> cancelAllPendingNotifications() async => cancelled++;
+
+  @override
+  Future<void> show({
+    required int id,
+    String? title,
+    String? body,
+    NotificationDetails? notificationDetails,
+    String? payload,
+  }) async => shown.add((title!, notificationDetails?.android?.channelId));
+
+  @override
+  T? resolvePlatformSpecificImplementation<
+    T extends FlutterLocalNotificationsPlatform
+  >() => android as T;
+}
 
 void main() {
-  test('기기가 별칭 이름(GMT 등)을 줘도 시간대를 찾는다', () {
-    // Android 에뮬레이터는 'GMT' 를 준다. 별칭이 없는 데이터에선 초기화가 깨졌다.
-    expect(resolveTimeZone('GMT').name, 'GMT');
-    expect(resolveTimeZone('Asia/Calcutta').name, 'Asia/Calcutta');
-    expect(resolveTimeZone('Asia/Seoul').name, 'Asia/Seoul');
+  late _FakePlugin plugin;
+  late LocalNotificationScheduler scheduler;
+
+  setUp(() {
+    plugin = _FakePlugin();
+    scheduler = LocalNotificationScheduler(plugin);
   });
 
-  test('모르는 시간대는 UTC 로 대신한다', () {
-    expect(resolveTimeZone('Nowhere/Unknown'), tz.UTC);
+  test('목표 달성 알림은 자동 종료와 다른 채널로 보낸다', () async {
+    await scheduler.showNow(title: '종료', body: 'b');
+    await scheduler.showGoalReached(title: '달성', body: 'b');
+
+    expect(plugin.shown, [('종료', 'run_auto_end'), ('달성', 'run_goal')]);
+  });
+
+  test('예약 취소 때 예전 주간 목표 채널을 지운다', () async {
+    await scheduler.cancelScheduled();
+
+    expect(plugin.cancelled, 1);
+    expect(plugin.android.deleted, ['weekly_goal']);
   });
 }

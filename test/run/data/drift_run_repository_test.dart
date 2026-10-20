@@ -525,27 +525,6 @@ void main() {
     });
   });
 
-  group('deletedRunStarts', () {
-    test('주어진 id 중 지운 완료 러닝의 시작 시각만 돌려준다', () async {
-      final a = await repo.createActiveRun(
-        DateTime(2026, 1, 6, 9),
-        goalM: 3000,
-      );
-      await repo.completeRun(a, summary(DateTime(2026, 1, 6, 9)));
-      final b = await repo.createActiveRun(
-        DateTime(2026, 1, 7, 9),
-        goalM: 3000,
-      );
-      await repo.completeRun(b, summary(DateTime(2026, 1, 7, 9)));
-      await repo.deleteRun(a);
-
-      expect(await repo.deletedRunStarts({a, b, 'none'}), {
-        a: DateTime(2026, 1, 6, 9),
-      });
-      expect(await repo.deletedRunStarts({}), isEmpty);
-    });
-  });
-
   test('existingRunIds 는 진행 중·완료·지운 러닝 id 를 모두 돌려주고 없는 id 는 뺀다', () async {
     final a = await repo.createActiveRun(DateTime(2026, 1, 6, 9), goalM: 3000);
     await repo.completeRun(a, summary(DateTime(2026, 1, 6, 9)));

@@ -207,7 +207,9 @@ class GoalResult extends StatelessWidget {
     final t = AppText.of(context);
     final goal = formatTargetKm(goalM);
     if (achieved) {
-      return _XpRow('목표 ${goal}km 달성', '보너스 +$bonusXp');
+      // 보너스를 이미 받아 이번 증가분이 0 이어도 달성 보너스 값을 보여 준다.
+      final shown = bonusXp > 0 ? bonusXp : goalBonusXp(goalM);
+      return _XpRow('목표 ${goal}km 달성', '보너스 +$shown');
     }
     final String message;
     if (distanceM >= goalM) {

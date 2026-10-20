@@ -114,6 +114,10 @@ class _Notifier implements InstantNotifier {
     if (fails) throw StateError('알림 실패');
     shown.add((title, body));
   }
+
+  @override
+  Future<void> showGoalReached({required String title, required String body}) =>
+      showNow(title: title, body: body);
 }
 
 class _Env {

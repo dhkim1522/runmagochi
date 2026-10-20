@@ -111,12 +111,6 @@ class FakeRunRepository implements RunRepository {
   Future<void> replaceCompletedRun(String runId, RunSummary summary) =>
       throw UnimplementedError();
 
-  @override
-  Future<Map<String, DateTime>> deletedRunStarts(Set<String> ids) async => {
-    for (final id in ids)
-      if (deleted.containsKey(id)) id: deleted[id]!,
-  };
-
   /// 목록에 없지만 저장소에 행이 있는 러닝(진행 중 등).
   final Set<String> otherIds = {};
 

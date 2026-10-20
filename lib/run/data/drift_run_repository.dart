@@ -295,20 +295,6 @@ class DriftRunRepository implements RunRepository {
   }
 
   @override
-  Future<Map<String, DateTime>> deletedRunStarts(Set<String> ids) async {
-    if (ids.isEmpty) return const {};
-    final rows =
-        await (_db.select(_db.runs)..where(
-              (r) =>
-                  r.id.isIn(ids) &
-                  r.status.equals(_completed) &
-                  r.deletedAt.isNotNull(),
-            ))
-            .get();
-    return {for (final r in rows) r.id: r.startedAt.toLocal()};
-  }
-
-  @override
   Future<Set<String>> existingRunIds(Set<String> ids) async {
     if (ids.isEmpty) return const {};
     final rows = await (_db.select(

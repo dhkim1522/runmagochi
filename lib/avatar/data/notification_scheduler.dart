@@ -1,8 +1,5 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:flutter_timezone/flutter_timezone.dart';
-import 'package:timezone/data/latest_all.dart' as tzdata;
-import 'package:timezone/timezone.dart' as tz;
 
 /// 예약된 알림 취소. 이전 버전이 예약해 둔 알림을 지우는 데 쓴다.
 abstract interface class NotificationScheduler {
@@ -10,25 +7,16 @@ abstract interface class NotificationScheduler {
   Future<void> cancelScheduled();
 }
 
-/// 바로 띄우는 알림. 예: 러닝 자동 종료.
+/// 바로 띄우는 알림.
 abstract interface class InstantNotifier {
+  /// 러닝 자동 종료 알림.
   Future<void> showNow({required String title, required String body});
+
+  /// 오늘 목표 달성 알림. 자동 종료와 알림 채널을 나눠 따로 끌 수 있게 한다.
+  Future<void> showGoalReached({required String title, required String body});
 }
 
-/// 기기가 준 시간대 이름을 찾는다. 시간대 데이터는 별칭(GMT, Asia/Calcutta 등)까지
-/// 들어 있는 전체판을 쓴다. 그래도 모르는 이름이면 UTC 로 대신한다. 예약 시각은
-/// 절대 시각으로 넘기므로 UTC 여도 알림 시각은 같다.
-tz.Location resolveTimeZone(String identifier) {
-  tzdata.initializeTimeZones();
-  try {
-    return tz.getLocation(identifier);
-  } on tz.LocationNotFoundException {
-    debugPrint('알림: 시간대 "$identifier" 를 몰라 UTC 로 대신한다.');
-    return tz.UTC;
-  }
-}
-
-/// flutter_local_notifications 구현. 정확한 알람 권한 없이 inexact 로 예약한다.
+/// flutter_local_notifications 구현.
 /// 알림 권한은 페이즈 1 권한 화면(PermissionGate)이 위치 권한과 함께 요청한다.
 class LocalNotificationScheduler
     implements NotificationScheduler, InstantNotifier {
@@ -40,6 +28,15 @@ class LocalNotificationScheduler
     '러닝 자동 종료 알림',
     channelDescription: '종료를 잊은 러닝을 자동으로 마치면 알려 줘요',
   );
+
+  static const _goalChannel = AndroidNotificationDetails(
+    'run_goal',
+    '목표 달성',
+    channelDescription: '오늘 목표를 채우면 알려요',
+  );
+
+  /// 예전 버전이 만든 주간 목표 알림 채널 id.
+  static const _obsoleteChannelId = 'weekly_goal';
 
   /// 즉시 알림 번호.
   static const _instantId = 1000;
@@ -57,8 +54,6 @@ class LocalNotificationScheduler
   }
 
   Future<void> _initialize() async {
-    final zone = await FlutterTimezone.getLocalTimezone();
-    tz.setLocalLocation(resolveTimeZone(zone.identifier));
     await _plugin.initialize(
       settings: const InitializationSettings(
         android: AndroidInitializationSettings('@mipmap/ic_launcher'),
@@ -78,6 +73,13 @@ class LocalNotificationScheduler
       await _ensureInit();
       // 예약 대기 중인 것만 지운다. 이미 띄운 알림은 남는다.
       await _plugin.cancelAllPendingNotifications();
+      try {
+        await _plugin
+            .resolvePlatformSpecificImplementation<
+              AndroidFlutterLocalNotificationsPlugin
+            >()
+            ?.deleteNotificationChannel(channelId: _obsoleteChannelId);
+      } catch (_) {} // 지워질 채널이 없어도 상관없다.
     } catch (e, st) {
       debugPrint('알림: 예약 취소 실패 $e\n$st');
       rethrow;
@@ -85,16 +87,27 @@ class LocalNotificationScheduler
   }
 
   @override
-  Future<void> showNow({required String title, required String body}) async {
+  Future<void> showNow({required String title, required String body}) =>
+      _show(_runChannel, title, body);
+
+  @override
+  Future<void> showGoalReached({required String title, required String body}) =>
+      _show(_goalChannel, title, body);
+
+  Future<void> _show(
+    AndroidNotificationDetails channel,
+    String title,
+    String body,
+  ) async {
     try {
       await _ensureInit();
       await _plugin.show(
         id: _instantId,
         title: title,
         body: body,
-        notificationDetails: const NotificationDetails(
-          android: _runChannel,
-          iOS: DarwinNotificationDetails(),
+        notificationDetails: NotificationDetails(
+          android: channel,
+          iOS: const DarwinNotificationDetails(),
         ),
       );
     } catch (e, st) {
