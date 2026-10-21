@@ -8,6 +8,7 @@ import 'package:runmagochi/avatar/domain/growth_rules.dart';
 import 'package:runmagochi/core/korean.dart';
 import 'package:runmagochi/onboarding/ui/onboarding_screen.dart';
 import 'package:runmagochi/profile/app/providers.dart';
+import 'package:runmagochi/shop/app/providers.dart';
 import 'package:runmagochi/run/app/permission_gate.dart';
 import 'package:runmagochi/run/app/providers.dart';
 
@@ -25,6 +26,7 @@ void main() {
           notificationSchedulerProvider.overrideWithValue(
             FakeNotificationScheduler(),
           ),
+          shopRepositoryProvider.overrideWithValue(FakeShop()),
           growthServiceProvider.overrideWithValue(
             FakeGrowthService(growthState()),
           ),
@@ -50,6 +52,7 @@ void main() {
           notificationSchedulerProvider.overrideWithValue(
             FakeNotificationScheduler(),
           ),
+          shopRepositoryProvider.overrideWithValue(FakeShop()),
           growthServiceProvider.overrideWithValue(
             FakeGrowthService(growthState()),
           ),
@@ -91,6 +94,7 @@ void main() {
           notificationSchedulerProvider.overrideWithValue(
             FakeNotificationScheduler(),
           ),
+          shopRepositoryProvider.overrideWithValue(FakeShop()),
           growthServiceProvider.overrideWithValue(
             FakeGrowthService(growthState()),
           ),
@@ -165,6 +169,7 @@ void main() {
         runControllerProvider.overrideWith(() => controller),
         runRepositoryProvider.overrideWithValue(FakeRepo((0, 0))),
         permissionGateProvider.overrideWithValue(FakeGate(GateResult.ready)),
+        shopRepositoryProvider.overrideWithValue(FakeShop()),
         growthServiceProvider.overrideWithValue(growth),
         growthRepositoryProvider.overrideWithValue(repo),
         profileRepositoryProvider.overrideWithValue(profile),

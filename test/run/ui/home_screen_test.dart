@@ -19,6 +19,9 @@ import 'package:runmagochi/run/ui/in_run_screen.dart';
 import 'package:runmagochi/run/ui/permission_screen.dart';
 import 'package:runmagochi/run/ui/run_goal_picker.dart';
 import 'package:runmagochi/run/ui/summary_screen.dart';
+import 'package:runmagochi/shop/app/providers.dart';
+import 'package:runmagochi/shop/ui/coin_chip.dart';
+import 'package:runmagochi/shop/ui/coin_history_screen.dart';
 
 import 'fakes.dart';
 
@@ -29,6 +32,7 @@ Future<void> pumpHome(
   FakeRepo? repo,
   FakeGrowthService? growth,
   double textScale = 1,
+  int coins = 0,
 }) async {
   await tester.pumpWidget(
     ProviderScope(
@@ -42,6 +46,7 @@ Future<void> pumpHome(
           growth ?? FakeGrowthService(growthState()),
         ),
         clockProvider.overrideWithValue(() => DateTime(2026, 10, 17)),
+        shopRepositoryProvider.overrideWithValue(FakeShop(const [], coins)),
       ],
       child: MaterialApp(
         theme: appLightTheme(),
@@ -66,6 +71,17 @@ Future<void> settle(WidgetTester tester) async {
 }
 
 void main() {
+  testWidgets('코인 칩이 천 단위 쉼표 잔액을 보이고 누르면 내역을 연다', (tester) async {
+    await pumpHome(tester, FakeController(), coins: 1240);
+    await tester.pump();
+    expect(find.byType(CoinChip), findsOneWidget);
+    expect(find.text('1,240'), findsOneWidget);
+    await tester.tap(find.byType(CoinChip));
+    await tester.pump();
+    await tester.pump(const Duration(seconds: 1));
+    expect(find.byType(CoinHistoryScreen), findsOneWidget);
+  });
+
   testWidgets('아바타·레벨이 보이고 주간 목표는 없다', (tester) async {
     await pumpHome(tester, FakeController());
     await tester.pump();

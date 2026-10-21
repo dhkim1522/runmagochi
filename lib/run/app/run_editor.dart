@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../avatar/app/providers.dart';
 import '../../avatar/domain/growth_state.dart';
+import '../../shop/app/providers.dart';
 import '../domain/run_summary.dart';
 import 'providers.dart';
 
@@ -44,6 +45,8 @@ class RunEditor {
       delta = null;
     }
     _ref.invalidate(growthStateProvider);
+    _ref.invalidate(coinBalanceProvider);
+    _ref.invalidate(coinHistoryProvider);
     if (shown == null || delta == null) return (trimmed, null);
     return (trimmed, shown.revisedBy(delta));
   }

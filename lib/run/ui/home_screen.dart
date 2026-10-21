@@ -8,6 +8,9 @@ import '../../avatar/ui/avatar_view.dart';
 import '../../core/theme.dart';
 import '../../core/ui/clay.dart';
 import '../../settings/ui/settings_screen.dart';
+import '../../shop/app/providers.dart';
+import '../../shop/ui/coin_chip.dart';
+import '../../shop/ui/coin_history_screen.dart';
 import '../app/permission_gate.dart';
 import '../app/providers.dart';
 import '../domain/run_summary.dart';
@@ -98,6 +101,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   void _refreshAfterRun({double? goalM}) {
     ref.invalidate(growthStateProvider);
     ref.invalidate(lastRunGoalProvider);
+    ref.invalidate(coinBalanceProvider);
+    ref.invalidate(coinHistoryProvider);
     setState(() => _goalM = goalM ?? _goalM);
   }
 
@@ -208,6 +213,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     context,
   ).push(MaterialPageRoute<void>(builder: (_) => const SettingsScreen()));
 
+  // 상점 탭이 생기기 전까지는 코인 내역을 연다.
+  Future<void> _openCoins() => Navigator.of(
+    context,
+  ).push(MaterialPageRoute<void>(builder: (_) => const CoinHistoryScreen()));
+
   @override
   Widget build(BuildContext context) {
     final c = AppColors.of(context);
@@ -290,6 +300,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             ),
                           ),
                         ),
+                      ),
+                      Positioned(
+                        top: Gap.s2,
+                        left: Gap.s2,
+                        child: CoinChip(onTap: _openCoins),
                       ),
                       // 설정은 무대 오른쪽 위 톱니로 연다. 겹쳐 두어 홈 배치는 그대로다.
                       Positioned(

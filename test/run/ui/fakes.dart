@@ -11,6 +11,8 @@ import 'package:runmagochi/run/data/run_progress_notifier.dart';
 import 'package:runmagochi/run/data/run_repository.dart';
 import 'package:runmagochi/run/domain/run_engine.dart';
 import 'package:runmagochi/run/domain/run_summary.dart';
+import 'package:runmagochi/shop/data/shop_repository.dart';
+import 'package:runmagochi/shop/domain/catalog.dart';
 
 RunSnapshot snap(
   RunState state, {
@@ -376,4 +378,23 @@ class FakeRunProgressNotifier implements RunProgressNotifier {
     if (fails) throw StateError('알림 실패');
     warningCancels++;
   }
+}
+
+/// 잔액만 있는 상점 저장소.
+class FakeShop implements ShopRepository {
+  FakeShop([this.entries = const [], this.bal = 0]);
+  final List<CoinEntry> entries;
+  final int bal;
+  @override
+  Future<int> balance() async => bal;
+  @override
+  Future<List<CoinEntry>> coinHistory() async => entries;
+  @override
+  Future<Set<String>> ownedItemIds() async => {};
+  @override
+  Future<void> purchase(String itemId, int price) async {}
+  @override
+  Future<Equipped> equipped() async => const Equipped();
+  @override
+  Future<void> equip(ItemSlot slot, String? itemId) async {}
 }

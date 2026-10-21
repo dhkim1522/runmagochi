@@ -47,6 +47,7 @@ Future<void> settle(WidgetTester tester) async {
 }
 
 void main() {
+  coinTests();
   testWidgets('레벨업이면 경험치 행과 레벨 업 문구가 보인다', (tester) async {
     await pumpIt(tester, gain(levelAfter: 2));
     expect(find.text('달린 거리 5.02km'), findsOneWidget);
@@ -269,4 +270,65 @@ void main() {
       expect(tester.takeException(), isNull);
     });
   });
+}
+
+void coinTests() {
+  Future<void> pumpGoal(
+    WidgetTester tester,
+    GrowthGain g, {
+    bool dark = false,
+    double scale = 1,
+  }) async {
+    tester.view.physicalSize = const Size(360, 640);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: dark ? appDarkTheme() : appLightTheme(),
+        home: MediaQuery(
+          data: MediaQueryData(textScaler: TextScaler.linear(scale)),
+          child: Scaffold(
+            body: GrowthSummary(
+              kind: AvatarKind.chick,
+              gain: g,
+              distanceM: 3130,
+              goalM: 3000,
+              achieved: true,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  GrowthGain coinGain(int d, int g) => GrowthGain(
+    distanceXp: 31,
+    goalBonusXp: 15,
+    distanceCoins: d,
+    goalCoins: g,
+    levelBefore: 1,
+    levelAfter: 1,
+    stageBefore: 1,
+    stageAfter: 1,
+  );
+
+  testWidgets('거리 줄과 달성 줄 아래에 코인 줄이 보인다', (tester) async {
+    await pumpGoal(tester, coinGain(15, 15));
+    expect(find.text('경험치 +31'), findsOneWidget);
+    expect(find.text('보너스 +15'), findsOneWidget);
+    expect(find.text('코인 +15'), findsNWidgets(2));
+  });
+
+  testWidgets('코인이 0이면 코인 줄이 없다', (tester) async {
+    await pumpGoal(tester, coinGain(0, 0));
+    expect(find.textContaining('코인'), findsNothing);
+    expect(find.text('경험치 +31'), findsOneWidget);
+  });
+
+  for (final dark in [false, true]) {
+    testWidgets('360×640 글자 1.3배 ${dark ? '다크' : '라이트'} 넘침 없음', (tester) async {
+      await pumpGoal(tester, coinGain(15, 15), dark: dark, scale: 1.3);
+      expect(tester.takeException(), isNull);
+    });
+  }
 }

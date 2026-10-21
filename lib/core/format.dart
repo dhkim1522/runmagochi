@@ -39,3 +39,7 @@ String formatTargetKm(double meters) {
       .replaceFirst(RegExp(r'0+$'), '')
       .replaceFirst(RegExp(r'\.$'), '');
 }
+
+/// 천 단위 쉼표. 1240 → `1,240`.
+String formatThousands(int n) =>
+    n.toString().replaceAllMapped(RegExp(r'\B(?=(\d{3})+(?!\d))'), (_) => ',');

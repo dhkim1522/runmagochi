@@ -90,7 +90,11 @@ class _GrowthSummaryState extends State<GrowthSummary>
     final rows = Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _XpRow('달린 거리 ${formatKm(widget.distanceM)}km', '경험치 +${g.distanceXp}'),
+        _XpRow(
+          '달린 거리 ${formatKm(widget.distanceM)}km',
+          '경험치 +${g.distanceXp}',
+          coins: g.distanceCoins,
+        ),
         if (widget.excludedM > 0) ...[
           const SizedBox(height: Gap.s2),
           Text(
@@ -106,6 +110,7 @@ class _GrowthSummaryState extends State<GrowthSummary>
             excludedM: widget.excludedM,
             achieved: widget.achieved,
             bonusXp: g.goalBonusXp,
+            coins: g.goalCoins,
           ),
         ],
       ],
@@ -189,6 +194,7 @@ class GoalResult extends StatelessWidget {
     required this.excludedM,
     required this.achieved,
     required this.bonusXp,
+    this.coins = 0,
   });
 
   final double goalM;
@@ -201,6 +207,9 @@ class GoalResult extends StatelessWidget {
   final bool achieved;
   final int bonusXp;
 
+  /// 이 줄에서 받은 코인. 0 이면 코인 줄을 그리지 않는다.
+  final int coins;
+
   @override
   Widget build(BuildContext context) {
     final c = AppColors.of(context);
@@ -209,7 +218,7 @@ class GoalResult extends StatelessWidget {
     if (achieved) {
       // 보너스를 이미 받아 이번 증가분이 0 이어도 달성 보너스 값을 보여 준다.
       final shown = bonusXp > 0 ? bonusXp : goalBonusXp(goalM);
-      return _XpRow('목표 ${goal}km 달성', '보너스 +$shown');
+      return _XpRow('목표 ${goal}km 달성', '보너스 +$shown', coins: coins);
     }
     final String message;
     if (distanceM >= goalM) {
@@ -222,11 +231,12 @@ class GoalResult extends StatelessWidget {
   }
 }
 
-/// 경험치 한 줄: 흰 카드, 값은 success 색 Jua 22.
+/// 경험치 한 줄: 흰 카드, 값은 success 색 Jua 22. 코인이 있으면 값 아래에 한 줄 더한다.
 class _XpRow extends StatelessWidget {
-  const _XpRow(this.label, this.xp);
+  const _XpRow(this.label, this.xp, {this.coins = 0});
   final String label;
   final String xp;
+  final int coins;
 
   @override
   Widget build(BuildContext context) {
@@ -239,7 +249,18 @@ class _XpRow extends StatelessWidget {
         children: [
           Expanded(child: Text(label, style: t.body)),
           const SizedBox(width: Gap.s2),
-          Text(xp, style: t.titleS.copyWith(color: c.success)),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(xp, style: t.titleS.copyWith(color: c.success)),
+              if (coins > 0)
+                Text(
+                  '코인 +$coins',
+                  style: t.caption.copyWith(color: c.accentDeep),
+                ),
+            ],
+          ),
         ],
       ),
     );
