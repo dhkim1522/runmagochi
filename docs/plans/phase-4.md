@@ -111,7 +111,7 @@
   - 테스트: v4 → v5 마이그레이션 뒤 러닝·경험치 유지, 잔액 0. `setRunRewards` 두 번 불러도 행이 두 개씩 생기지 않는다, 코인 null 이면 코인 행 그대로. 구매: 잔액 100 에 120 짜리 → `InsufficientCoins`, 행 없음. 같은 아이템 두 번 → 두 번째 `AlreadyOwned`, 잔액 한 번만 줄어듦. 미보유 장착 → `NotOwned`. v4 백업 가져오기 성공, v5 왕복에 코인·보유·장착 유지.
   - 확인: `fvm flutter test test/run/data test/avatar/data test/shop test/backup`
 
-- [ ] 6. 러닝 코인 지급
+- [x] 6. 러닝 코인 지급
   - 파일: `lib/avatar/domain/growth_rules.dart`, `lib/avatar/domain/growth_state.dart`, `lib/avatar/app/growth_service.dart`, `docs/specs/game-rules.md`
   - 규칙: `int distanceCoins(double distanceM, List<Split> splits) => distanceXp(distanceM, splits) ~/ 2`, `int goalBonusCoins(double goalM) => goalBonusXp(goalM)`.
   - 서비스: `_rate(detail, {required bool coins})` 가 `setRunRewards` 를 부른다. `sync` 의 새 러닝(경험치 없는 러닝)은 `coins: true`. 잘라내기·자가 복구 재평가는 `coins: await hasRunCoins(runId)`. `GrowthGain` 에 `distanceCoins`·`goalCoins` 를 더한다(재평가는 차이).
