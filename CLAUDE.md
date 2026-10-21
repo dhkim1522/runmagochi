@@ -24,6 +24,7 @@
 - `docs/plans/` — 페이즈별 구현 계획과 진행 상태 (`/phase` 가 작성)
 - `docs/research/nrc-analysis.md` — Nike Run Club 분석 요약
 - `docs/research/market.md` — 시장조사: 유사 앱 전수 조사, 경쟁·타깃·수익화·위험, 제안
+- `docs/research/naming.md` — 앱 이름 후보 6개와 상표·스토어·도메인 검색 결과, 사람 확인 목록
 - `docs/beta.md` — 베타 배포: 서명 키, 릴리스 APK 만들기, 테스터 안내문, 의견 질문
 - `docs/tooling.md` — Claude Code 추천 플러그인 목록, 사용 시점, 기본값
 - `design/wireframes/` — 화면 콘티 10개 (MVP 6개 + 후속 범위, HTML 원본·PNG)
