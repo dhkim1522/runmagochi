@@ -136,7 +136,7 @@
   - 테스트: 경계값(4.99/5.00km, 05:59/06:00 시작, 날짜가 바뀌는 3일 연속), 빠른 구간 제외, 이미 받은 배지 제외, 최고 5km 계산.
   - 확인: `fvm flutter test test/achievement`
 
-- [ ] 8. 배지 지급
+- [x] 8. 배지 지급
   - 파일: `lib/achievement/data/badge_repository.dart`·`drift_badge_repository.dart`(새 파일), `lib/achievement/app/achievement_service.dart`(새 파일), `lib/avatar/app/growth_service.dart` 또는 동기화 호출부, `lib/avatar/domain/growth_state.dart`(`GrowthGain.newBadges`)
   - 동작: 경험치 동기화 뒤 완료 러닝 전체로 `earnedBadgeIds` 를 돌리고, 새 배지마다 한 트랜잭션으로 `Badges` 행과 `CoinTxns(reason badge, itemId = 배지 id)` 를 쓴다. 업데이트 직후 첫 동기화에서 기존 기록으로 받을 배지를 모두 준다(소급, 확인 필요). 지운 러닝은 새 판정에서 빠지지만 받은 배지·코인은 남는다. 코인 내역 문구 `배지: 첫 5km`.
   - 테스트: 첫 러닝 뒤 `first_run` 1개·코인 50, 같은 동기화 두 번 불러도 한 번, 소급 판정, 지운 뒤 유지, 백업 왕복(Task 3) 뒤 중복 없음.
