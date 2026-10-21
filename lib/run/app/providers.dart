@@ -65,8 +65,9 @@ final runNotificationActionsProvider = Provider<Stream<String>>(
   (_) => const Stream<String>.empty(),
 );
 
-/// 홈 목표 선택의 초기값(m): 가장 최근에 시작한 러닝의 목표, 없으면 3km.
-final lastRunGoalProvider = FutureProvider.autoDispose<double>(
+/// 홈 목표 선택의 초기값: 가장 최근에 시작한 러닝의 목표(종류 포함), 없으면 거리 3km.
+final lastRunGoalProvider = FutureProvider.autoDispose<RunGoal>(
   (ref) async =>
-      (await ref.read(runRepositoryProvider).lastGoal()).distanceGoalM ?? 3000,
+      await ref.read(runRepositoryProvider).lastGoal() ??
+      const DistanceGoal(3000),
 );

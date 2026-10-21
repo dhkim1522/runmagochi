@@ -160,6 +160,16 @@ void main() {
     });
   });
 
+  test('시간 목표로 시작하면 알림 본문이 남은 시간이다', () {
+    _run((async, container, progress, sampleAt) {
+      container
+          .read(runControllerProvider.notifier)
+          .start(goal: const TimeGoal(Duration(minutes: 30)));
+      async.flushMicrotasks();
+      expect(progress.shown.single.body, '목표 30분까지 30:00');
+    });
+  });
+
   test('틱마다 다시 띄우지 않고, 거리가 10m 단위로 바뀌면 3초 간격으로 갱신한다', () {
     _run((async, container, progress, sampleAt) {
       container

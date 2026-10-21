@@ -6,6 +6,7 @@ import 'package:runmagochi/avatar/domain/growth_state.dart';
 import 'package:runmagochi/avatar/ui/avatar_view.dart';
 import 'package:runmagochi/avatar/ui/growth_summary.dart';
 import 'package:runmagochi/core/theme.dart';
+import 'package:runmagochi/run/domain/run_goal.dart';
 import 'package:runmagochi/shop/app/providers.dart';
 
 import '../../run/ui/fakes.dart';
@@ -41,7 +42,8 @@ Future<void> pumpIt(WidgetTester tester, GrowthGain g) async {
             kind: AvatarKind.chick,
             gain: g,
             distanceM: 5020,
-            goalM: null,
+            goal: null,
+            movingTime: Duration.zero,
             achieved: false,
           ),
         ),
@@ -118,7 +120,8 @@ void main() {
               kind: null,
               gain: gain(stageAfter: 2),
               distanceM: 5020,
-              goalM: null,
+              goal: null,
+              movingTime: Duration.zero,
               achieved: false,
             ),
           ),
@@ -147,7 +150,8 @@ void main() {
                   kind: AvatarKind.chick,
                   gain: gain(),
                   distanceM: 5020,
-                  goalM: null,
+                  goal: null,
+                  movingTime: Duration.zero,
                   achieved: false,
                   excludedM: excludedM,
                 ),
@@ -179,7 +183,8 @@ void main() {
     Future<void> pumpGoal(
       WidgetTester tester, {
       required double distanceM,
-      required double? goalM,
+      required RunGoal? goal,
+      Duration movingTime = Duration.zero,
       required bool achieved,
       double excludedM = 0,
       int bonus = 0,
@@ -196,7 +201,8 @@ void main() {
                   kind: AvatarKind.chick,
                   gain: gain(goalBonusXp: bonus),
                   distanceM: distanceM,
-                  goalM: goalM,
+                  goal: goal,
+                  movingTime: movingTime,
                   achieved: achieved,
                   excludedM: excludedM,
                 ),
@@ -211,7 +217,7 @@ void main() {
       await pumpGoal(
         tester,
         distanceM: 5020,
-        goalM: 5000,
+        goal: const DistanceGoal(5000),
         achieved: true,
         bonus: 25,
       );
@@ -225,7 +231,7 @@ void main() {
       await pumpGoal(
         tester,
         distanceM: 5020,
-        goalM: 5000,
+        goal: const DistanceGoal(5000),
         achieved: true,
         bonus: 0,
       );
@@ -234,7 +240,12 @@ void main() {
     });
 
     testWidgets('미달이면 남은 거리를 보조 글자색으로 안내한다', (tester) async {
-      await pumpGoal(tester, distanceM: 5020, goalM: 10000, achieved: false);
+      await pumpGoal(
+        tester,
+        distanceM: 5020,
+        goal: const DistanceGoal(10000),
+        achieved: false,
+      );
       final finder = find.text('목표 10km까지 4.98km 남았어요');
       expect(finder, findsOneWidget);
       final ctx = tester.element(finder);
@@ -249,7 +260,7 @@ void main() {
       await pumpGoal(
         tester,
         distanceM: 5020,
-        goalM: 5000,
+        goal: const DistanceGoal(5000),
         achieved: false,
         excludedM: 1000,
       );
@@ -257,8 +268,33 @@ void main() {
       expect(find.textContaining('남았어요'), findsNothing);
     });
 
+    testWidgets('시간 목표 달성이면 목표 30분 달성과 보너스를 보인다', (tester) async {
+      await pumpGoal(
+        tester,
+        distanceM: 5020,
+        goal: const TimeGoal(Duration(minutes: 30)),
+        movingTime: const Duration(minutes: 31),
+        achieved: true,
+        bonus: 25,
+      );
+      expect(find.text('목표 30분 달성'), findsOneWidget);
+      expect(find.text('보너스 +25'), findsOneWidget);
+    });
+
+    testWidgets('시간 목표 미달이면 남은 시간을 안내한다', (tester) async {
+      await pumpGoal(
+        tester,
+        distanceM: 4000,
+        goal: const TimeGoal(Duration(minutes: 30)),
+        movingTime: const Duration(minutes: 25, seconds: 48),
+        achieved: false,
+      );
+      expect(find.text('목표 30분까지 4:12 남았어요'), findsOneWidget);
+      expect(find.textContaining('보너스'), findsNothing);
+    });
+
     testWidgets('목표가 없으면 목표 줄이 없다', (tester) async {
-      await pumpGoal(tester, distanceM: 5020, goalM: null, achieved: false);
+      await pumpGoal(tester, distanceM: 5020, goal: null, achieved: false);
       expect(find.textContaining('목표'), findsNothing);
       expect(find.textContaining('보너스'), findsNothing);
     });
@@ -270,7 +306,7 @@ void main() {
       await pumpGoal(
         tester,
         distanceM: 10020,
-        goalM: 10000,
+        goal: const DistanceGoal(10000),
         achieved: true,
         bonus: 50,
         scale: 1.3,
@@ -279,7 +315,7 @@ void main() {
       await pumpGoal(
         tester,
         distanceM: 5020,
-        goalM: 10000,
+        goal: const DistanceGoal(10000),
         achieved: false,
         excludedM: 1200,
         scale: 1.3,
@@ -310,7 +346,8 @@ void coinTests() {
                 kind: AvatarKind.chick,
                 gain: g,
                 distanceM: 3130,
-                goalM: 3000,
+                goal: const DistanceGoal(3000),
+                movingTime: Duration.zero,
                 achieved: true,
               ),
             ),

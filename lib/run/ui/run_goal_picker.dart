@@ -1,45 +1,82 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import '../../core/format.dart';
 import '../../core/theme.dart';
 import '../../core/ui/clay.dart';
+import '../domain/run_goal.dart';
 
 /// 바로 고르는 목표 거리(km).
 const List<int> _presetKm = [3, 5, 10];
 
-/// 직접 입력할 수 있는 목표 범위(km).
+/// 직접 입력할 수 있는 목표 거리 범위(km).
 const int minGoalKm = 3;
 const int maxGoalKm = 42;
 
-/// 홈의 "오늘 목표" 선택. 3·5·10km 알약 칩과 직접 입력 칩.
+/// 바로 고르는 목표 시간(분).
+const List<int> _presetMinutes = [20, 30, 60];
+
+/// 직접 입력할 수 있는 목표 시간 범위(분).
+const int minGoalMinutes = 15;
+const int maxGoalMinutes = 180;
+
+/// 종류를 바꿀 때 처음 골라지는 목표.
+const RunGoal _defaultDistanceGoal = DistanceGoal(3000);
+const RunGoal _defaultTimeGoal = TimeGoal(Duration(minutes: 30));
+
+/// 홈의 "오늘 목표" 선택. 위쪽에서 거리·시간을 고르고, 아래 알약 칩에서 값을 고른다.
 ///
-/// [goalM] 은 지금 고른 목표(m). 3·5·10km 가 아니면 "직접" 칩이 그 값을 보인다.
+/// [goal] 은 지금 고른 목표. 바로 고르는 값이 아니면 "직접" 칩이 그 값을 보인다.
 class RunGoalPicker extends StatelessWidget {
-  const RunGoalPicker({
-    super.key,
-    required this.goalM,
-    required this.onChanged,
-  });
+  const RunGoalPicker({super.key, required this.goal, required this.onChanged});
 
-  final double goalM;
-  final ValueChanged<double> onChanged;
+  final RunGoal goal;
+  final ValueChanged<RunGoal> onChanged;
 
-  bool get _isPreset => _presetKm.any((km) => km * 1000 == goalM);
+  bool get _isTime => goal is TimeGoal;
+
+  /// 직접 입력 칩에 보일 값. 바로 고르는 값이면 null.
+  int? get _customValue => switch (goal) {
+    DistanceGoal(:final meters) =>
+      _presetKm.any((km) => km * 1000 == meters)
+          ? null
+          : (meters / 1000).round(),
+    TimeGoal(:final time) =>
+      _presetMinutes.any((m) => m == time.inMinutes) ? null : time.inMinutes,
+  };
 
   Future<void> _pickCustom(BuildContext context) async {
-    final km = await showDialog<int>(
+    final custom = _customValue;
+    final initial = custom == null ? '' : '$custom';
+    final value = await showDialog<int>(
       context: context,
-      builder: (_) =>
-          _GoalDialog(initial: _isPreset ? '' : formatTargetKm(goalM)),
+      builder: (_) => _isTime
+          ? _GoalDialog(
+              initial: initial,
+              min: minGoalMinutes,
+              max: maxGoalMinutes,
+              unit: '분',
+            )
+          : _GoalDialog(
+              initial: initial,
+              min: minGoalKm,
+              max: maxGoalKm,
+              unit: 'km',
+            ),
     );
-    if (km != null) onChanged(km * 1000.0);
+    if (value == null) return;
+    onChanged(
+      _isTime
+          ? TimeGoal(Duration(minutes: value))
+          : DistanceGoal(value * 1000.0),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     final c = AppColors.of(context);
     final t = AppText.of(context);
+    final custom = _customValue;
+    final unit = _isTime ? '분' : 'km';
     return ClayCard(
       radius: Radii.lg,
       padding: const EdgeInsets.fromLTRB(Gap.s3, Gap.s3, Gap.s3, Gap.s3),
@@ -51,24 +88,63 @@ class RunGoalPicker extends StatelessWidget {
           const SizedBox(height: Gap.s2),
           Row(
             children: [
-              for (final km in _presetKm) ...[
-                Expanded(
-                  child: _GoalChip(
-                    label: '${km}km',
-                    semanticLabel: '목표 ${km}km',
-                    selected: km * 1000 == goalM,
-                    onTap: () => onChanged(km * 1000.0),
-                  ),
-                ),
-                const SizedBox(width: Gap.s2),
-              ],
               Expanded(
                 child: _GoalChip(
-                  label: _isPreset ? '직접' : '${formatTargetKm(goalM)}km',
-                  semanticLabel: _isPreset
+                  label: '거리',
+                  semanticLabel: '목표 종류 거리',
+                  selected: !_isTime,
+                  onTap: () {
+                    if (_isTime) onChanged(_defaultDistanceGoal);
+                  },
+                ),
+              ),
+              const SizedBox(width: Gap.s2),
+              Expanded(
+                child: _GoalChip(
+                  label: '시간',
+                  semanticLabel: '목표 종류 시간',
+                  selected: _isTime,
+                  onTap: () {
+                    if (!_isTime) onChanged(_defaultTimeGoal);
+                  },
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: Gap.s2),
+          Row(
+            children: [
+              if (_isTime)
+                for (final m in _presetMinutes) ...[
+                  Expanded(
+                    child: _GoalChip(
+                      label: '$m분',
+                      semanticLabel: '목표 $m분',
+                      selected: goal == TimeGoal(Duration(minutes: m)),
+                      onTap: () => onChanged(TimeGoal(Duration(minutes: m))),
+                    ),
+                  ),
+                  const SizedBox(width: Gap.s2),
+                ]
+              else
+                for (final km in _presetKm) ...[
+                  Expanded(
+                    child: _GoalChip(
+                      label: '${km}km',
+                      semanticLabel: '목표 ${km}km',
+                      selected: goal == DistanceGoal(km * 1000.0),
+                      onTap: () => onChanged(DistanceGoal(km * 1000.0)),
+                    ),
+                  ),
+                  const SizedBox(width: Gap.s2),
+                ],
+              Expanded(
+                child: _GoalChip(
+                  label: custom == null ? '직접' : '$custom$unit',
+                  semanticLabel: custom == null
                       ? '목표 직접 입력'
-                      : '목표 ${formatTargetKm(goalM)}km 직접 입력',
-                  selected: !_isPreset,
+                      : '목표 $custom$unit 직접 입력',
+                  selected: custom != null,
                   onTap: () => _pickCustom(context),
                 ),
               ),
@@ -139,10 +215,18 @@ class _GoalChip extends StatelessWidget {
   }
 }
 
-/// 직접 입력 창. 3~42 사이 정수만 저장할 수 있다.
+/// 직접 입력 창. [min]~[max] 사이 정수만 저장할 수 있다.
 class _GoalDialog extends StatefulWidget {
-  const _GoalDialog({required this.initial});
+  const _GoalDialog({
+    required this.initial,
+    required this.min,
+    required this.max,
+    required this.unit,
+  });
   final String initial;
+  final int min;
+  final int max;
+  final String unit;
 
   @override
   State<_GoalDialog> createState() => _GoalDialogState();
@@ -160,16 +244,17 @@ class _GoalDialogState extends State<_GoalDialog> {
   }
 
   /// 범위 안 정수면 그 값, 비었거나 밖이면 null(저장 불가).
-  int? get _km {
+  int? get _value {
     final v = int.tryParse(_controller.text.trim());
-    if (v == null || v < minGoalKm || v > maxGoalKm) return null;
+    if (v == null || v < widget.min || v > widget.max) return null;
     return v;
   }
 
   @override
   Widget build(BuildContext context) {
-    final km = _km;
-    const rangeText = '$minGoalKm~${maxGoalKm}km 사이 정수로 입력해 주세요';
+    final value = _value;
+    final rangeText =
+        '${widget.min}~${widget.max}${widget.unit} 사이 정수로 입력해 주세요';
     return AlertDialog(
       title: const Text('오늘 목표'),
       content: TextField(
@@ -178,9 +263,9 @@ class _GoalDialogState extends State<_GoalDialog> {
         keyboardType: TextInputType.number,
         inputFormatters: [FilteringTextInputFormatter.digitsOnly],
         decoration: InputDecoration(
-          suffixText: 'km',
+          suffixText: widget.unit,
           helperText: _controller.text.isEmpty ? rangeText : null,
-          errorText: km == null && _controller.text.isNotEmpty
+          errorText: value == null && _controller.text.isNotEmpty
               ? rangeText
               : null,
         ),
@@ -192,7 +277,9 @@ class _GoalDialogState extends State<_GoalDialog> {
           child: const Text('취소'),
         ),
         FilledButton(
-          onPressed: km == null ? null : () => Navigator.of(context).pop(km),
+          onPressed: value == null
+              ? null
+              : () => Navigator.of(context).pop(value),
           child: const Text('저장'),
         ),
       ],

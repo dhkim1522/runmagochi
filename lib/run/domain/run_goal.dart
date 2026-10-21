@@ -1,3 +1,5 @@
+import '../../core/format.dart';
+
 /// 러닝 시작 때 고른 오늘 목표. 거리 또는 시간 중 하나다.
 sealed class RunGoal {
   const RunGoal();
@@ -9,6 +11,12 @@ sealed class RunGoal {
     if (goalSec != null) return TimeGoal(Duration(seconds: goalSec));
     return null;
   }
+
+  /// "목표 …" 문구에 들어가는 값. 거리는 `5km`, 시간은 `30분`.
+  String get label => switch (this) {
+    DistanceGoal(:final meters) => '${formatTargetKm(meters)}km',
+    TimeGoal(:final time) => '${time.inMinutes}분',
+  };
 }
 
 /// 거리 목표. [meters] 는 미터.
@@ -42,12 +50,4 @@ final class TimeGoal extends RunGoal {
 
   @override
   String toString() => 'TimeGoal($time)';
-}
-
-/// 거리 목표일 때만 미터 값을 꺼낸다. 시간 목표·목표 없음은 null.
-extension RunGoalDistance on RunGoal? {
-  double? get distanceGoalM => switch (this) {
-    DistanceGoal(:final meters) => meters,
-    _ => null,
-  };
 }

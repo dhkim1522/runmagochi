@@ -163,7 +163,10 @@ void main() {
       final controller = container.read(runControllerProvider.notifier);
       controller.start(goal: DistanceGoal(3000));
       async.flushMicrotasks();
-      expect(container.read(runControllerProvider).goalM, 3000);
+      expect(
+        container.read(runControllerProvider).goal,
+        const DistanceGoal(3000),
+      );
       expect(container.read(runControllerProvider).goalReached, isFalse);
 
       sampleAt(const Duration(seconds: 1), 0);
@@ -243,7 +246,7 @@ void main() {
         container.read(runControllerProvider.notifier).restoreIfAny();
         async.flushMicrotasks();
         final view = container.read(runControllerProvider);
-        expect(view.goalM, 3000);
+        expect(view.goal, const DistanceGoal(3000));
         expect(view.goalReached, isTrue);
         expect(notifier.shown, isEmpty);
       },
@@ -268,7 +271,7 @@ void main() {
         container.read(runControllerProvider.notifier).restoreIfAny();
         async.flushMicrotasks();
         final view = container.read(runControllerProvider);
-        expect(view.goalM, isNull);
+        expect(view.goal, isNull);
         expect(view.goalReached, isFalse);
         expect(notifier.shown, isEmpty);
       },
@@ -375,7 +378,6 @@ void main() {
           async.elapse(const Duration(seconds: 5));
           final view = container.read(runControllerProvider);
           expect(view.goal, goal);
-          expect(view.goalM, isNull);
           expect(view.goalReached, isTrue);
           expect(notifier.shown, isEmpty);
         },

@@ -11,6 +11,7 @@ import '../../core/theme.dart';
 import '../../core/ui/clay.dart';
 import '../app/providers.dart';
 import '../domain/run_engine.dart';
+import '../domain/run_goal.dart';
 import '../domain/run_summary.dart';
 
 const Duration _stopHold = Duration(milliseconds: 1500);
@@ -151,11 +152,12 @@ class _InRunScreenState extends ConsumerState<InRunScreen> {
                               'km',
                               style: t.title.copyWith(color: c.primaryDeep),
                             ),
-                            if (view.goalM != null) ...[
+                            if (view.goal case final goal?) ...[
                               const SizedBox(height: Gap.s3),
                               _GoalRow(
-                                goalM: view.goalM!,
+                                goal: goal,
                                 distanceM: snap.distanceM,
+                                movingTime: snap.movingTime,
                                 reached: view.goalReached,
                               ),
                             ],
@@ -183,11 +185,12 @@ class _InRunScreenState extends ConsumerState<InRunScreen> {
                             'km',
                             style: t.titleS.copyWith(color: c.primaryDeep),
                           ),
-                          if (view.goalM != null) ...[
+                          if (view.goal case final goal?) ...[
                             const SizedBox(height: Gap.s2),
                             _GoalRow(
-                              goalM: view.goalM!,
+                              goal: goal,
                               distanceM: snap.distanceM,
+                              movingTime: snap.movingTime,
                               reached: view.goalReached,
                             ),
                           ],
@@ -260,14 +263,22 @@ class _InRunScreenState extends ConsumerState<InRunScreen> {
 /// 거리 아래의 오늘 목표 진행. 달성하면 "목표 달성!" 을 success 색으로 보인다.
 class _GoalRow extends StatelessWidget {
   const _GoalRow({
-    required this.goalM,
+    required this.goal,
     required this.distanceM,
+    required this.movingTime,
     required this.reached,
   });
 
-  final double goalM;
+  final RunGoal goal;
   final double distanceM;
+  final Duration movingTime;
   final bool reached;
+
+  /// 진행 막대 값. 거리 목표는 거리, 시간 목표는 움직인 시간 기준이다.
+  double get _progress => switch (goal) {
+    DistanceGoal(:final meters) => distanceM / meters,
+    TimeGoal(:final time) => movingTime.inMilliseconds / time.inMilliseconds,
+  };
 
   @override
   Widget build(BuildContext context) {
@@ -279,12 +290,12 @@ class _GoalRow extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(
-            reached ? '목표 달성!' : '목표 ${formatTargetKm(goalM)}km',
+            reached ? '목표 달성!' : '목표 ${goal.label}',
             style: t.caption.copyWith(color: reached ? c.success : c.inkMuted),
           ),
           const SizedBox(height: Gap.s1),
           ClayBar(
-            value: reached ? 1 : distanceM / goalM,
+            value: reached ? 1 : _progress,
             height: 10,
             fill: c.primary,
             track: c.surfaceSoft,

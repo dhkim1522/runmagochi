@@ -4,6 +4,7 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import '../../core/format.dart';
 import '../../core/local_notifications.dart';
 import '../domain/run_engine.dart';
+import '../domain/run_goal.dart';
 
 /// 알림 버튼이 하는 일.
 enum RunProgressAction { pause, resume }
@@ -73,7 +74,7 @@ RunProgressContent runProgressContent({
   required RunState state,
   required double distanceM,
   required Duration movingTime,
-  required double? goalM,
+  required RunGoal? goal,
   required bool goalReached,
 }) {
   final km = '${formatKm(distanceM)}km';
@@ -86,12 +87,18 @@ RunProgressContent runProgressContent({
     );
   }
   final String body;
-  if (goalM == null) {
+  if (goal == null) {
     body = '화면을 꺼도 기록이 이어져요';
   } else if (goalReached) {
-    body = '목표 ${formatTargetKm(goalM)}km 달성!';
+    body = '목표 ${goal.label} 달성!';
   } else {
-    body = '목표 ${formatTargetKm(goalM)}km까지 ${formatKm(goalM - distanceM)}km';
+    final remaining = switch (goal) {
+      DistanceGoal(:final meters) => '${formatKm(meters - distanceM)}km',
+      TimeGoal(:final time) => formatDuration(
+        time > movingTime ? time - movingTime : Duration.zero,
+      ),
+    };
+    body = '목표 ${goal.label}까지 $remaining';
   }
   if (state == RunState.paused) {
     return RunProgressContent(

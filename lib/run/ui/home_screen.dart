@@ -36,11 +36,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   int? _countdown;
   bool _starting = false;
 
-  /// 사용자가 고른 오늘 목표(m). null 이면 최근 러닝의 목표를 따른다.
-  double? _goalM;
+  /// 사용자가 고른 오늘 목표. null 이면 최근 러닝의 목표를 따른다.
+  RunGoal? _goal;
 
-  double get _shownGoalM =>
-      _goalM ?? ref.read(lastRunGoalProvider).value ?? 3000;
+  RunGoal get _shownGoal =>
+      _goal ?? ref.read(lastRunGoalProvider).value ?? const DistanceGoal(3000);
 
   @override
   void initState() {
@@ -91,20 +91,20 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         _toast('저장하지 못했어요');
       }
       if (!mounted) return;
-      final goalM = await _endedRunGoal();
+      final goal = await _endedRunGoal();
       if (!mounted) return;
-      _refreshAfterRun(goalM: goalM);
+      _refreshAfterRun(goal: goal);
     }
   }
 
   /// 러닝이 끝나 홈으로 돌아오면 성장과 최근 목표를 다시 읽는다.
-  /// [goalM] 은 방금 끝난 러닝의 목표. 칩이 다시 읽기 전 값으로 잠깐 바뀌지 않게 먼저 둔다.
-  void _refreshAfterRun({double? goalM}) {
+  /// [goal] 은 방금 끝난 러닝의 목표. 칩이 다시 읽기 전 값으로 잠깐 바뀌지 않게 먼저 둔다.
+  void _refreshAfterRun({RunGoal? goal}) {
     ref.invalidate(growthStateProvider);
     ref.invalidate(lastRunGoalProvider);
     ref.invalidate(coinBalanceProvider);
     ref.invalidate(coinHistoryProvider);
-    setState(() => _goalM = goalM ?? _goalM);
+    setState(() => _goal = goal ?? _goal);
   }
 
   Future<void> _openInRun() async {
@@ -122,15 +122,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     await _openSummary(after);
   }
 
-  /// 방금 끝난 러닝의 목표(m). 컨트롤러는 끝나면 목표를 비우므로 저장된 러닝에서 읽는다.
-  Future<double?> _endedRunGoal() async {
+  /// 방금 끝난 러닝의 목표. 컨트롤러는 끝나면 목표를 비우므로 저장된 러닝에서 읽는다.
+  Future<RunGoal?> _endedRunGoal() async {
     final runId = ref.read(runControllerProvider).lastRunId;
     if (runId == null) return null;
     try {
-      return (await ref.read(runRepositoryProvider).getRun(runId))
-          ?.run
-          .goal
-          .distanceGoalM;
+      return (await ref.read(runRepositoryProvider).getRun(runId))?.run.goal;
     } catch (_) {
       return null;
     }
@@ -147,13 +144,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       gain = null; // 성장 영역만 빼고 요약은 연다.
     }
     if (!mounted) return;
-    final goalM = await _endedRunGoal(); // 못 읽으면 목표 줄만 뺀다.
+    final goal = await _endedRunGoal(); // 못 읽으면 목표 줄만 뺀다.
     if (!mounted) return;
-    _refreshAfterRun(goalM: goalM);
+    _refreshAfterRun(goal: goal);
     await Navigator.of(context).push(
       MaterialPageRoute<void>(
         builder: (_) =>
-            SummaryScreen.fromSummary(summary, gain: gain, goalM: goalM),
+            SummaryScreen.fromSummary(summary, gain: gain, goal: goal),
       ),
     );
   }
@@ -177,9 +174,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       }
       setState(() => _countdown = null);
       try {
-        await ref
-            .read(runControllerProvider.notifier)
-            .start(goal: DistanceGoal(_shownGoalM));
+        await ref.read(runControllerProvider.notifier).start(goal: _shownGoal);
       } catch (_) {
         _toast('러닝을 시작하지 못했어요');
         return;
@@ -225,7 +220,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final t = AppText.of(context);
     final GrowthState? g = ref.watch(growthStateProvider).value;
     final equipped = ref.watch(equippedProvider).value;
-    final goalM = _goalM ?? ref.watch(lastRunGoalProvider).value ?? 3000;
+    final goal =
+        _goal ??
+        ref.watch(lastRunGoalProvider).value ??
+        const DistanceGoal(3000);
     final nextLevelKm = g == null
         ? null
         : (g.level.xpForNext - g.level.xpIntoLevel) / 10;
@@ -238,8 +236,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 RunGoalPicker(
-                  goalM: goalM,
-                  onChanged: (v) => setState(() => _goalM = v),
+                  goal: goal,
+                  onChanged: (v) => setState(() => _goal = v),
                 ),
                 const SizedBox(height: Gap.s2),
                 Expanded(

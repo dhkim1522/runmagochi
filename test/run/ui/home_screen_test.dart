@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:runmagochi/run/domain/run_goal.dart';
 import 'package:runmagochi/avatar/app/providers.dart';
 import 'package:runmagochi/avatar/domain/growth_rules.dart';
 import 'package:runmagochi/avatar/domain/growth_state.dart';
@@ -15,6 +14,7 @@ import 'package:runmagochi/run/app/permission_gate.dart';
 import 'package:runmagochi/run/app/providers.dart';
 import 'package:runmagochi/run/data/run_repository.dart';
 import 'package:runmagochi/run/domain/run_engine.dart';
+import 'package:runmagochi/run/domain/run_goal.dart';
 import 'package:runmagochi/run/domain/run_summary.dart';
 import 'package:runmagochi/run/ui/home_screen.dart';
 import 'package:runmagochi/run/ui/in_run_screen.dart';
@@ -600,6 +600,160 @@ void main() {
       expect(chipColor(tester, '10km'), primary);
     });
 
+    testWidgets('시간을 누르면 칩이 20분·30분·60분·직접으로 바뀌고 30분이 골라진다', (tester) async {
+      final c = FakeController();
+      await pumpHome(tester, c);
+      await settle(tester);
+      expect(find.text('20분'), findsNothing);
+      await tester.tap(find.text('시간'));
+      await settle(tester);
+      for (final label in ['20분', '30분', '60분', '직접']) {
+        expect(find.text(label), findsOneWidget);
+      }
+      expect(find.text('3km'), findsNothing);
+      final primary = AppColors.of(
+        tester.element(find.byType(HomeScreen)),
+      ).primary;
+      expect(chipColor(tester, '30분'), primary);
+      expect(chipColor(tester, '20분'), isNot(primary));
+      await startAndWait(tester);
+      expect(c.startGoals, [const TimeGoal(Duration(minutes: 30))]);
+    });
+
+    testWidgets('거리로 되돌리면 3km 가 골라진다', (tester) async {
+      await pumpHome(tester, FakeController());
+      await settle(tester);
+      await tester.tap(find.text('시간'));
+      await settle(tester);
+      await tester.tap(find.text('거리'));
+      await settle(tester);
+      final primary = AppColors.of(
+        tester.element(find.byType(HomeScreen)),
+      ).primary;
+      expect(chipColor(tester, '3km'), primary);
+      expect(find.text('20분'), findsNothing);
+    });
+
+    testWidgets('60분을 누르고 시작하면 시간 목표 60분으로 시작한다', (tester) async {
+      final c = FakeController();
+      await pumpHome(tester, c);
+      await settle(tester);
+      await tester.tap(find.text('시간'));
+      await settle(tester);
+      await tester.tap(find.text('60분'));
+      await tester.pump();
+      await startAndWait(tester);
+      expect(c.startGoals, [const TimeGoal(Duration(minutes: 60))]);
+    });
+
+    testWidgets('지난번 목표가 시간 20분이면 시간 선택과 20분 칩이 골라져 있다', (tester) async {
+      await pumpHome(
+        tester,
+        FakeController(),
+        repo: FakeRepo((0, 0))
+          ..lastRunGoal = const TimeGoal(Duration(minutes: 20)),
+      );
+      await settle(tester);
+      final primary = AppColors.of(
+        tester.element(find.byType(HomeScreen)),
+      ).primary;
+      expect(chipColor(tester, '20분'), primary);
+      expect(chipColor(tester, '시간'), primary);
+      expect(chipColor(tester, '거리'), isNot(primary));
+    });
+
+    testWidgets('지난번 시간 목표가 45분이면 직접 칩이 45분을 보인다', (tester) async {
+      await pumpHome(
+        tester,
+        FakeController(),
+        repo: FakeRepo((0, 0))
+          ..lastRunGoal = const TimeGoal(Duration(minutes: 45)),
+      );
+      await settle(tester);
+      expect(find.text('45분'), findsOneWidget);
+      expect(find.text('직접'), findsNothing);
+    });
+
+    testWidgets('시간 직접 입력 45 → 45분으로 시작한다', (tester) async {
+      final c = FakeController();
+      await pumpHome(tester, c);
+      await settle(tester);
+      await tester.tap(find.text('시간'));
+      await settle(tester);
+      await tester.tap(find.text('직접'));
+      await settle(tester);
+      await tester.enterText(find.byType(TextField), '45');
+      await tester.pump();
+      await tester.tap(find.text('저장'));
+      await settle(tester);
+      expect(find.text('45분'), findsOneWidget);
+      await startAndWait(tester);
+      expect(c.startGoals, [const TimeGoal(Duration(minutes: 45))]);
+    });
+
+    for (final (text, ok) in [
+      ('14', false),
+      ('181', false),
+      ('', false),
+      ('15', true),
+      ('180', true),
+    ]) {
+      testWidgets('시간 직접 입력 "$text" ${ok ? '는 저장할 수 있다' : '는 저장할 수 없다'}', (
+        tester,
+      ) async {
+        await pumpHome(tester, FakeController());
+        await settle(tester);
+        await tester.tap(find.text('시간'));
+        await settle(tester);
+        await tester.tap(find.text('직접'));
+        await settle(tester);
+        await tester.enterText(find.byType(TextField), text);
+        await tester.pump();
+        final save = tester.widget<FilledButton>(
+          find.widgetWithText(FilledButton, '저장'),
+        );
+        expect(save.onPressed == null, !ok);
+        expect(
+          find.text('15~180분 사이 정수로 입력해 주세요'),
+          ok ? findsNothing : findsWidgets,
+        );
+      });
+    }
+
+    testWidgets('러닝이 끝나 돌아오면 지난번 시간 목표를 다시 보인다', (tester) async {
+      final repo = FakeRepo((0, 0))..lastGoalM = 5000;
+      await pumpHome(tester, FakeController(), repo: repo);
+      await settle(tester);
+      await tester.tap(find.text('시간'));
+      await settle(tester);
+      await tester.tap(find.text('20분'));
+      await tester.pump();
+      await startAndWait(tester);
+      repo.lastRunGoal = const TimeGoal(Duration(minutes: 20));
+      tester.state<NavigatorState>(find.byType(Navigator)).pop();
+      await settle(tester);
+      final primary = AppColors.of(
+        tester.element(find.byType(HomeScreen)),
+      ).primary;
+      expect(chipColor(tester, '20분'), primary);
+    });
+
+    testWidgets('거리·시간 선택과 시간 칩도 높이 48 이상이다', (tester) async {
+      await pumpHome(tester, FakeController());
+      await settle(tester);
+      await tester.tap(find.text('시간'));
+      await settle(tester);
+      final handle = tester.ensureSemantics();
+      for (final label in ['목표 종류 거리', '목표 종류 시간', '목표 20분', '목표 직접 입력']) {
+        expect(
+          tester.getSize(find.bySemanticsLabel(label)).height,
+          greaterThanOrEqualTo(48),
+          reason: label,
+        );
+      }
+      handle.dispose();
+    });
+
     testWidgets('칩은 높이 48 이상이고 버튼·선택 상태로 읽힌다', (tester) async {
       await pumpHome(tester, FakeController());
       await settle(tester);
@@ -666,6 +820,47 @@ void main() {
         expect(find.text('12km'), findsOneWidget);
         expect(find.text('시작'), findsOneWidget);
       });
+
+      testWidgets(
+        '시간 목표도 360×640 글자 1.3배 ${dark ? '다크' : '라이트'} 에서 넘침 없이 그려진다',
+        (tester) async {
+          tester.view.physicalSize = const Size(360, 640);
+          tester.view.devicePixelRatio = 1;
+          addTearDown(tester.view.reset);
+          await tester.pumpWidget(
+            ProviderScope(
+              overrides: [
+                runControllerProvider.overrideWith(() => FakeController()),
+                permissionGateProvider.overrideWithValue(
+                  FakeGate(GateResult.ready),
+                ),
+                runRepositoryProvider.overrideWithValue(
+                  FakeRepo((0, 0))
+                    ..lastRunGoal = const TimeGoal(Duration(minutes: 45)),
+                ),
+                growthServiceProvider.overrideWithValue(
+                  FakeGrowthService(growthState()),
+                ),
+                clockProvider.overrideWithValue(() => DateTime(2026, 10, 17)),
+              ],
+              child: MaterialApp(
+                theme: dark ? appDarkTheme() : appLightTheme(),
+                builder: (context, child) => MediaQuery(
+                  data: MediaQuery.of(
+                    context,
+                  ).copyWith(textScaler: const TextScaler.linear(1.3)),
+                  child: child!,
+                ),
+                home: const Scaffold(body: HomeScreen()),
+              ),
+            ),
+          );
+          await settle(tester);
+          expect(tester.takeException(), isNull);
+          expect(find.text('45분'), findsOneWidget);
+          expect(find.text('시작'), findsOneWidget);
+        },
+      );
     }
   });
 }

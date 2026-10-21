@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart' hide Split;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:runmagochi/run/domain/run_goal.dart';
 import 'package:runmagochi/avatar/app/providers.dart';
 import 'package:runmagochi/avatar/domain/growth_state.dart';
 import 'package:runmagochi/core/theme.dart';
 import 'package:runmagochi/run/app/providers.dart';
 import 'package:runmagochi/run/data/run_repository.dart';
 import 'package:runmagochi/run/domain/location_sample.dart';
+import 'package:runmagochi/run/domain/run_goal.dart';
 import 'package:runmagochi/run/domain/run_summary.dart';
 import 'package:runmagochi/core/ui/clay.dart';
 import 'package:runmagochi/run/ui/split_pace_chart.dart';
@@ -260,14 +260,44 @@ void main() {
   });
 
   testWidgets('성장 반영에 실패해도(gain 없음) 목표 달성 줄은 보인다', (tester) async {
-    await pump(tester, SummaryScreen.fromSummary(_summary(), goalM: 2000));
+    await pump(
+      tester,
+      SummaryScreen.fromSummary(_summary(), goal: const DistanceGoal(2000)),
+    );
     expect(find.text('목표 2km 달성'), findsOneWidget);
     expect(find.text('보너스 +10'), findsOneWidget);
   });
 
   testWidgets('성장 반영에 실패해도(gain 없음) 목표 미달 안내는 보인다', (tester) async {
-    await pump(tester, SummaryScreen.fromSummary(_summary(), goalM: 5000));
+    await pump(
+      tester,
+      SummaryScreen.fromSummary(_summary(), goal: const DistanceGoal(5000)),
+    );
     expect(find.text('목표 5km까지 2.50km 남았어요'), findsOneWidget);
+  });
+
+  testWidgets('시간 목표를 채웠으면(gain 없음) 목표 15분 달성과 보너스가 보인다', (tester) async {
+    await pump(
+      tester,
+      SummaryScreen.fromSummary(
+        _summary(),
+        goal: const TimeGoal(Duration(minutes: 15)),
+      ),
+    );
+    expect(find.text('목표 15분 달성'), findsOneWidget);
+    expect(find.text('보너스 +15'), findsOneWidget);
+  });
+
+  testWidgets('시간 목표에 못 미치면(gain 없음) 남은 시간이 보인다', (tester) async {
+    // 움직인 시간 16:15, 목표 30분 → 13:45.
+    await pump(
+      tester,
+      SummaryScreen.fromSummary(
+        _summary(),
+        goal: const TimeGoal(Duration(minutes: 30)),
+      ),
+    );
+    expect(find.text('목표 30분까지 13:45 남았어요'), findsOneWidget);
   });
 
   testWidgets('forRun 에는 성장 영역이 없다', (tester) async {
@@ -295,7 +325,7 @@ void main() {
   });
 
   group('기록 상세의 목표 줄', () {
-    FakeRepo repoWith(double? goalM) => FakeRepo(
+    FakeRepo repoWith(RunGoal? goal) => FakeRepo(
       (0, 0),
       details: {
         'a': RunDetail(
@@ -306,7 +336,7 @@ void main() {
             distanceM: 5020,
             movingTime: const Duration(minutes: 30),
             avgPaceSecPerKm: 360,
-            goal: goalM == null ? null : DistanceGoal(goalM),
+            goal: goal,
           ),
           calories: 168,
           route: const [],
@@ -316,7 +346,11 @@ void main() {
     );
 
     testWidgets('달성이면 보너스가 보인다', (tester) async {
-      await pump(tester, const SummaryScreen.forRun('a'), repo: repoWith(5000));
+      await pump(
+        tester,
+        const SummaryScreen.forRun('a'),
+        repo: repoWith(const DistanceGoal(5000)),
+      );
       await tester.pumpAndSettle();
       expect(find.text('목표 5km 달성'), findsOneWidget);
       expect(find.text('보너스 +25'), findsOneWidget);
@@ -326,10 +360,31 @@ void main() {
       await pump(
         tester,
         const SummaryScreen.forRun('a'),
-        repo: repoWith(10000),
+        repo: repoWith(const DistanceGoal(10000)),
       );
       await tester.pumpAndSettle();
       expect(find.text('목표 10km까지 4.98km 남았어요'), findsOneWidget);
+    });
+
+    testWidgets('시간 목표 달성이면 목표 30분 달성과 보너스가 보인다', (tester) async {
+      await pump(
+        tester,
+        const SummaryScreen.forRun('a'),
+        repo: repoWith(const TimeGoal(Duration(minutes: 30))),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('목표 30분 달성'), findsOneWidget);
+      expect(find.text('보너스 +25'), findsOneWidget);
+    });
+
+    testWidgets('시간 목표 미달이면 남은 시간이 보인다', (tester) async {
+      await pump(
+        tester,
+        const SummaryScreen.forRun('a'),
+        repo: repoWith(const TimeGoal(Duration(minutes: 60))),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('목표 60분까지 30:00 남았어요'), findsOneWidget);
     });
 
     testWidgets('목표 없는 예전 러닝은 목표 줄이 없다', (tester) async {

@@ -20,7 +20,8 @@ class GrowthSummary extends StatefulWidget {
     required this.kind,
     required this.gain,
     required this.distanceM,
-    required this.goalM,
+    required this.goal,
+    required this.movingTime,
     required this.achieved,
     this.excludedM = 0,
   });
@@ -32,10 +33,13 @@ class GrowthSummary extends StatefulWidget {
   /// 방금 달린 거리(미터).
   final double distanceM;
 
-  /// 이 러닝의 오늘 목표(미터). 목표가 없는 예전 러닝은 null 이고 목표 줄을 그리지 않는다.
-  final double? goalM;
+  /// 이 러닝의 오늘 목표. 목표가 없는 예전 러닝은 null 이고 목표 줄을 그리지 않는다.
+  final RunGoal? goal;
 
-  /// [goalM] 을 채웠는가. 호출하는 쪽이 지금 거리·구간으로 [goalAchieved] 를 계산해 넘긴다.
+  /// 움직인 시간. 시간 목표의 남은 시간을 셀 때 쓴다.
+  final Duration movingTime;
+
+  /// [goal] 을 채웠는가. 호출하는 쪽이 지금 거리·구간으로 [goalAchieved] 를 계산해 넘긴다.
   final bool achieved;
 
   /// 속도 검사로 경험치에서 뺀 거리(미터). 0 이면 안내를 보이지 않는다.
@@ -105,11 +109,12 @@ class _GrowthSummaryState extends State<GrowthSummary>
             style: t.caption.copyWith(color: c.inkMuted),
           ),
         ],
-        if (widget.goalM != null) ...[
+        if (widget.goal case final goal?) ...[
           const SizedBox(height: Gap.s3),
           GoalResult(
-            goalM: widget.goalM!,
+            goal: goal,
             distanceM: widget.distanceM,
+            movingTime: widget.movingTime,
             excludedM: widget.excludedM,
             achieved: widget.achieved,
             bonusXp: g.goalBonusXp,
@@ -199,18 +204,22 @@ class _GrowthSummaryState extends State<GrowthSummary>
 class GoalResult extends StatelessWidget {
   const GoalResult({
     super.key,
-    required this.goalM,
+    required this.goal,
     required this.distanceM,
+    required this.movingTime,
     required this.excludedM,
     required this.achieved,
     required this.bonusXp,
     this.coins = 0,
   });
 
-  final double goalM;
+  final RunGoal goal;
 
   /// 기록 거리(미터). 빠른 이동 거리를 빼기 전 값.
   final double distanceM;
+
+  /// 움직인 시간. 시간 목표의 남은 시간을 셀 때 쓴다.
+  final Duration movingTime;
 
   /// 속도 검사로 뺀 거리(미터).
   final double excludedM;
@@ -224,19 +233,19 @@ class GoalResult extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = AppColors.of(context);
     final t = AppText.of(context);
-    final goal = formatTargetKm(goalM);
     if (achieved) {
       // 보너스를 이미 받아 이번 증가분이 0 이어도 달성 보너스 값을 보여 준다.
-      final shown = bonusXp > 0 ? bonusXp : goalBonusXp(DistanceGoal(goalM));
-      return _XpRow('목표 ${goal}km 달성', '보너스 +$shown', coins: coins);
+      final shown = bonusXp > 0 ? bonusXp : goalBonusXp(goal);
+      return _XpRow('목표 ${goal.label} 달성', '보너스 +$shown', coins: coins);
     }
-    final String message;
-    if (distanceM >= goalM) {
-      message = '빠른 이동을 빼면 목표에 못 미쳤어요';
-    } else {
-      final remaining = goalM - (distanceM - excludedM);
-      message = '목표 ${goal}km까지 ${formatKm(remaining)}km 남았어요';
-    }
+    final String message = switch (goal) {
+      DistanceGoal(:final meters) when distanceM >= meters =>
+        '빠른 이동을 빼면 목표에 못 미쳤어요',
+      DistanceGoal(:final meters) =>
+        '목표 ${goal.label}까지 ${formatKm(meters - (distanceM - excludedM))}km 남았어요',
+      TimeGoal(:final time) =>
+        '목표 ${goal.label}까지 ${formatDuration(time > movingTime ? time - movingTime : Duration.zero)} 남았어요',
+    };
     return Text(message, style: t.body.copyWith(color: c.inkMuted));
   }
 }

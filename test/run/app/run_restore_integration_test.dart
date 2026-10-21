@@ -139,12 +139,18 @@ void main() {
       controller.start(goal: DistanceGoal(10000));
       async.flushMicrotasks();
       h.step(20);
-      expect(h.container.read(runControllerProvider).goalM, 10000);
+      expect(
+        h.container.read(runControllerProvider).goal,
+        const DistanceGoal(10000),
+      );
 
       h.crash();
-      expect(h.container.read(runControllerProvider).goalM, isNull);
+      expect(h.container.read(runControllerProvider).goal, isNull);
       expect(restore(h), isTrue);
-      expect(h.container.read(runControllerProvider).goalM, 10000);
+      expect(
+        h.container.read(runControllerProvider).goal,
+        const DistanceGoal(10000),
+      );
       h.close();
     });
   });

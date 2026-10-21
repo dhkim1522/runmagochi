@@ -39,6 +39,7 @@ class FakeController extends RunController {
     this.endError,
     this.initialSummary,
     this.initialGoalM,
+    this.initialGoal,
     this.initialGoalReached = false,
   }) : _initial = initial ?? snap(RunState.idle);
 
@@ -48,6 +49,9 @@ class FakeController extends RunController {
   final Object? startError;
   final RunSummary? initialSummary;
   final double? initialGoalM;
+
+  /// 시간 목표 등 거리 아닌 목표를 줄 때. [initialGoalM] 보다 먼저 쓴다.
+  final RunGoal? initialGoal;
   final bool initialGoalReached;
   Object? endError;
   final List<String> calls = [];
@@ -60,7 +64,9 @@ class FakeController extends RunController {
     snapshot: _initial,
     lastError: error,
     lastSummary: initialSummary,
-    goal: initialGoalM == null ? null : DistanceGoal(initialGoalM!),
+    goal:
+        initialGoal ??
+        (initialGoalM == null ? null : DistanceGoal(initialGoalM!)),
     goalReached: initialGoalReached,
   );
 
@@ -178,8 +184,15 @@ class FakeRepo implements RunRepository {
   /// 지정하면 weeklyTotal 이 이 Completer 가 끝날 때까지 기다린다.
   Completer<void>? holdWeekly;
 
-  /// 가장 최근에 시작한 러닝의 목표(m). null 이면 없다.
-  double? lastGoalM;
+  /// 가장 최근에 시작한 러닝의 목표. null 이면 없다.
+  RunGoal? lastRunGoal;
+
+  /// 거리 목표(m)로 [lastRunGoal] 을 읽고 쓴다.
+  double? get lastGoalM => switch (lastRunGoal) {
+    DistanceGoal(:final meters) => meters,
+    _ => null,
+  };
+  set lastGoalM(double? m) => lastRunGoal = m == null ? null : DistanceGoal(m);
 
   /// 지정하면 lastGoal 이 이 Completer 가 끝날 때까지 기다린다.
   Completer<void>? holdLastGoal;
@@ -187,8 +200,7 @@ class FakeRepo implements RunRepository {
   @override
   Future<RunGoal?> lastGoal() async {
     await holdLastGoal?.future;
-    final m = lastGoalM;
-    return m == null ? null : DistanceGoal(m);
+    return lastRunGoal;
   }
 
   @override

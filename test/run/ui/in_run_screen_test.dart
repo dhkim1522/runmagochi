@@ -13,6 +13,7 @@ import 'package:runmagochi/core/theme.dart';
 import 'package:runmagochi/core/ui/clay.dart';
 import 'package:runmagochi/run/app/providers.dart';
 import 'package:runmagochi/run/domain/run_engine.dart';
+import 'package:runmagochi/run/domain/run_goal.dart';
 import 'package:runmagochi/run/ui/in_run_screen.dart';
 
 import 'fakes.dart';
@@ -24,6 +25,7 @@ Future<FakeController> open(
   Object? endError,
   FakeGrowthService? growth,
   double? goalM,
+  RunGoal? goal,
   bool goalReached = false,
 }) async {
   final controller = FakeController(
@@ -31,6 +33,7 @@ Future<FakeController> open(
     error: error,
     endError: endError,
     initialGoalM: goalM,
+    initialGoal: goal,
     initialGoalReached: goalReached,
   );
   await tester.pumpWidget(
@@ -350,6 +353,46 @@ void main() {
       expect(bar(tester).value, closeTo(0.5, 1e-9));
       expect(bar(tester).fill, AppColors.light.primary);
       expect(bar(tester).track, AppColors.light.surfaceSoft);
+    });
+
+    testWidgets('시간 목표면 목표 30분과 시간 진행 막대가 보인다', (tester) async {
+      await open(
+        tester,
+        initial: snap(
+          RunState.recording,
+          distanceM: 2500,
+          movingTime: const Duration(minutes: 15),
+        ),
+        goal: const TimeGoal(Duration(minutes: 30)),
+      );
+      expect(find.text('목표 30분'), findsOneWidget);
+      expect(bar(tester).value, closeTo(0.5, 1e-9));
+    });
+
+    testWidgets('시간 목표 일시정지 화면에도 목표 줄이 보인다', (tester) async {
+      await open(
+        tester,
+        initial: snap(RunState.paused, movingTime: const Duration(minutes: 6)),
+        goal: const TimeGoal(Duration(minutes: 30)),
+      );
+      expect(find.text('목표 30분'), findsOneWidget);
+      expect(bar(tester).value, closeTo(0.2, 1e-9));
+    });
+
+    testWidgets('시간 목표를 달성하면 목표 달성! 과 가득 찬 막대', (tester) async {
+      final c = await open(
+        tester,
+        initial: snap(
+          RunState.recording,
+          movingTime: const Duration(minutes: 30, seconds: 2),
+        ),
+        goal: const TimeGoal(Duration(minutes: 30)),
+      );
+      expect(find.text('목표 달성!'), findsNothing);
+      c.reachGoal();
+      await settle(tester);
+      expect(find.text('목표 달성!'), findsOneWidget);
+      expect(bar(tester).value, 1);
     });
 
     testWidgets('목표가 없으면 목표 행이 없다', (tester) async {

@@ -28,7 +28,7 @@ class SummaryScreen extends ConsumerStatefulWidget {
   const SummaryScreen.fromSummary(
     RunSummary this.summary, {
     this.gain,
-    this.goalM,
+    this.goal,
     super.key,
   }) : runId = null;
 
@@ -36,7 +36,7 @@ class SummaryScreen extends ConsumerStatefulWidget {
   const SummaryScreen.forRun(String this.runId, {super.key})
     : summary = null,
       gain = null,
-      goalM = null;
+      goal = null;
 
   final RunSummary? summary;
   final String? runId;
@@ -44,8 +44,8 @@ class SummaryScreen extends ConsumerStatefulWidget {
   /// 이번 러닝으로 받은 성장. 없으면 성장 영역을 그리지 않는다.
   final GrowthGain? gain;
 
-  /// 이번 러닝의 오늘 목표(m). 목표 없는 예전 러닝은 null.
-  final double? goalM;
+  /// 이번 러닝의 오늘 목표. 목표 없는 예전 러닝은 null.
+  final RunGoal? goal;
 
   @override
   ConsumerState<SummaryScreen> createState() => _SummaryScreenState();
@@ -119,22 +119,23 @@ class _SummaryScreenState extends ConsumerState<SummaryScreen> {
               gain: g,
               distanceM: s.distanceM,
               excludedM: excludedFastDistanceM(s.splits),
-              goalM: widget.goalM,
+              goal: widget.goal,
+              movingTime: s.movingTime,
               // 잘라낸 뒤의 거리·구간으로 다시 판정한다.
               achieved:
-                  widget.goalM != null &&
+                  widget.goal != null &&
                   goalAchieved(
                     distanceM: s.distanceM,
                     splits: s.splits,
                     movingTime: s.movingTime,
-                    goal: DistanceGoal(widget.goalM!),
+                    goal: widget.goal!,
                   ),
             );
       body = _SummaryBody(
         growth: growth,
         // 성장 반영에 실패해도 목표 결과는 보여 준다.
         goal: g == null
-            ? _goalResult(widget.goalM, s.distanceM, s.splits, s.movingTime)
+            ? _goalResult(widget.goal, s.distanceM, s.splits, s.movingTime)
             : null,
         name: s.name,
         startedAt: s.startedAt,
@@ -275,33 +276,30 @@ class _DeleteRunButtonState extends ConsumerState<_DeleteRunButton> {
 }
 
 /// 기록에서 연 상세의 목표 결과. 목표 없는 예전 러닝은 줄이 없다.
-Widget? _detailGoal(RunDetail d) => _goalResult(
-  d.run.goal.distanceGoalM,
-  d.run.distanceM,
-  d.splits,
-  d.run.movingTime,
-);
+Widget? _detailGoal(RunDetail d) =>
+    _goalResult(d.run.goal, d.run.distanceM, d.splits, d.run.movingTime);
 
 /// 저장된 거리·구간으로 다시 판정한 목표 결과 줄. 목표가 없으면 null.
 Widget? _goalResult(
-  double? goalM,
+  RunGoal? goal,
   double distanceM,
   List<Split> splits,
   Duration movingTime,
 ) {
-  if (goalM == null) return null;
+  if (goal == null) return null;
   final achieved = goalAchieved(
     distanceM: distanceM,
     splits: splits,
     movingTime: movingTime,
-    goal: DistanceGoal(goalM),
+    goal: goal,
   );
   return GoalResult(
-    goalM: goalM,
+    goal: goal,
     distanceM: distanceM,
+    movingTime: movingTime,
     excludedM: excludedFastDistanceM(splits),
     achieved: achieved,
-    bonusXp: achieved ? goalBonusXp(DistanceGoal(goalM)) : 0,
+    bonusXp: achieved ? goalBonusXp(goal) : 0,
   );
 }
 

@@ -8,6 +8,7 @@ import 'package:runmagochi/core/theme.dart';
 import 'package:runmagochi/run/app/providers.dart';
 import 'package:runmagochi/run/app/run_editor.dart';
 import 'package:runmagochi/run/domain/location_sample.dart';
+import 'package:runmagochi/run/domain/run_goal.dart';
 import 'package:runmagochi/run/domain/run_summary.dart';
 import 'package:runmagochi/run/domain/run_trim.dart';
 import 'package:runmagochi/run/ui/summary_screen.dart';
@@ -205,7 +206,7 @@ void main() {
       tester,
       SummaryScreen.fromSummary(
         _summary(),
-        goalM: 50,
+        goal: const DistanceGoal(50),
         gain: const GrowthGain(
           distanceXp: 7,
           goalBonusXp: 25,

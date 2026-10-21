@@ -75,9 +75,6 @@ class RunViewState {
   /// 진행 중 러닝의 오늘 목표. 러닝 중·복원 때만 채우고 목표 없는 옛 러닝은 null.
   final RunGoal? goal;
 
-  /// 거리 목표일 때의 미터 값. 시간 목표·목표 없음은 null.
-  double? get goalM => goal.distanceGoalM;
-
   /// 목표에 닿았다(거리 목표는 기록 거리, 시간 목표는 움직인 시간). 목표가 없으면 항상 false.
   final bool goalReached;
 }
@@ -743,7 +740,7 @@ class RunController extends Notifier<RunViewState> {
                 state: snapshot.state,
                 distanceM: snapshot.distanceM,
                 movingTime: snapshot.movingTime,
-                goalM: _goal.distanceGoalM,
+                goal: _goal,
                 goalReached: _goalReached,
               ),
             )

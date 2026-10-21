@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:runmagochi/run/domain/run_goal.dart';
 import 'package:runmagochi/core/theme.dart';
 import 'package:runmagochi/run/app/providers.dart';
 import 'package:runmagochi/run/data/run_repository.dart';
+import 'package:runmagochi/run/domain/run_goal.dart';
 import 'package:runmagochi/shop/app/providers.dart';
 import 'package:runmagochi/shop/data/shop_repository.dart';
 import 'package:runmagochi/shop/ui/coin_chip.dart';
@@ -21,7 +21,7 @@ CoinEntry _e(int amount, String reason, String? runId, DateTime at) =>
       at: at,
     );
 
-RunDetail _detail(String id, double distanceM, double? goalM) => RunDetail(
+RunDetail _detail(String id, double distanceM, RunGoal? goal) => RunDetail(
   run: RunListItem(
     id: id,
     name: id,
@@ -29,7 +29,7 @@ RunDetail _detail(String id, double distanceM, double? goalM) => RunDetail(
     distanceM: distanceM,
     movingTime: const Duration(minutes: 20),
     avgPaceSecPerKm: 360,
-    goal: goalM == null ? null : DistanceGoal(goalM),
+    goal: goal,
   ),
   calories: 0,
   route: const [],
@@ -80,7 +80,10 @@ void main() {
   });
 
   group('내역', () {
-    final repo = FakeRepo((0, 0), details: {'r1': _detail('r1', 3130, 3000)});
+    final repo = FakeRepo(
+      (0, 0),
+      details: {'r1': _detail('r1', 3130, const DistanceGoal(3000))},
+    );
     final entries = [
       CoinEntry(
         amount: -100,
@@ -119,6 +122,22 @@ void main() {
       expect(colorOf('−100'), c.ink);
       final top = tester.getTopLeft(find.text('러닝 캡 구매')).dy;
       expect(top, lessThan(tester.getTopLeft(find.text('러닝 3.13km')).dy));
+    });
+
+    testWidgets('시간 목표 달성 줄은 목표 30분 달성이다', (tester) async {
+      final repo = FakeRepo(
+        (0, 0),
+        details: {
+          't1': _detail('t1', 4000, const TimeGoal(Duration(minutes: 30))),
+        },
+      );
+      await pump(
+        tester,
+        const CoinHistoryScreen(),
+        FakeShop([_e(25, 'runGoal', 't1', DateTime(2026, 10, 17, 17, 51))]),
+        repo: repo,
+      );
+      expect(find.text('목표 30분 달성'), findsOneWidget);
     });
 
     testWidgets('비면 안내 문구', (tester) async {
