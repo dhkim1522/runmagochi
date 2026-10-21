@@ -16,6 +16,7 @@ import 'package:runmagochi/run/data/run_progress_notifier.dart';
 import 'package:runmagochi/run/data/run_repository.dart';
 import 'package:runmagochi/run/domain/location_sample.dart';
 import 'package:runmagochi/run/domain/run_summary.dart';
+import '../ui/fakes.dart' show FakeSpeaker;
 
 const _lat0 = 37.5;
 const _lng0 = 127.0;
@@ -58,6 +59,8 @@ class _Repo implements RunRepository {
 class _Profile implements ProfileRepository {
   @override
   Future<double?> weightKg() async => null;
+  @override
+  Future<bool> voiceGuide() async => false;
   @override
   dynamic noSuchMethod(Invocation invocation) =>
       throw UnimplementedError('${invocation.memberName}');
@@ -128,6 +131,7 @@ void _run(
     final progress = _Progress()..fails = fails;
     final container = ProviderContainer(
       overrides: [
+        speakerProvider.overrideWithValue(FakeSpeaker()),
         runRepositoryProvider.overrideWithValue(_Repo()),
         profileRepositoryProvider.overrideWithValue(_Profile()),
         locationSourceProvider.overrideWithValue(location),

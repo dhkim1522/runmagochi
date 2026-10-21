@@ -10,7 +10,7 @@ import 'package:runmagochi/profile/app/providers.dart';
 import 'package:runmagochi/profile/data/drift_profile_repository.dart';
 import 'package:runmagochi/run/app/app_lifecycle.dart';
 import 'package:runmagochi/run/app/providers.dart';
-import '../ui/fakes.dart' show FakeRunProgressNotifier;
+import '../ui/fakes.dart' show FakeRunProgressNotifier, FakeSpeaker;
 import 'package:runmagochi/run/data/app_database.dart';
 import 'package:runmagochi/run/data/drift_run_repository.dart';
 import 'package:runmagochi/run/data/location_source.dart';
@@ -49,6 +49,7 @@ class _Harness {
     location = _FakeLocationSource();
     container = ProviderContainer(
       overrides: [
+        speakerProvider.overrideWithValue(FakeSpeaker()),
         runRepositoryProvider.overrideWithValue(repository),
         profileRepositoryProvider.overrideWithValue(DriftProfileRepository(db)),
         runProgressNotifierProvider.overrideWithValue(

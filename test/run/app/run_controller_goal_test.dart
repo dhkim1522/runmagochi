@@ -11,7 +11,7 @@ import 'package:runmagochi/profile/app/providers.dart';
 import 'package:runmagochi/profile/data/profile_repository.dart';
 import 'package:runmagochi/run/app/app_lifecycle.dart';
 import 'package:runmagochi/run/app/providers.dart';
-import '../ui/fakes.dart' show FakeRunProgressNotifier;
+import '../ui/fakes.dart' show FakeRunProgressNotifier, FakeSpeaker;
 import 'package:runmagochi/run/data/location_source.dart';
 import 'package:runmagochi/run/data/run_repository.dart';
 import 'package:runmagochi/run/domain/location_sample.dart';
@@ -68,6 +68,8 @@ class _Profile implements ProfileRepository {
   @override
   Future<double?> weightKg() async => null;
   @override
+  Future<bool> voiceGuide() async => false;
+  @override
   dynamic noSuchMethod(Invocation invocation) =>
       throw UnimplementedError('${invocation.memberName}');
 }
@@ -117,6 +119,7 @@ void _run(
     final notifier = _Notifier()..fails = notifierFails;
     final container = ProviderContainer(
       overrides: [
+        speakerProvider.overrideWithValue(FakeSpeaker()),
         runRepositoryProvider.overrideWithValue(repo),
         profileRepositoryProvider.overrideWithValue(_Profile()),
         runProgressNotifierProvider.overrideWithValue(
