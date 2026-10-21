@@ -46,6 +46,60 @@ SplitPacePainter? _painter(WidgetTester tester) {
 }
 
 void main() {
+  const bar = Color(0xFFF97316);
+  const fast = Color(0xFF9A3412);
+  PaceLayout layout(List<Split> sp, double? avg) => layoutPaceBars(
+    splits: sp,
+    avgPaceSecPerKm: avg,
+    plotH: 100,
+    barColor: bar,
+    fastColor: fast,
+  );
+
+  test('빠른 구간일수록 막대가 길다', () {
+    final l = layout([_s(1, 300), _s(2, 360), _s(3, 450)], 360);
+    expect(l.bars[0].height, 100);
+    expect(l.bars[0].height, greaterThan(l.bars[1].height));
+    expect(l.bars[1].height, greaterThan(l.bars[2].height));
+    expect(l.bars[2].height, closeTo(100 * 300 / 450, 1e-9));
+  });
+
+  test('평균선 y 는 알려진 입력에서 정확하고 가장 빠른·느린 막대 사이', () {
+    final l = layout([_s(1, 300), _s(2, 450)], 360);
+    // 속도 비 300/360 = 0.8333 -> 막대 높이 83.33, y = 100 - 83.33.
+    expect(l.avgLineY, closeTo(100 - 100 * 300 / 360, 1e-9));
+    expect(l.avgLineY, lessThan(100 - l.bars[1].height + 100)); // 안전 상한
+    expect(l.avgLineY, greaterThan(100 - l.bars[0].height));
+    expect(l.avgLineY, lessThan(100 - l.bars[1].height));
+    expect(layout([_s(1, 300), _s(2, 450)], null).avgLineY, isNull);
+  });
+
+  test('마지막 짧은 구간은 알파 0.4, 빠른 구간은 inkMuted', () {
+    final l = layout([_s(1, 300), _s(2, 140), _s(3, 150, 500)], 300);
+    expect(l.bars[0].color, bar);
+    expect(l.bars[1].color, fast);
+    expect(l.bars[2].color.a, closeTo(0.4, 0.01));
+    expect(l.bars[2].color.toARGB32() & 0xFFFFFF, bar.toARGB32() & 0xFFFFFF);
+  });
+
+  test('시간 0 구간은 최소 높이의 muted 막대로 그리고 다른 막대를 줄이지 않는다', () {
+    final l = layout([_s(1, 300), _s(2, 0)], 300);
+    expect(l.bars[1].height, 3);
+    expect(l.bars[1].color, fast);
+    expect(l.bars[0].height, 100);
+  });
+
+  test('라벨은 칸이 좁으면 건너뛴다', () {
+    expect(paceLabelStep(100, 10), 1);
+    expect(paceLabelStep(360 / 21, 20), greaterThan(1));
+  });
+
+  testWidgets('구간 21개, 글자 1.3배에서도 오류 없음', (tester) async {
+    await _pump(tester, [for (var i = 1; i <= 21; i++) _s(i, 360)], scale: 1.3);
+    expect(_painter(tester)!.splits, hasLength(21));
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('막대 수 = 구간 수, 마지막 짧은 구간도 포함', (tester) async {
     await _pump(tester, [_s(1, 385), _s(2, 390), _s(3, 200, 500)]);
     expect(_painter(tester)!.splits, hasLength(3));

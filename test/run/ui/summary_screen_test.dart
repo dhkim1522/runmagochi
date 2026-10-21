@@ -55,6 +55,31 @@ Future<void> pump(WidgetTester tester, Widget screen, {FakeRepo? repo}) async {
 }
 
 void main() {
+  testWidgets('구간이 1개면 그래프가 없다', (tester) async {
+    tester.view.physicalSize = const Size(800, 2400);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    final s = _summary();
+    await pump(
+      tester,
+      SummaryScreen.fromSummary(
+        RunSummary(
+          startedAt: s.startedAt,
+          endedAt: s.endedAt,
+          distanceM: 1000,
+          movingTime: const Duration(minutes: 6),
+          avgPaceSecPerKm: 385,
+          calories: 60,
+          name: s.name,
+          splits: [_splits.first],
+          points: s.points,
+        ),
+      ),
+    );
+    expect(find.byType(SplitPaceChart), findsNothing);
+    expect(find.byKey(const ValueKey('split-row')), findsOneWidget);
+  });
+
   testWidgets('요약 화면에 구간 행 수 = splits 수', (tester) async {
     tester.view.physicalSize = const Size(800, 2400);
     tester.view.devicePixelRatio = 1;
