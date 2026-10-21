@@ -6,7 +6,7 @@
 - `png/` — 화면 이미지 (390×844, 2배 해상도).
 - 편집용 캔버스: [claude.ai 디자인 캔버스](https://claude.ai/artifact/GGgUf6VGKuK3AkSRxrEnoQ)
 
-| 1 홈 | 2 목표 선택 | 3 러닝 중 | 4 일시정지 | 5 러닝 요약 |
+| 1 홈 | 2 목표 직접 입력 | 3 러닝 중 | 4 일시정지 | 5 러닝 요약 |
 | --- | --- | --- | --- | --- |
 | ![](png/01-main.png) | ![](png/02-goal.png) | ![](png/03-inrun.png) | ![](png/04-paused.png) | ![](png/05-summary.png) |
 
