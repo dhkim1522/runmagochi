@@ -66,7 +66,7 @@
 
 ### B. 자동 일시정지와 종료 예고 (F4, 결정 0020)
 
-- [ ] 3. 기록 엔진 자동 일시정지·재개
+- [x] 3. 기록 엔진 자동 일시정지·재개
   - 파일: `lib/run/domain/run_engine.dart`, `lib/run/app/run_controller.dart`, `lib/run/ui/in_run_screen.dart`, `lib/backup/app/providers.dart`
   - 인터페이스:
     - `RunState.autoPaused`
