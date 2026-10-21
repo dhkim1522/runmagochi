@@ -55,10 +55,14 @@ abstract interface class RunProgressNotifier {
   Future<void> cancelEndWarning();
 }
 
+/// 사용자 일시정지 종료 예고 문구. 알림과 음성 안내가 같이 쓴다.
+const String pausedEndWarningTitle = '일시정지가 길어 러닝을 마쳐요';
+const String pausedEndWarningBody = '30초 안에 재개를 누르세요';
+
 /// 종료 예고 알림 문구. 자동 일시정지는 움직여도 풀리지만 사용자 일시정지는 재개만 푼다.
 ({String title, String body}) endWarningContent({required bool paused}) =>
     paused
-    ? (title: '일시정지가 길어 러닝을 마쳐요', body: '30초 안에 재개를 누르세요')
+    ? (title: pausedEndWarningTitle, body: pausedEndWarningBody)
     : (title: '움직이지 않으면 러닝을 마쳐요', body: '30초 안에 움직이거나 재개를 누르세요');
 
 /// 종료 예고 알림이 스스로 사라질 때까지의 밀리초. 끝날 시각까지 남은 시간에

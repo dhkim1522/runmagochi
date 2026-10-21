@@ -683,7 +683,9 @@ class RunController extends Notifier<RunViewState> {
     state = _copyState(snapshot: snapshot, runId: _runId, clearError: clear);
     if (reachedNow) {
       _notifyGoalReached(goal);
-      _speak(VoiceGoalReached(goal));
+      // 같은 경계에서 닿은 구간 안내(엔진 사건, 비동기 전달)를 먼저 읽도록
+      // 한 박자 미룬다.
+      scheduleMicrotask(() => _speak(VoiceGoalReached(goal)));
     }
     _updateProgress(snapshot);
     _syncEndWarning(engine);
@@ -716,7 +718,12 @@ class RunController extends Notifier<RunViewState> {
       } else {
         if (!shown) {
           final left = deadline.difference(ref.read(clockProvider)());
-          _speak(VoiceEndWarning((left.inMilliseconds / 1000).ceil()));
+          _speak(
+            VoiceEndWarning(
+              (left.inMilliseconds / 1000).ceil(),
+              paused: engine.state == RunState.paused,
+            ),
+          );
         }
         unawaited(
           notifier

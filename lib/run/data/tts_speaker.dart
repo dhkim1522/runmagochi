@@ -3,9 +3,10 @@ import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart' show debugPrint, kIsWeb;
 import 'package:flutter_tts/flutter_tts.dart';
 
-/// 문장을 소리 내어 읽는 곳. 구현은 기기 음성 합성(TTS)이다.
+/// 문장을 소리 내어 읽는 곳. [speak] 는 다 읽은 뒤 끝난다. 구현은 기기 음성 합성(TTS)이다.
 abstract interface class Speaker {
-  /// [text] 를 읽는다. 앞 문장이 남아 있으면 끊고 이 문장을 읽는다.
+  /// [text] 를 읽고 읽기가 끝나면 완료한다. 겹쳐 부르면 앞 문장이 끊길 수 있으므로
+  /// 부르는 쪽(VoiceGuide)이 한 줄씩 부른다.
   Future<void> speak(String text);
 }
 
@@ -28,7 +29,15 @@ class TtsSpeaker implements Speaker {
       }
     }
 
-    await step('언어', () => _tts.setLanguage('ko-KR'));
+    try {
+      // 한국어 음성이 없으면 성공(1)이 아닌 값이 온다. 영어 음성으로 읽지 않게 로그로 남긴다.
+      final result = await _tts.setLanguage('ko-KR');
+      if (result != 1) debugPrint('음성 안내: 한국어(ko-KR) 설정 실패 $result');
+    } catch (e) {
+      debugPrint('음성 안내: 언어 설정 실패 $e');
+    }
+    // 다 읽어야 speak 가 끝나 VoiceGuide 가 문구를 한 줄씩 읽는다.
+    await step('읽기 완료 대기', () => _tts.awaitSpeakCompletion(true));
     if (kIsWeb) return;
     if (Platform.isIOS) {
       // 재생 범주에서 다른 앱 소리를 줄이고, 다 읽으면 되돌린다.
@@ -43,6 +52,8 @@ class TtsSpeaker implements Speaker {
     } else if (Platform.isAndroid) {
       // 내비게이션 안내 용도의 오디오 속성: 음악은 작아졌다 돌아온다.
       await step('오디오 속성', _tts.setAudioAttributesForNavigation);
+      // 1 = QUEUE_ADD: 앞 문장을 끊지 않고 뒤에 잇는다.
+      await step('큐 모드', () => _tts.setQueueMode(1));
     }
   }
 

@@ -1,3 +1,4 @@
+import 'package:fake_async/fake_async.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:runmagochi/run/app/voice_guide.dart';
 import 'package:runmagochi/run/domain/run_goal.dart';
@@ -55,6 +56,10 @@ void main() {
       expect(voiceLine(const VoiceAutoPaused()), '일시정지했어요');
       expect(voiceLine(const VoiceAutoResumed()), '다시 기록해요');
       expect(voiceLine(const VoiceEndWarning(30)), '움직이지 않으면 30초 뒤 러닝을 마쳐요');
+      expect(
+        voiceLine(const VoiceEndWarning(30, paused: true)),
+        '일시정지가 길어 러닝을 마쳐요. 30초 안에 재개를 누르세요',
+      );
       expect(voiceLine(const VoiceEndWarning(0)), isNull);
     });
   });
@@ -76,6 +81,30 @@ void main() {
         enabled: () async => false,
       ).say(const VoiceStart());
       expect(speaker.spoken, isEmpty);
+    });
+
+    test('문구는 부른 순서대로 한 줄씩 읽고 서로 끊지 않는다', () {
+      fakeAsync((async) {
+        final speaker = FakeSpeaker()..speakTime = const Duration(seconds: 2);
+        final guide = VoiceGuide(speaker: speaker, enabled: () async => true);
+        guide.say(const VoiceStart());
+        guide.say(const VoiceAutoPaused());
+        guide.say(const VoiceAutoResumed());
+        async.elapse(const Duration(seconds: 10));
+        expect(speaker.spoken, ['러닝을 시작해요', '일시정지했어요', '다시 기록해요']);
+        expect(speaker.cutOff, isEmpty);
+      });
+    });
+
+    test('읽기 끝 신호가 오지 않아도 15초 뒤 다음 문구를 읽는다', () {
+      fakeAsync((async) {
+        final speaker = FakeSpeaker()..speakTime = const Duration(minutes: 5);
+        final guide = VoiceGuide(speaker: speaker, enabled: () async => true);
+        guide.say(const VoiceStart());
+        guide.say(const VoiceAutoPaused());
+        async.elapse(const Duration(seconds: 16));
+        expect(speaker.spoken, ['러닝을 시작해요', '일시정지했어요']);
+      });
     });
 
     test('읽기 실패와 켜짐 확인 실패는 던지지 않는다', () async {

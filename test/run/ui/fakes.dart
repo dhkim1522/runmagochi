@@ -456,14 +456,38 @@ class FakeShop implements ShopRepository {
   }
 }
 
-/// 음성 안내 가짜. 읽은 문장을 모으고, [fails] 면 읽기가 실패한다.
+/// 음성 안내 가짜. 읽기 시작한 문장을 [spoken] 에 모으고, [fails] 면 읽기가 실패한다.
+/// [speakTime] 이 0 보다 크면 그 시간 동안 읽는 중이고, 그 사이 다음 문장을 부르면
+/// 앞 문장은 끊긴 것으로 [cutOff] 에 남는다(실제 TTS 의 flush 동작).
 class FakeSpeaker implements Speaker {
   final spoken = <String>[];
+  final cutOff = <String>[];
   bool fails = false;
+  Duration speakTime = Duration.zero;
+
+  String? _current;
+  Timer? _timer;
+  Completer<void>? _done;
 
   @override
   Future<void> speak(String text) async {
     if (fails) throw StateError('TTS 실패');
+    if (_current != null) {
+      cutOff.add(_current!);
+      _timer?.cancel();
+      _done?.complete();
+    }
     spoken.add(text);
+    if (speakTime == Duration.zero) {
+      _current = null;
+      return;
+    }
+    _current = text;
+    final done = _done = Completer<void>();
+    _timer = Timer(speakTime, () {
+      _current = null;
+      done.complete();
+    });
+    await done.future;
   }
 }

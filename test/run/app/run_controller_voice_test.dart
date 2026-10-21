@@ -195,9 +195,64 @@ void main() {
       sampleAt(const Duration(seconds: 301), 1005);
       sampleAt(const Duration(seconds: 401), 1300);
       async.elapse(const Duration(seconds: 3));
-      expect(speaker.spoken.where((s) => s.startsWith('목표')), [
+      expect(speaker.spoken, [
+        '러닝을 시작해요',
+        startsWith('1킬로미터. 시간 '),
         '목표 1킬로미터를 채웠어요',
       ]);
+    });
+  });
+
+  test('1km 경계에서 목표를 채우면 구간 안내 다음에 목표 안내를 끊김 없이 읽는다', () {
+    _run((async, container, speaker, profile, sampleAt) {
+      speaker.speakTime = const Duration(seconds: 2);
+      container
+          .read(runControllerProvider.notifier)
+          .start(goal: const DistanceGoal(1000));
+      async.flushMicrotasks();
+      sampleAt(const Duration(seconds: 1), 0);
+      sampleAt(const Duration(seconds: 301), 1005);
+      async.elapse(const Duration(seconds: 6));
+      expect(speaker.spoken, [
+        '러닝을 시작해요',
+        startsWith('1킬로미터. 시간 '),
+        '목표 1킬로미터를 채웠어요',
+      ]);
+      expect(speaker.cutOff, isEmpty);
+    });
+  });
+
+  test('자동 일시정지 안내 다음 종료 예고도 끊기지 않는다', () {
+    _run((async, container, speaker, profile, sampleAt) {
+      speaker.speakTime = const Duration(seconds: 2);
+      container
+          .read(runControllerProvider.notifier)
+          .start(goal: const DistanceGoal(5000));
+      async.flushMicrotasks();
+      sampleAt(const Duration(seconds: 1), 0);
+      sampleAt(const Duration(seconds: 11), 30);
+      async.elapse(const Duration(minutes: 5, seconds: 30));
+      expect(speaker.spoken, ['러닝을 시작해요', '일시정지했어요', '움직이지 않으면 30초 뒤 러닝을 마쳐요']);
+      expect(speaker.cutOff, isEmpty);
+    });
+  });
+
+  test('사용자 일시정지·재개는 말하지 않고, 길어지면 재개 안내로 종료 예고를 읽는다', () {
+    _run((async, container, speaker, profile, sampleAt) {
+      final controller = container.read(runControllerProvider.notifier);
+      controller.start(goal: const DistanceGoal(5000));
+      async.flushMicrotasks();
+      sampleAt(const Duration(seconds: 1), 0);
+      sampleAt(const Duration(seconds: 6), 15);
+      controller.pause();
+      async.flushMicrotasks();
+      controller.resume();
+      async.flushMicrotasks();
+      expect(speaker.spoken, ['러닝을 시작해요']);
+
+      controller.pause();
+      async.elapse(const Duration(hours: 1, seconds: 5));
+      expect(speaker.spoken, ['러닝을 시작해요', '일시정지가 길어 러닝을 마쳐요. 30초 안에 재개를 누르세요']);
     });
   });
 
