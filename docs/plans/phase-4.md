@@ -169,7 +169,7 @@
 
 ### F. 문서
 
-- [ ] 11. 문서·시안 반영
+- [x] 11. 문서·시안 반영
   - 파일: `docs/architecture.md`(데이터 모델 CoinTxn·OwnedItem·장착, 로컬 알림 줄), `docs/screens.md`(상점 화면·탭 4개·코인), `docs/specs/game-rules.md`, `docs/specs/sprite-spec.md`, `design/mockups/README.md`(구현 메모), `design/mockups/phase-4-screens/*.png`(E2E 스크린샷), `HANDOFF.md`
   - 확인: 문서에 "코인 (후속)"·"10분" 무점 종료 설명이 남아 있지 않다.
 
