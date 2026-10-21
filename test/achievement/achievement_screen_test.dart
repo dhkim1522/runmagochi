@@ -153,6 +153,30 @@ void main() {
   });
 
   for (final dark in [false, true]) {
+    testWidgets('다음 배지 막대 트랙이 카드와 다른 색이다 (다크 $dark)', (tester) async {
+      await _pump(
+        tester,
+        runs: [_run(4000)],
+        earned: [_earned('first_run')],
+        dark: dark,
+      );
+      final colors = dark ? AppColors.dark : AppColors.light;
+      final bar = tester.widget<ColoredBox>(
+        find.descendant(
+          of: find.byKey(const ValueKey('next-badge-bar')),
+          matching: find.byType(ColoredBox),
+        ),
+      );
+      expect(bar.color, colors.surfaceSoft);
+      expect(bar.color, isNot(colors.surface));
+      final locked = tester.widget<Container>(
+        find.byKey(const ValueKey('badge-locked-dist_10k')),
+      );
+      final deco = locked.decoration! as BoxDecoration;
+      expect(deco.color, colors.surfaceSoft);
+      expect((deco.border! as Border).top.color, colors.line);
+    });
+
     testWidgets('360×640 글자 1.3배에서 넘치지 않는다 (다크 $dark)', (tester) async {
       await _pump(
         tester,

@@ -186,6 +186,9 @@ class _BadgeIcon extends StatelessWidget {
         decoration: BoxDecoration(
           shape: BoxShape.circle,
           color: earned ? c.primary : c.surfaceSoft,
+          border: earned
+              ? null
+              : Border.all(color: c.line, width: Borders.thick),
         ),
         child: Icon(
           _iconFor(id),
@@ -292,7 +295,7 @@ class _NextBadgeCard extends StatelessWidget {
               value: p.ratio,
               height: 14,
               fill: c.primary,
-              track: c.surface,
+              track: c.surfaceSoft,
             ),
             const SizedBox(height: 6),
             Text(

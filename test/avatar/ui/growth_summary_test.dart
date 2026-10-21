@@ -88,6 +88,40 @@ void main() {
     expect(find.text('코인 +50'), findsOneWidget);
   });
 
+  testWidgets('새 배지 줄이 360×640 글자 1.3배에서 넘치지 않는다', (tester) async {
+    tester.view.physicalSize = const Size(360, 640);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    await tester.pumpWidget(
+      _scope(
+        MaterialApp(
+          theme: appLightTheme(),
+          builder: (context, child) => MediaQuery(
+            data: MediaQuery.of(
+              context,
+            ).copyWith(textScaler: const TextScaler.linear(1.3)),
+            child: child!,
+          ),
+          home: Scaffold(
+            body: SingleChildScrollView(
+              child: GrowthSummary(
+                kind: AvatarKind.chick,
+                gain: gain(newBadges: ['dist_half', 'goals_30']),
+                distanceM: 5020,
+                goal: null,
+                movingTime: Duration.zero,
+                achieved: false,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await settle(tester);
+    expect(find.text('배지 획득: 하프 완주'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('새 배지가 없으면 배지 줄이 없다', (tester) async {
     await pumpIt(tester, gain());
     expect(find.textContaining('배지 획득'), findsNothing);

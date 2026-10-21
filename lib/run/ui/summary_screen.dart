@@ -1,7 +1,7 @@
-import '../../achievement/app/providers.dart';
 import 'package:flutter/material.dart' hide Split;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../achievement/app/providers.dart';
 import '../../avatar/app/providers.dart';
 import '../../avatar/domain/growth_rules.dart';
 import '../../avatar/domain/growth_state.dart';
