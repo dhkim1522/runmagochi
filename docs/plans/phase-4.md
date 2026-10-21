@@ -151,7 +151,7 @@
 
 ### E. 상점·꾸미기 (F10·F11)
 
-- [ ] 9. 아바타에 아이템 겹쳐 그리기
+- [x] 9. 아바타에 아이템 겹쳐 그리기
   - 파일: `lib/avatar/ui/avatar_view.dart`, `lib/shop/app/providers.dart`, 아바타를 그리는 곳(`home_screen`, `in_run_screen`, `growth_summary`, `avatar_screen`)
   - 인터페이스: `AvatarView({..., String? hatItemId, String? accessoryItemId})`, `equippedProvider`(`FutureProvider<Equipped>`). 첫 실행 화면은 아이템을 그리지 않는다.
   - 테스트: 장착한 아이템 레이어 경로가 순서(`body, face, …, hat, accessory`)대로 들어간다. 장착을 바꾸면 홈 아바타가 다시 그려진다. 없는 id 는 무시.
