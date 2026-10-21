@@ -60,7 +60,7 @@
 
 ### B. 시간 목표 (F6-2)
 
-- [ ] 3. 저장 구조 v6
+- [x] 3. 저장 구조 v6
   - 파일: `lib/run/data/app_database.dart`(+ `.g.dart`), `lib/run/data/run_repository.dart`, `lib/run/data/drift_run_repository.dart`, `lib/run/domain/run_goal.dart`(새 파일), `lib/profile/data/*`, `lib/backup/domain/backup_codec.dart`, `lib/backup/data/drift_backup_repository.dart`, 호출부
   - 스키마 v6:
     - `Runs.goalSec` (int nullable)
