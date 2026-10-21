@@ -58,6 +58,12 @@ final runProgressNotifierProvider = Provider<RunProgressNotifier>(
   (_) => LocalRunProgressNotifier(),
 );
 
+/// 알림 버튼 id(`run_pause`·`run_resume`) 스트림. 기본은 비어 있고,
+/// 앱 시작(main)에서 실제 포트 스트림으로 바꾼다.
+final runNotificationActionsProvider = Provider<Stream<String>>(
+  (_) => const Stream<String>.empty(),
+);
+
 /// 홈 목표 선택의 초기값(m): 가장 최근에 시작한 러닝의 목표, 없으면 3km.
 final lastRunGoalProvider = FutureProvider.autoDispose<double>(
   (ref) async => await ref.read(runRepositoryProvider).lastGoalM() ?? 3000,

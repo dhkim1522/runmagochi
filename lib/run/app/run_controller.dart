@@ -141,12 +141,32 @@ class RunController extends Notifier<RunViewState> {
   RunViewState build() {
     final lifecycle = ref.read(appLifecycleProvider);
     final lifecycleSub = lifecycle.changes.listen(_onLifecycleChanged);
+    final actionSub = ref
+        .read(runNotificationActionsProvider)
+        .listen(_onNotificationAction, onError: (Object _) {});
     ref.onDispose(() {
       lifecycleSub.cancel();
+      actionSub.cancel();
       _stopTimers();
       _subscription?.cancel();
     });
     return const RunViewState(snapshot: _idleSnapshot);
+  }
+
+  /// 알림 버튼. 기록 중이면 일시정지, 일시정지면 재개한다.
+  /// 러닝이 없거나 상태에 맞지 않는 버튼은 무시하고, 오류는 밖으로 내지 않는다.
+  void _onNotificationAction(String actionId) {
+    try {
+      if (_engine == null || _ending) return;
+      final runState = _engine!.snapshot.state;
+      if (actionId == LocalRunProgressNotifier.pauseActionId &&
+          runState == RunState.recording) {
+        pause();
+      } else if (actionId == LocalRunProgressNotifier.resumeActionId &&
+          runState == RunState.paused) {
+        resume();
+      }
+    } catch (_) {}
   }
 
   /// [goalM] 은 홈에서 고른 오늘 목표(m). 이전 러닝의 lastSummary·lastError 는 지운다.

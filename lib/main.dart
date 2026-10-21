@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'app.dart';
+import 'core/local_notifications.dart';
 import 'run/app/providers.dart';
 import 'run/app/run_guard.dart';
 
@@ -12,6 +13,8 @@ const _autoEndMaxSec = String.fromEnvironment('RUN_AUTO_END_MAX_SEC');
 const _autoEndFastSec = String.fromEnvironment('RUN_AUTO_END_FAST_SEC');
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+  final notificationActions = registerRunNotificationActionPort();
   final guard = kDebugMode
       ? runGuardConfigFromSeconds(
           idleSec: _autoEndIdleSec,
@@ -22,6 +25,7 @@ void main() {
   runApp(
     ProviderScope(
       overrides: [
+        runNotificationActionsProvider.overrideWithValue(notificationActions),
         if (guard != null) runGuardConfigProvider.overrideWithValue(guard),
       ],
       child: const RunmagochiApp(),
