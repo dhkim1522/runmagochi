@@ -42,7 +42,7 @@
 
 ### A. 러닝 알림 (F20, 결정 0019)
 
-- [ ] 1. 러닝 진행 알림
+- [x] 1. 러닝 진행 알림
   - 파일: `lib/core/local_notifications.dart`(새 파일, 초기화 한 곳), `lib/avatar/data/notification_scheduler.dart`(초기화를 새 파일로), `lib/run/data/run_progress_notifier.dart`(새 파일), `lib/run/app/run_controller.dart`, `lib/run/app/providers.dart`, `lib/run/data/geolocator_location_source.dart`(채널 이름), `docs/decisions/0021-run-notification-overwrite.md`(새 결정)
   - 인터페이스:
     - `abstract interface class RunProgressNotifier { Future<void> show(RunProgressContent c); Future<void> cancel(); }`
