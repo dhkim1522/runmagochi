@@ -152,7 +152,7 @@
 
 ### E. 공유 (F21)
 
-- [ ] 10. 요약 공유 카드
+- [x] 10. 요약 공유 카드
   - 파일: `pubspec.yaml`(`share_plus`), `lib/run/ui/share_card.dart`(새 파일), `lib/run/app/share_service.dart`(새 파일), `lib/run/ui/summary_screen.dart`
   - 동작: 요약 오른쪽 위 `공유` 버튼 → 화면 밖에서 `ShareCard`(1080×1350, 아바타(장착 포함) + 날짜 + 거리 + 시간 + 평균 페이스 + 목표 달성 + 레벨업 + 앱 이름 자리 `runmagochi`)를 PNG 로 만들어 임시 폴더에 쓰고 OS 공유 창을 연다. 만드는 중에는 버튼을 막고, 실패하면 `공유하지 못했어요`.
   - 인터페이스: `abstract interface class Sharer { Future<void> shareImage(String path, {String? text}); }`(테스트에서 가짜로 바꾼다)
