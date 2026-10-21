@@ -184,9 +184,9 @@
 ## 완료 기준
 
 ### 자동 확인
-- [ ] `fvm flutter test` 통과
-- [ ] `fvm dart analyze` 오류·경고 0
-- [ ] `fvm flutter build apk --debug` 성공
+- [x] `fvm flutter test` 통과
+- [x] `fvm dart analyze` 오류·경고 0
+- [x] `fvm flutter build apk --debug` 성공
 
 ### E2E (에뮬레이터, `/e2e` 가 확인)
 - [ ] 기록 탭에서 `주`·`월`·`년`·`전체` 를 바꾸면 합계·막대가 바뀌고, 러닝 요약에 구간 페이스 그래프가 보인다.
