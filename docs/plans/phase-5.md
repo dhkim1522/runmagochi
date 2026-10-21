@@ -142,7 +142,7 @@
   - 테스트: 첫 러닝 뒤 `first_run` 1개·코인 50, 같은 동기화 두 번 불러도 한 번, 소급 판정, 지운 뒤 유지, 백업 왕복(Task 3) 뒤 중복 없음.
   - 확인: `fvm flutter test test/achievement test/avatar`
 
-- [ ] 9. 업적 화면과 새 배지 표시
+- [x] 9. 업적 화면과 새 배지 표시
   - 파일: `lib/achievement/ui/achievement_screen.dart`(새 파일), `lib/avatar/ui/avatar_screen.dart`(들어가는 버튼), `lib/avatar/ui/growth_summary.dart`, `lib/shop/ui/coin_history_screen.dart`(배지 문구)
   - 화면: 아바타 탭에 `업적` 버튼 → 업적 화면. `개인 기록`(최장 거리·최장 시간·최고 1km·최고 5km, 없으면 `-`), `배지 7 / 12` 그리드(받은 것 `primary` 원, 못 받은 것 흐린 원 + 이름), `다음 배지`(이름·코인·진행 막대). 그림은 임시 아이콘(페이즈 6-1 에서 도트로 다시 그린다).
   - 요약: 이번 러닝에서 받은 배지가 있으면 `배지 획득: 첫 5km` / `코인 +100` 줄.
