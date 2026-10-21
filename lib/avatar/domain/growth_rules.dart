@@ -10,6 +10,9 @@ const double _runPaceSecPerKm = 540;
 bool _isExcludedSplit(Split s) =>
     s.distanceM >= 1000 && s.paceSecPerKm < _minPaceSecPerKm;
 
+/// 너무 빨라 경험치에서 빼는 구간인가. 구간 그래프가 같은 기준으로 흐리게 그린다.
+bool isFastSplit(Split s) => _isExcludedSplit(s);
+
 /// 속도 검사에 걸려 경험치에서 뺀 거리 합(미터).
 double excludedFastDistanceM(List<Split> splits) {
   var excluded = 0.0;

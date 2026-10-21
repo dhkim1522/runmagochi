@@ -9,6 +9,7 @@ import 'package:runmagochi/run/data/run_repository.dart';
 import 'package:runmagochi/run/domain/location_sample.dart';
 import 'package:runmagochi/run/domain/run_summary.dart';
 import 'package:runmagochi/core/ui/clay.dart';
+import 'package:runmagochi/run/ui/split_pace_chart.dart';
 import 'package:runmagochi/run/ui/summary_screen.dart';
 
 import 'fakes.dart';
@@ -60,6 +61,7 @@ void main() {
     addTearDown(tester.view.reset);
     await pump(tester, SummaryScreen.fromSummary(_summary()));
     expect(find.byKey(const ValueKey('split-row')), findsNWidgets(3));
+    expect(find.byType(SplitPaceChart), findsOneWidget);
     String rowText(int i) => tester
         .widgetList<Text>(
           find.descendant(

@@ -15,6 +15,7 @@ import '../domain/run_summary.dart';
 import 'history_screen.dart';
 import 'home_screen.dart';
 import 'route_painter.dart';
+import 'split_pace_chart.dart';
 import 'trim_sheet.dart';
 
 final runDetailProvider = FutureProvider.autoDispose.family<RunDetail?, String>(
@@ -399,6 +400,10 @@ class _SummaryBody extends StatelessWidget {
           const SizedBox(height: Gap.s5),
           Text('구간', style: t.heading),
           const SizedBox(height: Gap.s2),
+          if (splits.length > 1) ...[
+            SplitPaceChart(splits: splits, avgPaceSecPerKm: avgPaceSecPerKm),
+            const SizedBox(height: Gap.s4),
+          ],
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: Gap.s1),
             child: Row(
