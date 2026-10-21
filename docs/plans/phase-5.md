@@ -75,7 +75,7 @@
   - 테스트: v5 → v6 마이그레이션(러닝·목표·코인·장착 유지, `goalSec` null, 음성 안내 true). 시간 목표 러닝 저장·목록·복원 왕복. `lastGoal` 이 종류까지 돌려준다. v5 백업 가져오기, v6 왕복.
   - 확인: `fvm flutter test test/run/data test/backup test/profile`
 
-- [ ] 4. 시간 목표 판정과 보너스
+- [x] 4. 시간 목표 판정과 보너스
   - 파일: `lib/avatar/domain/growth_rules.dart`, `lib/avatar/app/growth_service.dart`, `lib/run/app/run_controller.dart`, `docs/specs/game-rules.md`
   - 규칙:
     - `bool goalAchieved({required RunDetail-like 값, required RunGoal goal})` — 거리 목표는 지금 그대로, 시간 목표는 `movingTime >= goal.time`
