@@ -61,6 +61,10 @@ class Avatars extends Table {
   TextColumn get id => text()();
   TextColumn get name => text()();
   TextColumn get kind => text().withDefault(const Constant('default'))();
+
+  /// 장착한 모자·소품 아이템 id. 안 쓰면 null.
+  TextColumn get hatItemId => text().nullable()();
+  TextColumn get accessoryItemId => text().nullable()();
   DateTimeColumn get createdAt => dateTime()();
   DateTimeColumn get updatedAt => dateTime()();
   DateTimeColumn get deletedAt => dateTime().nullable()();
@@ -119,8 +123,53 @@ class XpTxns extends Table {
   ];
 }
 
+class CoinTxns extends Table {
+  TextColumn get id => text()();
+  IntColumn get amount => integer()(); // 지급 +, 구매 −
+  TextColumn get reason => text()(); // distance | runGoal | purchase
+  TextColumn get runId => text().nullable().references(Runs, #id)();
+  TextColumn get itemId => text().nullable()();
+  DateTimeColumn get createdAt => dateTime()();
+  DateTimeColumn get updatedAt => dateTime()();
+  DateTimeColumn get deletedAt => dateTime().nullable()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+
+  @override
+  List<Set<Column>> get uniqueKeys => [
+    {runId, reason},
+  ];
+}
+
+class OwnedItems extends Table {
+  TextColumn get id => text()();
+  TextColumn get itemId => text()();
+  DateTimeColumn get createdAt => dateTime()();
+  DateTimeColumn get updatedAt => dateTime()();
+  DateTimeColumn get deletedAt => dateTime().nullable()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+
+  @override
+  List<Set<Column>> get uniqueKeys => [
+    {itemId},
+  ];
+}
+
 @DriftDatabase(
-  tables: [Runs, RunPoints, Splits, Avatars, WeeklyGoals, XpTxns, Profiles],
+  tables: [
+    Runs,
+    RunPoints,
+    Splits,
+    Avatars,
+    WeeklyGoals,
+    XpTxns,
+    Profiles,
+    CoinTxns,
+    OwnedItems,
+  ],
 )
 class AppDatabase extends _$AppDatabase {
   AppDatabase(super.executor);
@@ -128,7 +177,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.production() : super(driftDatabase(name: 'runmagochi'));
 
   @override
-  int get schemaVersion => 4;
+  int get schemaVersion => 5;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -141,6 +190,15 @@ class AppDatabase extends _$AppDatabase {
       }
       if (from < 3) await m.createTable(profiles);
       if (from < 4) await m.addColumn(runs, runs.goalM);
+      if (from < 5) {
+        await m.createTable(coinTxns);
+        await m.createTable(ownedItems);
+        // from < 2 는 위에서 최신 모양의 avatars 를 막 만들었으므로 열이 이미 있다.
+        if (from >= 2) {
+          await m.addColumn(avatars, avatars.hatItemId);
+          await m.addColumn(avatars, avatars.accessoryItemId);
+        }
+      }
     },
   );
 

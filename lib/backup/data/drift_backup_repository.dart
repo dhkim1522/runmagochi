@@ -34,6 +34,10 @@ class DriftBackupRepository implements BackupRepository {
       final xp = await (_db.select(
         _db.xpTxns,
       )..where((x) => x.runId.isNull() | x.runId.isNotIn(activeIds))).get();
+      final coins = await (_db.select(
+        _db.coinTxns,
+      )..where((x) => x.runId.isNull() | x.runId.isNotIn(activeIds))).get();
+      final owned = await _db.select(_db.ownedItems).get();
       final avatars = await _db.select(_db.avatars).get();
       final goals = await _db.select(_db.weeklyGoals).get();
       final profiles = await _db.select(_db.profiles).get();
@@ -44,6 +48,8 @@ class DriftBackupRepository implements BackupRepository {
         'weeklyGoals': rows(goals),
         'xpTxns': rows(xp),
         'profiles': rows(profiles),
+        'coinTxns': rows(coins),
+        'ownedItems': rows(owned),
       };
     });
     return BackupCodec.encode(BackupData(exportedAt: now, tables: tables));
@@ -59,6 +65,8 @@ class DriftBackupRepository implements BackupRepository {
     final List<WeeklyGoal> goals;
     final List<XpTxn> xp;
     final List<Profile> profiles;
+    final List<CoinTxn> coins;
+    final List<OwnedItem> owned;
     try {
       List<T> parse<T>(String t, T Function(Map<String, dynamic>) f) => [
         for (final r in data.tables[t]!) f(r),
@@ -75,6 +83,11 @@ class DriftBackupRepository implements BackupRepository {
         'profiles',
         (j) => Profile.fromJson(j, serializer: _ser),
       );
+      coins = parse('coinTxns', (j) => CoinTxn.fromJson(j, serializer: _ser));
+      owned = parse(
+        'ownedItems',
+        (j) => OwnedItem.fromJson(j, serializer: _ser),
+      );
     } on Object {
       throw const BackupFormatException('백업 파일을 읽을 수 없어요. 데이터가 잘못됐어요');
     }
@@ -88,6 +101,8 @@ class DriftBackupRepository implements BackupRepository {
       await _db.delete(_db.runPoints).go();
       await _db.delete(_db.splits).go();
       await _db.delete(_db.xpTxns).go();
+      await _db.delete(_db.coinTxns).go();
+      await _db.delete(_db.ownedItems).go();
       await _db.delete(_db.weeklyGoals).go();
       await _db.delete(_db.avatars).go();
       await _db.delete(_db.profiles).go();
@@ -110,6 +125,12 @@ class DriftBackupRepository implements BackupRepository {
       }
       for (final r in profiles) {
         await _db.into(_db.profiles).insert(r);
+      }
+      for (final r in coins) {
+        await _db.into(_db.coinTxns).insert(r);
+      }
+      for (final r in owned) {
+        await _db.into(_db.ownedItems).insert(r);
       }
     });
   }

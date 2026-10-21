@@ -2013,6 +2013,28 @@ class $AvatarsTable extends Avatars with TableInfo<$AvatarsTable, Avatar> {
     requiredDuringInsert: false,
     defaultValue: const Constant('default'),
   );
+  static const VerificationMeta _hatItemIdMeta = const VerificationMeta(
+    'hatItemId',
+  );
+  @override
+  late final GeneratedColumn<String> hatItemId = GeneratedColumn<String>(
+    'hat_item_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _accessoryItemIdMeta = const VerificationMeta(
+    'accessoryItemId',
+  );
+  @override
+  late final GeneratedColumn<String> accessoryItemId = GeneratedColumn<String>(
+    'accessory_item_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _createdAtMeta = const VerificationMeta(
     'createdAt',
   );
@@ -2051,6 +2073,8 @@ class $AvatarsTable extends Avatars with TableInfo<$AvatarsTable, Avatar> {
     id,
     name,
     kind,
+    hatItemId,
+    accessoryItemId,
     createdAt,
     updatedAt,
     deletedAt,
@@ -2084,6 +2108,21 @@ class $AvatarsTable extends Avatars with TableInfo<$AvatarsTable, Avatar> {
       context.handle(
         _kindMeta,
         kind.isAcceptableOrUnknown(data['kind']!, _kindMeta),
+      );
+    }
+    if (data.containsKey('hat_item_id')) {
+      context.handle(
+        _hatItemIdMeta,
+        hatItemId.isAcceptableOrUnknown(data['hat_item_id']!, _hatItemIdMeta),
+      );
+    }
+    if (data.containsKey('accessory_item_id')) {
+      context.handle(
+        _accessoryItemIdMeta,
+        accessoryItemId.isAcceptableOrUnknown(
+          data['accessory_item_id']!,
+          _accessoryItemIdMeta,
+        ),
       );
     }
     if (data.containsKey('created_at')) {
@@ -2129,6 +2168,14 @@ class $AvatarsTable extends Avatars with TableInfo<$AvatarsTable, Avatar> {
         DriftSqlType.string,
         data['${effectivePrefix}kind'],
       )!,
+      hatItemId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}hat_item_id'],
+      ),
+      accessoryItemId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}accessory_item_id'],
+      ),
       createdAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}created_at'],
@@ -2154,6 +2201,10 @@ class Avatar extends DataClass implements Insertable<Avatar> {
   final String id;
   final String name;
   final String kind;
+
+  /// 장착한 모자·소품 아이템 id. 안 쓰면 null.
+  final String? hatItemId;
+  final String? accessoryItemId;
   final DateTime createdAt;
   final DateTime updatedAt;
   final DateTime? deletedAt;
@@ -2161,6 +2212,8 @@ class Avatar extends DataClass implements Insertable<Avatar> {
     required this.id,
     required this.name,
     required this.kind,
+    this.hatItemId,
+    this.accessoryItemId,
     required this.createdAt,
     required this.updatedAt,
     this.deletedAt,
@@ -2171,6 +2224,12 @@ class Avatar extends DataClass implements Insertable<Avatar> {
     map['id'] = Variable<String>(id);
     map['name'] = Variable<String>(name);
     map['kind'] = Variable<String>(kind);
+    if (!nullToAbsent || hatItemId != null) {
+      map['hat_item_id'] = Variable<String>(hatItemId);
+    }
+    if (!nullToAbsent || accessoryItemId != null) {
+      map['accessory_item_id'] = Variable<String>(accessoryItemId);
+    }
     map['created_at'] = Variable<DateTime>(createdAt);
     map['updated_at'] = Variable<DateTime>(updatedAt);
     if (!nullToAbsent || deletedAt != null) {
@@ -2184,6 +2243,12 @@ class Avatar extends DataClass implements Insertable<Avatar> {
       id: Value(id),
       name: Value(name),
       kind: Value(kind),
+      hatItemId: hatItemId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(hatItemId),
+      accessoryItemId: accessoryItemId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(accessoryItemId),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
       deletedAt: deletedAt == null && nullToAbsent
@@ -2201,6 +2266,8 @@ class Avatar extends DataClass implements Insertable<Avatar> {
       id: serializer.fromJson<String>(json['id']),
       name: serializer.fromJson<String>(json['name']),
       kind: serializer.fromJson<String>(json['kind']),
+      hatItemId: serializer.fromJson<String?>(json['hatItemId']),
+      accessoryItemId: serializer.fromJson<String?>(json['accessoryItemId']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
       deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
@@ -2213,6 +2280,8 @@ class Avatar extends DataClass implements Insertable<Avatar> {
       'id': serializer.toJson<String>(id),
       'name': serializer.toJson<String>(name),
       'kind': serializer.toJson<String>(kind),
+      'hatItemId': serializer.toJson<String?>(hatItemId),
+      'accessoryItemId': serializer.toJson<String?>(accessoryItemId),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
       'deletedAt': serializer.toJson<DateTime?>(deletedAt),
@@ -2223,6 +2292,8 @@ class Avatar extends DataClass implements Insertable<Avatar> {
     String? id,
     String? name,
     String? kind,
+    Value<String?> hatItemId = const Value.absent(),
+    Value<String?> accessoryItemId = const Value.absent(),
     DateTime? createdAt,
     DateTime? updatedAt,
     Value<DateTime?> deletedAt = const Value.absent(),
@@ -2230,6 +2301,10 @@ class Avatar extends DataClass implements Insertable<Avatar> {
     id: id ?? this.id,
     name: name ?? this.name,
     kind: kind ?? this.kind,
+    hatItemId: hatItemId.present ? hatItemId.value : this.hatItemId,
+    accessoryItemId: accessoryItemId.present
+        ? accessoryItemId.value
+        : this.accessoryItemId,
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
     deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
@@ -2239,6 +2314,10 @@ class Avatar extends DataClass implements Insertable<Avatar> {
       id: data.id.present ? data.id.value : this.id,
       name: data.name.present ? data.name.value : this.name,
       kind: data.kind.present ? data.kind.value : this.kind,
+      hatItemId: data.hatItemId.present ? data.hatItemId.value : this.hatItemId,
+      accessoryItemId: data.accessoryItemId.present
+          ? data.accessoryItemId.value
+          : this.accessoryItemId,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
       deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
@@ -2251,6 +2330,8 @@ class Avatar extends DataClass implements Insertable<Avatar> {
           ..write('id: $id, ')
           ..write('name: $name, ')
           ..write('kind: $kind, ')
+          ..write('hatItemId: $hatItemId, ')
+          ..write('accessoryItemId: $accessoryItemId, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('deletedAt: $deletedAt')
@@ -2259,8 +2340,16 @@ class Avatar extends DataClass implements Insertable<Avatar> {
   }
 
   @override
-  int get hashCode =>
-      Object.hash(id, name, kind, createdAt, updatedAt, deletedAt);
+  int get hashCode => Object.hash(
+    id,
+    name,
+    kind,
+    hatItemId,
+    accessoryItemId,
+    createdAt,
+    updatedAt,
+    deletedAt,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -2268,6 +2357,8 @@ class Avatar extends DataClass implements Insertable<Avatar> {
           other.id == this.id &&
           other.name == this.name &&
           other.kind == this.kind &&
+          other.hatItemId == this.hatItemId &&
+          other.accessoryItemId == this.accessoryItemId &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt &&
           other.deletedAt == this.deletedAt);
@@ -2277,6 +2368,8 @@ class AvatarsCompanion extends UpdateCompanion<Avatar> {
   final Value<String> id;
   final Value<String> name;
   final Value<String> kind;
+  final Value<String?> hatItemId;
+  final Value<String?> accessoryItemId;
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
   final Value<DateTime?> deletedAt;
@@ -2285,6 +2378,8 @@ class AvatarsCompanion extends UpdateCompanion<Avatar> {
     this.id = const Value.absent(),
     this.name = const Value.absent(),
     this.kind = const Value.absent(),
+    this.hatItemId = const Value.absent(),
+    this.accessoryItemId = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.deletedAt = const Value.absent(),
@@ -2294,6 +2389,8 @@ class AvatarsCompanion extends UpdateCompanion<Avatar> {
     required String id,
     required String name,
     this.kind = const Value.absent(),
+    this.hatItemId = const Value.absent(),
+    this.accessoryItemId = const Value.absent(),
     required DateTime createdAt,
     required DateTime updatedAt,
     this.deletedAt = const Value.absent(),
@@ -2306,6 +2403,8 @@ class AvatarsCompanion extends UpdateCompanion<Avatar> {
     Expression<String>? id,
     Expression<String>? name,
     Expression<String>? kind,
+    Expression<String>? hatItemId,
+    Expression<String>? accessoryItemId,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
     Expression<DateTime>? deletedAt,
@@ -2315,6 +2414,8 @@ class AvatarsCompanion extends UpdateCompanion<Avatar> {
       if (id != null) 'id': id,
       if (name != null) 'name': name,
       if (kind != null) 'kind': kind,
+      if (hatItemId != null) 'hat_item_id': hatItemId,
+      if (accessoryItemId != null) 'accessory_item_id': accessoryItemId,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (deletedAt != null) 'deleted_at': deletedAt,
@@ -2326,6 +2427,8 @@ class AvatarsCompanion extends UpdateCompanion<Avatar> {
     Value<String>? id,
     Value<String>? name,
     Value<String>? kind,
+    Value<String?>? hatItemId,
+    Value<String?>? accessoryItemId,
     Value<DateTime>? createdAt,
     Value<DateTime>? updatedAt,
     Value<DateTime?>? deletedAt,
@@ -2335,6 +2438,8 @@ class AvatarsCompanion extends UpdateCompanion<Avatar> {
       id: id ?? this.id,
       name: name ?? this.name,
       kind: kind ?? this.kind,
+      hatItemId: hatItemId ?? this.hatItemId,
+      accessoryItemId: accessoryItemId ?? this.accessoryItemId,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       deletedAt: deletedAt ?? this.deletedAt,
@@ -2353,6 +2458,12 @@ class AvatarsCompanion extends UpdateCompanion<Avatar> {
     }
     if (kind.present) {
       map['kind'] = Variable<String>(kind.value);
+    }
+    if (hatItemId.present) {
+      map['hat_item_id'] = Variable<String>(hatItemId.value);
+    }
+    if (accessoryItemId.present) {
+      map['accessory_item_id'] = Variable<String>(accessoryItemId.value);
     }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
@@ -2375,6 +2486,8 @@ class AvatarsCompanion extends UpdateCompanion<Avatar> {
           ..write('id: $id, ')
           ..write('name: $name, ')
           ..write('kind: $kind, ')
+          ..write('hatItemId: $hatItemId, ')
+          ..write('accessoryItemId: $accessoryItemId, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('deletedAt: $deletedAt, ')
@@ -3789,6 +3902,884 @@ class ProfilesCompanion extends UpdateCompanion<Profile> {
   }
 }
 
+class $CoinTxnsTable extends CoinTxns with TableInfo<$CoinTxnsTable, CoinTxn> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $CoinTxnsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _amountMeta = const VerificationMeta('amount');
+  @override
+  late final GeneratedColumn<int> amount = GeneratedColumn<int>(
+    'amount',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _reasonMeta = const VerificationMeta('reason');
+  @override
+  late final GeneratedColumn<String> reason = GeneratedColumn<String>(
+    'reason',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _runIdMeta = const VerificationMeta('runId');
+  @override
+  late final GeneratedColumn<String> runId = GeneratedColumn<String>(
+    'run_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES runs (id)',
+    ),
+  );
+  static const VerificationMeta _itemIdMeta = const VerificationMeta('itemId');
+  @override
+  late final GeneratedColumn<String> itemId = GeneratedColumn<String>(
+    'item_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _deletedAtMeta = const VerificationMeta(
+    'deletedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> deletedAt = GeneratedColumn<DateTime>(
+    'deleted_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    amount,
+    reason,
+    runId,
+    itemId,
+    createdAt,
+    updatedAt,
+    deletedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'coin_txns';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<CoinTxn> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('amount')) {
+      context.handle(
+        _amountMeta,
+        amount.isAcceptableOrUnknown(data['amount']!, _amountMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_amountMeta);
+    }
+    if (data.containsKey('reason')) {
+      context.handle(
+        _reasonMeta,
+        reason.isAcceptableOrUnknown(data['reason']!, _reasonMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_reasonMeta);
+    }
+    if (data.containsKey('run_id')) {
+      context.handle(
+        _runIdMeta,
+        runId.isAcceptableOrUnknown(data['run_id']!, _runIdMeta),
+      );
+    }
+    if (data.containsKey('item_id')) {
+      context.handle(
+        _itemIdMeta,
+        itemId.isAcceptableOrUnknown(data['item_id']!, _itemIdMeta),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    if (data.containsKey('deleted_at')) {
+      context.handle(
+        _deletedAtMeta,
+        deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  List<Set<GeneratedColumn>> get uniqueKeys => [
+    {runId, reason},
+  ];
+  @override
+  CoinTxn map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return CoinTxn(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      amount: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}amount'],
+      )!,
+      reason: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}reason'],
+      )!,
+      runId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}run_id'],
+      ),
+      itemId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}item_id'],
+      ),
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+      deletedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}deleted_at'],
+      ),
+    );
+  }
+
+  @override
+  $CoinTxnsTable createAlias(String alias) {
+    return $CoinTxnsTable(attachedDatabase, alias);
+  }
+}
+
+class CoinTxn extends DataClass implements Insertable<CoinTxn> {
+  final String id;
+  final int amount;
+  final String reason;
+  final String? runId;
+  final String? itemId;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  final DateTime? deletedAt;
+  const CoinTxn({
+    required this.id,
+    required this.amount,
+    required this.reason,
+    this.runId,
+    this.itemId,
+    required this.createdAt,
+    required this.updatedAt,
+    this.deletedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['amount'] = Variable<int>(amount);
+    map['reason'] = Variable<String>(reason);
+    if (!nullToAbsent || runId != null) {
+      map['run_id'] = Variable<String>(runId);
+    }
+    if (!nullToAbsent || itemId != null) {
+      map['item_id'] = Variable<String>(itemId);
+    }
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    if (!nullToAbsent || deletedAt != null) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt);
+    }
+    return map;
+  }
+
+  CoinTxnsCompanion toCompanion(bool nullToAbsent) {
+    return CoinTxnsCompanion(
+      id: Value(id),
+      amount: Value(amount),
+      reason: Value(reason),
+      runId: runId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(runId),
+      itemId: itemId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(itemId),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+      deletedAt: deletedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deletedAt),
+    );
+  }
+
+  factory CoinTxn.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return CoinTxn(
+      id: serializer.fromJson<String>(json['id']),
+      amount: serializer.fromJson<int>(json['amount']),
+      reason: serializer.fromJson<String>(json['reason']),
+      runId: serializer.fromJson<String?>(json['runId']),
+      itemId: serializer.fromJson<String?>(json['itemId']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'amount': serializer.toJson<int>(amount),
+      'reason': serializer.toJson<String>(reason),
+      'runId': serializer.toJson<String?>(runId),
+      'itemId': serializer.toJson<String?>(itemId),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'deletedAt': serializer.toJson<DateTime?>(deletedAt),
+    };
+  }
+
+  CoinTxn copyWith({
+    String? id,
+    int? amount,
+    String? reason,
+    Value<String?> runId = const Value.absent(),
+    Value<String?> itemId = const Value.absent(),
+    DateTime? createdAt,
+    DateTime? updatedAt,
+    Value<DateTime?> deletedAt = const Value.absent(),
+  }) => CoinTxn(
+    id: id ?? this.id,
+    amount: amount ?? this.amount,
+    reason: reason ?? this.reason,
+    runId: runId.present ? runId.value : this.runId,
+    itemId: itemId.present ? itemId.value : this.itemId,
+    createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+    deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
+  );
+  CoinTxn copyWithCompanion(CoinTxnsCompanion data) {
+    return CoinTxn(
+      id: data.id.present ? data.id.value : this.id,
+      amount: data.amount.present ? data.amount.value : this.amount,
+      reason: data.reason.present ? data.reason.value : this.reason,
+      runId: data.runId.present ? data.runId.value : this.runId,
+      itemId: data.itemId.present ? data.itemId.value : this.itemId,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CoinTxn(')
+          ..write('id: $id, ')
+          ..write('amount: $amount, ')
+          ..write('reason: $reason, ')
+          ..write('runId: $runId, ')
+          ..write('itemId: $itemId, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    amount,
+    reason,
+    runId,
+    itemId,
+    createdAt,
+    updatedAt,
+    deletedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is CoinTxn &&
+          other.id == this.id &&
+          other.amount == this.amount &&
+          other.reason == this.reason &&
+          other.runId == this.runId &&
+          other.itemId == this.itemId &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt &&
+          other.deletedAt == this.deletedAt);
+}
+
+class CoinTxnsCompanion extends UpdateCompanion<CoinTxn> {
+  final Value<String> id;
+  final Value<int> amount;
+  final Value<String> reason;
+  final Value<String?> runId;
+  final Value<String?> itemId;
+  final Value<DateTime> createdAt;
+  final Value<DateTime> updatedAt;
+  final Value<DateTime?> deletedAt;
+  final Value<int> rowid;
+  const CoinTxnsCompanion({
+    this.id = const Value.absent(),
+    this.amount = const Value.absent(),
+    this.reason = const Value.absent(),
+    this.runId = const Value.absent(),
+    this.itemId = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  CoinTxnsCompanion.insert({
+    required String id,
+    required int amount,
+    required String reason,
+    this.runId = const Value.absent(),
+    this.itemId = const Value.absent(),
+    required DateTime createdAt,
+    required DateTime updatedAt,
+    this.deletedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       amount = Value(amount),
+       reason = Value(reason),
+       createdAt = Value(createdAt),
+       updatedAt = Value(updatedAt);
+  static Insertable<CoinTxn> custom({
+    Expression<String>? id,
+    Expression<int>? amount,
+    Expression<String>? reason,
+    Expression<String>? runId,
+    Expression<String>? itemId,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
+    Expression<DateTime>? deletedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (amount != null) 'amount': amount,
+      if (reason != null) 'reason': reason,
+      if (runId != null) 'run_id': runId,
+      if (itemId != null) 'item_id': itemId,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (deletedAt != null) 'deleted_at': deletedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  CoinTxnsCompanion copyWith({
+    Value<String>? id,
+    Value<int>? amount,
+    Value<String>? reason,
+    Value<String?>? runId,
+    Value<String?>? itemId,
+    Value<DateTime>? createdAt,
+    Value<DateTime>? updatedAt,
+    Value<DateTime?>? deletedAt,
+    Value<int>? rowid,
+  }) {
+    return CoinTxnsCompanion(
+      id: id ?? this.id,
+      amount: amount ?? this.amount,
+      reason: reason ?? this.reason,
+      runId: runId ?? this.runId,
+      itemId: itemId ?? this.itemId,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      deletedAt: deletedAt ?? this.deletedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (amount.present) {
+      map['amount'] = Variable<int>(amount.value);
+    }
+    if (reason.present) {
+      map['reason'] = Variable<String>(reason.value);
+    }
+    if (runId.present) {
+      map['run_id'] = Variable<String>(runId.value);
+    }
+    if (itemId.present) {
+      map['item_id'] = Variable<String>(itemId.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (deletedAt.present) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CoinTxnsCompanion(')
+          ..write('id: $id, ')
+          ..write('amount: $amount, ')
+          ..write('reason: $reason, ')
+          ..write('runId: $runId, ')
+          ..write('itemId: $itemId, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $OwnedItemsTable extends OwnedItems
+    with TableInfo<$OwnedItemsTable, OwnedItem> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $OwnedItemsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _itemIdMeta = const VerificationMeta('itemId');
+  @override
+  late final GeneratedColumn<String> itemId = GeneratedColumn<String>(
+    'item_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _deletedAtMeta = const VerificationMeta(
+    'deletedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> deletedAt = GeneratedColumn<DateTime>(
+    'deleted_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    itemId,
+    createdAt,
+    updatedAt,
+    deletedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'owned_items';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<OwnedItem> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('item_id')) {
+      context.handle(
+        _itemIdMeta,
+        itemId.isAcceptableOrUnknown(data['item_id']!, _itemIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_itemIdMeta);
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    if (data.containsKey('deleted_at')) {
+      context.handle(
+        _deletedAtMeta,
+        deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  List<Set<GeneratedColumn>> get uniqueKeys => [
+    {itemId},
+  ];
+  @override
+  OwnedItem map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return OwnedItem(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      itemId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}item_id'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+      deletedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}deleted_at'],
+      ),
+    );
+  }
+
+  @override
+  $OwnedItemsTable createAlias(String alias) {
+    return $OwnedItemsTable(attachedDatabase, alias);
+  }
+}
+
+class OwnedItem extends DataClass implements Insertable<OwnedItem> {
+  final String id;
+  final String itemId;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  final DateTime? deletedAt;
+  const OwnedItem({
+    required this.id,
+    required this.itemId,
+    required this.createdAt,
+    required this.updatedAt,
+    this.deletedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['item_id'] = Variable<String>(itemId);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    if (!nullToAbsent || deletedAt != null) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt);
+    }
+    return map;
+  }
+
+  OwnedItemsCompanion toCompanion(bool nullToAbsent) {
+    return OwnedItemsCompanion(
+      id: Value(id),
+      itemId: Value(itemId),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+      deletedAt: deletedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deletedAt),
+    );
+  }
+
+  factory OwnedItem.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return OwnedItem(
+      id: serializer.fromJson<String>(json['id']),
+      itemId: serializer.fromJson<String>(json['itemId']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'itemId': serializer.toJson<String>(itemId),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'deletedAt': serializer.toJson<DateTime?>(deletedAt),
+    };
+  }
+
+  OwnedItem copyWith({
+    String? id,
+    String? itemId,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+    Value<DateTime?> deletedAt = const Value.absent(),
+  }) => OwnedItem(
+    id: id ?? this.id,
+    itemId: itemId ?? this.itemId,
+    createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+    deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
+  );
+  OwnedItem copyWithCompanion(OwnedItemsCompanion data) {
+    return OwnedItem(
+      id: data.id.present ? data.id.value : this.id,
+      itemId: data.itemId.present ? data.itemId.value : this.itemId,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('OwnedItem(')
+          ..write('id: $id, ')
+          ..write('itemId: $itemId, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, itemId, createdAt, updatedAt, deletedAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is OwnedItem &&
+          other.id == this.id &&
+          other.itemId == this.itemId &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt &&
+          other.deletedAt == this.deletedAt);
+}
+
+class OwnedItemsCompanion extends UpdateCompanion<OwnedItem> {
+  final Value<String> id;
+  final Value<String> itemId;
+  final Value<DateTime> createdAt;
+  final Value<DateTime> updatedAt;
+  final Value<DateTime?> deletedAt;
+  final Value<int> rowid;
+  const OwnedItemsCompanion({
+    this.id = const Value.absent(),
+    this.itemId = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  OwnedItemsCompanion.insert({
+    required String id,
+    required String itemId,
+    required DateTime createdAt,
+    required DateTime updatedAt,
+    this.deletedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       itemId = Value(itemId),
+       createdAt = Value(createdAt),
+       updatedAt = Value(updatedAt);
+  static Insertable<OwnedItem> custom({
+    Expression<String>? id,
+    Expression<String>? itemId,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
+    Expression<DateTime>? deletedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (itemId != null) 'item_id': itemId,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (deletedAt != null) 'deleted_at': deletedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  OwnedItemsCompanion copyWith({
+    Value<String>? id,
+    Value<String>? itemId,
+    Value<DateTime>? createdAt,
+    Value<DateTime>? updatedAt,
+    Value<DateTime?>? deletedAt,
+    Value<int>? rowid,
+  }) {
+    return OwnedItemsCompanion(
+      id: id ?? this.id,
+      itemId: itemId ?? this.itemId,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      deletedAt: deletedAt ?? this.deletedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (itemId.present) {
+      map['item_id'] = Variable<String>(itemId.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (deletedAt.present) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('OwnedItemsCompanion(')
+          ..write('id: $id, ')
+          ..write('itemId: $itemId, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -3799,6 +4790,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $WeeklyGoalsTable weeklyGoals = $WeeklyGoalsTable(this);
   late final $XpTxnsTable xpTxns = $XpTxnsTable(this);
   late final $ProfilesTable profiles = $ProfilesTable(this);
+  late final $CoinTxnsTable coinTxns = $CoinTxnsTable(this);
+  late final $OwnedItemsTable ownedItems = $OwnedItemsTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -3811,6 +4804,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     weeklyGoals,
     xpTxns,
     profiles,
+    coinTxns,
+    ownedItems,
   ];
 }
 
@@ -3906,6 +4901,25 @@ final class $$RunsTableReferences
     ).filter((f) => f.runId.id.sqlEquals($_itemColumn<String>('id')!));
 
     final cache = $_typedResult.readTableOrNull(_xpTxnsRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+
+  static MultiTypedResultKey<$CoinTxnsTable, List<CoinTxn>> _coinTxnsRefsTable(
+    _$AppDatabase db,
+  ) => MultiTypedResultKey.fromTable(
+    db.coinTxns,
+    aliasName: 'runs__id__coin_txns__run_id',
+  );
+
+  $$CoinTxnsTableProcessedTableManager get coinTxnsRefs {
+    final manager = $$CoinTxnsTableTableManager(
+      $_db,
+      $_db.coinTxns,
+    ).filter((f) => f.runId.id.sqlEquals($_itemColumn<String>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_coinTxnsRefsTable($_db));
     return ProcessedTableManager(
       manager.$state.copyWith(prefetchedData: cache),
     );
@@ -4056,6 +5070,31 @@ class $$RunsTableFilterComposer extends Composer<_$AppDatabase, $RunsTable> {
           }) => $$XpTxnsTableFilterComposer(
             $db: $db,
             $table: $db.xpTxns,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<bool> coinTxnsRefs(
+    Expression<bool> Function($$CoinTxnsTableFilterComposer f) f,
+  ) {
+    final $$CoinTxnsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.coinTxns,
+      getReferencedColumn: (t) => t.runId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$CoinTxnsTableFilterComposer(
+            $db: $db,
+            $table: $db.coinTxns,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -4276,6 +5315,31 @@ class $$RunsTableAnnotationComposer
     );
     return f(composer);
   }
+
+  Expression<T> coinTxnsRefs<T extends Object>(
+    Expression<T> Function($$CoinTxnsTableAnnotationComposer a) f,
+  ) {
+    final $$CoinTxnsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.coinTxns,
+      getReferencedColumn: (t) => t.runId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$CoinTxnsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.coinTxns,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
 }
 
 class $$RunsTableTableManager
@@ -4295,6 +5359,7 @@ class $$RunsTableTableManager
             bool runPointsRefs,
             bool splitsRefs,
             bool xpTxnsRefs,
+            bool coinTxnsRefs,
           })
         > {
   $$RunsTableTableManager(_$AppDatabase db, $RunsTable table)
@@ -4389,6 +5454,7 @@ class $$RunsTableTableManager
                 runPointsRefs = false,
                 splitsRefs = false,
                 xpTxnsRefs = false,
+                coinTxnsRefs = false,
               }) {
                 return PrefetchHooks(
                   db: db,
@@ -4396,6 +5462,7 @@ class $$RunsTableTableManager
                     if (runPointsRefs) db.runPoints,
                     if (splitsRefs) db.splits,
                     if (xpTxnsRefs) db.xpTxns,
+                    if (coinTxnsRefs) db.coinTxns,
                   ],
                   addJoins: null,
                   getPrefetchedDataCallback: (items) async {
@@ -4442,6 +5509,19 @@ class $$RunsTableTableManager
                               ),
                           typedResults: items,
                         ),
+                      if (coinTxnsRefs)
+                        await $_getPrefetchedData<Run, $RunsTable, CoinTxn>(
+                          currentTable: table,
+                          referencedTable: $$RunsTableReferences
+                              ._coinTxnsRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$RunsTableReferences(db, table, p0).coinTxnsRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.runId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
                     ];
                   },
                 );
@@ -4466,6 +5546,7 @@ typedef $$RunsTableProcessedTableManager =
         bool runPointsRefs,
         bool splitsRefs,
         bool xpTxnsRefs,
+        bool coinTxnsRefs,
       })
     >;
 typedef $$RunPointsTableCreateCompanionBuilder =
@@ -5280,6 +6361,8 @@ typedef $$AvatarsTableCreateCompanionBuilder =
       required String id,
       required String name,
       Value<String> kind,
+      Value<String?> hatItemId,
+      Value<String?> accessoryItemId,
       required DateTime createdAt,
       required DateTime updatedAt,
       Value<DateTime?> deletedAt,
@@ -5290,6 +6373,8 @@ typedef $$AvatarsTableUpdateCompanionBuilder =
       Value<String> id,
       Value<String> name,
       Value<String> kind,
+      Value<String?> hatItemId,
+      Value<String?> accessoryItemId,
       Value<DateTime> createdAt,
       Value<DateTime> updatedAt,
       Value<DateTime?> deletedAt,
@@ -5317,6 +6402,16 @@ class $$AvatarsTableFilterComposer
 
   ColumnFilters<String> get kind => $composableBuilder(
     column: $table.kind,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get hatItemId => $composableBuilder(
+    column: $table.hatItemId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get accessoryItemId => $composableBuilder(
+    column: $table.accessoryItemId,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -5360,6 +6455,16 @@ class $$AvatarsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get hatItemId => $composableBuilder(
+    column: $table.hatItemId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get accessoryItemId => $composableBuilder(
+    column: $table.accessoryItemId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
@@ -5393,6 +6498,14 @@ class $$AvatarsTableAnnotationComposer
 
   GeneratedColumn<String> get kind =>
       $composableBuilder(column: $table.kind, builder: (column) => column);
+
+  GeneratedColumn<String> get hatItemId =>
+      $composableBuilder(column: $table.hatItemId, builder: (column) => column);
+
+  GeneratedColumn<String> get accessoryItemId => $composableBuilder(
+    column: $table.accessoryItemId,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
@@ -5435,6 +6548,8 @@ class $$AvatarsTableTableManager
                 Value<String> id = const Value.absent(),
                 Value<String> name = const Value.absent(),
                 Value<String> kind = const Value.absent(),
+                Value<String?> hatItemId = const Value.absent(),
+                Value<String?> accessoryItemId = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<DateTime?> deletedAt = const Value.absent(),
@@ -5443,6 +6558,8 @@ class $$AvatarsTableTableManager
                 id: id,
                 name: name,
                 kind: kind,
+                hatItemId: hatItemId,
+                accessoryItemId: accessoryItemId,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 deletedAt: deletedAt,
@@ -5453,6 +6570,8 @@ class $$AvatarsTableTableManager
                 required String id,
                 required String name,
                 Value<String> kind = const Value.absent(),
+                Value<String?> hatItemId = const Value.absent(),
+                Value<String?> accessoryItemId = const Value.absent(),
                 required DateTime createdAt,
                 required DateTime updatedAt,
                 Value<DateTime?> deletedAt = const Value.absent(),
@@ -5461,6 +6580,8 @@ class $$AvatarsTableTableManager
                 id: id,
                 name: name,
                 kind: kind,
+                hatItemId: hatItemId,
+                accessoryItemId: accessoryItemId,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 deletedAt: deletedAt,
@@ -6344,6 +7465,586 @@ typedef $$ProfilesTableProcessedTableManager =
       Profile,
       PrefetchHooks Function()
     >;
+typedef $$CoinTxnsTableCreateCompanionBuilder =
+    CoinTxnsCompanion Function({
+      required String id,
+      required int amount,
+      required String reason,
+      Value<String?> runId,
+      Value<String?> itemId,
+      required DateTime createdAt,
+      required DateTime updatedAt,
+      Value<DateTime?> deletedAt,
+      Value<int> rowid,
+    });
+typedef $$CoinTxnsTableUpdateCompanionBuilder =
+    CoinTxnsCompanion Function({
+      Value<String> id,
+      Value<int> amount,
+      Value<String> reason,
+      Value<String?> runId,
+      Value<String?> itemId,
+      Value<DateTime> createdAt,
+      Value<DateTime> updatedAt,
+      Value<DateTime?> deletedAt,
+      Value<int> rowid,
+    });
+
+final class $$CoinTxnsTableReferences
+    extends BaseReferences<_$AppDatabase, $CoinTxnsTable, CoinTxn> {
+  $$CoinTxnsTableReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static $RunsTable _runIdTable(_$AppDatabase db) =>
+      db.runs.createAlias('coin_txns__run_id__runs__id');
+
+  $$RunsTableProcessedTableManager? get runId {
+    final $_column = $_itemColumn<String>('run_id');
+    if ($_column == null) return null;
+    final manager = $$RunsTableTableManager(
+      $_db,
+      $_db.runs,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_runIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$CoinTxnsTableFilterComposer
+    extends Composer<_$AppDatabase, $CoinTxnsTable> {
+  $$CoinTxnsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get amount => $composableBuilder(
+    column: $table.amount,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get reason => $composableBuilder(
+    column: $table.reason,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get itemId => $composableBuilder(
+    column: $table.itemId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$RunsTableFilterComposer get runId {
+    final $$RunsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.runId,
+      referencedTable: $db.runs,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$RunsTableFilterComposer(
+            $db: $db,
+            $table: $db.runs,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$CoinTxnsTableOrderingComposer
+    extends Composer<_$AppDatabase, $CoinTxnsTable> {
+  $$CoinTxnsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get amount => $composableBuilder(
+    column: $table.amount,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get reason => $composableBuilder(
+    column: $table.reason,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get itemId => $composableBuilder(
+    column: $table.itemId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$RunsTableOrderingComposer get runId {
+    final $$RunsTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.runId,
+      referencedTable: $db.runs,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$RunsTableOrderingComposer(
+            $db: $db,
+            $table: $db.runs,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$CoinTxnsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $CoinTxnsTable> {
+  $$CoinTxnsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<int> get amount =>
+      $composableBuilder(column: $table.amount, builder: (column) => column);
+
+  GeneratedColumn<String> get reason =>
+      $composableBuilder(column: $table.reason, builder: (column) => column);
+
+  GeneratedColumn<String> get itemId =>
+      $composableBuilder(column: $table.itemId, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get deletedAt =>
+      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
+
+  $$RunsTableAnnotationComposer get runId {
+    final $$RunsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.runId,
+      referencedTable: $db.runs,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$RunsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.runs,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$CoinTxnsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $CoinTxnsTable,
+          CoinTxn,
+          $$CoinTxnsTableFilterComposer,
+          $$CoinTxnsTableOrderingComposer,
+          $$CoinTxnsTableAnnotationComposer,
+          $$CoinTxnsTableCreateCompanionBuilder,
+          $$CoinTxnsTableUpdateCompanionBuilder,
+          (CoinTxn, $$CoinTxnsTableReferences),
+          CoinTxn,
+          PrefetchHooks Function({bool runId})
+        > {
+  $$CoinTxnsTableTableManager(_$AppDatabase db, $CoinTxnsTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$CoinTxnsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$CoinTxnsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$CoinTxnsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<int> amount = const Value.absent(),
+                Value<String> reason = const Value.absent(),
+                Value<String?> runId = const Value.absent(),
+                Value<String?> itemId = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<DateTime?> deletedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => CoinTxnsCompanion(
+                id: id,
+                amount: amount,
+                reason: reason,
+                runId: runId,
+                itemId: itemId,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required int amount,
+                required String reason,
+                Value<String?> runId = const Value.absent(),
+                Value<String?> itemId = const Value.absent(),
+                required DateTime createdAt,
+                required DateTime updatedAt,
+                Value<DateTime?> deletedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => CoinTxnsCompanion.insert(
+                id: id,
+                amount: amount,
+                reason: reason,
+                runId: runId,
+                itemId: itemId,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$CoinTxnsTable, CoinTxn>(table),
+                  $$CoinTxnsTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({runId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (runId) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.runId,
+                                referencedTable: $$CoinTxnsTableReferences
+                                    ._runIdTable(db),
+                                referencedColumn: $$CoinTxnsTableReferences
+                                    ._runIdTable(db)
+                                    .id,
+                              )
+                              as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$CoinTxnsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $CoinTxnsTable,
+      CoinTxn,
+      $$CoinTxnsTableFilterComposer,
+      $$CoinTxnsTableOrderingComposer,
+      $$CoinTxnsTableAnnotationComposer,
+      $$CoinTxnsTableCreateCompanionBuilder,
+      $$CoinTxnsTableUpdateCompanionBuilder,
+      (CoinTxn, $$CoinTxnsTableReferences),
+      CoinTxn,
+      PrefetchHooks Function({bool runId})
+    >;
+typedef $$OwnedItemsTableCreateCompanionBuilder =
+    OwnedItemsCompanion Function({
+      required String id,
+      required String itemId,
+      required DateTime createdAt,
+      required DateTime updatedAt,
+      Value<DateTime?> deletedAt,
+      Value<int> rowid,
+    });
+typedef $$OwnedItemsTableUpdateCompanionBuilder =
+    OwnedItemsCompanion Function({
+      Value<String> id,
+      Value<String> itemId,
+      Value<DateTime> createdAt,
+      Value<DateTime> updatedAt,
+      Value<DateTime?> deletedAt,
+      Value<int> rowid,
+    });
+
+class $$OwnedItemsTableFilterComposer
+    extends Composer<_$AppDatabase, $OwnedItemsTable> {
+  $$OwnedItemsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get itemId => $composableBuilder(
+    column: $table.itemId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$OwnedItemsTableOrderingComposer
+    extends Composer<_$AppDatabase, $OwnedItemsTable> {
+  $$OwnedItemsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get itemId => $composableBuilder(
+    column: $table.itemId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$OwnedItemsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $OwnedItemsTable> {
+  $$OwnedItemsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get itemId =>
+      $composableBuilder(column: $table.itemId, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get deletedAt =>
+      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
+}
+
+class $$OwnedItemsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $OwnedItemsTable,
+          OwnedItem,
+          $$OwnedItemsTableFilterComposer,
+          $$OwnedItemsTableOrderingComposer,
+          $$OwnedItemsTableAnnotationComposer,
+          $$OwnedItemsTableCreateCompanionBuilder,
+          $$OwnedItemsTableUpdateCompanionBuilder,
+          (
+            OwnedItem,
+            BaseReferences<_$AppDatabase, $OwnedItemsTable, OwnedItem>,
+          ),
+          OwnedItem,
+          PrefetchHooks Function()
+        > {
+  $$OwnedItemsTableTableManager(_$AppDatabase db, $OwnedItemsTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$OwnedItemsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$OwnedItemsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$OwnedItemsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> itemId = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<DateTime?> deletedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => OwnedItemsCompanion(
+                id: id,
+                itemId: itemId,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String itemId,
+                required DateTime createdAt,
+                required DateTime updatedAt,
+                Value<DateTime?> deletedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => OwnedItemsCompanion.insert(
+                id: id,
+                itemId: itemId,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$OwnedItemsTable, OwnedItem>(table),
+                  BaseReferences<_$AppDatabase, $OwnedItemsTable, OwnedItem>(
+                    db,
+                    table,
+                    e,
+                  ),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$OwnedItemsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $OwnedItemsTable,
+      OwnedItem,
+      $$OwnedItemsTableFilterComposer,
+      $$OwnedItemsTableOrderingComposer,
+      $$OwnedItemsTableAnnotationComposer,
+      $$OwnedItemsTableCreateCompanionBuilder,
+      $$OwnedItemsTableUpdateCompanionBuilder,
+      (OwnedItem, BaseReferences<_$AppDatabase, $OwnedItemsTable, OwnedItem>),
+      OwnedItem,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -6361,4 +8062,8 @@ class $AppDatabaseManager {
       $$XpTxnsTableTableManager(_db, _db.xpTxns);
   $$ProfilesTableTableManager get profiles =>
       $$ProfilesTableTableManager(_db, _db.profiles);
+  $$CoinTxnsTableTableManager get coinTxns =>
+      $$CoinTxnsTableTableManager(_db, _db.coinTxns);
+  $$OwnedItemsTableTableManager get ownedItems =>
+      $$OwnedItemsTableTableManager(_db, _db.ownedItems);
 }

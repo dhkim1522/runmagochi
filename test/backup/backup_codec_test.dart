@@ -17,24 +17,36 @@ void main() {
   test('encode 후 decode 하면 같은 값이다', () {
     final back = BackupCodec.decode(BackupCodec.encode(data));
     expect(back.exportedAt, data.exportedAt);
-    expect(back.schemaVersion, 4);
+    expect(back.schemaVersion, 5);
     expect(back.tables, data.tables);
   });
 
-  test('schemaVersion 3 은 받고 2 와 5 는 거부한다', () {
+  test('schemaVersion 3·4·5 는 받고 2 와 6 은 거부한다', () {
     String withSchema(int v) {
       final m = jsonDecode(BackupCodec.encode(data)) as Map<String, dynamic>;
       m['schemaVersion'] = v;
       return jsonEncode(m);
     }
 
-    expect(BackupCodec.decode(withSchema(3)).schemaVersion, 3);
-    for (final v in [2, 5]) {
+    for (final v in [3, 4, 5]) {
+      expect(BackupCodec.decode(withSchema(v)).schemaVersion, v);
+    }
+    for (final v in [2, 6]) {
       expect(
         () => BackupCodec.decode(withSchema(v)),
         throwsA(isA<BackupFormatException>()),
       );
     }
+  });
+
+  test('5 미만 파일은 코인·보유 테이블 없이도 읽고 빈 목록으로 채운다', () {
+    final m = jsonDecode(BackupCodec.encode(data)) as Map<String, dynamic>;
+    m['schemaVersion'] = 4;
+    (m['tables'] as Map).remove('coinTxns');
+    (m['tables'] as Map).remove('ownedItems');
+    final back = BackupCodec.decode(jsonEncode(m));
+    expect(back.tables['coinTxns'], isEmpty);
+    expect(back.tables['ownedItems'], isEmpty);
   });
 
   test('이상한 입력은 BackupFormatException', () {

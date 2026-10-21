@@ -24,13 +24,21 @@ abstract interface class GrowthRepository {
   /// 그 러닝의 거리 경험치를 [distanceXp] 로, 달성 보너스(`runGoal`)를 [goalBonusXp] 로
   /// 맞춘다(한 트랜잭션). 거리 행은 만들거나 살려 값을 바꾸고 시각을 갱신한다.
   /// 보너스가 0보다 크면 보너스 행을 만들거나 살려 값을 바꾸고, 0이면 삭제 표시를 한다.
+  /// 코인도 같은 트랜잭션에서 맞춘다. [distanceCoins]·[goalCoins] 가 null 이면 그 코인 행을
+  /// 건드리지 않고(예전 러닝은 코인이 없다), 0이면 삭제 표시, 0보다 크면 만들거나 살려 값을 바꾼다.
   /// 같은 러닝을 여러 번 불러도 행은 러닝마다 하나씩이다.
-  Future<void> setRunXp(
+  Future<void> setRunRewards(
     String runId, {
     required int distanceXp,
     required int goalBonusXp,
+    required int? distanceCoins,
+    required int? goalCoins,
   });
 
-  /// 그 러닝의 거리·보너스 행에 삭제 표시를 한다. 없거나 이미 물렀으면 아무 일도 없다.
-  Future<void> revokeRunXp(String runId);
+  /// 그 러닝의 거리·보너스 경험치 행과 코인 행에 삭제 표시를 한다.
+  /// 없거나 이미 물렀으면 아무 일도 없다.
+  Future<void> revokeRunRewards(String runId);
+
+  /// 그 러닝에 살아 있는 거리 코인 행이 있는지. 없으면 코인을 받지 않은 러닝이다.
+  Future<bool> hasRunCoins(String runId);
 }

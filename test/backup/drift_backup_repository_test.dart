@@ -162,7 +162,7 @@ void main() {
     final m = jsonDecode(json) as Map<String, dynamic>;
     expect(m['format'], 'runmagochi-backup');
     expect(m['version'], 1);
-    expect(m['schemaVersion'], 4);
+    expect(m['schemaVersion'], 5);
     expect(m['exportedAt'], '2026-10-18T01:00:00.000Z');
     final tables = m['tables'] as Map<String, dynamic>;
     expect(tables.keys, isNot(contains('runPoints')));
@@ -224,6 +224,76 @@ void main() {
     expect(runs.map((r) => r.goalM), [null, null]);
   });
 
+  test('v4 백업 파일(코인·보유·장착 없음)을 가져오면 코인·보유 없이 열린다', () async {
+    await _seed(src);
+    final m =
+        jsonDecode(await DriftBackupRepository(src).exportJson(_now))
+            as Map<String, dynamic>;
+    m['schemaVersion'] = 4;
+    (m['tables'] as Map).remove('coinTxns');
+    (m['tables'] as Map).remove('ownedItems');
+    for (final r in (m['tables'] as Map)['avatars'] as List) {
+      (r as Map)
+        ..remove('hatItemId')
+        ..remove('accessoryItemId');
+    }
+    await _seed(dst, suffix: '-old');
+    await DriftBackupRepository(dst).importJson(jsonEncode(m));
+    expect(await dst.select(dst.coinTxns).get(), isEmpty);
+    expect(await dst.select(dst.ownedItems).get(), isEmpty);
+    final a = (await dst.select(dst.avatars).get()).single;
+    expect(a.hatItemId, isNull);
+    expect(a.accessoryItemId, isNull);
+  });
+
+  test('v5 왕복에 코인·보유·장착이 유지된다', () async {
+    await _seed(src);
+    await src
+        .into(src.coinTxns)
+        .insert(
+          CoinTxnsCompanion.insert(
+            id: 'c1',
+            amount: 50,
+            reason: 'distance',
+            runId: const Value('r1'),
+            createdAt: _t,
+            updatedAt: _t,
+          ),
+        );
+    await src
+        .into(src.coinTxns)
+        .insert(
+          CoinTxnsCompanion.insert(
+            id: 'c2',
+            amount: -30,
+            reason: 'purchase',
+            itemId: const Value('hat1'),
+            createdAt: _t,
+            updatedAt: _t,
+          ),
+        );
+    await src
+        .into(src.ownedItems)
+        .insert(
+          OwnedItemsCompanion.insert(
+            id: 'o1',
+            itemId: 'hat1',
+            createdAt: _t,
+            updatedAt: _t,
+          ),
+        );
+    await (src.update(
+      src.avatars,
+    )).write(const AvatarsCompanion(hatItemId: Value('hat1')));
+    final json = await DriftBackupRepository(src).exportJson(_now);
+    await _seed(dst, suffix: '-old');
+    await DriftBackupRepository(dst).importJson(json);
+    final coins = await dst.select(dst.coinTxns).get();
+    expect(coins.map((c) => c.id), unorderedEquals(['c1', 'c2']));
+    expect((await dst.select(dst.ownedItems).get()).single.itemId, 'hat1');
+    expect((await dst.select(dst.avatars).get()).single.hatItemId, 'hat1');
+  });
+
   test('가져오면 기존 데이터를 모두 바꾼다 (진행 중 러닝·점 포함)', () async {
     await _seed(src);
     final json = await DriftBackupRepository(src).exportJson(_now);
@@ -272,7 +342,7 @@ void main() {
       return expectRejected(jsonEncode(parsed()..['version'] = 2));
     });
     test('스키마 버전이 다름', () async {
-      await expectRejected(jsonEncode(parsed()..['schemaVersion'] = 5));
+      await expectRejected(jsonEncode(parsed()..['schemaVersion'] = 6));
       await expectRejected(jsonEncode(parsed()..['schemaVersion'] = 2));
     });
     test('테이블이 없음', () {

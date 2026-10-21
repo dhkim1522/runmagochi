@@ -26,12 +26,12 @@ class BackupData {
 
 /// [BackupData] 와 JSON 문자열을 서로 바꾼다. 순수 함수만 있다.
 ///
-/// schemaVersion 3(러닝에 목표가 없다)과 4 를 받는다. DB 스키마가 바뀌면 [currentSchemaVersion] 을 올리고,
+/// schemaVersion 3(러닝에 목표가 없다)·4(코인·보유·장착이 없다)·5 를 받는다. DB 스키마가 바뀌면 [currentSchemaVersion] 을 올리고,
 /// 이전 버전 파일을 읽을 수 있게 [decode] 에 변환 단계를 더한다.
 abstract final class BackupCodec {
   static const format = 'runmagochi-backup';
   static const version = 1;
-  static const currentSchemaVersion = 4;
+  static const currentSchemaVersion = 5;
 
   /// 백업에 담는 테이블. RunPoints 는 담지 않는다.
   static const tableNames = [
@@ -41,7 +41,12 @@ abstract final class BackupCodec {
     'weeklyGoals',
     'xpTxns',
     'profiles',
+    'coinTxns',
+    'ownedItems',
   ];
+
+  /// 5 미만 파일에는 없어 빈 목록으로 채우는 테이블.
+  static const _addedInV5 = ['coinTxns', 'ownedItems'];
 
   static const _unreadable = '백업 파일을 읽을 수 없어요';
 
@@ -70,7 +75,7 @@ abstract final class BackupCodec {
       );
     }
     final s = root['schemaVersion'];
-    if (s is! int || (s != currentSchemaVersion && s != 3)) {
+    if (s is! int || (s < 3 || s > currentSchemaVersion)) {
       throw const BackupFormatException('$_unreadable. 다른 버전 앱에서 만든 백업 파일이에요');
     }
     final exported = root['exportedAt'];
@@ -84,7 +89,7 @@ abstract final class BackupCodec {
     }
     final tables = <String, List<Map<String, Object?>>>{};
     for (final name in tableNames) {
-      final rows = raw[name];
+      final rows = s < 5 && _addedInV5.contains(name) ? const [] : raw[name];
       if (rows is! List) {
         throw BackupFormatException('$_unreadable. $name 데이터가 없어요');
       }

@@ -179,11 +179,56 @@ class DriftGrowthRepository implements GrowthRepository {
     return row == null || row.deletedAt != null ? 0 : row.amount;
   }
 
+  /// (runId, reason) 로 찾은 코인 행. 무른 행도 돌려준다.
+  Future<CoinTxn?> _coinRow(String reason, String runId) {
+    return (_db.select(_db.coinTxns)
+          ..where((t) => t.reason.equals(reason) & t.runId.equals(runId)))
+        .getSingleOrNull();
+  }
+
+  /// 코인 행을 [_setXp] 처럼 맞춘다. 0이면 삭제 표시. 트랜잭션 안에서 부른다.
+  Future<void> _setCoins(String reason, int amount, String runId) async {
+    final now = _now();
+    final row = await _coinRow(reason, runId);
+    if (amount <= 0) {
+      if (row != null && row.deletedAt == null) {
+        await (_db.update(
+          _db.coinTxns,
+        )..where((t) => t.id.equals(row.id))).write(
+          CoinTxnsCompanion(deletedAt: Value(now), updatedAt: Value(now)),
+        );
+      }
+    } else if (row == null) {
+      await _db
+          .into(_db.coinTxns)
+          .insert(
+            CoinTxnsCompanion.insert(
+              id: _uuid.v4(),
+              amount: amount,
+              reason: reason,
+              runId: Value(runId),
+              createdAt: now,
+              updatedAt: now,
+            ),
+          );
+    } else {
+      await (_db.update(_db.coinTxns)..where((t) => t.id.equals(row.id))).write(
+        CoinTxnsCompanion(
+          amount: Value(amount),
+          deletedAt: const Value(null),
+          updatedAt: Value(now),
+        ),
+      );
+    }
+  }
+
   @override
-  Future<void> setRunXp(
+  Future<void> setRunRewards(
     String runId, {
     required int distanceXp,
     required int goalBonusXp,
+    required int? distanceCoins,
+    required int? goalCoins,
   }) => _db.transaction(() async {
     await _setXp(_distance, distanceXp, runId);
     if (goalBonusXp > 0) {
@@ -191,11 +236,27 @@ class DriftGrowthRepository implements GrowthRepository {
     } else {
       await _revokeXp(_runGoal, runId);
     }
+    if (distanceCoins != null) await _setCoins(_distance, distanceCoins, runId);
+    if (goalCoins != null) await _setCoins(_runGoal, goalCoins, runId);
   });
 
   @override
-  Future<void> revokeRunXp(String runId) => _db.transaction(() async {
+  Future<void> revokeRunRewards(String runId) => _db.transaction(() async {
     await _revokeXp(_distance, runId);
     await _revokeXp(_runGoal, runId);
+    final now = _now();
+    await (_db.update(_db.coinTxns)..where(
+          (t) =>
+              t.runId.equals(runId) &
+              t.reason.isIn([_distance, _runGoal]) &
+              t.deletedAt.isNull(),
+        ))
+        .write(CoinTxnsCompanion(deletedAt: Value(now), updatedAt: Value(now)));
   });
+
+  @override
+  Future<bool> hasRunCoins(String runId) async {
+    final row = await _coinRow(_distance, runId);
+    return row != null && row.deletedAt == null;
+  }
 }

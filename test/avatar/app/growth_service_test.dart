@@ -238,7 +238,13 @@ void main() {
 
     test('저장소가 지웠다고 확인하지 않은 경험치는 그대로 둔다', () async {
       runs.otherIds.add('kept'); // 목록에는 없지만 행은 있다(진행 중 등).
-      await growth.setRunXp('kept', distanceXp: 30, goalBonusXp: 0);
+      await growth.setRunRewards(
+        'kept',
+        distanceXp: 30,
+        goalBonusXp: 0,
+        distanceCoins: null,
+        goalCoins: null,
+      );
       await service.sync();
       expect(await growth.totalXp(), 30);
     });
@@ -246,7 +252,13 @@ void main() {
     test('저장소에 아예 없는 러닝의 경험치는 sync 가 무른다', () async {
       runs.add('a', DateTime(2026, 10, 13, 7), 5020);
       await service.sync();
-      await growth.setRunXp('ghost', distanceXp: 30, goalBonusXp: 15);
+      await growth.setRunRewards(
+        'ghost',
+        distanceXp: 30,
+        goalBonusXp: 15,
+        distanceCoins: null,
+        goalCoins: null,
+      );
       final gain = await service.sync();
       expect(gain.isEmpty, isTrue);
       expect(await growth.totalXp(), 50);

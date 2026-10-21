@@ -68,10 +68,12 @@ class GrowthService {
             )
         ? goalBonusXp(goalM)
         : 0;
-    await _growth.setRunXp(
+    await _growth.setRunRewards(
       run.id,
       distanceXp: distanceXp(run.distanceM, detail.splits),
       goalBonusXp: bonus,
+      distanceCoins: null,
+      goalCoins: null,
     );
     return bonus;
   }
@@ -98,7 +100,7 @@ class GrowthService {
     if (orphans.isNotEmpty) {
       final existing = await _runs.existingRunIds(orphans);
       for (final runId in orphans.difference(existing)) {
-        await _growth.revokeRunXp(runId);
+        await _growth.revokeRunRewards(runId);
       }
     }
     final revisedAt = await _runs.completedRunRevisions();
