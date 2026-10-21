@@ -58,7 +58,7 @@
   - 테스트: `runProgressContent` 세 상태 문구(목표 있음·달성·없음). 컨트롤러가 시작·거리 변화·일시정지·재개 때 `show` 를 부르고 3초 안의 거리 변화는 한 번으로 묶는다. 끝내면 `cancel`. 알림 실패가 러닝을 멈추지 않는다.
   - 확인: `fvm flutter test test/run`
 
-- [ ] 2. 알림 버튼으로 일시정지·재개
+- [x] 2. 알림 버튼으로 일시정지·재개
   - 파일: `lib/core/local_notifications.dart`, `lib/run/app/run_controller.dart`, `lib/run/app/providers.dart`, `lib/main.dart`
   - 동작: 알림 버튼 id 는 `run_pause`·`run_resume`(`showsUserInterface: false`). 앱이 살아 있으면 `onDidReceiveNotificationResponse` 가, 백그라운드 isolate 에서 받으면 최상위 `@pragma('vm:entry-point')` 함수가 `IsolateNameServer.lookupPortByName('run_notification_actions')` 로 메인 isolate 에 보낸다. 메인 isolate 는 시작 때 그 이름으로 포트를 등록하고(있던 이름은 먼저 지운다) `Stream<String> runNotificationActions` 로 내보낸다. 컨트롤러는 기록 중이면 `pause()`, 일시정지·자동 일시정지면 `resume()`. 맞지 않는 상태의 버튼은 무시한다.
   - 테스트: 액션 스트림에 `run_pause` → 일시정지, `run_resume` → 재개, 러닝이 없을 때는 무시. 포트가 없을 때 백그라운드 함수가 예외 없이 끝난다.
