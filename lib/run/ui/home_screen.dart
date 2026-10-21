@@ -14,6 +14,7 @@ import '../../shop/app/providers.dart';
 import '../../shop/ui/coin_chip.dart';
 import '../app/permission_gate.dart';
 import '../app/providers.dart';
+import '../app/run_controller.dart' show shortRunMessage;
 import '../domain/run_goal.dart';
 import '../domain/run_summary.dart';
 import 'in_run_screen.dart';
@@ -62,7 +63,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       // 복원한 러닝이 이미 자동 종료 조건을 넘어 끝났으면 요약을 연다.
       final view = ref.read(runControllerProvider);
       final summary = view.lastSummary;
-      if (view.autoEnded && summary != null) await _openSummary(summary);
+      if (view.discardedShortRun) {
+        _toast(shortRunMessage);
+      } else if (view.autoEnded && summary != null) {
+        await _openSummary(summary);
+      }
       return;
     }
     final resume = await showDialog<bool>(
@@ -92,6 +97,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         _toast('저장하지 못했어요');
       }
       if (!mounted) return;
+      if (ref.read(runControllerProvider).discardedShortRun) {
+        _toast(shortRunMessage);
+        _refreshAfterRun();
+        return;
+      }
       final goal = await _endedRunGoal();
       if (!mounted) return;
       _refreshAfterRun(goal: goal);
@@ -116,6 +126,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       context,
     ).push(MaterialPageRoute<void>(builder: (_) => const InRunScreen()));
     if (!mounted) return;
+    if (ref.read(runControllerProvider).discardedShortRun) {
+      _toast(shortRunMessage);
+      _refreshAfterRun();
+      return;
+    }
     final after = ref.read(runControllerProvider).lastSummary;
     if (after == null || identical(after, before)) {
       _refreshAfterRun();

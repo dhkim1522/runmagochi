@@ -130,6 +130,29 @@ void main() {
       expect(earned([run()]), ['first_run']);
     });
 
+    test('1km 미만 러닝은 first_run 이 아니고, 1km 는 맞다', () {
+      expect(earned([run(distanceM: 900, splits: km(0))]), isEmpty);
+      // 10m 반올림: 995m 는 1.00km, 994m 는 0.99km.
+      expect(earned([run(distanceM: 994, splits: km(0))]), isEmpty);
+      expect(earned([run(distanceM: 995, splits: km(0))]), ['first_run']);
+      expect(earned([run(distanceM: 1000, splits: km(1))]), ['first_run']);
+    });
+
+    test('빠른 구간을 빼면 1km 미만이 되는 러닝은 세지 않는다', () {
+      // 1.2km 중 마지막 1km 구간이 시속 30km 를 넘는 빠른 구간이면 경험치 거리는 0.2km.
+      final r = run(
+        distanceM: 1200,
+        splits: [
+          const Split(
+            index: 1,
+            distanceM: 1000,
+            duration: Duration(seconds: 100),
+          ),
+        ],
+      );
+      expect(earned([r]), isNot(contains('first_run')));
+    });
+
     test('한 번에 5km: 4.99km 는 아니고 5.00km 는 맞다 (4,995m 도 5km)', () {
       expect(
         earned([run(distanceM: 4990, splits: km(4))]),
@@ -221,6 +244,29 @@ void main() {
       expect(
         earned([run(at: DateTime(2026, 1, 1, 6, 0))]),
         isNot(contains('dawn')),
+      );
+    });
+
+    test('1km 미만 러닝은 새벽 러너·3일 연속에 세지 않는다', () {
+      final shortDawn = run(
+        at: DateTime(2026, 1, 1, 5),
+        distanceM: 900,
+        splits: km(0),
+      );
+      expect(earned([shortDawn]), isNot(contains('dawn')));
+      expect(
+        earned([shortDawn, run(at: DateTime(2026, 1, 2, 7))]),
+        isNot(contains('dawn')),
+      );
+      final days = [
+        run(at: DateTime(2026, 1, 1, 7)),
+        run(at: DateTime(2026, 1, 2, 7), distanceM: 900, splits: km(0)),
+        run(at: DateTime(2026, 1, 3, 7)),
+      ];
+      expect(earned(days), isNot(contains('streak_3')));
+      expect(
+        earned([...days, run(at: DateTime(2026, 1, 4, 7))]),
+        isNot(contains('streak_3')),
       );
     });
 

@@ -114,6 +114,14 @@ class _FakeRunRepository implements RunRepository {
     completed.add((runId, summary));
   }
 
+  final discarded = <String>[];
+
+  @override
+  Future<void> discardActiveRun(String runId) async {
+    log.add('discardActiveRun');
+    discarded.add(runId);
+  }
+
   @override
   Future<List<RunListItem>> listRuns() => throw UnimplementedError();
 
@@ -236,6 +244,23 @@ void _run(
 void main() {
   _weightTests();
 
+  /// 3m/s 로 335초 달려 1km 를 넘기고(1km 미만은 저장하지 않는다), 주기 저장이 한 번
+  /// 돈 뒤 저장소 호출 기록을 비운다. 끝난 시각은 시작 후 340초다.
+  void runKm(
+    FakeAsync async,
+    _FakeLocationSource location,
+    _FakeRunRepository repository,
+  ) {
+    for (var i = 1; i <= 335; i++) {
+      async.elapse(const Duration(seconds: 1));
+      location.controller.add(_sample(_t0.add(async.elapsed), i * 3.0));
+      async.flushMicrotasks();
+    }
+    async.elapse(const Duration(seconds: 5));
+    repository.log.clear();
+    repository.appendCalls.clear();
+  }
+
   /// 1초를 보내고 그 시각에 [meters] 지점의 점을 보낸다.
   void stepTo(FakeAsync async, _FakeLocationSource location, double meters) {
     async.elapse(const Duration(seconds: 1));
@@ -288,9 +313,13 @@ void main() {
     _run((async, controller, container, repository, location) {
       controller.start(goal: DistanceGoal(3000));
       async.flushMicrotasks();
-      for (var i = 1; i <= 2; i++) {
+      for (var i = 1; i <= 335; i++) {
         stepTo(async, location, i * 3.0);
       }
+      final savedBefore = repository.appendCalls.fold<int>(
+        0,
+        (n, c) => n + c.points.length,
+      );
 
       RunSummary? summary;
       controller.end().then((s) => summary = s);
@@ -299,13 +328,17 @@ void main() {
       expect(summary, isNotNull);
       expect(repository.completed.single.$1, _runId);
       expect(repository.completed.single.$2, same(summary));
-      expect(summary!.points, hasLength(2));
-      expect(repository.appendCalls.single.points, hasLength(2));
-      expect(repository.log, [
-        'createActiveRun',
-        'appendPoints',
-        'completeRun',
-      ]);
+      expect(summary!.points, hasLength(335));
+      // 끝낼 때 남은 점까지 모두 completeRun 전에 저장한다.
+      final saved = repository.appendCalls.fold<int>(
+        0,
+        (n, c) => n + c.points.length,
+      );
+      expect(saved, 335);
+      expect(saved, greaterThan(savedBefore));
+      expect(repository.log.last, 'completeRun');
+      expect(repository.log.where((e) => e == 'completeRun'), hasLength(1));
+      expect(repository.log[repository.log.length - 2], 'appendPoints');
       expect(location.isListened, isFalse);
       expect(async.pendingTimers, isEmpty);
 
@@ -320,7 +353,7 @@ void main() {
     _run((async, controller, container, repository, location) {
       controller.start(goal: DistanceGoal(3000));
       async.flushMicrotasks();
-      stepTo(async, location, 3);
+      runKm(async, location, repository);
       controller.end();
       async.flushMicrotasks();
       final calls = repository.appendCalls.length;
@@ -336,25 +369,20 @@ void main() {
     _run((async, controller, container, repository, location) {
       controller.start(goal: DistanceGoal(3000));
       async.flushMicrotasks();
-      stepTo(async, location, 3);
+      runKm(async, location, repository);
       final gate = repository.appendGate = Completer<void>();
-      async.elapse(const Duration(seconds: 9));
-      expect(repository.log, ['createActiveRun', 'appendPoints']);
+      async.elapse(const Duration(seconds: 10));
+      expect(repository.log, ['appendPoints']);
 
       controller.end();
       async.flushMicrotasks();
-      expect(repository.log, ['createActiveRun', 'appendPoints']);
+      expect(repository.log, ['appendPoints']);
       expect(repository.completed, isEmpty);
 
       gate.complete();
       async.flushMicrotasks();
-      expect(repository.log, [
-        'createActiveRun',
-        'appendPoints',
-        'appendPoints',
-        'completeRun',
-      ]);
-      expect(repository.appendCalls[0].points, hasLength(1));
+      expect(repository.log, ['appendPoints', 'appendPoints', 'completeRun']);
+      expect(repository.appendCalls[0].points, isEmpty);
       expect(repository.appendCalls[1].points, isEmpty);
     });
   });
@@ -380,6 +408,7 @@ void main() {
     _run((async, controller, container, repository, location) {
       controller.start(goal: DistanceGoal(3000));
       async.flushMicrotasks();
+      runKm(async, location, repository);
       controller.end();
       async.flushMicrotasks();
       expect(container.read(runControllerProvider).lastSummary, isNotNull);
@@ -439,7 +468,7 @@ void main() {
     _run((async, controller, container, repository, location) {
       controller.start(goal: DistanceGoal(3000));
       async.flushMicrotasks();
-      stepTo(async, location, 3);
+      runKm(async, location, repository);
       controller.pause();
       async.flushMicrotasks();
       final gate = repository.appendGate = Completer<void>();
@@ -462,7 +491,7 @@ void main() {
       _run((async, controller, container, repository, location) {
         controller.start(goal: DistanceGoal(3000));
         async.flushMicrotasks();
-        stepTo(async, location, 3);
+        runKm(async, location, repository);
         final gate = repository.appendGate = Completer<void>();
 
         controller.end();
@@ -476,11 +505,7 @@ void main() {
         gate.complete();
         async.flushMicrotasks();
         async.elapse(const Duration(seconds: 30));
-        expect(repository.log, [
-          'createActiveRun',
-          'appendPoints',
-          'completeRun',
-        ]);
+        expect(repository.log, ['appendPoints', 'completeRun']);
       });
     },
   );
@@ -491,7 +516,7 @@ void main() {
       _run((async, controller, container, repository, location) {
         controller.start(goal: DistanceGoal(3000));
         async.flushMicrotasks();
-        stepTo(async, location, 3);
+        runKm(async, location, repository);
         repository.completeError = StateError('쓰기 실패');
 
         Object? error;
@@ -510,13 +535,8 @@ void main() {
         async.flushMicrotasks();
 
         expect(summary, isNotNull);
-        expect(summary!.points, hasLength(1));
-        expect(repository.log, [
-          'createActiveRun',
-          'appendPoints',
-          'completeRun',
-          'completeRun',
-        ]);
+        expect(summary!.points, hasLength(335));
+        expect(repository.log, ['appendPoints', 'completeRun', 'completeRun']);
         final state = container.read(runControllerProvider);
         expect(state.runId, isNull);
         expect(state.lastSummary, same(summary));

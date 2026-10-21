@@ -1,5 +1,6 @@
 import '../../avatar/domain/growth_rules.dart';
 import '../../run/data/run_repository.dart';
+import '../../run/domain/run_summary.dart' show minSavedDistanceM;
 
 /// 배지 한 종류. 보상은 코인만이다.
 class BadgeDef {
@@ -15,7 +16,7 @@ class BadgeDef {
 
 /// 배지 목록(초안). 받는 순서는 이 목록 순서다.
 const badgeCatalog = <BadgeDef>[
-  BadgeDef('first_run', '첫 러닝', '러닝 1회', 50),
+  BadgeDef('first_run', '첫 러닝', '1km 이상 러닝 1회', 50),
   BadgeDef('first_goal', '첫 목표 달성', '목표 달성 1회', 50),
   BadgeDef('dist_5k', '첫 5km', '한 번에 5km', 100),
   BadgeDef('dist_10k', '첫 10km', '한 번에 10km', 150),
@@ -25,8 +26,8 @@ const badgeCatalog = <BadgeDef>[
   BadgeDef('total_300', '누적 300km', '누적 300km', 300),
   BadgeDef('goals_10', '목표 달성 10번', '목표 달성 10회', 100),
   BadgeDef('goals_30', '목표 달성 30번', '목표 달성 30회', 200),
-  BadgeDef('streak_3', '3일 연속', '서로 다른 3일 연속 러닝', 50),
-  BadgeDef('dawn', '새벽 러너', '오전 6시 전에 시작', 50),
+  BadgeDef('streak_3', '3일 연속', '1km 이상 서로 다른 3일 연속 러닝', 50),
+  BadgeDef('dawn', '새벽 러너', '1km 이상 러닝을 오전 6시 전에 시작', 50),
 ];
 
 /// 미획득 배지 하나의 진행 상황. [current]/[target] 은 배지마다 단위가 다르다
@@ -65,7 +66,6 @@ _Stats _statsOf(List<RunDetail> runs) {
   final s = _Stats();
   final days = <DateTime>{};
   for (final d in runs) {
-    s.runs++;
     final goal = d.run.goal;
     if (goal != null &&
         goalAchieved(
@@ -79,6 +79,9 @@ _Stats _statsOf(List<RunDetail> runs) {
     final m = _countedM(d);
     if (m > s.bestSingleM) s.bestSingleM = m;
     s.totalM += m;
+    // 첫 러닝·3일 연속·새벽 러너는 경험치 거리 1km 이상인 러닝만 센다(결정 0027).
+    if (m < minSavedDistanceM) continue;
+    s.runs++;
     final local = d.run.startedAt.toLocal();
     if (local.hour < 6) s.dawn = true;
     days.add(DateTime.utc(local.year, local.month, local.day));
@@ -117,6 +120,7 @@ _Stats _statsOf(List<RunDetail> runs) {
 /// - 거리: 빠른 구간을 뺀 경험치 거리를 목표 판정과 같이 10m 로 반올림해 잰다.
 ///   4,995m 는 5.00km 로 보이므로 5km 로 센다.
 /// - 목표 달성: 러닝에 저장된 목표(거리·시간)를 [goalAchieved] 로 판정한다. 목표 없는 러닝은 세지 않는다.
+/// - 첫 러닝·3일 연속·새벽 러너: 경험치 거리(위와 같은 규칙)가 1km 이상인 러닝만 센다.
 /// - 3일 연속: 현지 달력 날짜가 서로 다르고 하루씩 이어지는 3일.
 /// - 새벽 러너: 현지 시각 06:00 전에 시작.
 List<String> earnedBadgeIds(

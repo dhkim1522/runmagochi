@@ -24,7 +24,7 @@ Flutter로 개발한다. 근거는 [결정 0004](decisions/0004-flutter.md).
 
 ```mermaid
 flowchart TB
-    UI["화면 8개 · 하단 탭 4개(러닝·기록·아바타·상점)"]
+    UI["화면 7개 · 하단 탭 4개(러닝·기록·아바타·상점)"]
     subgraph Domain["도메인"]
         Engine["기록 엔진<br/>GPS 수집·필터<br/>거리·페이스·구간"]
         Growth["성장 로직<br/>경험치·레벨·상태"]

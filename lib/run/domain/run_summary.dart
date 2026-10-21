@@ -17,6 +17,9 @@ class Split {
       (distanceM / 1000);
 }
 
+/// 이 거리(m) 미만으로 끝난 러닝은 저장하지 않는다(결정 0027).
+const double minSavedDistanceM = 1000;
+
 class RunSummary {
   const RunSummary({
     required this.startedAt,

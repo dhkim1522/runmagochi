@@ -34,6 +34,8 @@ const String _saveErrorMessage = '기록 저장에 실패했어요. 자동으로
 const String _endErrorMessage = '러닝 저장에 실패했어요. 다시 종료해 주세요';
 const String _autoEndTitle = '러닝을 자동으로 마쳤어요';
 const String _autoEndFastTitle = '빠른 이동이 감지돼 러닝을 마쳤어요';
+const String _shortRunAutoEndTitle = '러닝을 마쳤어요';
+const String shortRunMessage = '1km 미만은 기록하지 않아요';
 const String _goalReachedTitle = '목표 달성!';
 
 const RunSnapshot _idleSnapshot = RunSnapshot(
@@ -56,6 +58,7 @@ class RunViewState {
     this.lastRunId,
     this.goal,
     this.goalReached = false,
+    this.discardedShortRun = false,
   });
 
   final RunSnapshot snapshot;
@@ -79,6 +82,10 @@ class RunViewState {
 
   /// 목표에 닿았다(거리 목표는 기록 거리, 시간 목표는 움직인 시간). 목표가 없으면 항상 false.
   final bool goalReached;
+
+  /// 방금 끝낸 러닝이 [minSavedDistanceM] 미만이라 저장하지 않고 지웠다(결정 0027).
+  /// 이때 [lastSummary]·[lastRunId] 는 비어 있다. 다음 러닝을 시작하면 지워진다.
+  final bool discardedShortRun;
 }
 
 class RunController extends Notifier<RunViewState> {
@@ -309,8 +316,14 @@ class RunController extends Notifier<RunViewState> {
         _pendingAutoEnd = auto?.reason;
         _publish();
       }
+      // 1km 미만은 저장하지 않고 진행 중 러닝을 지운다. 최종 기록 거리(잘라낸 뒤)로 정한다.
+      final discard = summary.distanceM < minSavedDistanceM;
       try {
-        await _repository.completeRun(runId, summary);
+        if (discard) {
+          await _repository.discardActiveRun(runId);
+        } else {
+          await _repository.completeRun(runId, summary);
+        }
       } catch (_) {
         state = _copyState(lastError: _endErrorMessage);
         rethrow;
@@ -328,11 +341,14 @@ class RunController extends Notifier<RunViewState> {
       _flushClosed = false;
       state = RunViewState(
         snapshot: _idleSnapshot,
-        lastSummary: summary,
+        lastSummary: discard ? null : summary,
         autoEnded: autoEnded,
-        lastRunId: runId,
+        lastRunId: discard ? null : runId,
+        discardedShortRun: discard,
       );
-      if (autoEndReason != null) _notifyAutoEnd(summary, autoEndReason);
+      if (autoEndReason != null) {
+        _notifyAutoEnd(summary, autoEndReason, discarded: discard);
+      }
       return summary;
     } finally {
       _ending = false;
@@ -475,18 +491,26 @@ class RunController extends Notifier<RunViewState> {
   }
 
   /// 알림 실패는 러닝 저장과 상관없으므로 버린다.
-  void _notifyAutoEnd(RunSummary summary, AutoEndReason reason) {
+  /// 저장하지 않은([discarded]) 러닝은 기록을 저장했다고 알리지 않는다.
+  void _notifyAutoEnd(
+    RunSummary summary,
+    AutoEndReason reason, {
+    required bool discarded,
+  }) {
     try {
       unawaited(
         ref
             .read(instantNotifierProvider)
             .showNow(
-              title: reason == AutoEndReason.fast
+              title: discarded
+                  ? _shortRunAutoEndTitle
+                  : reason == AutoEndReason.fast
                   ? _autoEndFastTitle
                   : _autoEndTitle,
-              body:
-                  '${formatKm(summary.distanceM)}km 기록을 저장했어요. '
-                  '요약에서 확인하세요.',
+              body: discarded
+                  ? shortRunMessage
+                  : '${formatKm(summary.distanceM)}km 기록을 저장했어요. '
+                        '요약에서 확인하세요.',
             )
             .catchError((Object e) => debugPrint('알림: 자동 종료 알림 실패 $e')),
       );
@@ -752,7 +776,8 @@ class RunController extends Notifier<RunViewState> {
     final now = ref.read(clockProvider)();
     final km = formatKm(snapshot.distanceM);
     final goal = _goal;
-    final timeStep = goal is TimeGoal
+    // 달성한 뒤에는 15초 단계가 알림 갱신을 일으키지 않게 키에서 뺀다.
+    final timeStep = goal is TimeGoal && !_goalReached
         ? (goal.time - snapshot.movingTime).inSeconds ~/
               _progressTimeStepSeconds
         : null;
@@ -903,6 +928,7 @@ class RunController extends Notifier<RunViewState> {
       lastRunId: state.lastRunId,
       goal: _goal,
       goalReached: _goalReached,
+      discardedShortRun: state.discardedShortRun,
     );
   }
 }

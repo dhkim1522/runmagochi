@@ -66,6 +66,38 @@ class _AutoEndOnEndController extends FakeController {
   }
 }
 
+/// 1km 미만이라 저장하지 않고 지운 상태를 흉내 내는 컨트롤러.
+class _DiscardController extends FakeController {
+  _DiscardController({super.restore, this.discardOnRestore = false});
+
+  final bool discardOnRestore;
+
+  void discard({bool auto = false}) {
+    state = RunViewState(
+      snapshot: snap(RunState.idle),
+      autoEnded: auto,
+      discardedShortRun: true,
+    );
+  }
+
+  @override
+  Future<RunSummary> end() async {
+    calls.add('end');
+    discard();
+    return _summary;
+  }
+
+  @override
+  Future<bool> restoreIfAny() async {
+    if (discardOnRestore) {
+      calls.add('restore');
+      discard(auto: true);
+      return false;
+    }
+    return super.restoreIfAny();
+  }
+}
+
 class _PopCounter extends NavigatorObserver {
   int pops = 0;
 
@@ -163,5 +195,43 @@ void main() {
     final screen = tester.widget<SummaryScreen>(find.byType(SummaryScreen));
     expect(screen.summary, same(_summary));
     expect(c.calls, ['restore']);
+  });
+
+  testWidgets('러닝 중 1km 미만으로 자동 종료되면 러닝 화면을 닫고 요약 없이 안내만 보인다', (tester) async {
+    final c = _DiscardController();
+    await _pumpHome(tester, c);
+    await tester.tap(find.text('시작'));
+    await tester.pump();
+    await tester.pump(const Duration(seconds: 3));
+    await _settle(tester);
+    expect(find.byType(InRunScreen), findsOneWidget);
+
+    c.discard(auto: true);
+    await _settle(tester);
+
+    expect(find.byType(InRunScreen), findsNothing);
+    expect(find.byType(SummaryScreen), findsNothing);
+    expect(find.text('1km 미만은 기록하지 않아요'), findsOneWidget);
+  });
+
+  testWidgets('복원 때 바로 1km 미만으로 끝나면 요약 대신 안내를 보인다', (tester) async {
+    final c = _DiscardController(discardOnRestore: true);
+    await _pumpHome(tester, c);
+    await _settle(tester);
+
+    expect(find.byType(SummaryScreen), findsNothing);
+    expect(find.text('1km 미만은 기록하지 않아요'), findsOneWidget);
+  });
+
+  testWidgets('복구 다이얼로그의 종료하고 저장이 1km 미만이면 안내를 보인다', (tester) async {
+    final c = _DiscardController(restore: true);
+    await _pumpHome(tester, c);
+    await _settle(tester);
+    await tester.tap(find.text('종료하고 저장'));
+    await _settle(tester);
+
+    expect(c.calls, ['restore', 'end']);
+    expect(find.byType(SummaryScreen), findsNothing);
+    expect(find.text('1km 미만은 기록하지 않아요'), findsOneWidget);
   });
 }

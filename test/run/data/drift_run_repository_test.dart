@@ -493,6 +493,56 @@ void main() {
     expect(await repo.getRun(id), isNull);
   });
 
+  group('discardActiveRun', () {
+    test('진행 중 러닝과 점을 행째 지우고 목록·합계·진행 중 조회에 남지 않는다', () async {
+      final start = DateTime(2026, 1, 5, 9);
+      final done = await repo.createActiveRun(
+        start.subtract(const Duration(days: 1)),
+        goal: const DistanceGoal(3000),
+      );
+      await repo.completeRun(
+        done,
+        summary(start.subtract(const Duration(days: 1))),
+      );
+      final id = await repo.createActiveRun(
+        start,
+        goal: const DistanceGoal(3000),
+      );
+      await repo.appendPoints(
+        id,
+        segmentIndex: 0,
+        points: [sample(start.add(const Duration(seconds: 1)), 37.5, 127.0)],
+        movingTime: const Duration(seconds: 1),
+      );
+
+      await repo.discardActiveRun(id);
+
+      expect(await repo.findActiveRun(), isNull);
+      expect((await repo.listRuns()).map((r) => r.id), [done]);
+      expect(await repo.existingRunIds({id, done}), {done});
+      expect(await db.select(db.runPoints).get(), isEmpty);
+      expect(await db.select(db.splits).get(), isEmpty);
+      // 지운 러닝은 목표 기억에서도 빠진다.
+      expect((await repo.lastGoal()), const DistanceGoal(3000));
+    });
+
+    test('없는 러닝이면 아무 일도 없다', () async {
+      await repo.discardActiveRun('none');
+    });
+
+    test('완료된 러닝이면 StateError 이고 그대로 남는다', () async {
+      final start = DateTime(2026, 1, 5, 9);
+      final id = await repo.createActiveRun(
+        start,
+        goal: const DistanceGoal(3000),
+      );
+      await repo.completeRun(id, summary(start));
+
+      await expectLater(repo.discardActiveRun(id), throwsStateError);
+      expect((await repo.listRuns()).map((r) => r.id), [id]);
+    });
+  });
+
   group('deleteRun', () {
     const twoSplits = [
       Split(index: 1, distanceM: 1000, duration: Duration(minutes: 5)),

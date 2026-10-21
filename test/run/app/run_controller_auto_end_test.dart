@@ -28,6 +28,11 @@ const _title = '러닝을 자동으로 마쳤어요';
 const _fastTitle = '빠른 이동이 감지돼 러닝을 마쳤어요';
 final _t0 = DateTime(2026, 10, 18, 7);
 
+/// 1km 미만은 저장하지 않으므로(결정 0027) 저장을 확인하는 러닝은 먼저 330초를
+/// 3m/s 로 달려 990m 를 쌓고 시작한다.
+const _warm = Duration(seconds: 330);
+const _warmM = 990.0;
+
 double _northOf(double meters) => _lat0 + meters / 6371000 * 180 / math.pi;
 
 LocationSample _sample(DateTime time, double meters) => LocationSample(
@@ -41,6 +46,13 @@ double _dist(double a, double b) =>
     haversineMeters(_northOf(a), _lng0, _northOf(b), _lng0);
 
 class _Repo implements RunRepository {
+  final discarded = <String>[];
+
+  @override
+  Future<void> discardActiveRun(String runId) async {
+    discarded.add(runId);
+  }
+
   @override
   Future<List<RunDetail>> listRunDetails() => throw UnimplementedError();
 
@@ -147,6 +159,11 @@ class _Env {
     location.controller.add(_sample(_t0.add(at), meters));
     async.flushMicrotasks();
   }
+
+  /// 1km 를 넘기는 앞 달리기(_warm 초, 3m/s) 뒤의 시각·지점으로 점을 보낸다.
+  /// [at]·[meters] 는 앞 달리기가 없던 때의 값이다.
+  void tailAt(Duration at, double meters) =>
+      sampleAt(at + _warm, meters + _warmM);
 }
 
 void _run(
@@ -180,19 +197,19 @@ void _run(
 }
 
 void main() {
-  /// 시작 뒤 1~5초에 3m 씩 점 5개.
+  /// 시작 뒤 1~335초에 3m 씩 점 335개(1,005m). 마지막 점은 335초.
   void runFiveSamples(_Env env) {
     env.controller.start(goal: DistanceGoal(3000));
     env.async.flushMicrotasks();
-    for (var i = 1; i <= 5; i++) {
+    for (var i = 1; i <= 335; i++) {
       env.sampleAt(Duration(seconds: i), i * 3.0);
     }
   }
 
-  const lastPointOffset = Duration(seconds: 5);
+  const lastPointOffset = Duration(seconds: 335);
   final lastPoint = _t0.add(lastPointOffset);
   final fiveDistance = [
-    for (var i = 1; i < 5; i++) _dist(i * 3.0, (i + 1) * 3.0),
+    for (var i = 1; i < 335; i++) _dist(i * 3.0, (i + 1) * 3.0),
   ].reduce((a, b) => a + b);
 
   /// 시작 기준 [at] 까지 흐르게 한다.
@@ -231,13 +248,13 @@ void main() {
         final summary = env.repo.completed.single.$2;
         expect(summary.endedAt, lastPoint);
         expect(summary.distanceM, closeTo(fiveDistance, 1e-9));
-        expect(summary.points, hasLength(5));
-        expect(summary.movingTime, const Duration(seconds: 5));
+        expect(summary.points, hasLength(335));
+        expect(summary.movingTime, lastPointOffset);
         expect(env.view.autoEnded, isTrue);
         expect(env.view.snapshot.state, RunState.idle);
         expect(env.progress.warnings, hasLength(1));
         expect(env.progress.warningCancels, 1);
-        expect(env.notifier.shown, [(_title, '0.01km 기록을 저장했어요. 요약에서 확인하세요.')]);
+        expect(env.notifier.shown, [(_title, '1.00km 기록을 저장했어요. 요약에서 확인하세요.')]);
       });
     });
 
@@ -250,13 +267,13 @@ void main() {
         // 10m 넘게 움직인 점 3개로 자동 재개한다.
         final from = env.async.elapsed;
         for (var i = 1; i <= 3; i++) {
-          env.sampleAt(from + Duration(seconds: i), 15.0 + i * 6);
+          env.sampleAt(from + Duration(seconds: i), 1005.0 + i * 6);
         }
         expect(env.view.snapshot.state, RunState.recording);
         expect(env.progress.warningCancels, 1);
 
         for (var i = 4; i <= 40; i++) {
-          env.sampleAt(from + Duration(seconds: i), 15.0 + i * 6);
+          env.sampleAt(from + Duration(seconds: i), 1005.0 + i * 6);
         }
         expect(env.repo.completed, isEmpty);
         expect(env.view.snapshot.state, RunState.recording);
@@ -288,7 +305,7 @@ void main() {
         runFiveSamples(env);
         // 6~14초 점은 5m 안에서 흔들려 받아들이지만 움직임은 아니다.
         for (var i = 6; i <= 14; i++) {
-          env.sampleAt(Duration(seconds: i), i.isEven ? 16.0 : 15.0);
+          env.tailAt(Duration(seconds: i), i.isEven ? 16.0 : 15.0);
         }
         elapseTo(
           env,
@@ -296,10 +313,10 @@ void main() {
         );
         final summary = env.repo.completed.single.$2;
         expect(summary.endedAt, lastPoint);
-        expect(summary.points, hasLength(5));
+        expect(summary.points, hasLength(335));
         expect(summary.distanceM, closeTo(fiveDistance, 1e-9));
         // 움직인 시간은 멈춘 시각에서 이미 멈춰 있다.
-        expect(summary.movingTime, const Duration(seconds: 5));
+        expect(summary.movingTime, lastPointOffset);
       });
     });
 
@@ -323,7 +340,7 @@ void main() {
         elapseTo(env, switchAt + const Duration(hours: 1, seconds: 30));
         final summary = env.repo.completed.single.$2;
         expect(summary.endedAt, lastPoint);
-        expect(summary.movingTime, const Duration(seconds: 5));
+        expect(summary.movingTime, lastPointOffset);
         expect(env.view.autoEnded, isTrue);
         expect(env.notifier.shown.single.$1, _title);
       });
@@ -369,7 +386,7 @@ void main() {
         final summary = env.repo.completed.single.$2;
         expect(summary.endedAt, lastPoint);
         expect(summary.distanceM, closeTo(fiveDistance, 1e-9));
-        expect(summary.movingTime, const Duration(seconds: 5));
+        expect(summary.movingTime, lastPointOffset);
         expect(env.view.autoEnded, isTrue);
         expect(env.progress.warningCancels, 1);
         expect(env.notifier.shown.single.$1, _title);
@@ -403,23 +420,23 @@ void main() {
       expect(summary.endedAt, lastPoint);
       expect(summary.distanceM, closeTo(fiveDistance, 1e-9));
       // 일시정지까지 움직인 시간은 그대로 둔다.
-      expect(summary.movingTime, const Duration(seconds: 10));
+      expect(summary.movingTime, lastPointOffset + const Duration(seconds: 5));
       expect(env.view.autoEnded, isTrue);
       expect(env.notifier.shown.single.$1, _title);
     });
   });
 
   test('계속 점이 들어와도 시작 6시간이면 끝낸다', () {
-    _run(config: const RunGuardConfig(max: Duration(seconds: 30)), (env) {
+    _run(config: const RunGuardConfig(max: Duration(seconds: 340)), (env) {
       env.controller.start(goal: DistanceGoal(3000));
       env.async.flushMicrotasks();
-      for (var i = 1; i <= 29; i++) {
+      for (var i = 1; i <= 339; i++) {
         env.sampleAt(Duration(seconds: i), i * 3.0);
       }
       env.async.elapse(const Duration(seconds: 1));
       final summary = env.repo.completed.single.$2;
-      expect(summary.endedAt, _t0.add(const Duration(seconds: 29)));
-      expect(summary.points, hasLength(29));
+      expect(summary.endedAt, _t0.add(const Duration(seconds: 339)));
+      expect(summary.points, hasLength(339));
     });
   });
 
@@ -505,7 +522,7 @@ void main() {
     void feedFast(_Env env, int fastUntil) {
       runFiveSamples(env);
       for (var i = 6; i <= fastUntil; i++) {
-        env.sampleAt(Duration(seconds: i), 15.0 + (i - 5) * 10);
+        env.tailAt(Duration(seconds: i), 15.0 + (i - 5) * 10);
       }
     }
 
@@ -517,16 +534,16 @@ void main() {
         expect(env.view.snapshot.state, RunState.recording);
 
         // 36초 점이 오면 점 시각 차이가 30초.
-        env.sampleAt(const Duration(seconds: 36), 15.0 + 31 * 10);
+        env.tailAt(const Duration(seconds: 36), 15.0 + 31 * 10);
         env.async.elapse(const Duration(seconds: 1));
         final summary = env.repo.completed.single.$2;
         expect(summary.endedAt, lastPoint);
         // 빠른 구간은 거리에 들어가지 않는다.
         expect(summary.distanceM, closeTo(fiveDistance, 1e-9));
-        expect(summary.points, hasLength(5));
+        expect(summary.points, hasLength(335));
         expect(env.view.autoEnded, isTrue);
         expect(env.notifier.shown, [
-          (_fastTitle, '0.01km 기록을 저장했어요. 요약에서 확인하세요.'),
+          (_fastTitle, '1.00km 기록을 저장했어요. 요약에서 확인하세요.'),
         ]);
       });
     });
@@ -547,11 +564,12 @@ void main() {
       _run((env) {
         feedFast(env, 7);
         for (var i = 8; i <= 67; i++) {
-          env.async.elapse(Duration(seconds: i) - env.async.elapsed);
+          final at = Duration(seconds: i) + _warm;
+          env.async.elapse(at - env.async.elapsed);
           env.location.controller.add(
             LocationSample(
-              time: _t0.add(Duration(seconds: i)),
-              latitude: _northOf(500.0 + i * 10),
+              time: _t0.add(at),
+              latitude: _northOf(_warmM + 500.0 + i * 10),
               longitude: _lng0,
               accuracy: 50,
             ),
@@ -570,9 +588,9 @@ void main() {
       _run((env) {
         feedFast(env, 7);
         // 7초 점은 35m. 3m/s 점으로 연속이 끊긴다.
-        env.sampleAt(const Duration(seconds: 8), 38);
+        env.tailAt(const Duration(seconds: 8), 38);
         for (var i = 9; i <= 70; i++) {
-          env.sampleAt(Duration(seconds: i), 38.0 + (i - 8) * 3);
+          env.tailAt(Duration(seconds: i), 38.0 + (i - 8) * 3);
         }
         expect(env.repo.completed, isEmpty);
         expect(env.view.snapshot.state, RunState.recording);
@@ -594,7 +612,7 @@ void main() {
         // 바로 끝난다. 재개 뒤 첫 점부터 세면 마지막 점까지 29초.
         final resumedSec = env.async.elapsed.inSeconds;
         for (var i = resumedSec + 1; i <= resumedSec + 30; i++) {
-          env.sampleAt(Duration(seconds: i), 15.0 + (i - 5) * 10);
+          env.sampleAt(Duration(seconds: i), _warmM + 15.0 + (i - 335) * 10);
         }
         expect(env.repo.completed, isEmpty);
         expect(env.view.snapshot.state, RunState.recording);
@@ -608,7 +626,7 @@ void main() {
         feedFast(env, 8);
         env.async.elapse(const Duration(seconds: 1));
         expect(env.repo.completed, isEmpty);
-        env.sampleAt(const Duration(seconds: 9), 15.0 + 40);
+        env.tailAt(const Duration(seconds: 9), 15.0 + 40);
         env.async.elapse(const Duration(seconds: 1));
         expect(env.repo.completed.single.$2.endedAt, lastPoint);
       });
@@ -624,8 +642,8 @@ void main() {
       segments: [
         [
           _sample(startedAt, 0),
-          _sample(startedAt.add(const Duration(seconds: 2)), 4),
-          _sample(startedAt.add(lastPointOffset), 8),
+          _sample(startedAt.add(const Duration(seconds: 2)), 600),
+          _sample(startedAt.add(lastPointOffset), 1200),
         ],
       ],
       movingTime: const Duration(seconds: 4),
@@ -710,7 +728,10 @@ void main() {
         final summary = env.repo.completed.single.$2;
         expect(summary.endedAt, startedAt.add(lastPointOffset));
         expect(summary.movingTime, const Duration(seconds: 4));
-        expect(summary.distanceM, closeTo(_dist(0, 4) + _dist(4, 8), 1e-9));
+        expect(
+          summary.distanceM,
+          closeTo(_dist(0, 600) + _dist(600, 1200), 1e-9),
+        );
         expect(env.view.autoEnded, isTrue);
         expect(env.view.lastSummary, same(summary));
         expect(env.view.runId, isNull);

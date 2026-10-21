@@ -76,6 +76,12 @@ abstract interface class RunRepository {
   Future<ActiveRun?> findActiveRun();
   Future<void> completeRun(String runId, RunSummary summary);
 
+  /// 진행 중 러닝과 그 점·구간을 지운다(한 트랜잭션). 1km 미만이라 저장하지
+  /// 않는 러닝에 쓴다(결정 0027). 진행 중 러닝은 한 번도 동기화되지 않았으므로
+  /// 삭제 표시 없이 행을 지운다. 이미 없으면 아무 일도 없고, 완료된 러닝이면
+  /// [StateError] 다(완료 기록은 `deleteRun` 으로만 지운다).
+  Future<void> discardActiveRun(String runId);
+
   /// 완료된 러닝만, 최신순.
   Future<List<RunListItem>> listRuns();
   Future<RunDetail?> getRun(String id);

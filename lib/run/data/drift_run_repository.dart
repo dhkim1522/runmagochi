@@ -176,6 +176,24 @@ class DriftRunRepository implements RunRepository {
     });
   }
 
+  @override
+  Future<void> discardActiveRun(String runId) {
+    return _db.transaction(() async {
+      final run = await (_db.select(
+        _db.runs,
+      )..where((r) => r.id.equals(runId))).getSingleOrNull();
+      if (run == null) return;
+      if (run.status != _active) {
+        throw StateError('진행 중인 러닝이 아니다: $runId');
+      }
+      await (_db.delete(
+        _db.runPoints,
+      )..where((p) => p.runId.equals(runId))).go();
+      await (_db.delete(_db.splits)..where((s) => s.runId.equals(runId))).go();
+      await (_db.delete(_db.runs)..where((r) => r.id.equals(runId))).go();
+    });
+  }
+
   RunListItem _toItem(Run r) => RunListItem(
     id: r.id,
     name: r.name,

@@ -53,6 +53,8 @@ class _Repo implements RunRepository {
   @override
   Future<void> completeRun(String runId, RunSummary summary) async {}
   @override
+  Future<void> discardActiveRun(String runId) async {}
+  @override
   dynamic noSuchMethod(Invocation invocation) =>
       throw UnimplementedError('${invocation.memberName}');
 }
@@ -291,7 +293,38 @@ void main() {
       expect(container.read(runControllerProvider).runId, 'run-1');
       controller.end();
       async.flushMicrotasks();
-      expect(container.read(runControllerProvider).lastSummary, isNotNull);
+      // 1km 미만이라 저장하지 않고 지운다. 알림이 실패해도 끝낸다.
+      final view = container.read(runControllerProvider);
+      expect(view.runId, isNull);
+      expect(view.discardedShortRun, isTrue);
+    });
+  });
+
+  test('시간 목표를 달성한 뒤에는 15초 단계가 바뀌어도 알림을 다시 띄우지 않는다', () {
+    _run((async, container, progress, sampleAt) {
+      container
+          .read(runControllerProvider.notifier)
+          .start(goal: const TimeGoal(Duration(seconds: 30)));
+      async.flushMicrotasks();
+      sampleAt(const Duration(seconds: 1), 0);
+      for (var s = 2; s <= 25; s++) {
+        sampleAt(Duration(seconds: s), (s - 1) * 4.0);
+      }
+      sampleAt(const Duration(seconds: 31), 102);
+      expect(container.read(runControllerProvider).goalReached, isTrue);
+      expect(progress.shown.last.body, '목표 0분 달성!');
+
+      // 달성 뒤 초속 1m 로 계속 달리면 움직인 시간이 늘어 15초 단계가 세 번 바뀌지만,
+      // 알림은 화면 거리(10m 단위)가 바뀔 때만 갱신한다. 45m 를 가면 거리 표시는 4~5번 바뀐다.
+      final shownAfterReach = progress.shown.length;
+      for (var s = 32; s <= 76; s++) {
+        sampleAt(Duration(seconds: s), 102.0 + (s - 31));
+      }
+      expect(
+        container.read(runControllerProvider).snapshot.state,
+        RunState.recording,
+      );
+      expect(progress.shown.length - shownAfterReach, lessThanOrEqualTo(5));
     });
   });
 }
