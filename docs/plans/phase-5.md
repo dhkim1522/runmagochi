@@ -85,7 +85,7 @@
   - 테스트: 30분 목표 29:59 미달·30:00 달성, 일시정지·자동 일시정지 시간 제외, 보너스 20분 15·30분 25·60분 50, 잘라내 29분이 되면 보너스·코인 무름, 거리 목표 기존 테스트 그대로 통과.
   - 확인: `fvm flutter test test/avatar test/run/app`
 
-- [ ] 5. 시간 목표 화면
+- [x] 5. 시간 목표 화면
   - 파일: `lib/run/ui/run_goal_picker.dart`, `lib/run/ui/home_screen.dart`, `lib/run/ui/in_run_screen.dart`, `lib/avatar/ui/growth_summary.dart`, `lib/run/data/run_progress_notifier.dart`(`runProgressContent`)
   - 홈: 오늘 목표 카드 위쪽에 `거리`·`시간` 고르기, 아래 칩이 `3km·5km·10km·직접` 또는 `20분·30분·60분·직접`. 직접 입력 창은 시간이면 `15~180분 사이 정수로 입력해 주세요`.
   - 러닝 중: 시간 목표면 `목표 30분` 과 시간 진행 막대, 달성 뒤 `목표 달성!`. 알림 본문 `목표 30분까지 12:34`.
