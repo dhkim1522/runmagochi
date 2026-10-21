@@ -1,7 +1,7 @@
 // 종료를 잊은 러닝 자동 종료 규칙 (결정 0016).
 
 /// 기록 중 이 시간 동안 받아들인 위치 점이 없으면 끝낸다.
-const Duration autoEndIdle = Duration(minutes: 20);
+const Duration autoEndIdle = Duration(minutes: 10);
 
 /// 시속 30km 를 넘는 빠른 이동이 이 시간 이어지면 끝낸다 (결정 0018).
 const Duration autoEndFast = Duration(seconds: 30);

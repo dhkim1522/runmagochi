@@ -293,7 +293,7 @@ class RunController extends Notifier<RunViewState> {
   ///
   /// 복구한 러닝이 시작 6시간을 넘었으면 묻지 않고 끝내고 false 를 돌려준다
   /// (상태 autoEnded, lastSummary 에 요약). 일시정지 여부를 저장하지 않아
-  /// 20분 규칙은 적용하지 않는다. 자동 종료 저장이 실패하면 러닝을 남기고
+  /// 10분 규칙은 적용하지 않는다. 자동 종료 저장이 실패하면 러닝을 남기고
   /// true 를 돌려준다.
   Future<bool> restoreIfAny() async {
     _requireNoRun();

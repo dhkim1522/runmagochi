@@ -7,8 +7,8 @@ DateTime _at(Duration d) => _start.add(d);
 
 void main() {
   parseTests();
-  test('기본값은 20분·6시간', () {
-    expect(autoEndIdle, const Duration(minutes: 20));
+  test('기본값은 10분·6시간', () {
+    expect(autoEndIdle, const Duration(minutes: 10));
     expect(autoEndMax, const Duration(hours: 6));
     const config = RunGuardConfig();
     expect(config.idle, autoEndIdle);
@@ -87,7 +87,7 @@ void main() {
       );
     });
 
-    test('20분 규칙보다 먼저 본다', () {
+    test('10분 규칙보다 먼저 본다', () {
       final d = checkAutoEnd(
         now: _at(const Duration(minutes: 40)),
         startedAt: _start,
@@ -117,12 +117,12 @@ void main() {
     });
   });
 
-  group('기록 중 20분 규칙', () {
+  group('기록 중 10분 규칙', () {
     final lastPoint = _at(const Duration(minutes: 10));
 
-    test('마지막 점 뒤 19분 59초면 계속', () {
+    test('마지막 점 뒤 9분 59초면 계속', () {
       final d = checkAutoEnd(
-        now: lastPoint.add(const Duration(minutes: 19, seconds: 59)),
+        now: lastPoint.add(const Duration(minutes: 9, seconds: 59)),
         startedAt: _start,
         recording: true,
         lastPointAt: lastPoint,
@@ -131,9 +131,9 @@ void main() {
       expect(d, isNull);
     });
 
-    test('마지막 점 뒤 20분이면 종료, 끝 시각은 마지막 점', () {
+    test('마지막 점 뒤 10분이면 종료, 끝 시각은 마지막 점', () {
       final d = checkAutoEnd(
-        now: lastPoint.add(const Duration(minutes: 20)),
+        now: lastPoint.add(const Duration(minutes: 10)),
         startedAt: _start,
         recording: true,
         lastPointAt: lastPoint,
@@ -146,7 +146,7 @@ void main() {
     test('재개 뒤에는 재개 시각부터 다시 센다', () {
       final resumedAt = _at(const Duration(minutes: 40));
       final keep = checkAutoEnd(
-        now: resumedAt.add(const Duration(minutes: 19)),
+        now: resumedAt.add(const Duration(minutes: 9)),
         startedAt: _start,
         recording: true,
         lastPointAt: lastPoint,
@@ -155,7 +155,7 @@ void main() {
       expect(keep, isNull);
 
       final end = checkAutoEnd(
-        now: resumedAt.add(const Duration(minutes: 20)),
+        now: resumedAt.add(const Duration(minutes: 10)),
         startedAt: _start,
         recording: true,
         lastPointAt: lastPoint,

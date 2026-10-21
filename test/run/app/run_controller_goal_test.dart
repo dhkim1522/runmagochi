@@ -187,7 +187,7 @@ void main() {
       container.read(runControllerProvider.notifier).start(goalM: 3000);
       async.flushMicrotasks();
       sampleAt(const Duration(seconds: 1), 0);
-      sampleAt(const Duration(seconds: 1000), 3005);
+      sampleAt(const Duration(seconds: 501), 3005);
       expect(container.read(runControllerProvider).goalReached, isTrue);
     });
   });

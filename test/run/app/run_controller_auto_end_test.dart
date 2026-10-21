@@ -185,12 +185,12 @@ void main() {
     for (var i = 1; i < 5; i++) _dist(i * 3.0, (i + 1) * 3.0),
   ].reduce((a, b) => a + b);
 
-  test('기록 중 마지막 점 뒤 19분 59초엔 계속, 20분엔 마지막 점으로 끝낸다', () {
+  test('기록 중 마지막 점 뒤 9분 59초엔 계속, 10분엔 마지막 점으로 끝낸다', () {
     _run((env) {
       runFiveSamples(env);
       env.async.elapse(
         lastPointOffset +
-            const Duration(minutes: 19, seconds: 59) -
+            const Duration(minutes: 9, seconds: 59) -
             env.async.elapsed,
       );
       expect(env.view.snapshot.state, RunState.recording);
@@ -202,7 +202,7 @@ void main() {
       expect(summary.endedAt, lastPoint);
       expect(summary.distanceM, closeTo(fiveDistance, 1e-9));
       expect(summary.points, hasLength(5));
-      // 잘라낸 20분은 움직인 시간에서 빠진다.
+      // 잘라낸 10분은 움직인 시간에서 빠진다.
       expect(summary.movingTime, const Duration(seconds: 5));
       expect(env.view.autoEnded, isTrue);
       expect(env.view.lastSummary, same(summary));
@@ -225,14 +225,14 @@ void main() {
     });
   });
 
-  test('재개하면 20분을 재개 시각부터 다시 센다', () {
+  test('재개하면 10분을 재개 시각부터 다시 센다', () {
     _run((env) {
       runFiveSamples(env);
       env.controller.pause();
       env.async.elapse(const Duration(minutes: 30));
       env.controller.resume();
       final resumedAt = _t0.add(env.async.elapsed);
-      env.async.elapse(const Duration(minutes: 19, seconds: 59));
+      env.async.elapse(const Duration(minutes: 9, seconds: 59));
       expect(env.repo.completed, isEmpty);
 
       env.async.elapse(const Duration(seconds: 1));
@@ -465,7 +465,7 @@ void main() {
       movingTime: const Duration(seconds: 4),
     );
 
-    test('마지막 점 뒤 30분이어도 6시간 전이면 그대로 복원한다 (20분 규칙 미적용)', () {
+    test('마지막 점 뒤 30분이어도 6시간 전이면 그대로 복원한다 (10분 규칙 미적용)', () {
       final startedAt = _t0.subtract(
         lastPointOffset + const Duration(minutes: 30),
       );
