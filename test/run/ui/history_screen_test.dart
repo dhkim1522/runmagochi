@@ -28,6 +28,7 @@ Future<void> pump(
   FakeRepo repo, [
   FakeController? c,
   double scale = 1.0,
+  ThemeData? theme,
 ]) async {
   await tester.pumpWidget(
     ProviderScope(
@@ -37,7 +38,7 @@ Future<void> pump(
         clockProvider.overrideWithValue(() => DateTime(2026, 10, 17)),
       ],
       child: MaterialApp(
-        theme: appLightTheme(),
+        theme: theme ?? appLightTheme(),
         builder: (context, child) => MediaQuery(
           data: MediaQuery.of(
             context,
@@ -54,6 +55,7 @@ Future<void> pump(
 void main() {
   _loadingLayoutTests();
   _deleteTests();
+  _statsTests();
   testWidgets('기록 탭에 러닝 2개가 최신순으로 보이고 이번 주 합계가 보인다', (tester) async {
     final repo = FakeRepo(
       (8000, 2),
@@ -63,7 +65,7 @@ void main() {
       ],
     );
     await pump(tester, repo);
-    expect(find.text('이번 주'), findsOneWidget);
+    expect(find.text('2026년 10월 12일 ~ 10월 18일'), findsOneWidget);
     expect(find.text('8.00'), findsOneWidget);
     expect(find.text('러닝 2회'), findsOneWidget);
     expect(find.text('최근 러닝'), findsOneWidget);
@@ -255,11 +257,13 @@ void _deleteTests() {
 
 void _loadingLayoutTests() {
   testWidgets('이번 주 카드는 불러오는 동안에도 불러온 뒤와 높이가 같다', (tester) async {
-    final repo = FakeRepo((8000, 2))..holdWeekly = Completer<void>();
+    final hold = Completer<List<RunListItem>>();
+    final repo = FakeRepo((8000, 2));
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
           runRepositoryProvider.overrideWithValue(repo),
+          runListProvider.overrideWith((ref) => hold.future),
           runControllerProvider.overrideWith(() => FakeController()),
           clockProvider.overrideWithValue(() => DateTime(2026, 10, 17)),
         ],
@@ -273,9 +277,120 @@ void _loadingLayoutTests() {
     final card = find.byType(ClayCard).first;
     final before = tester.getSize(card).height;
     expect(find.text('러닝 -회'), findsOneWidget);
-    repo.holdWeekly!.complete();
+    hold.complete([
+      _item('b', '토요일 아침 러닝', DateTime(2026, 10, 17, 7), 5000),
+      _item('a', '목요일 저녁 러닝', DateTime(2026, 10, 15, 19), 3000),
+    ]);
     await tester.pumpAndSettle();
     expect(find.text('러닝 2회'), findsOneWidget);
     expect(tester.getSize(card).height, before);
   });
+}
+
+List<RunListItem> _statsRuns() => [
+  _item('a', '토요일 아침 러닝', DateTime(2026, 10, 17, 7), 5000),
+  _item('b', '목요일 저녁 러닝', DateTime(2026, 10, 15, 19), 3000),
+  _item('c', '지난주 러닝', DateTime(2026, 10, 5, 8), 2000),
+  _item('d', '9월 러닝', DateTime(2026, 9, 20, 8), 4000),
+  _item('e', '작년 러닝', DateTime(2025, 6, 1, 8), 6000),
+];
+
+void _statsTests() {
+  Finder next() => find.byKey(const Key('stats-next'));
+  Finder prev() => find.byKey(const Key('stats-prev'));
+
+  testWidgets('주·월·년·전체 탭을 바꾸면 통계가 바뀐다', (tester) async {
+    await pump(tester, FakeRepo((0, 0), runs: _statsRuns()));
+    expect(find.text('8.00'), findsOneWidget);
+    expect(find.text('러닝 2회'), findsOneWidget);
+    expect(find.textContaining('5\'00"'), findsOneWidget);
+    expect(find.textContaining('40:00'), findsWidgets);
+
+    await tester.tap(find.text('월'));
+    await tester.pumpAndSettle();
+    expect(find.text('2026년 10월'), findsOneWidget);
+    expect(find.text('10.00'), findsOneWidget);
+    expect(find.text('러닝 3회'), findsOneWidget);
+
+    await tester.tap(find.text('년'));
+    await tester.pumpAndSettle();
+    expect(find.text('2026년'), findsOneWidget);
+    expect(find.text('14.00'), findsOneWidget);
+    expect(find.text('러닝 4회'), findsOneWidget);
+
+    await tester.tap(find.text('전체'));
+    await tester.pumpAndSettle();
+    expect(find.text('20.00'), findsOneWidget);
+    expect(find.text('러닝 5회'), findsOneWidget);
+    expect(prev(), findsNothing);
+    expect(next(), findsNothing);
+  });
+
+  testWidgets('화살표로 이전 기간으로 가고 미래로는 못 간다', (tester) async {
+    await pump(tester, FakeRepo((0, 0), runs: _statsRuns()));
+    await tester.tap(find.text('월'));
+    await tester.pumpAndSettle();
+    // 이번 달에서 다음 달로는 못 간다.
+    await tester.tap(next());
+    await tester.pumpAndSettle();
+    expect(find.text('2026년 10월'), findsOneWidget);
+
+    await tester.tap(prev());
+    await tester.pumpAndSettle();
+    expect(find.text('2026년 9월'), findsOneWidget);
+    expect(find.text('4.00'), findsOneWidget);
+    expect(find.text('러닝 1회'), findsOneWidget);
+
+    await tester.tap(next());
+    await tester.pumpAndSettle();
+    expect(find.text('2026년 10월'), findsOneWidget);
+    expect(find.text('10.00'), findsOneWidget);
+  });
+
+  testWidgets('러닝 없는 기간은 0 과 빈 그래프로 그려지고 탭을 바꾸면 이번 기간으로 돌아온다', (tester) async {
+    await pump(tester, FakeRepo((0, 0), runs: _statsRuns()));
+    await tester.tap(prev());
+    await tester.pumpAndSettle();
+    expect(find.text('2026년 10월 5일 ~ 10월 11일'), findsOneWidget);
+    await tester.tap(prev());
+    await tester.pumpAndSettle();
+    expect(find.text('0.00'), findsOneWidget);
+    expect(find.text('러닝 0회'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+    await tester.tap(find.text('년'));
+    await tester.pumpAndSettle();
+    expect(find.text('2026년'), findsOneWidget);
+  });
+
+  testWidgets('그래프는 기간을 요약하는 시맨틱 라벨이 있다', (tester) async {
+    final handle = tester.ensureSemantics();
+    await pump(tester, FakeRepo((0, 0), runs: _statsRuns()));
+    expect(
+      find.bySemanticsLabel(RegExp('^막대 그래프, 요일별 .*토 5.00km')),
+      findsOneWidget,
+    );
+    handle.dispose();
+  });
+
+  for (final dark in [false, true]) {
+    testWidgets('360x640 글자 1.3배 ${dark ? '다크' : '라이트'} 에서 모든 탭이 넘치지 않는다', (
+      tester,
+    ) async {
+      tester.view.physicalSize = const Size(360, 640);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      await pump(
+        tester,
+        FakeRepo((0, 0), runs: _statsRuns()),
+        null,
+        1.3,
+        dark ? appDarkTheme() : appLightTheme(),
+      );
+      for (final tab in ['주', '월', '년', '전체']) {
+        await tester.tap(find.text(tab));
+        await tester.pumpAndSettle();
+        expect(tester.takeException(), isNull, reason: tab);
+      }
+    });
+  }
 }
