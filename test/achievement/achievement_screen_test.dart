@@ -194,4 +194,23 @@ void main() {
       expect(tester.takeException(), isNull);
     });
   }
+
+  for (final dark in [false, true]) {
+    testWidgets('긴 기록 1:05:00 과 배지 4개가 360×640 글자 1.3배에서 넘치지 않는다 (다크 $dark)', (
+      tester,
+    ) async {
+      await _pump(
+        tester,
+        runs: [_run(21500, minutes: 65)],
+        earned: [
+          for (final id in ['first_run', 'dist_5k', 'dist_10k', 'dist_half'])
+            _earned(id),
+        ],
+        textScale: 1.3,
+        dark: dark,
+      );
+      expect(find.text('1:05:00'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    });
+  }
 }
