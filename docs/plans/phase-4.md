@@ -119,7 +119,7 @@
   - 테스트: 5km 목표로 5.02km → 거리 25·달성 25. 10km 목표로 5km → 25·0. 빠른 구간 제외. 업데이트 전 러닝(경험치 있음·코인 없음)은 sync·잘라내기 뒤에도 코인 0. 새 러닝을 잘라내 미달 → 달성 코인 삭제 표시, gain −25. 러닝 삭제 뒤 잔액 그대로.
   - 확인: `fvm flutter test test/avatar`
 
-- [ ] 7. 코인 표시: 요약·홈·내역
+- [x] 7. 코인 표시: 요약·홈·내역
   - 파일: `lib/avatar/ui/growth_summary.dart`, `lib/run/ui/home_screen.dart`, `lib/shop/ui/coin_history_screen.dart`(새 파일), `lib/shop/ui/coin_chip.dart`(새 파일)
   - 요약: 거리 줄 오른쪽을 `경험치 +31` 아래 `코인 +15` 두 줄로, 달성 줄은 `보너스 +15` 아래 `코인 +15`. 코인이 0이면 코인 줄을 뺀다(업데이트 전 러닝).
   - 홈: 아바타 무대 왼쪽 위에 `CoinChip`(코인 아이콘 + `1,240`). 누르면 상점 탭으로 간다(Task 10 전에는 내역 화면).
