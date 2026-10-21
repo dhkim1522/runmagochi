@@ -40,7 +40,7 @@
 
 ### A. 기록 통계 (F5-2)
 
-- [ ] 1. 기간별 통계
+- [x] 1. 기간별 통계
   - 파일: `lib/run/domain/run_stats.dart`(새 파일), `lib/run/ui/history_screen.dart`, `lib/run/ui/stats_chart.dart`(새 파일), `lib/run/data/run_repository.dart`(필요하면)
   - 인터페이스:
     - `enum StatsPeriod { week, month, year, all }`
