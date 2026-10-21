@@ -16,7 +16,23 @@ const Duration _staleSampleTolerance = Duration(seconds: 2);
 const double _splitM = 1000;
 const double _minLastSplitM = 1;
 
-enum RunState { idle, recording, paused, ended }
+/// 마지막 움직인 점 뒤 이만큼 지나면 자동 일시정지한다 (결정 0020).
+const Duration autoPauseStill = Duration(seconds: 10);
+
+/// 직전 움직인 점에서 이만큼(m) 이상 떨어진 점이 움직인 점이다.
+const double autoPauseStillM = 5;
+
+/// 자동 재개를 판정하는 창. 창 안 첫 점과 마지막 점을 잰다.
+const Duration autoResumeWindow = Duration(seconds: 10);
+
+/// 창 안 첫 점과 마지막 점이 이만큼(m) 이상 떨어지면 움직임이다.
+const double autoResumeMoveM = 10;
+
+/// 창에 이만큼 점이 있어야 움직임으로 본다.
+const int autoResumeMinPoints = 3;
+
+/// [paused] 는 사용자 일시정지, [autoPaused] 는 멈춰서 된 자동 일시정지다.
+enum RunState { idle, recording, paused, autoPaused, ended }
 
 sealed class RunEvent {}
 
@@ -84,6 +100,8 @@ class RunEngine {
     }
     _movingBase = restoredMovingTime ?? _sampleMovingTime;
     _state = RunState.paused;
+    _stateSince = _clock();
+    _pausedAt = _lastAccepted?.time ?? _startedAt;
   }
 
   final Clock _clock;
@@ -112,6 +130,18 @@ class RunEngine {
 
   Duration _movingBase = Duration.zero;
   DateTime? _recordingSince;
+  DateTime? _stateSince;
+  DateTime? _pausedAt;
+
+  /// 이번 기록 구간의 마지막 움직인 점. 없으면 첫 받아들인 점이 기준이다.
+  LocationSample? _moveAnchor;
+
+  /// 마지막 움직인 점의 시각. 없으면 기록 구간 시작 시각.
+  DateTime? _movedAt;
+
+  /// 자동 일시정지 중 정확도 거름을 통과한 최근 [autoResumeWindow] 의 점.
+  final List<LocationSample> _resumeWindow = [];
+  List<LocationSample> _lastAppended = const [];
 
   /// 구간마다 (마지막 점 − 첫 점 시각) 의 합. 구간 기록 시간의 기준이다.
   Duration _sampleMovingTime = Duration.zero;
@@ -135,6 +165,16 @@ class RunEngine {
 
   /// 이번 기록 구간을 시작·재개한 시각. 기록 중이 아니면 null.
   DateTime? get recordingSince => _recordingSince;
+
+  /// 지금 상태에 들어온 시각. 시작 전이면 null.
+  DateTime? get stateSince => _stateSince;
+
+  /// 기록이 멈춘 시각. 자동 일시정지에서 사용자 일시정지로 바뀌어도 처음
+  /// 값을 유지한다. 복원한 러닝은 마지막 점(없으면 시작) 시각. 기록 중이면 null.
+  DateTime? get pausedAt => _pausedAt;
+
+  /// 마지막 [addSample] 호출이 구간에 넣은 점. 자동 재개면 여러 개다.
+  List<LocationSample> get lastAppended => _lastAppended;
 
   /// 마지막으로 받아들인 점(복원한 점 포함)의 시각. 없으면 null.
   DateTime? get lastPointAt => _lastAccepted?.time;
@@ -170,19 +210,46 @@ class RunEngine {
     _startedAt = _transition(RunState.idle, RunState.recording);
   }
 
+  /// 기록 중이나 자동 일시정지 중에 사용자 일시정지한다.
   void pause() {
-    _transition(RunState.recording, RunState.paused);
+    _transition(
+      _state == RunState.autoPaused ? RunState.autoPaused : RunState.recording,
+      RunState.paused,
+    );
   }
 
+  /// 사용자 일시정지나 자동 일시정지에서 재개한다.
   void resume() {
-    _transition(RunState.paused, RunState.recording);
+    _transition(
+      _state == RunState.autoPaused ? RunState.autoPaused : RunState.paused,
+      RunState.recording,
+    );
   }
 
-  /// 기록 중이나 일시정지 중에 끝낸다. 남은 거리가 1m 이상이면 마지막
+  /// 기록 중이고 마지막 움직인 점(없으면 기록 구간 시작) 뒤 [autoPauseStill]
+  /// 이 지났으면 그 시각으로 자동 일시정지하고 true. 빠른 이동 중에는 멈춘
+  /// 것이 아니므로 하지 않는다(빠른 이동 자동 종료가 맡는다).
+  bool autoPauseIfStill(DateTime now) {
+    if (_state != RunState.recording || _fastSince != null) return false;
+    final since = _recordingSince!;
+    final movedAt = _movedAt!.isBefore(since) ? since : _movedAt!;
+    if (now.difference(movedAt) < autoPauseStill) return false;
+    _transition(
+      RunState.recording,
+      RunState.autoPaused,
+      at: movedAt,
+      auto: true,
+    );
+    return true;
+  }
+
+  /// 기록 중이나 일시정지·자동 일시정지 중에 끝낸다. 남은 거리가 1m 이상이면 마지막
   /// 구간으로 넣고 `RunEnded` 를 낸 뒤 `ended` 로 바꾸고 이벤트 스트림을
   /// 닫는다. `clock()` 은 한 번만 읽는다.
   RunSummary end({double weightKg = defaultWeightKg}) {
-    if (_state != RunState.recording && _state != RunState.paused) {
+    if (_state != RunState.recording &&
+        _state != RunState.paused &&
+        _state != RunState.autoPaused) {
       throw StateError('Cannot go from $_state to ${RunState.ended}');
     }
     final remainingM = _distanceM - _splits.length * _splitM;
@@ -216,14 +283,58 @@ class RunEngine {
     return summary;
   }
 
-  /// 채택하면 true.
+  /// 채택하면 true. 자동 일시정지 중에는 점을 창에 모으고, 움직임이면 창의
+  /// 첫 점 시각으로 재개해 창의 점을 새 구간에 넣는다. 넣은 점은 [lastAppended].
+  /// 빠른 이동은 자동 일시정지 중에도 잰다.
   bool addSample(LocationSample s) {
-    if (_state != RunState.recording) return false;
+    _lastAppended = const [];
     if (s.accuracy > _maxAccuracyM) return false;
+    if (_state == RunState.autoPaused) {
+      _trackFast(s);
+      return _collectWhileStill(s);
+    }
+    if (_state != RunState.recording) return false;
     if (s.time.isBefore(_recordingSince!.subtract(_staleSampleTolerance))) {
       return false;
     }
     _trackFast(s);
+    if (!_accept(s)) return false;
+    _lastAppended = [s];
+    return true;
+  }
+
+  /// 움직임이면 재개하고 창의 점을 차례로 받아들인다. 하나라도 넣으면 true.
+  bool _collectWhileStill(LocationSample s) {
+    final window = _resumeWindow;
+    final lastAt = _lastAccepted?.time;
+    if (!s.time.isAfter(window.isEmpty ? _stateSince! : window.last.time) ||
+        (lastAt != null && !s.time.isAfter(lastAt))) {
+      return false;
+    }
+    window
+      ..add(s)
+      ..removeWhere((p) => s.time.difference(p.time) > autoResumeWindow);
+    if (window.length < autoResumeMinPoints ||
+        _distance(window.first, window.last) < autoResumeMoveM) {
+      return false;
+    }
+    final points = List.of(window);
+    _transition(
+      RunState.autoPaused,
+      RunState.recording,
+      at: points.first.time,
+      auto: true,
+    );
+    _lastAppended = [
+      for (final p in points)
+        if (_accept(p)) p,
+    ];
+    return _lastAppended.isNotEmpty;
+  }
+
+  /// 정확도·오래된 점 거름을 통과한 기록 중 점을 튀는 값 거름에 걸러
+  /// 받아들이면 true. 움직인 점이면 [_movedAt] 을 옮긴다.
+  bool _accept(LocationSample s) {
     final last = _lastAccepted;
     if (last != null) {
       final dt = s.time.difference(last.time);
@@ -234,6 +345,13 @@ class RunEngine {
       }
     }
     _append(s);
+    final anchor = _moveAnchor;
+    if (anchor == null) {
+      _moveAnchor = s;
+    } else if (_distance(anchor, s) >= autoPauseStillM) {
+      _moveAnchor = s;
+      _movedAt = s.time;
+    }
     return true;
   }
 
@@ -303,23 +421,37 @@ class RunEngine {
     return d;
   }
 
-  /// 전이 시각([at], 없으면 `clock()`)을 돌려준다.
-  DateTime _transition(RunState from, RunState to, {DateTime? at}) {
+  /// 전이 시각([at], 없으면 `clock()`)을 돌려준다. [auto] 는 멈춤·움직임으로
+  /// 바뀐 전이다. 위치를 계속 받으므로 빠른 이동 연속을 비우지 않는다.
+  DateTime _transition(
+    RunState from,
+    RunState to, {
+    DateTime? at,
+    bool auto = false,
+  }) {
     if (_state != from) {
       throw StateError('Cannot go from $_state to $to');
     }
     final now = at ?? _clock();
-    _lastRaw = null;
-    _resetFast();
+    if (!auto) {
+      _lastRaw = null;
+      _resetFast();
+    }
+    _resumeWindow.clear();
     if (from == RunState.recording) {
       _movingBase += now.difference(_recordingSince!);
       _recordingSince = null;
+      _pausedAt = now;
     }
     if (to == RunState.recording) {
       _recordingSince = now;
       _segmentPending = true;
+      _pausedAt = null;
+      _moveAnchor = null;
+      _movedAt = now;
     }
     _state = to;
+    _stateSince = now;
     _events.add(StateChanged(from, to));
     return now;
   }

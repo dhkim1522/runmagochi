@@ -65,7 +65,8 @@ class _InRunScreenState extends ConsumerState<InRunScreen> {
     final snap = view.snapshot;
     // ended 는 러닝 저장이 실패해 종료만 다시 할 수 있는 상태다.
     final ended = snap.state == RunState.ended;
-    final paused = snap.state == RunState.paused || ended;
+    final autoPaused = snap.state == RunState.autoPaused;
+    final paused = snap.state == RunState.paused || autoPaused || ended;
     final c = AppColors.of(context);
     final t = AppText.of(context);
     // 종류를 읽기 전(또는 실패)에는 같은 크기의 빈자리만 둔다.
@@ -95,7 +96,21 @@ class _InRunScreenState extends ConsumerState<InRunScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                ScreenTitle(paused ? '일시정지' : '러닝 중'),
+                ScreenTitle(
+                  autoPaused
+                      ? '멈춰서 일시정지했어요'
+                      : paused
+                      ? '일시정지'
+                      : '러닝 중',
+                ),
+                if (autoPaused)
+                  Padding(
+                    padding: const EdgeInsets.only(top: Gap.s1),
+                    child: Text(
+                      '움직이면 이어져요',
+                      style: t.caption.copyWith(color: c.inkMuted),
+                    ),
+                  ),
                 if (view.lastError != null)
                   Padding(
                     padding: const EdgeInsets.only(top: Gap.s2),

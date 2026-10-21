@@ -153,17 +153,18 @@ class RunController extends Notifier<RunViewState> {
     return const RunViewState(snapshot: _idleSnapshot);
   }
 
-  /// 알림 버튼. 기록 중이면 일시정지, 일시정지면 재개한다.
-  /// 러닝이 없거나 상태에 맞지 않는 버튼은 무시하고, 오류는 밖으로 내지 않는다.
+  /// 알림 버튼. 기록 중·자동 일시정지면 일시정지, 일시정지·자동 일시정지면
+  /// 재개한다. 러닝이 없거나 상태에 맞지 않는 버튼은 무시하고, 오류는 밖으로
+  /// 내지 않는다.
   void _onNotificationAction(String actionId) {
     try {
       if (_engine == null || _ending) return;
       final runState = _engine!.snapshot.state;
       if (actionId == LocalRunProgressNotifier.pauseActionId &&
-          runState == RunState.recording) {
+          (runState == RunState.recording || runState == RunState.autoPaused)) {
         pause();
       } else if (actionId == LocalRunProgressNotifier.resumeActionId &&
-          runState == RunState.paused) {
+          (runState == RunState.paused || runState == RunState.autoPaused)) {
         resume();
       }
     } catch (_) {}
@@ -370,7 +371,10 @@ class RunController extends Notifier<RunViewState> {
     final engine = _engine;
     if (engine == null || _ending || _pendingSummary != null) return false;
     final runState = engine.state;
-    if (runState != RunState.recording && runState != RunState.paused) {
+    // 자동 일시정지도 일시정지처럼 6시간 상한만 본다.
+    if (runState != RunState.recording &&
+        runState != RunState.paused &&
+        runState != RunState.autoPaused) {
       return false;
     }
     final decision = checkAutoEnd(
@@ -471,12 +475,18 @@ class RunController extends Notifier<RunViewState> {
         );
   }
 
-  /// 오류나 종료로 끊긴 구독을 버린다. 기록 중이면 잠시 뒤 다시 구독하고,
-  /// 일시정지 중이면 resume 이 다시 구독한다.
+  /// 위치를 받아야 하는 상태. 자동 일시정지는 움직임을 봐야 풀린다.
+  bool get _needsLocation {
+    final runState = _engine?.state;
+    return runState == RunState.recording || runState == RunState.autoPaused;
+  }
+
+  /// 오류나 종료로 끊긴 구독을 버린다. 기록·자동 일시정지 중이면 잠시 뒤 다시
+  /// 구독하고, 일시정지 중이면 resume 이 다시 구독한다.
   void _dropSubscription() {
     unawaited(_subscription?.cancel().catchError((Object _) {}));
     _subscription = null;
-    if (_engine?.snapshot.state != RunState.recording) return;
+    if (!_needsLocation) return;
     _resubscribePending = true;
     _resubscribeTimer?.cancel();
     _resubscribeTimer = null;
@@ -503,7 +513,7 @@ class RunController extends Notifier<RunViewState> {
     if (lifecycleState != AppLifecycleState.resumed) return;
     if (_checkAutoEnd()) return;
     if (!_resubscribePending || _subscription != null) return;
-    if (_engine?.snapshot.state != RunState.recording) return;
+    if (!_needsLocation) return;
     _resubscribeTimer?.cancel();
     _resubscribeTimer = null;
     _resubscribePending = false;
@@ -513,11 +523,21 @@ class RunController extends Notifier<RunViewState> {
   void _onSample(LocationSample sample) {
     final engine = _engine;
     if (engine == null) return;
-    final segmentIndex = engine.segmentIndex;
-    if (engine.addSample(sample)) {
-      _buffer.add((segmentIndex, sample));
-      _publish(clearLocationError: true);
+    engine.addSample(sample);
+    final appended = engine.lastAppended;
+    if (appended.isEmpty) {
+      // 자동 일시정지 중 점은 재개 판정 창에 모인다. 위치 신호는 살아 있다.
+      if (engine.state == RunState.autoPaused) {
+        _publish(clearLocationError: true);
+      }
+      return;
     }
+    // 한 번에 넣은 점은 모두 같은 구간이다(자동 재개면 새 구간).
+    final segmentIndex = engine.segmentIndex;
+    for (final s in appended) {
+      _buffer.add((segmentIndex, s));
+    }
+    _publish(clearLocationError: true);
   }
 
   void _startFlushTimer() {
@@ -530,7 +550,9 @@ class RunController extends Notifier<RunViewState> {
 
   void _startTick() {
     _tickTimer ??= Timer.periodic(_tickInterval, (_) {
-      if (!_checkAutoEnd()) _publish();
+      if (_checkAutoEnd()) return;
+      _engine?.autoPauseIfStill(ref.read(clockProvider)());
+      _publish();
     });
   }
 
@@ -616,7 +638,8 @@ class RunController extends Notifier<RunViewState> {
   /// 알림 실패는 러닝과 상관없으므로 버린다.
   void _updateProgress(RunSnapshot snapshot) {
     if (snapshot.state != RunState.recording &&
-        snapshot.state != RunState.paused) {
+        snapshot.state != RunState.paused &&
+        snapshot.state != RunState.autoPaused) {
       return;
     }
     final now = ref.read(clockProvider)();

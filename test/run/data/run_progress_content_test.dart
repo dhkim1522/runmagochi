@@ -47,4 +47,19 @@ void main() {
       expect(_content(RunState.paused, goalM: null).body, '화면을 꺼도 기록이 이어져요');
     });
   });
+
+  group('자동 일시정지', () {
+    test('멈춘 문구, 크로노미터 끔, 재개 버튼', () {
+      final c = _content(RunState.autoPaused);
+      expect(c.title, '멈춰서 일시정지했어요 · 2.31km');
+      expect(c.body, '움직이면 이어져요');
+      expect(c.elapsed, isNull);
+      expect(c.action, RunProgressAction.resume);
+    });
+
+    test('목표와 상관없이 본문이 같다', () {
+      expect(_content(RunState.autoPaused, reached: true).body, '움직이면 이어져요');
+      expect(_content(RunState.autoPaused, goalM: null).body, '움직이면 이어져요');
+    });
+  });
 }

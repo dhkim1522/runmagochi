@@ -387,22 +387,23 @@ void main() {
       controller.start(goalM: 3000);
       async.flushMicrotasks();
       stepTo(async, location, 3);
+      stepTo(async, location, 9);
       repository.appendError = StateError('디스크 가득');
 
-      async.elapse(const Duration(seconds: 9));
+      async.elapse(const Duration(seconds: 8));
 
       expect(repository.appendCalls, isEmpty);
       expect(container.read(runControllerProvider).lastError, _saveError);
 
       // 새 점이 채택돼도 저장 오류는 지우지 않는다.
-      stepTo(async, location, 6);
+      stepTo(async, location, 15);
       expect(container.read(runControllerProvider).lastError, _saveError);
 
       async.elapse(const Duration(seconds: 9));
 
       final call = repository.appendCalls.single;
       expect(call.segmentIndex, 0);
-      expect(call.points, hasLength(2));
+      expect(call.points, hasLength(3));
       expect(call.movingTime, const Duration(seconds: 20));
     });
   });
@@ -550,13 +551,14 @@ void main() {
       controller.resume();
       expect(location.isListened, isTrue);
       stepTo(async, location, 6);
+      stepTo(async, location, 12);
       final before = repository.appendCalls.length;
-      async.elapse(const Duration(seconds: 10));
+      async.elapse(const Duration(seconds: 9));
 
       final saved = repository.appendCalls.skip(before).toList();
       expect(saved, isNotEmpty);
       expect(saved.first.segmentIndex, 1);
-      expect(saved.first.points, hasLength(1));
+      expect(saved.first.points, hasLength(2));
       expect(
         container.read(runControllerProvider).snapshot.movingTime,
         const Duration(seconds: 12),
@@ -612,6 +614,63 @@ void main() {
       expect(state.runId, _runId);
       expect(state.snapshot.state, RunState.recording);
       expect(state.snapshot.movingTime, const Duration(seconds: 3));
+    });
+  });
+
+  test('멈추면 틱에서 자동 일시정지하고 구독을 유지하며, 움직이면 창의 점을 새 구간으로 저장한다', () {
+    _run((async, controller, container, repository, location) {
+      controller.start(goalM: 3000);
+      async.flushMicrotasks();
+      for (var i = 1; i <= 3; i++) {
+        stepTo(async, location, i * 6.0); // 1·2·3초, 6m 씩
+      }
+
+      async.elapse(const Duration(seconds: 10)); // 마지막 움직인 점 3초 + 10초
+      final paused = container.read(runControllerProvider).snapshot;
+      expect(paused.state, RunState.autoPaused);
+      expect(paused.movingTime, const Duration(seconds: 3));
+      expect(location.isListened, isTrue);
+
+      for (var i = 1; i <= 3; i++) {
+        stepTo(async, location, 18 + i * 6.0); // 14·15·16초
+      }
+      expect(
+        container.read(runControllerProvider).snapshot.state,
+        RunState.recording,
+      );
+      async.elapse(const Duration(seconds: 4)); // 20초 주기 저장
+
+      final withPoints = repository.appendCalls
+          .where((c) => c.points.isNotEmpty)
+          .toList();
+      expect([for (final c in withPoints) c.segmentIndex], [0, 1]);
+      expect(withPoints[0].points, hasLength(3));
+      expect(withPoints[1].points.map((p) => p.time), [
+        _t0.add(const Duration(seconds: 14)),
+        _t0.add(const Duration(seconds: 15)),
+        _t0.add(const Duration(seconds: 16)),
+      ]);
+      expect(location.listenCount, 1);
+    });
+  });
+
+  test('자동 일시정지 중 위치 스트림이 끊기면 다시 구독한다', () {
+    _run((async, controller, container, repository, location) {
+      controller.start(goalM: 3000);
+      async.flushMicrotasks();
+      async.elapse(const Duration(seconds: 10));
+      expect(
+        container.read(runControllerProvider).snapshot.state,
+        RunState.autoPaused,
+      );
+      location.controller.addError(Exception('gps'));
+      async.flushMicrotasks();
+      expect(location.isListened, isFalse);
+
+      async.elapse(const Duration(seconds: 5));
+
+      expect(location.listenCount, 2);
+      expect(location.isListened, isTrue);
     });
   });
 
@@ -716,7 +775,8 @@ void main() {
       stepTo(async, location, 6);
       final state = container.read(runControllerProvider);
       expect(state.lastError, isNull);
-      expect(state.snapshot.distanceM, closeTo(3, 0.01));
+      // 끊긴 사이 자동 일시정지됐고, 받은 점은 재개 판정 창에 모인다.
+      expect(state.snapshot.state, RunState.autoPaused);
     });
   });
 

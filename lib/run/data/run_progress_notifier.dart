@@ -46,7 +46,7 @@ abstract interface class RunProgressNotifier {
   Future<void> cancel();
 }
 
-/// 상태·거리·목표로 알림 문구를 만든다. 기록 중과 일시정지 중만 다룬다.
+/// 상태·거리·목표로 알림 문구를 만든다. 기록 중과 일시정지·자동 일시정지 중만 다룬다.
 RunProgressContent runProgressContent({
   required RunState state,
   required double distanceM,
@@ -55,6 +55,14 @@ RunProgressContent runProgressContent({
   required bool goalReached,
 }) {
   final km = '${formatKm(distanceM)}km';
+  if (state == RunState.autoPaused) {
+    return RunProgressContent(
+      title: '멈춰서 일시정지했어요 · $km',
+      body: '움직이면 이어져요',
+      elapsed: null,
+      action: RunProgressAction.resume,
+    );
+  }
   final String body;
   if (goalM == null) {
     body = '화면을 꺼도 기록이 이어져요';

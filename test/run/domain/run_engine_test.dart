@@ -396,6 +396,190 @@ void main() {
       throwsArgumentError,
     );
   });
+
+  group('자동 일시정지', () {
+    DateTime sec(int s) => t0.add(Duration(seconds: s));
+
+    /// [sec] 초에 북쪽 [meters] 지점의 점.
+    LocationSample north(int sec, double meters, {double accuracy = 5}) =>
+        at(sec, _northOf(meters), _lng0, accuracy: accuracy);
+
+    /// 초속 1m 로 2초마다 점을 넣어 [untilSec] 초까지 걷는다. 매초 판정한다.
+    void walk(int untilSec) {
+      for (var s = 0; s <= untilSec; s++) {
+        now = sec(s);
+        if (s.isEven) engine.addSample(north(s, s.toDouble()));
+        expect(engine.autoPauseIfStill(now), isFalse, reason: '$s초');
+      }
+    }
+
+    test('초속 1m 로 2초마다 걸으면 기록 중을 유지한다', () {
+      engine.start();
+      walk(120);
+      expect(engine.state, RunState.recording);
+    });
+
+    test('마지막 움직인 점 뒤 10초면 그 시각으로 자동 일시정지한다', () {
+      engine.start();
+      expect(engine.stateSince, t0);
+      walk(18); // 6·12·18초 점이 움직인 점
+      expect(engine.autoPauseIfStill(sec(27)), isFalse);
+      now = sec(28);
+      expect(engine.autoPauseIfStill(now), isTrue);
+      expect(engine.state, RunState.autoPaused);
+      expect(engine.pausedAt, sec(18));
+      expect(engine.stateSince, sec(18));
+      expect(engine.recordingSince, isNull);
+      now = sec(60);
+      expect(engine.snapshot.movingTime, const Duration(seconds: 18));
+      expect(engine.autoPauseIfStill(now), isFalse);
+    });
+
+    test('점이 없으면 기록 구간 시작 시각으로 자동 일시정지한다', () {
+      engine.start();
+      now = sec(10);
+      expect(engine.autoPauseIfStill(now), isTrue);
+      expect(engine.pausedAt, t0);
+      expect(engine.snapshot.movingTime, Duration.zero);
+    });
+
+    test('정확도 15m 점이 제자리에서 4~8m 씩 흔들리면 풀리지 않는다', () {
+      engine.start();
+      engine.addSample(north(0, 0));
+      now = sec(10);
+      engine.autoPauseIfStill(now);
+      const offsets = <double>[6, 0, 7, 2, 8, 3, -1, 5, 0];
+      for (var s = 11; s <= 120; s++) {
+        now = sec(s);
+        engine.addSample(north(s, offsets[s % offsets.length], accuracy: 15));
+        expect(engine.state, RunState.autoPaused, reason: '$s초');
+        expect(engine.lastAppended, isEmpty);
+      }
+      expect(engine.segments.single, hasLength(1));
+      expect(engine.snapshot.distanceM, 0);
+    });
+
+    test('10초 안에 3점·12m 움직이면 첫 점 시각으로 재개하고 그 점들을 새 구간에 넣는다', () {
+      engine.start();
+      walk(6);
+      now = sec(16);
+      engine.autoPauseIfStill(now);
+      expect(engine.pausedAt, sec(6));
+
+      now = sec(40);
+      expect(engine.addSample(north(40, 6)), isFalse);
+      now = sec(44);
+      expect(engine.addSample(north(44, 12)), isFalse);
+      expect(engine.state, RunState.autoPaused);
+      now = sec(48);
+      expect(engine.addSample(north(48, 18)), isTrue);
+
+      expect(engine.state, RunState.recording);
+      expect(engine.recordingSince, sec(40));
+      expect(engine.stateSince, sec(40));
+      expect(engine.pausedAt, isNull);
+      expect(engine.lastAppended.map((p) => p.time), [
+        sec(40),
+        sec(44),
+        sec(48),
+      ]);
+      expect(engine.segments, hasLength(2));
+      expect(engine.segments.last, hasLength(3));
+      expect(engine.segmentIndex, 1);
+      expect(engine.snapshot.distanceM, closeTo(6 + 12, 1e-6));
+      // 6초까지 + 40~48초. 자동 일시정지 동안은 빠진다.
+      expect(engine.snapshot.movingTime, const Duration(seconds: 14));
+    });
+
+    test('창 10초를 넘긴 점은 세지 않는다', () {
+      engine.start();
+      now = sec(10);
+      engine.autoPauseIfStill(now);
+      for (final (s, m) in [(30, 0.0), (36, 6.0), (42, 12.0)]) {
+        now = sec(s);
+        engine.addSample(north(s, m));
+      }
+      expect(engine.state, RunState.autoPaused);
+    });
+
+    test('정확도 거름에 걸린 점은 창에 넣지 않는다', () {
+      engine.start();
+      now = sec(10);
+      engine.autoPauseIfStill(now);
+      for (final (s, m) in [(20, 0.0), (22, 6.0), (24, 12.0)]) {
+        now = sec(s);
+        engine.addSample(north(s, m, accuracy: 25));
+      }
+      expect(engine.state, RunState.autoPaused);
+    });
+
+    test('자동 일시정지 중 pause 는 paused 가 되고 pausedAt 은 처음 값을 유지한다', () {
+      engine.start();
+      walk(6);
+      now = sec(16);
+      engine.autoPauseIfStill(now);
+      now = sec(100);
+      engine.pause();
+      expect(engine.state, RunState.paused);
+      expect(engine.pausedAt, sec(6));
+      expect(engine.stateSince, sec(100));
+      // 사용자 일시정지는 움직여도 풀리지 않는다.
+      for (final (s, m) in [(101, 0.0), (103, 6.0), (105, 12.0)]) {
+        now = sec(s);
+        expect(engine.addSample(north(s, m)), isFalse);
+      }
+      expect(engine.state, RunState.paused);
+    });
+
+    test('자동 일시정지 중 resume·end 를 할 수 있다', () {
+      engine.start();
+      now = sec(10);
+      engine.autoPauseIfStill(now);
+      now = sec(20);
+      engine.resume();
+      expect(engine.state, RunState.recording);
+      expect(engine.recordingSince, sec(20));
+      now = sec(30);
+      engine.autoPauseIfStill(now);
+      final summary = engine.end();
+      expect(engine.state, RunState.ended);
+      expect(summary.movingTime, Duration.zero);
+    });
+
+    test('빠른 이동 중에는 자동 일시정지하지 않고, 자동 일시정지 중에도 빠른 이동을 잰다', () {
+      engine.start();
+      engine.addSample(north(0, 0));
+      // 초속 10m 점은 튀는 값으로 버려지지만 빠른 이동 연속은 이어진다.
+      for (var s = 1; s <= 20; s++) {
+        now = sec(s);
+        engine.addSample(north(s, s * 10.0));
+        expect(engine.autoPauseIfStill(now), isFalse, reason: '$s초');
+      }
+      expect(engine.fastSince, sec(1));
+
+      // 느린 점으로 연속이 끊기면 멈춤 판정을 한다.
+      now = sec(22);
+      engine.addSample(north(22, 201));
+      expect(engine.fastSince, isNull);
+      expect(engine.autoPauseIfStill(now), isTrue);
+      for (var s = 23; s <= 24; s++) {
+        now = sec(s);
+        engine.addSample(north(s, 201 + (s - 22) * 10.0));
+      }
+      expect(engine.fastSince, sec(23));
+    });
+
+    test('사용자 일시정지에서 재개하면 pausedAt 은 null', () {
+      engine.start();
+      now = sec(5);
+      engine.pause();
+      expect(engine.pausedAt, sec(5));
+      expect(engine.autoPauseIfStill(sec(60)), isFalse);
+      now = sec(60);
+      engine.resume();
+      expect(engine.pausedAt, isNull);
+    });
+  });
 }
 
 Matcher _stateChanged(RunState from, RunState to) => isA<StateChanged>()

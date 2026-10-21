@@ -121,10 +121,29 @@ void _run(
       ],
     );
     container.read(runControllerProvider.notifier);
-    void sampleAt(Duration at, double meters) {
+    void send(Duration at, double meters) {
       async.elapse(at - async.elapsed);
       location.controller.add(_sample(_t0.add(at), meters));
       async.flushMicrotasks();
+    }
+
+    double? lastMeters;
+    var lastAt = Duration.zero;
+
+    /// [at] 에 [meters] 지점에 닿는다. 점 사이가 멀면 자동 일시정지되므로
+    /// 직전 점부터 5초마다 곧게 이어 달린다.
+    void sampleAt(Duration at, double meters) {
+      final from = lastMeters;
+      if (from != null) {
+        const step = Duration(seconds: 5);
+        for (var t = lastAt + step; t < at; t += step) {
+          final f = (t - lastAt).inMicroseconds / (at - lastAt).inMicroseconds;
+          send(t, from + (meters - from) * f);
+        }
+      }
+      send(at, meters);
+      lastMeters = meters;
+      lastAt = at;
     }
 
     body(async, container, notifier, sampleAt);

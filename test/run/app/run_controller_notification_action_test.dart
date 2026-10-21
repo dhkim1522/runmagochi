@@ -123,6 +123,21 @@ void main() {
     });
   });
 
+  test('자동 일시정지 중 run_resume 은 재개, run_pause 는 사용자 일시정지', () {
+    _run((async, container, actions) {
+      container.read(runControllerProvider.notifier).start(goalM: 5000);
+      async.flushMicrotasks();
+      async.elapse(const Duration(seconds: 10)); // 점이 없어 멈춤
+      expect(_state(container), RunState.autoPaused);
+      _send(async, actions, 'run_resume');
+      expect(_state(container), RunState.recording);
+      async.elapse(const Duration(seconds: 10));
+      expect(_state(container), RunState.autoPaused);
+      _send(async, actions, 'run_pause');
+      expect(_state(container), RunState.paused);
+    });
+  });
+
   test('러닝이 없으면 버튼을 무시한다', () {
     _run((async, container, actions) {
       _send(async, actions, 'run_pause');

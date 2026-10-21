@@ -189,14 +189,22 @@ void main() {
     for (var i = 1; i < 5; i++) _dist(i * 3.0, (i + 1) * 3.0),
   ].reduce((a, b) => a + b);
 
-  test('기록 중 마지막 점 뒤 9분 59초엔 계속, 10분엔 마지막 점으로 끝낸다', () {
+  test('기록 중 멈추면 자동 일시정지하고 10분 무점 규칙으로 끝내지 않는다', () {
     _run((env) {
       runFiveSamples(env);
-      env.async.elapse(
-        lastPointOffset +
-            const Duration(minutes: 9, seconds: 59) -
-            env.async.elapsed,
-      );
+      env.async.elapse(const Duration(minutes: 30));
+      expect(env.view.snapshot.state, RunState.autoPaused);
+      expect(env.repo.completed, isEmpty);
+      env.controller.end();
+      env.async.flushMicrotasks();
+    });
+  });
+
+  test('기록 중 마지막 점 뒤 무점 기준 1초 전엔 계속, 기준엔 마지막 점으로 끝낸다', () {
+    // 자동 일시정지(마지막 점 뒤 10초)보다 짧은 기준으로 기록 중 규칙을 본다.
+    _run(config: const RunGuardConfig(idle: Duration(seconds: 8)), (env) {
+      runFiveSamples(env);
+      env.async.elapse(const Duration(seconds: 7));
       expect(env.view.snapshot.state, RunState.recording);
       expect(env.repo.completed, isEmpty);
 
@@ -206,7 +214,7 @@ void main() {
       expect(summary.endedAt, lastPoint);
       expect(summary.distanceM, closeTo(fiveDistance, 1e-9));
       expect(summary.points, hasLength(5));
-      // 잘라낸 10분은 움직인 시간에서 빠진다.
+      // 잘라낸 시간은 움직인 시간에서 빠진다.
       expect(summary.movingTime, const Duration(seconds: 5));
       expect(env.view.autoEnded, isTrue);
       expect(env.view.lastSummary, same(summary));
@@ -229,14 +237,14 @@ void main() {
     });
   });
 
-  test('재개하면 10분을 재개 시각부터 다시 센다', () {
-    _run((env) {
+  test('재개하면 무점 기준을 재개 시각부터 다시 센다', () {
+    _run(config: const RunGuardConfig(idle: Duration(seconds: 8)), (env) {
       runFiveSamples(env);
       env.controller.pause();
       env.async.elapse(const Duration(minutes: 30));
       env.controller.resume();
       final resumedAt = _t0.add(env.async.elapsed);
-      env.async.elapse(const Duration(minutes: 9, seconds: 59));
+      env.async.elapse(const Duration(seconds: 7));
       expect(env.repo.completed, isEmpty);
 
       env.async.elapse(const Duration(seconds: 1));
@@ -284,9 +292,9 @@ void main() {
   });
 
   test('provider 로 줄인 기준을 따른다', () {
-    _run(config: const RunGuardConfig(idle: Duration(seconds: 30)), (env) {
+    _run(config: const RunGuardConfig(idle: Duration(seconds: 9)), (env) {
       runFiveSamples(env);
-      env.async.elapse(const Duration(seconds: 29));
+      env.async.elapse(const Duration(seconds: 8));
       expect(env.repo.completed, isEmpty);
       env.async.elapse(const Duration(seconds: 1));
       expect(env.repo.completed.single.$2.endedAt, lastPoint);
@@ -308,7 +316,7 @@ void main() {
   });
 
   test('저장이 실패하면 lastError, 다시 end 하면 자동 종료로 저장하고 알린다', () {
-    _run((env) {
+    _run(config: const RunGuardConfig(idle: Duration(seconds: 8)), (env) {
       runFiveSamples(env);
       env.repo.completeError = StateError('db');
       env.async.elapse(const Duration(minutes: 20));
@@ -326,7 +334,7 @@ void main() {
   });
 
   test('알림이 실패해도 러닝은 저장된다', () {
-    _run((env) {
+    _run(config: const RunGuardConfig(idle: Duration(seconds: 8)), (env) {
       env.notifier.fails = true;
       runFiveSamples(env);
       env.async.elapse(const Duration(minutes: 20));
@@ -435,7 +443,8 @@ void main() {
         env.controller.resume();
         env.async.elapse(const Duration(seconds: 29));
         expect(env.repo.completed, isEmpty);
-        expect(env.view.snapshot.state, RunState.recording);
+        // 재개 뒤 점이 없어 자동 일시정지했다.
+        expect(env.view.snapshot.state, RunState.autoPaused);
         env.controller.end();
         env.async.flushMicrotasks();
       });

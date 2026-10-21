@@ -166,8 +166,12 @@ void main() {
       expect(progress.shown, hasLength(3));
       expect(progress.shown.last.title, '러닝 중 · 0.02km');
 
-      async.elapse(const Duration(seconds: 10)); // 거리가 그대로면 안 띄운다
+      async.elapse(const Duration(seconds: 6)); // 거리가 그대로면 안 띄운다
       expect(progress.shown, hasLength(3));
+
+      async.elapse(const Duration(seconds: 1)); // 5초 점 뒤 10초에 멈춤
+      expect(progress.shown, hasLength(4));
+      expect(progress.shown.last.title, '멈춰서 일시정지했어요 · 0.02km');
     });
   });
 

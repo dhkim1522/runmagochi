@@ -23,7 +23,11 @@ final backupServiceProvider = Provider<BackupService>((ref) {
     ref.watch(growthServiceProvider),
     () async {
       final state = ref.read(runControllerProvider).snapshot.state;
-      if (state == RunState.recording || state == RunState.paused) return true;
+      if (state == RunState.recording ||
+          state == RunState.paused ||
+          state == RunState.autoPaused) {
+        return true;
+      }
       return await ref.read(runRepositoryProvider).findActiveRun() != null;
     },
     ref.watch(clockProvider),
