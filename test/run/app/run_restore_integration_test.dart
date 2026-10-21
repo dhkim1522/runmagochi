@@ -16,6 +16,7 @@ import 'package:runmagochi/run/data/drift_run_repository.dart';
 import 'package:runmagochi/run/data/location_source.dart';
 import 'package:runmagochi/run/domain/location_sample.dart';
 import 'package:runmagochi/run/domain/run_engine.dart';
+import 'package:runmagochi/run/domain/run_goal.dart';
 
 final _t0 = DateTime(2026, 10, 17, 7);
 
@@ -102,7 +103,7 @@ void main() {
   /// 2구간(200초 → 30초 일시정지 → 250초)을 달린다.
   void runTwoSegments(_Harness h) {
     final controller = h.container.read(runControllerProvider.notifier);
-    controller.start(goalM: 3000);
+    controller.start(goal: DistanceGoal(3000));
     h.async.flushMicrotasks();
     h.step(200);
     controller.pause();
@@ -135,7 +136,7 @@ void main() {
     fakeAsync((async) {
       final h = _Harness(async);
       final controller = h.container.read(runControllerProvider.notifier);
-      controller.start(goalM: 10000);
+      controller.start(goal: DistanceGoal(10000));
       async.flushMicrotasks();
       h.step(20);
       expect(h.container.read(runControllerProvider).goalM, 10000);

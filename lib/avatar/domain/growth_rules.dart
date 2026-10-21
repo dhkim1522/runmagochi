@@ -1,3 +1,4 @@
+import '../../run/domain/run_goal.dart';
 import '../../run/domain/run_summary.dart';
 
 /// 1km 구간 페이스가 이보다 빠르면(초/km) 그 구간 거리는 경험치에서 뺀다.
@@ -33,27 +34,45 @@ int distanceXp(double distanceM, List<Split> splits) {
 /// 목표 1km 당 달성 보너스 경험치.
 const int goalBonusXpPerKm = 5;
 
-/// 오늘 목표를 채웠는가. 거리에서 빠른 구간 거리를 뺀 값을 표시 단위(10m)로
-/// 반올림해 [goalM] 이상이어야 한다. 4,995m 가 "5.00km" 로 보이면 5km 목표를 채운 것이다.
+/// 오늘 목표를 채웠는가.
+/// - 거리 목표: 거리에서 빠른 구간 거리를 뺀 값을 표시 단위(10m)로 반올림해 목표
+///   이상이어야 한다. 4,995m 가 "5.00km" 로 보이면 5km 목표를 채운 것이다.
+/// - 시간 목표: 움직인 시간([movingTime], 자동 일시정지·일시정지 제외)이 목표 이상이어야 한다.
 bool goalAchieved({
   required double distanceM,
   required List<Split> splits,
-  required double goalM,
-}) => distanceReachesGoal(distanceM - excludedFastDistanceM(splits), goalM);
+  required Duration movingTime,
+  required RunGoal goal,
+}) => switch (goal) {
+  DistanceGoal(:final meters) => distanceReachesGoal(
+    distanceM - excludedFastDistanceM(splits),
+    meters,
+  ),
+  TimeGoal(:final time) => movingTime >= time,
+};
 
 /// [countedM] 을 표시 단위(10m)로 반올림해 [goalM] 이상인가. 러닝 중 판정과 끝난 뒤 판정이 같다.
 bool distanceReachesGoal(double countedM, double goalM) =>
     (countedM / 10).round() * 10 >= goalM;
 
-/// 목표를 채웠을 때 받는 보너스 경험치: 목표 km(반올림) × [goalBonusXpPerKm].
-int goalBonusXp(double goalM) => (goalM / 1000).round() * goalBonusXpPerKm;
+/// 시간 목표 보너스 계산에서 경험치 1단위에 해당하는 분.
+const int _timeGoalMinutesPerUnit = 6;
+
+/// 목표를 채웠을 때 받는 보너스 경험치.
+/// - 거리: 목표 km(반올림) × [goalBonusXpPerKm].
+/// - 시간: (목표 분 ÷ 6 반올림) × [goalBonusXpPerKm]. 20분 15, 30분 25, 60분 50.
+int goalBonusXp(RunGoal goal) => switch (goal) {
+  DistanceGoal(:final meters) => (meters / 1000).round() * goalBonusXpPerKm,
+  TimeGoal(:final time) =>
+    (time.inSeconds / 60 / _timeGoalMinutesPerUnit).round() * goalBonusXpPerKm,
+};
 
 /// 러닝 거리로 얻는 코인: 거리 경험치의 절반, 소수점 버림(1km당 5).
 int distanceCoins(double distanceM, List<Split> splits) =>
     distanceXp(distanceM, splits) ~/ 2;
 
-/// 목표를 채웠을 때 받는 코인: 달성 보너스 경험치와 같다(목표 km × 5).
-int goalBonusCoins(double goalM) => goalBonusXp(goalM);
+/// 목표를 채웠을 때 받는 코인: 달성 보너스 경험치와 같다.
+int goalBonusCoins(RunGoal goal) => goalBonusXp(goal);
 
 class LevelProgress {
   const LevelProgress({

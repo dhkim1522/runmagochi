@@ -1,4 +1,3 @@
-import '../domain/run_goal.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -14,6 +13,7 @@ import '../../shop/app/providers.dart';
 import '../../shop/ui/coin_chip.dart';
 import '../app/permission_gate.dart';
 import '../app/providers.dart';
+import '../domain/run_goal.dart';
 import '../domain/run_summary.dart';
 import 'in_run_screen.dart';
 import 'permission_screen.dart';
@@ -179,7 +179,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       try {
         await ref
             .read(runControllerProvider.notifier)
-            .start(goalM: _shownGoalM);
+            .start(goal: DistanceGoal(_shownGoalM));
       } catch (_) {
         _toast('러닝을 시작하지 못했어요');
         return;

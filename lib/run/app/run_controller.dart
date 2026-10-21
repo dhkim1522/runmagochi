@@ -1,4 +1,3 @@
-import '../domain/run_goal.dart';
 import 'dart:async';
 
 import 'package:flutter/foundation.dart' show debugPrint;
@@ -13,6 +12,7 @@ import '../data/run_progress_notifier.dart';
 import '../data/run_repository.dart';
 import '../domain/location_sample.dart';
 import '../domain/run_engine.dart';
+import '../domain/run_goal.dart';
 import '../domain/run_summary.dart';
 import '../domain/run_trim.dart';
 import 'providers.dart';
@@ -52,7 +52,7 @@ class RunViewState {
     this.weightKg = defaultWeightKg,
     this.autoEnded = false,
     this.lastRunId,
-    this.goalM,
+    this.goal,
     this.goalReached = false,
   });
 
@@ -73,9 +73,12 @@ class RunViewState {
   final String? lastRunId;
 
   /// 진행 중 러닝의 오늘 목표(m). 러닝 중·복원 때만 채우고 목표 없는 옛 러닝은 null.
-  final double? goalM;
+  final RunGoal? goal;
 
-  /// 기록 거리가 [goalM] 이상이 됐다. 목표가 없으면 항상 false.
+  /// 거리 목표일 때의 미터 값. 시간 목표·목표 없음은 null.
+  double? get goalM => goal.distanceGoalM;
+
+  /// 목표에 닿았다(거리 목표는 기록 거리, 시간 목표는 움직인 시간). 목표가 없으면 항상 false.
   final bool goalReached;
 }
 
@@ -124,7 +127,7 @@ class RunController extends Notifier<RunViewState> {
   DateTime? _endWarningDeadline;
 
   /// 진행 중 러닝의 목표(m).
-  double? _goalM;
+  RunGoal? _goal;
 
   /// 목표 달성을 이미 알렸거나(복원 포함) 알릴 필요가 없다.
   bool _goalReached = false;
@@ -174,21 +177,18 @@ class RunController extends Notifier<RunViewState> {
     } catch (_) {}
   }
 
-  /// [goalM] 은 홈에서 고른 오늘 목표(m). 이전 러닝의 lastSummary·lastError 는 지운다.
-  Future<void> start({required double goalM}) async {
+  /// [goal] 은 홈에서 고른 오늘 목표. 이전 러닝의 lastSummary·lastError 는 지운다.
+  Future<void> start({required RunGoal goal}) async {
     _requireNoRun();
     _starting = true;
     try {
       final clock = ref.read(clockProvider);
-      final runId = await _repository.createActiveRun(
-        clock(),
-        goal: DistanceGoal(goalM),
-      );
+      final runId = await _repository.createActiveRun(clock(), goal: goal);
       _weightKg = await _readWeight();
       final engine = RunEngine(clock: clock)..start();
       _engine = engine;
       _runId = runId;
-      _goalM = goalM;
+      _goal = goal;
       _goalReached = false;
       _subscribe();
       _startFlushTimer();
@@ -197,7 +197,7 @@ class RunController extends Notifier<RunViewState> {
         snapshot: engine.snapshot,
         runId: runId,
         weightKg: _weightKg,
-        goalM: goalM,
+        goal: goal,
       );
       _updateProgress(engine.snapshot);
     } finally {
@@ -309,7 +309,7 @@ class RunController extends Notifier<RunViewState> {
       final autoEnded = autoEndReason != null;
       _engine = null;
       _runId = null;
-      _goalM = null;
+      _goal = null;
       _goalReached = false;
       _cancelProgress();
       _pendingSummary = null;
@@ -356,11 +356,10 @@ class RunController extends Notifier<RunViewState> {
       restoredMovingTime: active.movingTime,
     );
     _runId = active.id;
-    _goalM = active.goal.distanceGoalM;
+    _goal = active.goal;
     // 이미 넘긴 목표는 알리지 않는다(사용자가 이미 알았거나 앱이 죽어 있었다).
-    final goal = active.goal.distanceGoalM;
-    _goalReached =
-        goal != null && distanceReachesGoal(engine.snapshot.distanceM, goal);
+    final goal = active.goal;
+    _goalReached = goal != null && _reaches(goal, engine.snapshot);
     _weightKg = await _readWeight();
     _publish();
     final decision = checkAutoEnd(
@@ -650,6 +649,15 @@ class RunController extends Notifier<RunViewState> {
     }
   }
 
+  /// 기록이 [goal] 에 닿았는가. 시간 목표는 엔진의 움직인 시간(일시정지·자동 일시정지 제외)이다.
+  bool _reaches(RunGoal goal, RunSnapshot snapshot) => switch (goal) {
+    DistanceGoal(:final meters) => distanceReachesGoal(
+      snapshot.distanceM,
+      meters,
+    ),
+    TimeGoal(:final time) => snapshot.movingTime >= time,
+  };
+
   /// [clearLocationError] 면 위치 스트림 오류 문구를 지운다. 다른 오류는 둔다.
   void _publish({bool clearLocationError = false}) {
     final engine = _engine;
@@ -657,11 +665,9 @@ class RunController extends Notifier<RunViewState> {
     final clear =
         clearLocationError && state.lastError == _locationErrorMessage;
     final snapshot = engine.snapshot;
-    final goal = _goalM;
+    final goal = _goal;
     final reachedNow =
-        goal != null &&
-        !_goalReached &&
-        distanceReachesGoal(snapshot.distanceM, goal);
+        goal != null && !_goalReached && _reaches(goal, snapshot);
     if (reachedNow) _goalReached = true;
     state = _copyState(snapshot: snapshot, runId: _runId, clearError: clear);
     if (reachedNow) _notifyGoalReached(goal);
@@ -736,7 +742,7 @@ class RunController extends Notifier<RunViewState> {
                 state: snapshot.state,
                 distanceM: snapshot.distanceM,
                 movingTime: snapshot.movingTime,
-                goalM: _goalM,
+                goalM: _goal.distanceGoalM,
                 goalReached: _goalReached,
               ),
             )
@@ -764,14 +770,18 @@ class RunController extends Notifier<RunViewState> {
   }
 
   /// 알림 실패는 러닝과 상관없으므로 버린다.
-  void _notifyGoalReached(double goalM) {
+  void _notifyGoalReached(RunGoal goal) {
+    final label = switch (goal) {
+      DistanceGoal(:final meters) => '${formatTargetKm(meters)}km',
+      TimeGoal(:final time) => '${time.inMinutes}분',
+    };
     try {
       unawaited(
         ref
             .read(instantNotifierProvider)
             .showGoalReached(
               title: _goalReachedTitle,
-              body: '${formatTargetKm(goalM)}km 목표를 채웠어요. 종료할 때까지 기록은 이어져요',
+              body: '$label 목표를 채웠어요. 종료할 때까지 기록은 이어져요',
             )
             .catchError((Object e) => debugPrint('알림: 목표 달성 알림 실패 $e')),
       );
@@ -795,7 +805,7 @@ class RunController extends Notifier<RunViewState> {
       weightKg: _weightKg,
       autoEnded: state.autoEnded,
       lastRunId: state.lastRunId,
-      goalM: _goalM,
+      goal: _goal,
       goalReached: _goalReached,
     );
   }

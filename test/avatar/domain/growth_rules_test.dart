@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:runmagochi/avatar/domain/growth_rules.dart';
+import 'package:runmagochi/run/domain/run_goal.dart';
 import 'package:runmagochi/run/domain/run_summary.dart';
 
 void main() {
@@ -110,26 +111,120 @@ void main() {
     );
 
     test('보너스는 목표 km × 5', () {
-      expect(goalBonusXp(3000), 15);
-      expect(goalBonusXp(10000), 50);
+      expect(goalBonusXp(const DistanceGoal(3000)), 15);
+      expect(goalBonusXp(const DistanceGoal(10000)), 50);
     });
 
     test('거리가 목표 이상이면 달성', () {
-      expect(goalAchieved(distanceM: 5000, splits: [], goalM: 5000), isTrue);
-      expect(goalAchieved(distanceM: 4999, splits: [], goalM: 5000), isTrue);
-      expect(goalAchieved(distanceM: 4995, splits: [], goalM: 5000), isTrue);
-      expect(goalAchieved(distanceM: 4994, splits: [], goalM: 5000), isFalse);
+      expect(
+        goalAchieved(
+          distanceM: 5000,
+          splits: [],
+          movingTime: Duration.zero,
+          goal: const DistanceGoal(5000),
+        ),
+        isTrue,
+      );
+      expect(
+        goalAchieved(
+          distanceM: 4999,
+          splits: [],
+          movingTime: Duration.zero,
+          goal: const DistanceGoal(5000),
+        ),
+        isTrue,
+      );
+      expect(
+        goalAchieved(
+          distanceM: 4995,
+          splits: [],
+          movingTime: Duration.zero,
+          goal: const DistanceGoal(5000),
+        ),
+        isTrue,
+      );
+      expect(
+        goalAchieved(
+          distanceM: 4994,
+          splits: [],
+          movingTime: Duration.zero,
+          goal: const DistanceGoal(5000),
+        ),
+        isFalse,
+      );
     });
 
     test('빠른 구간 거리는 뺀다', () {
       expect(
-        goalAchieved(distanceM: 5000, splits: [fast(1)], goalM: 5000),
+        goalAchieved(
+          distanceM: 5000,
+          splits: [fast(1)],
+          movingTime: Duration.zero,
+          goal: const DistanceGoal(5000),
+        ),
         isFalse,
       );
       expect(
-        goalAchieved(distanceM: 6000, splits: [fast(1)], goalM: 5000),
+        goalAchieved(
+          distanceM: 6000,
+          splits: [fast(1)],
+          movingTime: Duration.zero,
+          goal: const DistanceGoal(5000),
+        ),
         isTrue,
       );
+    });
+
+    group('시간 목표', () {
+      const thirty = TimeGoal(Duration(minutes: 30));
+      bool achieved(Duration moving, {double distanceM = 0}) => goalAchieved(
+        distanceM: distanceM,
+        splits: [],
+        movingTime: moving,
+        goal: thirty,
+      );
+
+      test('29분 59초는 미달, 30분은 달성', () {
+        expect(achieved(const Duration(minutes: 29, seconds: 59)), isFalse);
+        expect(achieved(const Duration(minutes: 30)), isTrue);
+        expect(achieved(const Duration(minutes: 45)), isTrue);
+      });
+
+      test('거리와 빠른 구간은 판정에 쓰지 않는다', () {
+        expect(
+          goalAchieved(
+            distanceM: 100000,
+            splits: [fast(1)],
+            movingTime: const Duration(minutes: 10),
+            goal: thirty,
+          ),
+          isFalse,
+        );
+        expect(
+          goalAchieved(
+            distanceM: 0,
+            splits: [fast(1)],
+            movingTime: const Duration(minutes: 30),
+            goal: thirty,
+          ),
+          isTrue,
+        );
+      });
+
+      test('보너스는 목표 분 ÷ 6 반올림 × 5, 코인도 같다', () {
+        for (final (minutes, bonus) in [
+          (15, 15),
+          (20, 15),
+          (30, 25),
+          (45, 40),
+          (60, 50),
+          (180, 150),
+        ]) {
+          final goal = TimeGoal(Duration(minutes: minutes));
+          expect(goalBonusXp(goal), bonus, reason: '$minutes분');
+          expect(goalBonusCoins(goal), bonus, reason: '$minutes분 코인');
+        }
+      });
     });
   });
 }

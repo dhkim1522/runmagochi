@@ -542,7 +542,7 @@ void main() {
       await tester.tap(find.text('10km'));
       await tester.pump();
       await startAndWait(tester);
-      expect(c.startGoals, [10000]);
+      expect(c.startGoals, [DistanceGoal(10000)]);
     });
 
     testWidgets('고르지 않고 시작하면 기본 3km 로 시작한다', (tester) async {
@@ -550,7 +550,7 @@ void main() {
       await pumpHome(tester, c);
       await settle(tester);
       await startAndWait(tester);
-      expect(c.startGoals, [3000]);
+      expect(c.startGoals, [DistanceGoal(3000)]);
     });
 
     testWidgets('직접 입력 12 → 12km 로 시작한다', (tester) async {
@@ -565,7 +565,7 @@ void main() {
       await settle(tester);
       expect(find.text('12km'), findsOneWidget);
       await startAndWait(tester);
-      expect(c.startGoals, [12000]);
+      expect(c.startGoals, [DistanceGoal(12000)]);
     });
 
     for (final text in ['2', '43', '']) {

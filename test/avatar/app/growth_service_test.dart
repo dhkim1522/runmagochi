@@ -21,6 +21,8 @@ class FakeRunRepository implements RunRepository {
     DateTime startedAt,
     double distanceM, {
     double? goalM,
+    RunGoal? goal,
+    Duration movingTime = const Duration(minutes: 30),
     List<Split> splits = const [],
   }) {
     runs.add(
@@ -30,9 +32,9 @@ class FakeRunRepository implements RunRepository {
           name: id,
           startedAt: startedAt,
           distanceM: distanceM,
-          movingTime: const Duration(minutes: 30),
+          movingTime: movingTime,
           avgPaceSecPerKm: 360,
-          goal: goalM == null ? null : DistanceGoal(goalM),
+          goal: goal ?? (goalM == null ? null : DistanceGoal(goalM)),
         ),
         calories: 0,
         route: const [],
@@ -94,11 +96,22 @@ class FakeRunRepository implements RunRepository {
 
   /// 잘라내기처럼 거리만 바꾼다(시작 시각은 그대로).
   /// [at] 은 저장소가 바꾼 시각(updatedAt). 없으면 아주 예전으로 둔다.
-  void revise(String id, double distanceM, {DateTime? at}) {
+  void revise(
+    String id,
+    double distanceM, {
+    DateTime? at,
+    Duration? movingTime,
+  }) {
     final i = runs.indexWhere((r) => r.run.id == id);
     final old = runs[i].run;
     runs.removeAt(i);
-    add(id, old.startedAt, distanceM, goalM: old.goal.distanceGoalM);
+    add(
+      id,
+      old.startedAt,
+      distanceM,
+      goal: old.goal,
+      movingTime: movingTime ?? old.movingTime,
+    );
     if (at != null) revisedAt[id] = at;
   }
 
@@ -321,6 +334,63 @@ void main() {
       final gain = await service.sync();
       expect(gain.goalBonusXp, 0);
       expect(await growth.totalXp(), 40);
+    });
+  });
+
+  group('시간 목표 보너스', () {
+    final at = DateTime(2026, 10, 13, 7);
+    Future<int> balance() => DriftShopRepository(db).balance();
+    const thirty = TimeGoal(Duration(minutes: 30));
+
+    test('30분 목표로 30분을 움직이면 보너스 25 + 코인 25', () async {
+      runs.add(
+        'a',
+        at,
+        3000,
+        goal: thirty,
+        movingTime: const Duration(minutes: 30),
+      );
+      final gain = await service.sync();
+      expect(gain.goalBonusXp, 25);
+      expect(gain.goalCoins, 25);
+      expect(await growth.totalXp(), 30 + 25);
+    });
+
+    test('29분 59초면 미달이라 보너스와 목표 코인이 없다', () async {
+      runs.add(
+        'a',
+        at,
+        3000,
+        goal: thirty,
+        movingTime: const Duration(minutes: 29, seconds: 59),
+      );
+      final gain = await service.sync();
+      expect(gain.goalBonusXp, 0);
+      expect(gain.goalCoins, 0);
+      expect(await balance(), 15);
+    });
+
+    test('잘라내 29분이 되면 보너스와 목표 코인을 무르고 다시 늘리면 돌려준다', () async {
+      runs.add(
+        'a',
+        at,
+        3000,
+        goal: thirty,
+        movingTime: const Duration(minutes: 31),
+      );
+      await service.sync();
+      expect(await balance(), 15 + 25);
+
+      runs.revise('a', 2800, movingTime: const Duration(minutes: 29));
+      final cut = await service.runRevised('a', at);
+      expect(cut.goalBonusXp, -25);
+      expect(cut.goalCoins, -25);
+      expect(await balance(), 14);
+
+      runs.revise('a', 3000, movingTime: const Duration(minutes: 30));
+      final back = await service.runRevised('a', at);
+      expect(back.goalBonusXp, 25);
+      expect(back.goalCoins, 25);
     });
   });
 

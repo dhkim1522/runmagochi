@@ -241,7 +241,7 @@ void main() {
 
   test('start → 점 5개 → 10초 경과 → appendPoints 1회, 점 5개', () {
     _run((async, controller, container, repository, location) {
-      controller.start(goalM: 3000);
+      controller.start(goal: DistanceGoal(3000));
       async.flushMicrotasks();
       for (var i = 1; i <= 5; i++) {
         stepTo(async, location, i * 3.0);
@@ -260,7 +260,7 @@ void main() {
 
   test('pause 시 버퍼를 즉시 저장하고 위치 구독은 유지한다', () {
     _run((async, controller, container, repository, location) {
-      controller.start(goalM: 3000);
+      controller.start(goal: DistanceGoal(3000));
       async.flushMicrotasks();
       for (var i = 1; i <= 3; i++) {
         stepTo(async, location, i * 3.0);
@@ -282,7 +282,7 @@ void main() {
 
   test('end 후 completeRun 호출, 위치 구독 해제, 버퍼는 completeRun 전에 저장', () {
     _run((async, controller, container, repository, location) {
-      controller.start(goalM: 3000);
+      controller.start(goal: DistanceGoal(3000));
       async.flushMicrotasks();
       for (var i = 1; i <= 2; i++) {
         stepTo(async, location, i * 3.0);
@@ -314,7 +314,7 @@ void main() {
 
   test('end 후 30초가 지나도 appendPoints 를 더 부르지 않는다', () {
     _run((async, controller, container, repository, location) {
-      controller.start(goalM: 3000);
+      controller.start(goal: DistanceGoal(3000));
       async.flushMicrotasks();
       stepTo(async, location, 3);
       controller.end();
@@ -330,7 +330,7 @@ void main() {
 
   test('end 는 진행 중인 주기 저장이 끝난 뒤 completeRun 한다', () {
     _run((async, controller, container, repository, location) {
-      controller.start(goalM: 3000);
+      controller.start(goal: DistanceGoal(3000));
       async.flushMicrotasks();
       stepTo(async, location, 3);
       final gate = repository.appendGate = Completer<void>();
@@ -357,11 +357,13 @@ void main() {
 
   test('러닝이 이미 있으면 start 는 StateError', () {
     _run((async, controller, container, repository, location) {
-      controller.start(goalM: 3000);
+      controller.start(goal: DistanceGoal(3000));
       async.flushMicrotasks();
 
       Object? error;
-      controller.start(goalM: 3000).catchError((Object e) => error = e);
+      controller
+          .start(goal: DistanceGoal(3000))
+          .catchError((Object e) => error = e);
       async.flushMicrotasks();
 
       expect(error, isA<StateError>());
@@ -372,13 +374,13 @@ void main() {
 
   test('start 는 이전 러닝의 lastSummary 를 지운다', () {
     _run((async, controller, container, repository, location) {
-      controller.start(goalM: 3000);
+      controller.start(goal: DistanceGoal(3000));
       async.flushMicrotasks();
       controller.end();
       async.flushMicrotasks();
       expect(container.read(runControllerProvider).lastSummary, isNotNull);
 
-      controller.start(goalM: 3000);
+      controller.start(goal: DistanceGoal(3000));
       async.flushMicrotasks();
 
       final state = container.read(runControllerProvider);
@@ -390,7 +392,7 @@ void main() {
 
   test('주기 저장 실패는 lastError 에 남기고 점은 다음 저장 때 저장한다', () {
     _run((async, controller, container, repository, location) {
-      controller.start(goalM: 3000);
+      controller.start(goal: DistanceGoal(3000));
       async.flushMicrotasks();
       stepTo(async, location, 3);
       stepTo(async, location, 9);
@@ -417,8 +419,10 @@ void main() {
   test('start 두 번을 연달아 부르면 러닝은 하나만 만들고 두 번째는 StateError', () {
     _run((async, controller, container, repository, location) {
       Object? error;
-      controller.start(goalM: 3000);
-      controller.start(goalM: 3000).catchError((Object e) => error = e);
+      controller.start(goal: DistanceGoal(3000));
+      controller
+          .start(goal: DistanceGoal(3000))
+          .catchError((Object e) => error = e);
       async.flushMicrotasks();
 
       expect(error, isA<StateError>());
@@ -429,7 +433,7 @@ void main() {
 
   test('end 가 저장하는 동안 resume 은 StateError, end 뒤 구독·타이머가 없다', () {
     _run((async, controller, container, repository, location) {
-      controller.start(goalM: 3000);
+      controller.start(goal: DistanceGoal(3000));
       async.flushMicrotasks();
       stepTo(async, location, 3);
       controller.pause();
@@ -452,7 +456,7 @@ void main() {
     'end 가 저장하는 동안 pause·end 는 StateError, completeRun 뒤 appendPoints 없음',
     () {
       _run((async, controller, container, repository, location) {
-        controller.start(goalM: 3000);
+        controller.start(goal: DistanceGoal(3000));
         async.flushMicrotasks();
         stepTo(async, location, 3);
         final gate = repository.appendGate = Completer<void>();
@@ -481,7 +485,7 @@ void main() {
     'completeRun 이 실패하면 lastError 에 남기고 end 를 다시 부르면 completeRun 만 다시 한다',
     () {
       _run((async, controller, container, repository, location) {
-        controller.start(goalM: 3000);
+        controller.start(goal: DistanceGoal(3000));
         async.flushMicrotasks();
         stepTo(async, location, 3);
         repository.completeError = StateError('쓰기 실패');
@@ -518,7 +522,7 @@ void main() {
 
   test('pause 저장 실패는 lastError 에 남기고 점은 다음 저장 때 저장한다', () {
     _run((async, controller, container, repository, location) {
-      controller.start(goalM: 3000);
+      controller.start(goal: DistanceGoal(3000));
       async.flushMicrotasks();
       stepTo(async, location, 3);
       repository.appendError = StateError('디스크 가득');
@@ -536,7 +540,7 @@ void main() {
 
   test('end 의 저장이 실패하면 lastError 에 남기고 resume 하면 구독·주기 저장을 다시 한다', () {
     _run((async, controller, container, repository, location) {
-      controller.start(goalM: 3000);
+      controller.start(goal: DistanceGoal(3000));
       async.flushMicrotasks();
       stepTo(async, location, 3);
       controller.pause();
@@ -574,7 +578,7 @@ void main() {
 
   test('점이 없어도 10초마다 움직인 시간을 저장한다', () {
     _run((async, controller, container, repository, location) {
-      controller.start(goalM: 3000);
+      controller.start(goal: DistanceGoal(3000));
       async.flushMicrotasks();
 
       async.elapse(const Duration(seconds: 10));
@@ -587,7 +591,7 @@ void main() {
 
   test('resume 뒤 점은 새 구간 번호로 저장한다', () {
     _run((async, controller, container, repository, location) {
-      controller.start(goalM: 3000);
+      controller.start(goal: DistanceGoal(3000));
       async.flushMicrotasks();
       stepTo(async, location, 3);
       stepTo(async, location, 6);
@@ -611,7 +615,7 @@ void main() {
 
   test('1초마다 snapshot 을 새로 낸다', () {
     _run((async, controller, container, repository, location) {
-      controller.start(goalM: 3000);
+      controller.start(goal: DistanceGoal(3000));
       async.flushMicrotasks();
 
       async.elapse(const Duration(seconds: 3));
@@ -625,7 +629,7 @@ void main() {
 
   test('멈추면 틱에서 자동 일시정지하고 구독을 유지하며, 움직이면 창의 점을 새 구간으로 저장한다', () {
     _run((async, controller, container, repository, location) {
-      controller.start(goalM: 3000);
+      controller.start(goal: DistanceGoal(3000));
       async.flushMicrotasks();
       for (var i = 1; i <= 3; i++) {
         stepTo(async, location, i * 6.0); // 1·2·3초, 6m 씩
@@ -662,7 +666,7 @@ void main() {
 
   test('자동 일시정지 중 위치 스트림이 끊기면 다시 구독한다', () {
     _run((async, controller, container, repository, location) {
-      controller.start(goalM: 3000);
+      controller.start(goal: DistanceGoal(3000));
       async.flushMicrotasks();
       async.elapse(const Duration(seconds: 10));
       expect(
@@ -682,7 +686,7 @@ void main() {
 
   test('위치 스트림 오류는 lastError 에 남기고, 재시도 뒤 점이 오면 오류를 지운다', () {
     _run((async, controller, container, repository, location) {
-      controller.start(goalM: 3000);
+      controller.start(goal: DistanceGoal(3000));
       async.flushMicrotasks();
       stepTo(async, location, 3);
 
@@ -706,7 +710,7 @@ void main() {
 
   test('재시도 구독이 또 실패하면 5초마다 계속 다시 구독한다', () {
     _run((async, controller, container, repository, location) {
-      controller.start(goalM: 3000);
+      controller.start(goal: DistanceGoal(3000));
       async.flushMicrotasks();
 
       location.controller.addError(Exception('GPS 꺼짐'));
@@ -722,7 +726,7 @@ void main() {
 
   test('오류 뒤 pause → resume 하면 바로 다시 구독하고 점을 받는다', () {
     _run((async, controller, container, repository, location) {
-      controller.start(goalM: 3000);
+      controller.start(goal: DistanceGoal(3000));
       async.flushMicrotasks();
       location.controller.addError(Exception('GPS 꺼짐'));
       async.flushMicrotasks();
@@ -745,7 +749,7 @@ void main() {
 
   test('위치 스트림이 끝나도 기록 중이면 다시 구독한다', () {
     _run((async, controller, container, repository, location) {
-      controller.start(goalM: 3000);
+      controller.start(goal: DistanceGoal(3000));
       async.flushMicrotasks();
       stepTo(async, location, 3);
 
@@ -761,7 +765,7 @@ void main() {
 
   test('백그라운드에서 끊기면 구독하지 않다가, 화면으로 돌아오면 바로 구독한다', () {
     _run((async, controller, container, repository, location) {
-      controller.start(goalM: 3000);
+      controller.start(goal: DistanceGoal(3000));
       async.flushMicrotasks();
       stepTo(async, location, 3);
 
@@ -788,7 +792,7 @@ void main() {
 
   test('재시도 시각에 백그라운드면 구독하지 않고, 돌아오면 바로 구독한다', () {
     _run((async, controller, container, repository, location) {
-      controller.start(goalM: 3000);
+      controller.start(goal: DistanceGoal(3000));
       async.flushMicrotasks();
       location.controller.addError(Exception('GPS 꺼짐'));
       async.flushMicrotasks();
@@ -805,7 +809,7 @@ void main() {
 
   test('구독이 살아 있으면 화면으로 돌아와도 다시 구독하지 않는다', () {
     _run((async, controller, container, repository, location) {
-      controller.start(goalM: 3000);
+      controller.start(goal: DistanceGoal(3000));
       async.flushMicrotasks();
 
       _lifecycle.set(AppLifecycleState.paused);
@@ -816,7 +820,7 @@ void main() {
 
   test('사용자가 일시정지한 동안 화면으로 돌아와도 구독하지 않는다', () {
     _run((async, controller, container, repository, location) {
-      controller.start(goalM: 3000);
+      controller.start(goal: DistanceGoal(3000));
       async.flushMicrotasks();
       _lifecycle.set(AppLifecycleState.paused);
       location.controller.addError(Exception('GPS 꺼짐'));
@@ -832,7 +836,7 @@ void main() {
 
   test('end 뒤에 화면으로 돌아와도 구독하지 않는다', () {
     _run((async, controller, container, repository, location) {
-      controller.start(goalM: 3000);
+      controller.start(goal: DistanceGoal(3000));
       async.flushMicrotasks();
       _lifecycle.set(AppLifecycleState.paused);
       location.controller.addError(Exception('GPS 꺼짐'));
@@ -848,7 +852,7 @@ void main() {
 
   test('pause·end 뒤에는 재시도 타이머가 돌지 않는다', () {
     _run((async, controller, container, repository, location) {
-      controller.start(goalM: 3000);
+      controller.start(goal: DistanceGoal(3000));
       async.flushMicrotasks();
       location.controller.addError(Exception('GPS 꺼짐'));
       async.flushMicrotasks();
@@ -950,7 +954,7 @@ void main() {
         repository,
         location,
       ) {
-        controller.start(goalM: 3000);
+        controller.start(goal: DistanceGoal(3000));
         async.flushMicrotasks();
 
         Object? error;
@@ -990,7 +994,7 @@ void _weightTests() {
         repository,
         location,
       ) {
-        controller.start(goalM: 3000);
+        controller.start(goal: DistanceGoal(3000));
         async.flushMicrotasks();
         for (var i = 1; i <= 200; i++) {
           async.elapse(const Duration(seconds: 1));

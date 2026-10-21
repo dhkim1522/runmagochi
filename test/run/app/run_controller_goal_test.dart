@@ -157,7 +157,7 @@ void main() {
   test('목표 3km: 2.99km 까지 알림 0회, 3.00km 에서 1회, 더 달려도 1회', () {
     _run((async, container, notifier, sampleAt) {
       final controller = container.read(runControllerProvider.notifier);
-      controller.start(goalM: 3000);
+      controller.start(goal: DistanceGoal(3000));
       async.flushMicrotasks();
       expect(container.read(runControllerProvider).goalM, 3000);
       expect(container.read(runControllerProvider).goalReached, isFalse);
@@ -187,7 +187,9 @@ void main() {
   test('표시 단위(10m) 반올림: 4,995m 이상은 5km 목표를 채우고 4,994m 는 못 채운다', () {
     for (final (meters, reached) in [(4994.0, false), (4995.5, true)]) {
       _run((async, container, notifier, sampleAt) {
-        container.read(runControllerProvider.notifier).start(goalM: 5000);
+        container
+            .read(runControllerProvider.notifier)
+            .start(goal: DistanceGoal(5000));
         async.flushMicrotasks();
         sampleAt(const Duration(seconds: 1), 0);
         for (var km = 1; km <= 4; km++) {
@@ -208,7 +210,9 @@ void main() {
 
   test('알림이 실패해도 달성 상태는 바뀌고 오류는 퍼지지 않는다', () {
     _run(notifierFails: true, (async, container, notifier, sampleAt) {
-      container.read(runControllerProvider.notifier).start(goalM: 3000);
+      container
+          .read(runControllerProvider.notifier)
+          .start(goal: DistanceGoal(3000));
       async.flushMicrotasks();
       sampleAt(const Duration(seconds: 1), 0);
       sampleAt(const Duration(seconds: 501), 3005);
@@ -265,5 +269,94 @@ void main() {
         expect(notifier.shown, isEmpty);
       },
     );
+  });
+
+  group('시간 목표 30분', () {
+    const goal = TimeGoal(Duration(minutes: 30));
+
+    test('움직인 시간 29:59 까지 알림 0회, 30:00 에 점이 없어도 1초 틱에서 1회', () {
+      _run((async, container, notifier, sampleAt) {
+        final controller = container.read(runControllerProvider.notifier);
+        controller.start(goal: goal);
+        async.flushMicrotasks();
+        sampleAt(const Duration(seconds: 1), 0);
+        // 29분 55초 지점까지 곧게 달린다(3km).
+        sampleAt(const Duration(minutes: 29, seconds: 55), 3000);
+        async.elapse(const Duration(seconds: 4)); // 29:59
+        var view = container.read(runControllerProvider);
+        expect(view.snapshot.movingTime, lessThan(goal.time));
+        expect(view.goalReached, isFalse);
+        expect(notifier.shown, isEmpty);
+
+        async.elapse(const Duration(seconds: 1)); // 30:00, 새 점 없음
+        view = container.read(runControllerProvider);
+        expect(view.snapshot.movingTime, greaterThanOrEqualTo(goal.time));
+        expect(view.goalReached, isTrue);
+        expect(notifier.shown, [('목표 달성!', '30분 목표를 채웠어요. 종료할 때까지 기록은 이어져요')]);
+
+        async.elapse(const Duration(seconds: 30));
+        expect(notifier.shown, hasLength(1));
+      });
+    });
+
+    test('사용자 일시정지 시간은 세지 않는다', () {
+      _run((async, container, notifier, sampleAt) {
+        final controller = container.read(runControllerProvider.notifier);
+        controller.start(goal: goal);
+        async.flushMicrotasks();
+        sampleAt(const Duration(seconds: 1), 0);
+        sampleAt(const Duration(minutes: 20), 2000);
+        controller.pause();
+        async.elapse(const Duration(minutes: 10)); // 벽시계 30분
+        controller.resume();
+        async.elapse(const Duration(seconds: 3));
+        final view = container.read(runControllerProvider);
+        expect(view.snapshot.movingTime, lessThan(const Duration(minutes: 21)));
+        expect(view.goalReached, isFalse);
+        expect(notifier.shown, isEmpty);
+      });
+    });
+
+    test('자동 일시정지(멈춤) 시간은 세지 않는다', () {
+      _run((async, container, notifier, sampleAt) {
+        container.read(runControllerProvider.notifier).start(goal: goal);
+        async.flushMicrotasks();
+        sampleAt(const Duration(seconds: 1), 0);
+        sampleAt(const Duration(minutes: 20), 2000);
+        async.elapse(const Duration(minutes: 10)); // 점 없이 서 있다
+        final view = container.read(runControllerProvider);
+        expect(view.snapshot.movingTime, lessThan(const Duration(minutes: 21)));
+        expect(view.goalReached, isFalse);
+        expect(notifier.shown, isEmpty);
+      });
+    });
+
+    test('복원한 러닝이 이미 30분을 넘었으면 달성 상태이고 알리지 않는다', () {
+      final start = _t0.subtract(const Duration(minutes: 50));
+      _run(
+        activeRun: ActiveRun(
+          id: 'run-1',
+          startedAt: start,
+          segments: [
+            [
+              _sample(start, 0),
+              _sample(start.add(const Duration(minutes: 40)), 4000),
+            ],
+          ],
+          movingTime: const Duration(minutes: 40),
+          goal: goal,
+        ),
+        (async, container, notifier, sampleAt) {
+          container.read(runControllerProvider.notifier).restoreIfAny();
+          async.flushMicrotasks();
+          async.elapse(const Duration(seconds: 5));
+          final view = container.read(runControllerProvider);
+          expect(view.goal, goal);
+          expect(view.goalM, isNull);
+          expect(view.goalReached, isTrue);
+          expect(notifier.shown, isEmpty);
+        },
+      );
+    });
   });
 }

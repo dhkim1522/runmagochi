@@ -150,7 +150,9 @@ void _run(
 void main() {
   test('시작하면 바로 알림을 띄운다', () {
     _run((async, container, progress, sampleAt) {
-      container.read(runControllerProvider.notifier).start(goalM: 5000);
+      container
+          .read(runControllerProvider.notifier)
+          .start(goal: DistanceGoal(5000));
       async.flushMicrotasks();
       expect(progress.shown, hasLength(1));
       expect(progress.shown.single.title, '러닝 중 · 0.00km');
@@ -160,7 +162,9 @@ void main() {
 
   test('틱마다 다시 띄우지 않고, 거리가 10m 단위로 바뀌면 3초 간격으로 갱신한다', () {
     _run((async, container, progress, sampleAt) {
-      container.read(runControllerProvider.notifier).start(goalM: 5000);
+      container
+          .read(runControllerProvider.notifier)
+          .start(goal: DistanceGoal(5000));
       async.flushMicrotasks();
       async.elapse(const Duration(seconds: 2));
       expect(progress.shown, hasLength(1));
@@ -188,7 +192,7 @@ void main() {
   test('일시정지·재개는 3초 안이어도 바로 띄운다', () {
     _run((async, container, progress, sampleAt) {
       final controller = container.read(runControllerProvider.notifier);
-      controller.start(goalM: 5000);
+      controller.start(goal: DistanceGoal(5000));
       async.flushMicrotasks();
       controller.pause();
       async.flushMicrotasks();
@@ -204,7 +208,7 @@ void main() {
   test('끝내면 알림을 지운다', () {
     _run((async, container, progress, sampleAt) {
       final controller = container.read(runControllerProvider.notifier);
-      controller.start(goalM: 5000);
+      controller.start(goal: DistanceGoal(5000));
       async.flushMicrotasks();
       controller.end();
       async.flushMicrotasks();
@@ -215,7 +219,7 @@ void main() {
   test('알림이 실패해도 러닝은 계속된다', () {
     _run(fails: true, (async, container, progress, sampleAt) {
       final controller = container.read(runControllerProvider.notifier);
-      controller.start(goalM: 5000);
+      controller.start(goal: DistanceGoal(5000));
       async.flushMicrotasks();
       sampleAt(const Duration(seconds: 1), 0);
       sampleAt(const Duration(seconds: 10), 30);

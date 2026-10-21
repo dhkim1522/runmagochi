@@ -115,7 +115,9 @@ void _send(FakeAsync async, StreamController<String> a, String id) {
 void main() {
   test('기록 중 run_pause 는 일시정지, run_resume 은 재개한다', () {
     _run((async, container, actions) {
-      container.read(runControllerProvider.notifier).start(goalM: 5000);
+      container
+          .read(runControllerProvider.notifier)
+          .start(goal: DistanceGoal(5000));
       async.flushMicrotasks();
       _send(async, actions, 'run_pause');
       expect(_state(container), RunState.paused);
@@ -126,7 +128,9 @@ void main() {
 
   test('자동 일시정지 중 run_resume 은 재개, run_pause 는 사용자 일시정지', () {
     _run((async, container, actions) {
-      container.read(runControllerProvider.notifier).start(goalM: 5000);
+      container
+          .read(runControllerProvider.notifier)
+          .start(goal: DistanceGoal(5000));
       async.flushMicrotasks();
       async.elapse(const Duration(seconds: 10)); // 점이 없어 멈춤
       expect(_state(container), RunState.autoPaused);
@@ -149,7 +153,9 @@ void main() {
 
   test('상태에 맞지 않는 버튼과 모르는 id 는 오류 없이 무시한다', () {
     _run((async, container, actions) {
-      container.read(runControllerProvider.notifier).start(goalM: 5000);
+      container
+          .read(runControllerProvider.notifier)
+          .start(goal: DistanceGoal(5000));
       async.flushMicrotasks();
       _send(async, actions, 'run_resume'); // 기록 중에 재개
       expect(_state(container), RunState.recording);

@@ -1,4 +1,3 @@
-import '../../run/domain/run_goal.dart';
 import '../../core/clock.dart';
 import '../../run/data/run_repository.dart';
 import '../data/growth_repository.dart';
@@ -65,21 +64,23 @@ class GrowthService {
   /// 반환값은 매긴 달성 보너스(경험치).
   Future<int> _rate(RunDetail detail, {required bool coins}) async {
     final run = detail.run;
-    final goalM = run.goal.distanceGoalM;
-    final achieved =
-        goalM != null &&
-        goalAchieved(
-          distanceM: run.distanceM,
-          splits: detail.splits,
-          goalM: goalM,
-        );
-    final bonus = achieved ? goalBonusXp(goalM) : 0;
+    final goal = run.goal;
+    final bonus =
+        goal != null &&
+            goalAchieved(
+              distanceM: run.distanceM,
+              splits: detail.splits,
+              movingTime: run.movingTime,
+              goal: goal,
+            )
+        ? goalBonusXp(goal)
+        : 0;
     await _growth.setRunRewards(
       run.id,
       distanceXp: distanceXp(run.distanceM, detail.splits),
       goalBonusXp: bonus,
       distanceCoins: coins ? distanceCoins(run.distanceM, detail.splits) : null,
-      goalCoins: coins ? (achieved ? goalBonusCoins(goalM) : 0) : null,
+      goalCoins: coins ? bonus : null, // 코인 보너스는 경험치 보너스와 같다.
     );
     return bonus;
   }

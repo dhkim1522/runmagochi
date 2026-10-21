@@ -1,4 +1,3 @@
-import '../domain/run_goal.dart';
 import 'package:flutter/material.dart' hide Split;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -12,6 +11,7 @@ import '../../core/ui/clay.dart';
 import '../app/providers.dart';
 import '../app/run_editor.dart';
 import '../data/run_repository.dart';
+import '../domain/run_goal.dart';
 import '../domain/run_summary.dart';
 import 'history_screen.dart';
 import 'home_screen.dart';
@@ -126,14 +126,15 @@ class _SummaryScreenState extends ConsumerState<SummaryScreen> {
                   goalAchieved(
                     distanceM: s.distanceM,
                     splits: s.splits,
-                    goalM: widget.goalM!,
+                    movingTime: s.movingTime,
+                    goal: DistanceGoal(widget.goalM!),
                   ),
             );
       body = _SummaryBody(
         growth: growth,
         // 성장 반영에 실패해도 목표 결과는 보여 준다.
         goal: g == null
-            ? _goalResult(widget.goalM, s.distanceM, s.splits)
+            ? _goalResult(widget.goalM, s.distanceM, s.splits, s.movingTime)
             : null,
         name: s.name,
         startedAt: s.startedAt,
@@ -274,23 +275,33 @@ class _DeleteRunButtonState extends ConsumerState<_DeleteRunButton> {
 }
 
 /// 기록에서 연 상세의 목표 결과. 목표 없는 예전 러닝은 줄이 없다.
-Widget? _detailGoal(RunDetail d) =>
-    _goalResult(d.run.goal.distanceGoalM, d.run.distanceM, d.splits);
+Widget? _detailGoal(RunDetail d) => _goalResult(
+  d.run.goal.distanceGoalM,
+  d.run.distanceM,
+  d.splits,
+  d.run.movingTime,
+);
 
 /// 저장된 거리·구간으로 다시 판정한 목표 결과 줄. 목표가 없으면 null.
-Widget? _goalResult(double? goalM, double distanceM, List<Split> splits) {
+Widget? _goalResult(
+  double? goalM,
+  double distanceM,
+  List<Split> splits,
+  Duration movingTime,
+) {
   if (goalM == null) return null;
   final achieved = goalAchieved(
     distanceM: distanceM,
     splits: splits,
-    goalM: goalM,
+    movingTime: movingTime,
+    goal: DistanceGoal(goalM),
   );
   return GoalResult(
     goalM: goalM,
     distanceM: distanceM,
     excludedM: excludedFastDistanceM(splits),
     achieved: achieved,
-    bonusXp: achieved ? goalBonusXp(goalM) : 0,
+    bonusXp: achieved ? goalBonusXp(DistanceGoal(goalM)) : 0,
   );
 }
 

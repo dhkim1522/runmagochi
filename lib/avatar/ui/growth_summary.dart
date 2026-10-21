@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/format.dart';
 import '../../core/theme.dart';
 import '../../core/ui/clay.dart';
+import '../../run/domain/run_goal.dart';
 import '../../shop/app/providers.dart';
 import '../domain/growth_rules.dart';
 import '../domain/growth_state.dart';
@@ -226,7 +227,7 @@ class GoalResult extends StatelessWidget {
     final goal = formatTargetKm(goalM);
     if (achieved) {
       // 보너스를 이미 받아 이번 증가분이 0 이어도 달성 보너스 값을 보여 준다.
-      final shown = bonusXp > 0 ? bonusXp : goalBonusXp(goalM);
+      final shown = bonusXp > 0 ? bonusXp : goalBonusXp(DistanceGoal(goalM));
       return _XpRow('목표 ${goal}km 달성', '보너스 +$shown', coins: coins);
     }
     final String message;

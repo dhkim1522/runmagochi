@@ -176,7 +176,7 @@ void _run(
 void main() {
   /// 시작 뒤 1~5초에 3m 씩 점 5개.
   void runFiveSamples(_Env env) {
-    env.controller.start(goalM: 3000);
+    env.controller.start(goal: DistanceGoal(3000));
     env.async.flushMicrotasks();
     for (var i = 1; i <= 5; i++) {
       env.sampleAt(Duration(seconds: i), i * 3.0);
@@ -405,7 +405,7 @@ void main() {
 
   test('계속 점이 들어와도 시작 6시간이면 끝낸다', () {
     _run(config: const RunGuardConfig(max: Duration(seconds: 30)), (env) {
-      env.controller.start(goalM: 3000);
+      env.controller.start(goal: DistanceGoal(3000));
       env.async.flushMicrotasks();
       for (var i = 1; i <= 29; i++) {
         env.sampleAt(Duration(seconds: i), i * 3.0);

@@ -21,6 +21,7 @@ import 'package:runmagochi/run/data/app_database.dart';
 import 'package:runmagochi/run/data/drift_run_repository.dart';
 import 'package:runmagochi/run/data/location_source.dart';
 import 'package:runmagochi/run/domain/location_sample.dart';
+import 'package:runmagochi/run/domain/run_goal.dart';
 import 'package:runmagochi/run/domain/run_summary.dart';
 
 // 2026-10-17 은 토요일.
@@ -118,7 +119,7 @@ class _Harness {
   /// 1200m 를 달리고 [idleAfter] 만큼 서 있다가 끝낸 뒤 sync 한다.
   (RunSummary, GrowthGain) runAndEnd({Duration idleAfter = Duration.zero}) {
     final controller = container.read(runControllerProvider.notifier);
-    wait(controller.start(goalM: 3000));
+    wait(controller.start(goal: DistanceGoal(3000)));
     step(400);
     async.elapse(idleAfter);
     final summary = wait(controller.end());
