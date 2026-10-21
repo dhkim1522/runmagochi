@@ -335,7 +335,10 @@ void main() {
     expect(all.map((d) => d.run.id), [b, a]);
     expect(all[0].splits, isEmpty);
     expect(all[1].splits.map((s) => s.index), [0, 1]);
-    expect(all[1].splits, (await repo.getRun(a))!.splits);
+    final viaGet = (await repo.getRun(a))!.splits;
+    expect(all[1].splits.map((s) => (s.index, s.distanceM, s.duration)), [
+      for (final s in viaGet) (s.index, s.distanceM, s.duration),
+    ]);
     expect(all.every((d) => d.route.isEmpty), isTrue);
   });
 
