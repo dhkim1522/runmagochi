@@ -241,11 +241,18 @@ class _ClayButtonState extends State<ClayButton> {
                   ),
                 ],
               ),
-              child: Text(
-                widget.label,
-                style: AppText.of(
-                  context,
-                ).button.copyWith(color: widget.foreground ?? c.onPrimary),
+              // 글자가 길거나 커지면 줄이 바뀌지 않고 버튼 안에서 작아진다.
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: Gap.s4),
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    widget.label,
+                    style: AppText.of(
+                      context,
+                    ).button.copyWith(color: widget.foreground ?? c.onPrimary),
+                  ),
+                ),
               ),
             ),
           ),

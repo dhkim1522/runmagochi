@@ -7,6 +7,7 @@ import 'package:runmagochi/avatar/app/providers.dart';
 import 'package:runmagochi/avatar/domain/growth_rules.dart';
 import 'package:runmagochi/avatar/domain/growth_state.dart';
 import 'package:runmagochi/avatar/ui/avatar_view.dart';
+import 'package:runmagochi/core/home_tab.dart';
 import 'package:runmagochi/core/theme.dart';
 import 'package:runmagochi/core/ui/clay.dart';
 import 'package:runmagochi/run/app/permission_gate.dart';
@@ -96,7 +97,7 @@ void main() {
     expect(paths()['hat'], contains('/hat/beanie_'));
   });
 
-  testWidgets('코인 칩이 천 단위 쉼표 잔액을 보이고 누르면 내역을 연다', (tester) async {
+  testWidgets('코인 칩이 천 단위 쉼표 잔액을 보이고 누르면 상점 탭으로 바꾼다', (tester) async {
     await pumpHome(tester, FakeController(), coins: 1240);
     await tester.pump();
     expect(find.byType(CoinChip), findsOneWidget);
@@ -104,7 +105,13 @@ void main() {
     await tester.tap(find.byType(CoinChip));
     await tester.pump();
     await tester.pump(const Duration(seconds: 1));
-    expect(find.byType(CoinHistoryScreen), findsOneWidget);
+    expect(find.byType(CoinHistoryScreen), findsNothing);
+    expect(
+      ProviderScope.containerOf(
+        tester.element(find.byType(HomeScreen)),
+      ).read(homeTabProvider),
+      3,
+    );
   });
 
   testWidgets('아바타·레벨이 보이고 주간 목표는 없다', (tester) async {

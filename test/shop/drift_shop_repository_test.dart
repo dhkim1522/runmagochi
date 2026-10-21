@@ -94,6 +94,28 @@ void main() {
     );
   });
 
+  test('다른 부위 아이템 장착은 ArgumentError 이고 장착이 바뀌지 않는다', () async {
+    await db
+        .into(db.avatars)
+        .insert(
+          AvatarsCompanion.insert(
+            id: 'a1',
+            name: '러니',
+            createdAt: _t,
+            updatedAt: _t,
+          ),
+        );
+    await grant(300, 'r1', 'distance');
+    await repo.purchase('cap', 100);
+    await expectLater(
+      repo.equip(ItemSlot.accessory, 'cap'),
+      throwsA(isA<ArgumentError>()),
+    );
+    expect((await repo.equipped()).accessoryItemId, isNull);
+    await repo.equip(ItemSlot.hat, 'cap');
+    expect((await repo.equipped()).hatItemId, 'cap');
+  });
+
   test('장착과 해제', () async {
     await db
         .into(db.avatars)

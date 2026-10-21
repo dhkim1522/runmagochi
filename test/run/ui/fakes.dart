@@ -380,26 +380,51 @@ class FakeRunProgressNotifier implements RunProgressNotifier {
   }
 }
 
-/// 잔액만 있는 상점 저장소.
+/// 상점 저장소 가짜. 구매·장착이 실제처럼 잔액·보유·장착을 바꾼다.
 class FakeShop implements ShopRepository {
   FakeShop([
     this.entries = const [],
     this.bal = 0,
     this.equippedNow = const Equipped(),
-  ]);
+    Set<String>? owned,
+  ]) : owned = owned ?? {};
   final List<CoinEntry> entries;
-  final int bal;
+  int bal;
   Equipped equippedNow;
+  final Set<String> owned;
+
+  /// purchase 로 불린 (id, 가격) 목록.
+  final List<(String, int)> purchases = [];
+
+  /// 지정하면 purchase 가 이 Completer 가 끝날 때까지 기다린다.
+  Completer<void>? holdPurchase;
+
   @override
   Future<int> balance() async => bal;
   @override
   Future<List<CoinEntry>> coinHistory() async => entries;
   @override
-  Future<Set<String>> ownedItemIds() async => {};
+  Future<Set<String>> ownedItemIds() async => {...owned};
   @override
-  Future<void> purchase(String itemId, int price) async {}
+  Future<void> purchase(String itemId, int price) async {
+    purchases.add((itemId, price));
+    await holdPurchase?.future;
+    if (owned.contains(itemId)) throw const AlreadyOwned();
+    if (bal < price) throw const InsufficientCoins();
+    bal -= price;
+    owned.add(itemId);
+  }
+
   @override
   Future<Equipped> equipped() async => equippedNow;
   @override
-  Future<void> equip(ItemSlot slot, String? itemId) async {}
+  Future<void> equip(ItemSlot slot, String? itemId) async {
+    if (itemId != null && !owned.contains(itemId)) throw const NotOwned();
+    equippedNow = Equipped(
+      hatItemId: slot == ItemSlot.hat ? itemId : equippedNow.hatItemId,
+      accessoryItemId: slot == ItemSlot.accessory
+          ? itemId
+          : equippedNow.accessoryItemId,
+    );
+  }
 }

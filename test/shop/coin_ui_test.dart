@@ -81,7 +81,14 @@ void main() {
   group('내역', () {
     final repo = FakeRepo((0, 0), details: {'r1': _detail('r1', 3130, 3000)});
     final entries = [
-      _e(-120, 'purchase', null, DateTime(2026, 10, 18, 9)),
+      CoinEntry(
+        amount: -100,
+        reason: 'purchase',
+        runId: null,
+        itemId: 'cap',
+        at: DateTime(2026, 10, 18, 9),
+      ),
+      _e(-120, 'purchase', null, DateTime(2026, 10, 18, 8)),
       _e(15, 'runGoal', 'r1', DateTime(2026, 10, 17, 17, 51)),
       _e(15, 'distance', 'r1', DateTime(2026, 10, 17, 17, 51)),
       _e(5, 'distance', 'gone', DateTime(2026, 10, 10, 8)),
@@ -96,6 +103,7 @@ void main() {
         repo: repo,
       );
       expect(find.text('코인 내역'), findsOneWidget);
+      expect(find.text('러닝 캡 구매'), findsOneWidget);
       expect(find.text('아이템 구매'), findsOneWidget);
       expect(find.text('러닝 3.13km'), findsOneWidget);
       expect(find.text('목표 3km 달성'), findsOneWidget);
@@ -107,8 +115,8 @@ void main() {
       Color colorOf(String s) =>
           tester.widget<Text>(find.text(s).first).style!.color!;
       expect(colorOf('+15'), c.success);
-      expect(colorOf('−120'), c.ink);
-      final top = tester.getTopLeft(find.text('아이템 구매')).dy;
+      expect(colorOf('−100'), c.ink);
+      final top = tester.getTopLeft(find.text('러닝 캡 구매')).dy;
       expect(top, lessThan(tester.getTopLeft(find.text('러닝 3.13km')).dy));
     });
 

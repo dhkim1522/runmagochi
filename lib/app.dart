@@ -3,11 +3,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'avatar/app/providers.dart';
 import 'avatar/ui/avatar_screen.dart';
+import 'core/home_tab.dart';
 import 'core/theme.dart';
 import 'onboarding/ui/onboarding_screen.dart';
 import 'profile/app/providers.dart';
 import 'run/ui/history_screen.dart';
 import 'run/ui/home_screen.dart';
+import 'shop/ui/shop_screen.dart';
 
 class RunmagochiApp extends StatelessWidget {
   const RunmagochiApp({super.key});
@@ -75,34 +77,29 @@ class _OnboardingGateState extends ConsumerState<_OnboardingGate> {
   }
 }
 
-class _HomeShell extends StatefulWidget {
+class _HomeShell extends ConsumerWidget {
   const _HomeShell();
 
   @override
-  State<_HomeShell> createState() => _HomeShellState();
-}
-
-class _HomeShellState extends State<_HomeShell> {
-  int _index = 0;
-
-  @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final index = ref.watch(homeTabProvider);
     return Scaffold(
       body: IndexedStack(
-        index: _index,
+        index: index,
         // 가려진 탭은 애니메이션을 돌리지 않는다.
         children: [
           for (final (i, screen) in const <Widget>[
             HomeScreen(),
             HistoryScreen(),
             AvatarScreen(),
+            ShopScreen(),
           ].indexed)
-            TickerMode(enabled: i == _index, child: screen),
+            TickerMode(enabled: i == index, child: screen),
         ],
       ),
       bottomNavigationBar: _TabBar(
-        index: _index,
-        onSelected: (i) => setState(() => _index = i),
+        index: index,
+        onSelected: ref.read(homeTabProvider.notifier).select,
       ),
     );
   }
@@ -112,6 +109,7 @@ const _tabs = [
   (Icons.directions_run, '러닝'),
   (Icons.history, '기록'),
   (Icons.pets, '아바타'),
+  (Icons.storefront, '상점'),
 ];
 
 /// 하단 탭바: 위에 2px line 테두리, 선택은 primary-deep 굵게, 나머지는 ink-muted.

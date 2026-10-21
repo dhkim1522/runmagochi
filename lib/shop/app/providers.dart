@@ -22,3 +22,8 @@ final coinHistoryProvider = FutureProvider.autoDispose<List<CoinEntry>>(
 final equippedProvider = FutureProvider.autoDispose<Equipped>(
   (ref) => ref.read(shopRepositoryProvider).equipped(),
 );
+
+/// 가진 아이템 id. 구매 뒤 invalidate 한다.
+final ownedItemsProvider = FutureProvider.autoDispose<Set<String>>(
+  (ref) => ref.read(shopRepositoryProvider).ownedItemIds(),
+);

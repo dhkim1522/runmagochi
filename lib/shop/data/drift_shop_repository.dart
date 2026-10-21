@@ -129,6 +129,11 @@ class DriftShopRepository implements ShopRepository {
   @override
   Future<void> equip(ItemSlot slot, String? itemId) =>
       _db.transaction(() async {
+        // 목록에 있는 아이템은 자기 부위에만 달 수 있다.
+        final item = itemId == null ? null : itemById(itemId);
+        if (item != null && item.slot != slot) {
+          throw ArgumentError('$itemId 는 ${item.slot.name} 아이템이에요');
+        }
         if (itemId != null && !await _owned(itemId)) throw const NotOwned();
         final a = await _avatar();
         // 아바타 행은 앱이 처음 열릴 때 만들어진다. 없으면 장착할 곳이 없다.

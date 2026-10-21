@@ -5,12 +5,12 @@ import '../../avatar/app/providers.dart';
 import '../../avatar/domain/growth_rules.dart';
 import '../../avatar/domain/growth_state.dart';
 import '../../avatar/ui/avatar_view.dart';
+import '../../core/home_tab.dart';
 import '../../core/theme.dart';
 import '../../core/ui/clay.dart';
 import '../../settings/ui/settings_screen.dart';
 import '../../shop/app/providers.dart';
 import '../../shop/ui/coin_chip.dart';
-import '../../shop/ui/coin_history_screen.dart';
 import '../app/permission_gate.dart';
 import '../app/providers.dart';
 import '../domain/run_summary.dart';
@@ -213,10 +213,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     context,
   ).push(MaterialPageRoute<void>(builder: (_) => const SettingsScreen()));
 
-  // 상점 탭이 생기기 전까지는 코인 내역을 연다.
-  Future<void> _openCoins() => Navigator.of(
-    context,
-  ).push(MaterialPageRoute<void>(builder: (_) => const CoinHistoryScreen()));
+  void _openShop() => ref.read(homeTabProvider.notifier).select(shopTabIndex);
 
   @override
   Widget build(BuildContext context) {
@@ -307,7 +304,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       Positioned(
                         top: Gap.s2,
                         left: Gap.s2,
-                        child: CoinChip(onTap: _openCoins),
+                        child: CoinChip(onTap: _openShop),
                       ),
                       // 설정은 무대 오른쪽 위 톱니로 연다. 겹쳐 두어 홈 배치는 그대로다.
                       Positioned(

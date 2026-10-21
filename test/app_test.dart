@@ -16,7 +16,7 @@ import 'onboarding/onboarding_screen_test.dart' show FakeOnboardingGrowthRepo;
 import 'run/ui/fakes.dart';
 
 void main() {
-  testWidgets('하단 탭 3개가 보인다', (tester) async {
+  testWidgets('하단 탭 4개가 보인다', (tester) async {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
@@ -39,6 +39,7 @@ void main() {
     expect(find.text('러닝'), findsOneWidget);
     expect(find.text('기록'), findsOneWidget);
     expect(find.text('아바타'), findsOneWidget);
+    expect(find.text('상점'), findsOneWidget);
   });
 
   testWidgets('탭을 누르면 화면이 바뀌고 선택 상태가 시맨틱에 드러난다', (tester) async {
@@ -106,7 +107,7 @@ void main() {
     final ring = find.byKey(const ValueKey('tab-focus-ring'));
     expect(ring, findsNothing);
 
-    // 탭 3개가 순서대로 포커스를 받는다.
+    // 탭 4개가 순서대로 포커스를 받는다.
     Future<void> tab() async {
       await tester.sendKeyEvent(LogicalKeyboardKey.tab);
       await tester.pump();
@@ -118,7 +119,7 @@ void main() {
           .first,
     );
     final before = [
-      for (final t in ['러닝', '기록', '아바타']) size(t),
+      for (final t in ['러닝', '기록', '아바타', '상점']) size(t),
     ];
 
     var found = false;
@@ -130,7 +131,7 @@ void main() {
     expect(ring, findsOneWidget);
     expect(
       [
-        for (final t in ['러닝', '기록', '아바타']) size(t),
+        for (final t in ['러닝', '기록', '아바타', '상점']) size(t),
       ],
       before,
       reason: '포커스 표시가 탭 크기를 바꾸지 않는다',

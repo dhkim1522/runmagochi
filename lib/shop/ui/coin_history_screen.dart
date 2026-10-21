@@ -7,6 +7,7 @@ import '../../core/ui/clay.dart';
 import '../../run/app/providers.dart';
 import '../app/providers.dart';
 import '../data/shop_repository.dart';
+import '../domain/catalog.dart';
 
 /// 내역 한 줄: 코인 행과 사유 문구.
 typedef _Row = ({CoinEntry entry, String label});
@@ -23,7 +24,10 @@ final _coinRowsProvider = FutureProvider.autoDispose<List<_Row>>((ref) async {
       'distance' => run == null ? '러닝' : '러닝 ${formatKm(run.distanceM)}km',
       'runGoal' =>
         run?.goalM == null ? '목표 달성' : '목표 ${formatTargetKm(run!.goalM!)}km 달성',
-      _ => '아이템 구매',
+      _ => switch (e.itemId == null ? null : itemById(e.itemId!)) {
+        final item? => '${item.name} 구매',
+        null => '아이템 구매',
+      },
     };
     rows.add((entry: e, label: label));
   }
