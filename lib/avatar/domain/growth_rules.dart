@@ -45,6 +45,13 @@ bool distanceReachesGoal(double countedM, double goalM) =>
 /// 목표를 채웠을 때 받는 보너스 경험치: 목표 km(반올림) × [goalBonusXpPerKm].
 int goalBonusXp(double goalM) => (goalM / 1000).round() * goalBonusXpPerKm;
 
+/// 러닝 거리로 얻는 코인: 거리 경험치의 절반, 소수점 버림(1km당 5).
+int distanceCoins(double distanceM, List<Split> splits) =>
+    distanceXp(distanceM, splits) ~/ 2;
+
+/// 목표를 채웠을 때 받는 코인: 달성 보너스 경험치와 같다(목표 km × 5).
+int goalBonusCoins(double goalM) => goalBonusXp(goalM);
+
 class LevelProgress {
   const LevelProgress({
     required this.level,

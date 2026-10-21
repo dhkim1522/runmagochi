@@ -259,4 +259,14 @@ class DriftGrowthRepository implements GrowthRepository {
     final row = await _coinRow(_distance, runId);
     return row != null && row.deletedAt == null;
   }
+
+  @override
+  Future<({int distance, int goal})> runCoins(String runId) async {
+    final d = await _coinRow(_distance, runId);
+    final g = await _coinRow(_runGoal, runId);
+    return (
+      distance: d == null || d.deletedAt != null ? 0 : d.amount,
+      goal: g == null || g.deletedAt != null ? 0 : g.amount,
+    );
+  }
 }

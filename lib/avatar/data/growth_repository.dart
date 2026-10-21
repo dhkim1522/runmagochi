@@ -41,4 +41,7 @@ abstract interface class GrowthRepository {
 
   /// 그 러닝에 살아 있는 거리 코인 행이 있는지. 없으면 코인을 받지 않은 러닝이다.
   Future<bool> hasRunCoins(String runId);
+
+  /// 그 러닝이 지금 받아 둔 거리 코인과 달성 코인(살아 있는 행). 없으면 0.
+  Future<({int distance, int goal})> runCoins(String runId);
 }

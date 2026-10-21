@@ -32,6 +32,8 @@ class GrowthGain {
   const GrowthGain({
     required this.distanceXp,
     required this.goalBonusXp,
+    this.distanceCoins = 0,
+    this.goalCoins = 0,
     required this.levelBefore,
     required this.levelAfter,
     required this.stageBefore,
@@ -40,6 +42,10 @@ class GrowthGain {
 
   final int distanceXp;
   final int goalBonusXp;
+
+  /// 이번에 받은(재평가면 바뀐) 거리 코인·달성 코인.
+  final int distanceCoins;
+  final int goalCoins;
   final int levelBefore;
   final int levelAfter;
   final int stageBefore;
@@ -47,7 +53,11 @@ class GrowthGain {
 
   bool get leveledUp => levelAfter > levelBefore;
   bool get stageUp => stageAfter > stageBefore;
-  bool get isEmpty => distanceXp == 0 && goalBonusXp == 0;
+  bool get isEmpty =>
+      distanceXp == 0 &&
+      goalBonusXp == 0 &&
+      distanceCoins == 0 &&
+      goalCoins == 0;
 
   /// 이 gain 을 받은 러닝을 다시 계산한 변화 [delta](`GrowthService.runRevised`)
   /// 를 더한 값. 경험치는 더하고, 레벨·단계는 이 gain 의 시작에서 [delta] 뒤
@@ -55,6 +65,8 @@ class GrowthGain {
   GrowthGain revisedBy(GrowthGain delta) => GrowthGain(
     distanceXp: distanceXp + delta.distanceXp,
     goalBonusXp: goalBonusXp + delta.goalBonusXp,
+    distanceCoins: distanceCoins + delta.distanceCoins,
+    goalCoins: goalCoins + delta.goalCoins,
     levelBefore: levelBefore,
     levelAfter: delta.levelAfter,
     stageBefore: stageBefore,

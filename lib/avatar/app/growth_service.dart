@@ -26,16 +26,20 @@ class GrowthService {
   Future<GrowthGain> runRevised(String runId, DateTime runStartedAt) =>
       _serial(() async {
         final bonusBefore = await _growth.runGoalXp(runId);
+        final coinsBefore = await _growth.runCoins(runId);
         final xpBefore = await _growth.totalXp();
         await _runChanged(runId);
         final xpAfter = await _growth.totalXp();
         final bonusAfter = await _growth.runGoalXp(runId);
+        final coinsAfter = await _growth.runCoins(runId);
         final levelBefore = levelFor(xpBefore).level;
         final levelAfter = levelFor(xpAfter).level;
         final bonusDelta = bonusAfter - bonusBefore;
         return GrowthGain(
           distanceXp: xpAfter - xpBefore - bonusDelta,
           goalBonusXp: bonusDelta,
+          distanceCoins: coinsAfter.distance - coinsBefore.distance,
+          goalCoins: coinsAfter.goal - coinsBefore.goal,
           levelBefore: levelBefore,
           levelAfter: levelAfter,
           stageBefore: stageForLevel(levelBefore),
@@ -55,25 +59,26 @@ class GrowthService {
   }
 
   /// 러닝의 거리 경험치와 달성 보너스를 그 러닝의 현재 기록으로 매긴다.
-  /// 목표 없이 만든 예전 러닝은 보너스가 없다. 반환값은 매긴 보너스.
-  Future<int> _rate(RunDetail detail) async {
+  /// 목표 없이 만든 예전 러닝은 보너스가 없다. [coins] 면 코인도 같은 규칙으로
+  /// 매기고, 아니면 코인 행을 건드리지 않는다(업데이트 전에 경험치를 받은 러닝).
+  /// 반환값은 매긴 달성 보너스(경험치).
+  Future<int> _rate(RunDetail detail, {required bool coins}) async {
     final run = detail.run;
     final goalM = run.goalM;
-    final bonus =
+    final achieved =
         goalM != null &&
-            goalAchieved(
-              distanceM: run.distanceM,
-              splits: detail.splits,
-              goalM: goalM,
-            )
-        ? goalBonusXp(goalM)
-        : 0;
+        goalAchieved(
+          distanceM: run.distanceM,
+          splits: detail.splits,
+          goalM: goalM,
+        );
+    final bonus = achieved ? goalBonusXp(goalM) : 0;
     await _growth.setRunRewards(
       run.id,
       distanceXp: distanceXp(run.distanceM, detail.splits),
       goalBonusXp: bonus,
-      distanceCoins: null,
-      goalCoins: null,
+      distanceCoins: coins ? distanceCoins(run.distanceM, detail.splits) : null,
+      goalCoins: coins ? (achieved ? goalBonusCoins(goalM) : 0) : null,
     );
     return bonus;
   }
@@ -81,7 +86,10 @@ class GrowthService {
   /// 바뀐(잘라낸) 러닝의 경험치를 새 기록으로 다시 매긴다. 러닝이 없으면 아무 일도 없다.
   Future<void> _runChanged(String runId) async {
     final detail = await _runs.getRun(runId);
-    if (detail != null) await _rate(detail);
+    // 코인이 없는 러닝(업데이트 전에 경험치를 받음)은 잘라내도 코인을 받지 않는다.
+    if (detail != null) {
+      await _rate(detail, coins: await _growth.hasRunCoins(runId));
+    }
   }
 
   /// 기록과 경험치 사이에 앱이 죽거나 실패해 어긋난 러닝을 고친다. 고친 것은
@@ -124,18 +132,25 @@ class GrowthService {
     final known = await _growth.runIdsWithDistanceXp();
     var distanceXpSum = 0;
     var bonusSum = 0;
+    var distanceCoinSum = 0;
+    var goalCoinSum = 0;
     for (final r in runs.reversed) {
       if (known.contains(r.id)) continue;
       final detail = await _runs.getRun(r.id);
       if (detail == null) continue;
-      bonusSum += await _rate(detail);
+      bonusSum += await _rate(detail, coins: true);
       distanceXpSum += distanceXp(detail.run.distanceM, detail.splits);
+      final coins = await _growth.runCoins(r.id);
+      distanceCoinSum += coins.distance;
+      goalCoinSum += coins.goal;
     }
 
     final levelAfter = levelFor(await _growth.totalXp()).level;
     return GrowthGain(
       distanceXp: distanceXpSum,
       goalBonusXp: bonusSum,
+      distanceCoins: distanceCoinSum,
+      goalCoins: goalCoinSum,
       levelBefore: levelBefore,
       levelAfter: levelAfter,
       stageBefore: stageForLevel(levelBefore),

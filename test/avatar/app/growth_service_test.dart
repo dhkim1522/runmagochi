@@ -10,6 +10,7 @@ import 'package:runmagochi/run/data/app_database.dart';
 import 'package:runmagochi/run/data/run_repository.dart';
 import 'package:runmagochi/run/domain/location_sample.dart';
 import 'package:runmagochi/run/domain/run_summary.dart';
+import 'package:runmagochi/shop/data/drift_shop_repository.dart';
 
 class FakeRunRepository implements RunRepository {
   final List<RunDetail> runs = [];
@@ -319,6 +320,86 @@ void main() {
       final gain = await service.sync();
       expect(gain.goalBonusXp, 0);
       expect(await growth.totalXp(), 40);
+    });
+  });
+
+  group('러닝 코인', () {
+    final at = DateTime(2026, 10, 13, 7);
+    Future<int> balance() => DriftShopRepository(db).balance();
+
+    test('5km 목표로 5.02km 를 달리면 거리 25 + 달성 25', () async {
+      runs.add('a', at, 5020, goalM: 5000);
+      final gain = await service.sync();
+      expect(gain.distanceCoins, 25);
+      expect(gain.goalCoins, 25);
+      expect(await balance(), 50);
+    });
+
+    test('10km 목표로 5km 를 달리면 거리 25 + 달성 0', () async {
+      runs.add('a', at, 5000, goalM: 10000);
+      final gain = await service.sync();
+      expect(gain.distanceCoins, 25);
+      expect(gain.goalCoins, 0);
+      expect(await balance(), 25);
+    });
+
+    test('빠른 구간은 거리 코인에서 빠지고 달성도 못 한다', () async {
+      final splits = [
+        for (var i = 0; i < 5; i++)
+          Split(
+            index: i,
+            distanceM: 1000,
+            duration: Duration(seconds: i == 0 ? 120 : 360),
+          ),
+      ];
+      runs.add('a', at, 5000, goalM: 5000, splits: splits);
+      final gain = await service.sync();
+      expect(gain.distanceCoins, 20);
+      expect(gain.goalCoins, 0);
+      expect(await balance(), 20);
+    });
+
+    test('업데이트 전 러닝(경험치만 있음)은 sync·잘라내기 뒤에도 코인 0', () async {
+      runs.add('a', at, 5000, goalM: 5000);
+      await growth.setRunRewards(
+        'a',
+        distanceXp: 50,
+        goalBonusXp: 25,
+        distanceCoins: null,
+        goalCoins: null,
+      );
+      final gain = await service.sync();
+      expect(gain.distanceCoins, 0);
+      expect(await balance(), 0);
+
+      runs.revise('a', 3000);
+      final delta = await service.runRevised('a', at);
+      expect(delta.distanceCoins, 0);
+      expect(delta.goalCoins, 0);
+      expect(await balance(), 0);
+      expect(await db.select(db.coinTxns).get(), isEmpty);
+    });
+
+    test('새 러닝을 잘라내 미달이 되면 달성 코인을 무르고 gain 은 -25', () async {
+      runs.add('a', at, 5000, goalM: 5000);
+      await service.sync();
+      expect(await balance(), 50);
+
+      runs.revise('a', 4000);
+      final delta = await service.runRevised('a', at);
+      expect(delta.goalCoins, -25);
+      expect(delta.distanceCoins, -5);
+      expect(await balance(), 20);
+      final rows = await db.select(db.coinTxns).get();
+      expect(rows.where((r) => r.deletedAt != null), hasLength(1));
+    });
+
+    test('러닝 삭제 뒤 잔액 그대로', () async {
+      runs.add('a', at, 5000, goalM: 5000);
+      await service.sync();
+      await runs.deleteRun('a');
+      await service.sync();
+      expect(await balance(), 50);
     });
   });
 
