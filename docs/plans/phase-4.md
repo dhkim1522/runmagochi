@@ -130,7 +130,7 @@
 
 ### D. 아이템 (F11)
 
-- [ ] 8. 아이템 목록과 그림
+- [x] 8. 아이템 목록과 그림
   - 파일: `lib/shop/domain/catalog.dart`(새 파일), `tool/sprites/items.dart`(새 파일), `tool/sprites/pet_art.dart`, `tool/sprites/chick.dart`·`jelly.dart`·`acorn.dart`(머리 기준점), `tool/sprites/render.dart`, `lib/avatar/ui/sprite_sheet.dart`, `pubspec.yaml`(에셋 폴더), `assets/sprites/<종류>/hat/`·`accessory/`, `design/character/items.png`(미리보기), `docs/specs/sprite-spec.md`
   - 목록(`enum ItemSlot { hat, accessory }`, `class Item { id, slot, name, price }`):
 
