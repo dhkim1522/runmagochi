@@ -18,6 +18,11 @@ final _weightProvider = FutureProvider.autoDispose<double?>(
   (ref) => ref.read(profileRepositoryProvider).weightKg(),
 );
 
+/// 러닝 중 음성 안내 켜짐 여부. 저장하거나 가져온 뒤 invalidate 한다.
+final _voiceProvider = FutureProvider.autoDispose<bool>(
+  (ref) => ref.read(profileRepositoryProvider).voiceGuide(),
+);
+
 /// 체중으로 받을 수 있는 범위(kg).
 const double _minWeightKg = 30;
 const double _maxWeightKg = 200;
@@ -63,6 +68,15 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     if (mounted) ref.invalidate(_weightProvider);
   }
 
+  Future<void> _setVoice(bool on) async {
+    try {
+      await ref.read(profileRepositoryProvider).setVoiceGuide(on);
+    } catch (_) {
+      _toast('음성 안내를 바꾸지 못했어요');
+    }
+    if (mounted) ref.invalidate(_voiceProvider);
+  }
+
   Future<void> _editName(String current) async {
     final name = await showDialog<String>(
       context: context,
@@ -95,6 +109,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         if (refresh) {
           refreshAfterImport(ref);
           ref.invalidate(_weightProvider);
+          ref.invalidate(_voiceProvider);
         }
         _toast(doneMessage);
       case BackupCancelled():
@@ -145,6 +160,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final t = AppText.of(context);
     final GrowthState? g = ref.watch(growthStateProvider).value;
     final weight = ref.watch(_weightProvider);
+    final voice = ref.watch(_voiceProvider);
     final weightLabel = switch (weight) {
       AsyncData(:final value) =>
         value == null ? '입력 안 함' : '${_kgLabel(value)}kg',
@@ -204,6 +220,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     title: '아바타 이름',
                     value: g?.name ?? '-',
                     onTap: g == null ? null : () => _editName(g.name),
+                  ),
+                  _SwitchRow(
+                    title: '음성 안내',
+                    subtitle: '러닝 중 거리와 시간을 말로 알려줘요',
+                    value: voice.value ?? true,
+                    onChanged: voice.hasValue ? _setVoice : null,
                   ),
                 ],
               ),
@@ -398,6 +420,79 @@ class _SettingsRow extends StatelessWidget {
       excludeSemantics: true,
       onTap: onTap,
       child: InkWell(onTap: onTap, child: content),
+    );
+  }
+}
+
+/// 켜고 끄는 설정 한 줄. 줄 전체를 누르면 바뀌고 하나의 스위치 노드로 읽힌다.
+/// [onChanged] 가 null 이면 끈 상태(값을 읽는 중)다.
+class _SwitchRow extends StatelessWidget {
+  const _SwitchRow({
+    required this.title,
+    required this.subtitle,
+    required this.value,
+    required this.onChanged,
+  });
+
+  final String title;
+  final String subtitle;
+  final bool value;
+  final ValueChanged<bool>? onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = AppColors.of(context);
+    final t = AppText.of(context);
+    final change = onChanged;
+    return Semantics(
+      toggled: value,
+      enabled: change != null,
+      label: '$title\n$subtitle',
+      excludeSemantics: true,
+      onTap: change == null ? null : () => change(!value),
+      child: InkWell(
+        onTap: change == null ? null : () => change(!value),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(minHeight: 64),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(
+              vertical: Gap.s3,
+              horizontal: Gap.s4,
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(title, style: t.bodyStrong),
+                      const SizedBox(height: 2),
+                      Text(
+                        subtitle,
+                        style: t.caption.copyWith(color: c.inkMuted),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: Gap.s2),
+                // 줄 전체가 누름 영역이라 스위치는 모양만 맡는다.
+                IgnorePointer(
+                  child: Switch(
+                    value: value,
+                    onChanged: change == null ? null : (_) {},
+                    activeThumbColor: c.onPrimary,
+                    activeTrackColor: c.primary,
+                    inactiveThumbColor: c.inkMuted,
+                    inactiveTrackColor: c.surfaceSoft,
+                    trackOutlineColor: WidgetStatePropertyAll(c.lineStrong),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

@@ -9,6 +9,7 @@ import 'package:runmagochi/profile/data/profile_repository.dart';
 import 'package:runmagochi/run/app/permission_gate.dart';
 import 'package:runmagochi/run/app/run_controller.dart';
 import 'package:runmagochi/run/data/run_progress_notifier.dart';
+import 'package:runmagochi/run/data/tts_speaker.dart';
 import 'package:runmagochi/run/data/run_repository.dart';
 import 'package:runmagochi/run/domain/run_engine.dart';
 import 'package:runmagochi/run/domain/run_summary.dart';
@@ -452,5 +453,17 @@ class FakeShop implements ShopRepository {
           ? itemId
           : equippedNow.accessoryItemId,
     );
+  }
+}
+
+/// 음성 안내 가짜. 읽은 문장을 모으고, [fails] 면 읽기가 실패한다.
+class FakeSpeaker implements Speaker {
+  final spoken = <String>[];
+  bool fails = false;
+
+  @override
+  Future<void> speak(String text) async {
+    if (fails) throw StateError('TTS 실패');
+    spoken.add(text);
   }
 }

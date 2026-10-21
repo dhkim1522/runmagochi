@@ -29,6 +29,20 @@ class _Profile implements ProfileRepository {
   @override
   Future<void> setWeightKg(double? kg) async => weight = kg;
 
+  bool voice = true;
+
+  /// true 면 setVoiceGuide 가 실패한다.
+  bool voiceFails = false;
+
+  @override
+  Future<bool> voiceGuide() async => voice;
+
+  @override
+  Future<void> setVoiceGuide(bool on) async {
+    if (voiceFails) throw StateError('저장 실패');
+    voice = on;
+  }
+
   @override
   dynamic noSuchMethod(Invocation invocation) =>
       throw UnimplementedError('${invocation.memberName}');
@@ -465,6 +479,57 @@ void main() {
     await tester.tap(gear);
     await settle(tester);
     expect(find.byType(SettingsScreen), findsOneWidget);
+  });
+
+  group('음성 안내', () {
+    Switch voiceSwitch(WidgetTester tester) =>
+        tester.widget<Switch>(find.byType(Switch));
+
+    testWidgets('기본으로 켜져 있고 끄면 저장된다', (tester) async {
+      final env = await pumpSettings(tester);
+      expect(find.text('음성 안내'), findsOneWidget);
+      expect(voiceSwitch(tester).value, isTrue);
+      await tester.tap(find.text('음성 안내'));
+      await settle(tester);
+      expect(env.profile.voice, isFalse);
+      expect(voiceSwitch(tester).value, isFalse);
+      await tester.tap(find.text('음성 안내'));
+      await settle(tester);
+      expect(env.profile.voice, isTrue);
+      expect(voiceSwitch(tester).value, isTrue);
+    });
+
+    testWidgets('꺼진 저장값을 보여 준다', (tester) async {
+      final env = SettingsEnv()..profile.voice = false;
+      await pumpSettings(tester, env: env);
+      expect(voiceSwitch(tester).value, isFalse);
+    });
+
+    testWidgets('저장에 실패하면 되돌리고 알린다', (tester) async {
+      final env = SettingsEnv()..profile.voiceFails = true;
+      await pumpSettings(tester, env: env);
+      await tester.tap(find.text('음성 안내'));
+      await settle(tester);
+      expect(voiceSwitch(tester).value, isTrue);
+      expect(find.text('음성 안내를 바꾸지 못했어요'), findsOneWidget);
+    });
+
+    testWidgets('하나의 스위치 노드로 읽힌다', (tester) async {
+      await pumpSettings(tester);
+      final handle = tester.ensureSemantics();
+      expect(
+        tester.getSemantics(find.text('음성 안내')),
+        matchesSemantics(
+          label: '음성 안내\n러닝 중 거리와 시간을 말로 알려줘요',
+          hasToggledState: true,
+          isToggled: true,
+          hasTapAction: true,
+          hasEnabledState: true,
+          isEnabled: true,
+        ),
+      );
+      handle.dispose();
+    });
   });
 
   testWidgets('글자 크기 1.3배에서 overflow 없이 그려진다', (tester) async {

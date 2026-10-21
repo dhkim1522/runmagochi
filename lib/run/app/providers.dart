@@ -3,15 +3,18 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../avatar/data/notification_scheduler.dart';
 import '../../core/clock.dart';
+import '../../profile/app/providers.dart';
 import '../data/app_database.dart';
 import '../data/drift_run_repository.dart';
 import '../data/geolocator_location_source.dart';
 import '../data/location_source.dart';
 import '../data/run_progress_notifier.dart';
 import '../data/run_repository.dart';
+import '../data/tts_speaker.dart';
 import 'app_lifecycle.dart';
 import 'run_controller.dart';
 import 'run_guard.dart';
+import 'voice_guide.dart';
 
 final appDatabaseProvider = Provider<AppDatabase>((ref) {
   final db = AppDatabase.production();
@@ -70,4 +73,15 @@ final lastRunGoalProvider = FutureProvider.autoDispose<RunGoal>(
   (ref) async =>
       await ref.read(runRepositoryProvider).lastGoal() ??
       const DistanceGoal(3000),
+);
+
+/// 음성 안내를 읽는 곳. 테스트는 가짜로 바꾼다.
+final speakerProvider = Provider<Speaker>((_) => TtsSpeaker());
+
+/// 러닝 중 음성 안내. 켜짐 여부는 말할 때마다 프로필에서 읽는다.
+final voiceGuideProvider = Provider<VoiceGuide>(
+  (ref) => VoiceGuide(
+    speaker: ref.watch(speakerProvider),
+    enabled: () => ref.read(profileRepositoryProvider).voiceGuide(),
+  ),
 );

@@ -17,6 +17,7 @@ import '../domain/run_summary.dart';
 import '../domain/run_trim.dart';
 import 'providers.dart';
 import 'run_guard.dart';
+import 'voice_guide.dart';
 
 const Duration _flushInterval = Duration(seconds: 10);
 const Duration _tickInterval = Duration(seconds: 1);
@@ -129,6 +130,12 @@ class RunController extends Notifier<RunViewState> {
   /// 목표 달성을 이미 알렸거나(복원 포함) 알릴 필요가 없다.
   bool _goalReached = false;
 
+  /// 엔진 사건(구간·자동 일시정지·재개)을 음성 안내로 옮기는 구독.
+  StreamSubscription<RunEvent>? _voiceSubscription;
+
+  /// 음성으로 안내한 마지막 1km 구간 번호. 같은 구간은 두 번 읽지 않는다.
+  int _spokenSplits = 0;
+
   /// 저장된 체중. 없거나 읽지 못하면 기본 체중.
   Future<double> _readWeight() async {
     try {
@@ -153,6 +160,7 @@ class RunController extends Notifier<RunViewState> {
       actionSub.cancel();
       _stopTimers();
       _subscription?.cancel();
+      _voiceSubscription?.cancel();
     });
     return const RunViewState(snapshot: _idleSnapshot);
   }
@@ -187,6 +195,8 @@ class RunController extends Notifier<RunViewState> {
       _runId = runId;
       _goal = goal;
       _goalReached = false;
+      _listenVoice(engine, spokenSplits: 0);
+      _speak(const VoiceStart());
       _subscribe();
       _startFlushTimer();
       _startTick();
@@ -308,6 +318,7 @@ class RunController extends Notifier<RunViewState> {
       _runId = null;
       _goal = null;
       _goalReached = false;
+      _stopVoice();
       _cancelProgress();
       _pendingSummary = null;
       _pendingAutoEnd = null;
@@ -357,6 +368,8 @@ class RunController extends Notifier<RunViewState> {
     // 이미 넘긴 목표는 알리지 않는다(사용자가 이미 알았거나 앱이 죽어 있었다).
     final goal = active.goal;
     _goalReached = goal != null && _reaches(goal, engine.snapshot);
+    // 복원 전에 지난 구간은 이미 안내했거나 앱이 죽어 있었다. 이후 구간부터 읽는다.
+    _listenVoice(engine, spokenSplits: engine.snapshot.splits.length);
     _weightKg = await _readWeight();
     _publish();
     final decision = checkAutoEnd(
@@ -668,7 +681,10 @@ class RunController extends Notifier<RunViewState> {
         goal != null && !_goalReached && _reaches(goal, snapshot);
     if (reachedNow) _goalReached = true;
     state = _copyState(snapshot: snapshot, runId: _runId, clearError: clear);
-    if (reachedNow) _notifyGoalReached(goal);
+    if (reachedNow) {
+      _notifyGoalReached(goal);
+      _speak(VoiceGoalReached(goal));
+    }
     _updateProgress(snapshot);
     _syncEndWarning(engine);
   }
@@ -698,6 +714,10 @@ class RunController extends Notifier<RunViewState> {
           );
         }
       } else {
+        if (!shown) {
+          final left = deadline.difference(ref.read(clockProvider)());
+          _speak(VoiceEndWarning((left.inMilliseconds / 1000).ceil()));
+        }
         unawaited(
           notifier
               .showEndWarning(deadline, paused: engine.state == RunState.paused)
@@ -764,6 +784,60 @@ class RunController extends Notifier<RunViewState> {
       );
     } catch (e) {
       debugPrint('알림: 러닝 진행 알림 취소 실패 $e');
+    }
+  }
+
+  /// 엔진 사건을 듣는다. [spokenSplits] 까지의 구간은 이미 안내한 것으로 본다.
+  void _listenVoice(RunEngine engine, {required int spokenSplits}) {
+    _voiceSubscription?.cancel();
+    _spokenSplits = spokenSplits;
+    _voiceSubscription = engine.events.listen((event) {
+      switch (event) {
+        case SplitCompleted(:final split):
+          _speakSplit(engine, split);
+        case StateChanged(from: RunState.recording, to: RunState.autoPaused):
+          _speak(const VoiceAutoPaused());
+        case StateChanged(from: RunState.autoPaused, to: RunState.recording):
+          _speak(const VoiceAutoResumed());
+        case StateChanged() || RunEnded():
+          break;
+      }
+    });
+  }
+
+  void _stopVoice() {
+    _voiceSubscription?.cancel();
+    _voiceSubscription = null;
+  }
+
+  /// [split] 까지의 누적 움직인 시간과 평균 페이스를 읽는다.
+  /// 각 구간은 1km 이므로 누적 시간은 구간 시간의 합, 평균 페이스는 그 시간을
+  /// 구간 번호(km)로 나눈 값이다.
+  void _speakSplit(RunEngine engine, Split split) {
+    if (split.index <= _spokenSplits) return;
+    _spokenSplits = split.index;
+    var elapsed = Duration.zero;
+    for (final s in engine.snapshot.splits) {
+      if (s.index <= split.index) elapsed += s.duration;
+    }
+    _speak(
+      VoiceSplit(
+        km: split.index,
+        elapsed: elapsed,
+        avgPaceSecPerKm:
+            elapsed.inMicroseconds /
+            Duration.microsecondsPerSecond /
+            split.index,
+      ),
+    );
+  }
+
+  /// 음성 안내 실패(꺼짐 포함)는 러닝과 상관없다. [VoiceGuide.say] 가 던지지 않는다.
+  void _speak(VoiceEvent event) {
+    try {
+      unawaited(ref.read(voiceGuideProvider).say(event));
+    } catch (e) {
+      debugPrint('음성 안내 실패: $e');
     }
   }
 

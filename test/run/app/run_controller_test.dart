@@ -10,7 +10,7 @@ import 'package:runmagochi/profile/app/providers.dart';
 import 'package:runmagochi/profile/data/profile_repository.dart';
 import 'package:runmagochi/run/app/app_lifecycle.dart';
 import 'package:runmagochi/run/app/providers.dart';
-import '../ui/fakes.dart' show FakeRunProgressNotifier;
+import '../ui/fakes.dart' show FakeRunProgressNotifier, FakeSpeaker;
 import 'package:runmagochi/run/app/run_controller.dart';
 import 'package:runmagochi/run/data/location_source.dart';
 import 'package:runmagochi/run/data/run_repository.dart';
@@ -213,6 +213,7 @@ void _run(
         locationSourceProvider.overrideWithValue(location),
         appLifecycleProvider.overrideWithValue(lifecycle),
         clockProvider.overrideWithValue(() => _t0.add(async.elapsed)),
+        speakerProvider.overrideWithValue(FakeSpeaker()),
       ],
     );
     body(
