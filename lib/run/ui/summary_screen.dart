@@ -1,3 +1,4 @@
+import '../../achievement/app/providers.dart';
 import 'package:flutter/material.dart' hide Split;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -259,6 +260,7 @@ class _DeleteRunButtonState extends ConsumerState<_DeleteRunButton> {
     ref.invalidate(runListProvider);
     ref.invalidate(weeklyTotalProvider);
     ref.invalidate(growthStateProvider);
+    ref.invalidate(achievementRunsProvider);
     Navigator.of(context).pop();
   }
 

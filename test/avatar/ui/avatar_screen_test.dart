@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:runmagochi/achievement/app/providers.dart';
+import 'package:runmagochi/achievement/ui/achievement_screen.dart';
 import 'package:runmagochi/avatar/app/providers.dart';
 import 'package:runmagochi/avatar/domain/growth_rules.dart';
 import 'package:runmagochi/avatar/domain/growth_state.dart';
@@ -35,6 +37,8 @@ Future<void> pumpIt(
   await tester.pumpWidget(
     ProviderScope(
       overrides: [
+        achievementRunsProvider.overrideWith((ref) async => const []),
+        earnedBadgesProvider.overrideWith((ref) async => const []),
         growthServiceProvider.overrideWithValue(
           FakeGrowthService(stateFor(totalXp, kind)),
         ),
@@ -76,6 +80,18 @@ void main() {
     expect(find.text('누적 34.80km · 러닝 12회'), findsOneWidget);
     expect(find.text('다음 성장 단계까지 15.2km'), findsOneWidget);
     expect(find.text('성장 단계'), findsOneWidget);
+  });
+
+  testWidgets('업적 버튼이 업적 화면을 연다', (tester) async {
+    await pumpIt(tester, 600);
+    final button = find.widgetWithText(ClayButton, '업적');
+    await tester.ensureVisible(button);
+    await tester.tap(button);
+    await tester.pumpAndSettle();
+    expect(find.byType(AchievementScreen), findsOneWidget);
+    await tester.tap(find.byIcon(Icons.chevron_left));
+    await tester.pumpAndSettle();
+    expect(find.byType(AchievementScreen), findsNothing);
   });
 
   testWidgets('단계 4행과 현재·잠김·달성 상태', (tester) async {

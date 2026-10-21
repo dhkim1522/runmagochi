@@ -106,6 +106,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     ref.invalidate(coinBalanceProvider);
     ref.invalidate(coinHistoryProvider);
     ref.invalidate(earnedBadgesProvider);
+    ref.invalidate(achievementRunsProvider);
     setState(() => _goal = goal ?? _goal);
   }
 

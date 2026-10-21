@@ -1,3 +1,4 @@
+import '../../achievement/app/providers.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../avatar/app/providers.dart';
@@ -47,6 +48,7 @@ class RunEditor {
     _ref.invalidate(growthStateProvider);
     _ref.invalidate(coinBalanceProvider);
     _ref.invalidate(coinHistoryProvider);
+    _ref.invalidate(achievementRunsProvider);
     if (shown == null || delta == null) return (trimmed, null);
     return (trimmed, shown.revisedBy(delta));
   }

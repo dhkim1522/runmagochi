@@ -15,6 +15,7 @@ void refreshAfterImport(WidgetRef ref) {
   ref.invalidate(coinBalanceProvider);
   ref.invalidate(coinHistoryProvider);
   ref.invalidate(earnedBadgesProvider);
+  ref.invalidate(achievementRunsProvider);
   ref.invalidate(equippedProvider);
   ref.invalidate(ownedItemsProvider);
 }

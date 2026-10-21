@@ -18,6 +18,7 @@ GrowthGain gain({
   int levelAfter = 1,
   int stageBefore = 1,
   int stageAfter = 1,
+  List<String> newBadges = const [],
 }) => GrowthGain(
   distanceXp: distanceXp,
   goalBonusXp: goalBonusXp,
@@ -25,6 +26,7 @@ GrowthGain gain({
   levelAfter: levelAfter,
   stageBefore: stageBefore,
   stageAfter: stageAfter,
+  newBadges: newBadges,
 );
 
 Widget _scope(Widget child) => ProviderScope(
@@ -76,6 +78,19 @@ void main() {
     expect(find.text('경험치 +50'), findsOneWidget);
     expect(find.text('레벨 업!'), findsNothing);
     expect(find.byType(AvatarView), findsNothing);
+  });
+
+  testWidgets('새 배지마다 배지 획득 줄과 코인 줄을 보인다', (tester) async {
+    await pumpIt(tester, gain(newBadges: ['dist_5k', 'first_run']));
+    expect(find.text('배지 획득: 첫 5km'), findsOneWidget);
+    expect(find.text('코인 +100'), findsOneWidget);
+    expect(find.text('배지 획득: 첫 러닝'), findsOneWidget);
+    expect(find.text('코인 +50'), findsOneWidget);
+  });
+
+  testWidgets('새 배지가 없으면 배지 줄이 없다', (tester) async {
+    await pumpIt(tester, gain());
+    expect(find.textContaining('배지 획득'), findsNothing);
   });
 
   testWidgets('경험치가 0이어도 경험치 +0 을 보인다', (tester) async {

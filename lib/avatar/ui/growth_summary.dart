@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../achievement/domain/badges.dart';
 import '../../core/format.dart';
 import '../../core/theme.dart';
 import '../../core/ui/clay.dart';
@@ -121,6 +122,16 @@ class _GrowthSummaryState extends State<GrowthSummary>
             coins: g.goalCoins,
           ),
         ],
+        for (final id in g.newBadges)
+          if (badgeCatalog.where((b) => b.id == id).firstOrNull
+              case final badge?) ...[
+            const SizedBox(height: Gap.s3),
+            _XpRow(
+              '배지 획득: ${badge.name}',
+              '코인 +${badge.coins}',
+              valueColor: c.accentDeep,
+            ),
+          ],
       ],
     );
     if (!_animates) return rows;
@@ -252,10 +263,13 @@ class GoalResult extends StatelessWidget {
 
 /// 경험치 한 줄: 흰 카드, 값은 success 색 Jua 22. 코인이 있으면 값 아래에 한 줄 더한다.
 class _XpRow extends StatelessWidget {
-  const _XpRow(this.label, this.xp, {this.coins = 0});
+  const _XpRow(this.label, this.xp, {this.coins = 0, this.valueColor});
   final String label;
   final String xp;
   final int coins;
+
+  /// 값 글자색. 없으면 success.
+  final Color? valueColor;
 
   @override
   Widget build(BuildContext context) {
@@ -272,7 +286,10 @@ class _XpRow extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.end,
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(xp, style: t.titleS.copyWith(color: c.success)),
+              Text(
+                xp,
+                style: t.titleS.copyWith(color: valueColor ?? c.success),
+              ),
               if (coins > 0)
                 Text(
                   '코인 +$coins',

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../achievement/ui/achievement_screen.dart';
 import '../../shop/app/providers.dart';
 import '../../core/format.dart';
 import '../../core/theme.dart';
@@ -90,6 +91,16 @@ class AvatarScreen extends ConsumerWidget {
                     const SizedBox(height: 14),
                     _StageProgress(g),
                   ],
+                ),
+              ),
+            ),
+            const SizedBox(height: Gap.s4),
+            ClayButton.secondary(
+              context,
+              label: '업적',
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (_) => const AchievementScreen(),
                 ),
               ),
             ),
