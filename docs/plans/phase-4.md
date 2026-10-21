@@ -96,7 +96,7 @@
 
 ### C. 코인 (F9)
 
-- [ ] 5. 저장 구조 v5
+- [x] 5. 저장 구조 v5
   - 파일: `lib/run/data/app_database.dart`(+ `.g.dart`), `lib/avatar/data/growth_repository.dart`, `lib/avatar/data/drift_growth_repository.dart`, `lib/shop/data/shop_repository.dart`(새 파일), `lib/shop/data/drift_shop_repository.dart`(새 파일), `lib/shop/app/providers.dart`(새 파일), `lib/backup/domain/backup_codec.dart`, `lib/backup/data/drift_backup_repository.dart`
   - 스키마 v5:
     - `CoinTxns`: id, amount(int, 지급 +, 구매 −), reason(`distance` | `runGoal` | `purchase`), runId(nullable, Runs 참조), itemId(nullable), createdAt, updatedAt, deletedAt. 고유 `{runId, reason}`.
