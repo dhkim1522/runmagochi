@@ -168,7 +168,7 @@
 
 ### G. 문서
 
-- [ ] 12. 문서·시안 반영
+- [x] 12. 문서·시안 반영
   - 파일: `docs/architecture.md`(Run.goalSec·Badge·Profile.voiceGuide, 패키지), `docs/screens.md`(기록 통계·업적 화면·공유·시간 목표), `docs/specs/run-engine.md`(음성 안내 이벤트), `docs/product.md`(F5-2·F14·F19·F21 포함), `design/mockups/README.md`(구현 메모), `HANDOFF.md`
   - 확인: 문서 설명이 코드와 맞고, 레이스·건강 연동은 백로그로만 남아 있다.
 
