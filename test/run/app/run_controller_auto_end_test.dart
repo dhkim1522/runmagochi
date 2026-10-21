@@ -389,7 +389,8 @@ void main() {
         feedFast(env, 6);
         env.async.elapse(const Duration(seconds: 60));
         expect(env.repo.completed, isEmpty);
-        expect(env.view.snapshot.state, RunState.recording);
+        // 빠른 점이 끊긴 뒤 10초에 자동 일시정지했다.
+        expect(env.view.snapshot.state, RunState.autoPaused);
         env.controller.end();
         env.async.flushMicrotasks();
       });
@@ -411,7 +412,8 @@ void main() {
           env.async.flushMicrotasks();
         }
         expect(env.repo.completed, isEmpty);
-        expect(env.view.snapshot.state, RunState.recording);
+        // 빠른 점이 끊긴 뒤 10초에 자동 일시정지했다.
+        expect(env.view.snapshot.state, RunState.autoPaused);
         env.controller.end();
         env.async.flushMicrotasks();
       });
@@ -441,10 +443,14 @@ void main() {
         expect(env.repo.completed, isEmpty);
 
         env.controller.resume();
-        env.async.elapse(const Duration(seconds: 29));
+        // 같은 초속 10m 선을 이어 간다. 연속을 비우지 않았다면 6초부터 세어
+        // 바로 끝난다. 재개 뒤 첫 점부터 세면 마지막 점까지 29초.
+        final resumedSec = env.async.elapsed.inSeconds;
+        for (var i = resumedSec + 1; i <= resumedSec + 30; i++) {
+          env.sampleAt(Duration(seconds: i), 15.0 + (i - 5) * 10);
+        }
         expect(env.repo.completed, isEmpty);
-        // 재개 뒤 점이 없어 자동 일시정지했다.
-        expect(env.view.snapshot.state, RunState.autoPaused);
+        expect(env.view.snapshot.state, RunState.recording);
         env.controller.end();
         env.async.flushMicrotasks();
       });

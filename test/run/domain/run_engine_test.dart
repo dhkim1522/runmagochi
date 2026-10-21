@@ -569,6 +569,21 @@ void main() {
       expect(engine.fastSince, sec(23));
     });
 
+    test('빠른 점이 끊기면 마지막 빠른 점 뒤 10초에 자동 일시정지한다', () {
+      engine.start();
+      engine.addSample(north(0, 0));
+      for (var s = 1; s <= 5; s++) {
+        now = sec(s);
+        engine.addSample(north(s, s * 10.0));
+      }
+      expect(engine.fastSince, sec(1));
+      expect(engine.autoPauseIfStill(sec(14)), isFalse);
+      now = sec(15);
+      expect(engine.autoPauseIfStill(now), isTrue);
+      expect(engine.state, RunState.autoPaused);
+      expect(engine.pausedAt, t0);
+    });
+
     test('사용자 일시정지에서 재개하면 pausedAt 은 null', () {
       engine.start();
       now = sec(5);

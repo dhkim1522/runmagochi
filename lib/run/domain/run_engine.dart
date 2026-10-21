@@ -122,7 +122,7 @@ class RunEngine {
   LocationSample? _lastAccepted;
 
   /// 정확도 거름을 통과한 직전 원시 점. 빠른 이동 속도를 잰다.
-  /// 일시정지·재개하면 비운다.
+  /// 사용자 일시정지·재개하면 비우고, 멈춤·움직임 전이에는 남긴다.
   LocationSample? _lastRaw;
   DateTime? _fastSince;
   DateTime? _fastLastAt;
@@ -227,10 +227,15 @@ class RunEngine {
   }
 
   /// 기록 중이고 마지막 움직인 점(없으면 기록 구간 시작) 뒤 [autoPauseStill]
-  /// 이 지났으면 그 시각으로 자동 일시정지하고 true. 빠른 이동 중에는 멈춘
-  /// 것이 아니므로 하지 않는다(빠른 이동 자동 종료가 맡는다).
+  /// 이 지났으면 그 시각으로 자동 일시정지하고 true. 마지막 빠른 점 뒤
+  /// [autoPauseStill] 이 지나기 전에는 멈춘 것이 아니므로 하지 않는다(빠른
+  /// 이동 자동 종료가 맡는다).
   bool autoPauseIfStill(DateTime now) {
-    if (_state != RunState.recording || _fastSince != null) return false;
+    if (_state != RunState.recording) return false;
+    final fastLastAt = _fastLastAt;
+    if (fastLastAt != null && now.difference(fastLastAt) < autoPauseStill) {
+      return false;
+    }
     final since = _recordingSince!;
     final movedAt = _movedAt!.isBefore(since) ? since : _movedAt!;
     if (now.difference(movedAt) < autoPauseStill) return false;
@@ -243,9 +248,9 @@ class RunEngine {
     return true;
   }
 
-  /// 기록 중이나 일시정지·자동 일시정지 중에 끝낸다. 남은 거리가 1m 이상이면 마지막
-  /// 구간으로 넣고 `RunEnded` 를 낸 뒤 `ended` 로 바꾸고 이벤트 스트림을
-  /// 닫는다. `clock()` 은 한 번만 읽는다.
+  /// 기록 중이나 일시정지·자동 일시정지 중에 끝낸다. 남은 거리가 1m
+  /// 이상이면 마지막 구간으로 넣고 `RunEnded` 를 낸 뒤 `ended` 로 바꾸고
+  /// 이벤트 스트림을 닫는다. `clock()` 은 한 번만 읽는다.
   RunSummary end({double weightKg = defaultWeightKg}) {
     if (_state != RunState.recording &&
         _state != RunState.paused &&
