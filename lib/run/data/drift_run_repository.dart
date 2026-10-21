@@ -229,6 +229,46 @@ class DriftRunRepository implements RunRepository {
   }
 
   @override
+  Future<List<RunDetail>> listRunDetails() async {
+    final runRows =
+        await (_db.select(_db.runs)
+              ..where((r) => r.status.equals(_completed) & r.deletedAt.isNull())
+              ..orderBy([(r) => OrderingTerm.desc(r.startedAt)]))
+            .get();
+    final splitRows =
+        await (_db.select(_db.splits).join([
+                innerJoin(_db.runs, _db.runs.id.equalsExp(_db.splits.runId)),
+              ])
+              ..where(
+                _db.runs.status.equals(_completed) &
+                    _db.runs.deletedAt.isNull() &
+                    _db.splits.deletedAt.isNull(),
+              )
+              ..orderBy([OrderingTerm.asc(_db.splits.idx)]))
+            .map((row) => row.readTable(_db.splits))
+            .get();
+    final byRun = <String, List<Split>>{};
+    for (final s in splitRows) {
+      (byRun[s.runId] ??= []).add(
+        Split(
+          index: s.idx,
+          distanceM: s.distanceM,
+          duration: Duration(milliseconds: s.durationMs),
+        ),
+      );
+    }
+    return [
+      for (final r in runRows)
+        RunDetail(
+          run: _toItem(r),
+          calories: r.calories,
+          route: const [],
+          splits: byRun[r.id] ?? const [],
+        ),
+    ];
+  }
+
+  @override
   Future<(double distanceM, int count)> weeklyTotal(DateTime now) async {
     final monday = weekStartOf(now);
     final nextMonday = DateTime(monday.year, monday.month, monday.day + 7);

@@ -47,6 +47,9 @@ class _AppendCall {
 }
 
 class _FakeRunRepository implements RunRepository {
+  @override
+  Future<List<RunDetail>> listRunDetails() => throw UnimplementedError();
+
   ActiveRun? activeRun;
 
   /// 주면 appendPoints 가 이 완료를 기다린다.

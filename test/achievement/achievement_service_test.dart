@@ -1,6 +1,7 @@
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:runmagochi/achievement/app/achievement_service.dart';
+import 'package:runmagochi/achievement/domain/badges.dart';
 import 'package:runmagochi/achievement/data/drift_badge_repository.dart';
 import 'package:runmagochi/avatar/app/growth_service.dart';
 import 'package:runmagochi/avatar/data/drift_growth_repository.dart';
@@ -48,6 +49,45 @@ void main() {
     );
     expect(row.itemId, 'first_run');
     expect(row.runId, isNull);
+    expect((await badges.earned()).single.runId, 'a');
+  });
+
+  test('배지 행의 runId 는 판정한 러닝 중 가장 최근 것이다', () async {
+    runs.add('old', DateTime(2026, 10, 13, 8), 3000);
+    runs.add('new', DateTime(2026, 10, 15, 8), 3000);
+    await service.sync();
+    expect((await badges.earned()).single.runId, 'new');
+  });
+
+  test('모든 배지를 받았으면 sync 가 러닝 상세를 읽지 않는다', () async {
+    runs.add('a', DateTime(2026, 10, 13, 8), 3000);
+    for (final b in badgeCatalog) {
+      await badges.award(b.id, coins: b.coins, at: now);
+    }
+    await service.sync();
+    expect(runs.detailLoads, 0);
+  });
+
+  test('sync 도중 끼어든 러닝은 이번 판정에 넣지 않고 다음 sync 에서 받는다', () async {
+    runs.add('a', DateTime(2026, 10, 13, 8), 3000);
+    runs.afterListRuns = () => runs.add('b', DateTime(2026, 10, 14, 8), 5200);
+    final first = await service.sync();
+    expect(first.newBadges, ['first_run']);
+    final second = await service.sync();
+    expect(second.newBadges, ['dist_5k']);
+  });
+
+  test('배지 전의 옛 백업을 가져오면 다음 sync 에서 한 번만 다시 준다', () async {
+    runs.add('a', DateTime(2026, 10, 13, 8), 3000);
+    final backup = DriftBackupRepository(db);
+    final before = await backup.exportJson(now);
+    await service.sync();
+    await backup.importJson(before);
+    expect((await badges.earned()), isEmpty);
+    final gain = await service.sync();
+    expect(gain.newBadges, ['first_run']);
+    expect((await service.sync()).newBadges, isEmpty);
+    expect(await badges.earned(), hasLength(1));
   });
 
   test('sync 를 두 번 불러도 한 번만 준다', () async {

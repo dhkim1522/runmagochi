@@ -22,6 +22,9 @@ final _t0 = DateTime(2026, 10, 21, 7);
 
 class _Repo implements RunRepository {
   @override
+  Future<List<RunDetail>> listRunDetails() => throw UnimplementedError();
+
+  @override
   Future<RunGoal?> lastGoal() async => null;
   @override
   Future<String> createActiveRun(

@@ -177,6 +177,9 @@ class FakeGate implements PermissionGate {
 }
 
 class FakeRepo implements RunRepository {
+  @override
+  Future<List<RunDetail>> listRunDetails() => throw UnimplementedError();
+
   FakeRepo(this.total, {this.runs = const [], this.details = const {}});
   (double, int) total;
   List<RunListItem> runs;

@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../achievement/app/providers.dart';
 import '../../run/app/providers.dart';
+import '../../shop/app/providers.dart';
 import '../data/drift_growth_repository.dart';
 import '../data/growth_repository.dart';
 import '../data/notification_scheduler.dart';
@@ -28,6 +29,12 @@ final growthServiceProvider = Provider<GrowthService>(
 /// sync 뒤 load. 러닝이 끝난 뒤 invalidate 하면 다시 계산한다.
 final growthStateProvider = FutureProvider<GrowthState>((ref) async {
   final service = ref.watch(growthServiceProvider);
-  await service.sync();
+  final gain = await service.sync();
+  // 시작할 때 소급으로 받은 배지·코인이 칩과 내역에 바로 보이게 한다.
+  if (gain.newBadges.isNotEmpty) {
+    ref.invalidate(coinBalanceProvider);
+    ref.invalidate(coinHistoryProvider);
+    ref.invalidate(earnedBadgesProvider);
+  }
   return service.load();
 });

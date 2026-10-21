@@ -300,6 +300,45 @@ void main() {
     });
   });
 
+  test('listRunDetails 는 getRun 과 같은 구간을 경로 없이 최신순으로 돌려준다', () async {
+    final splits = [
+      const Split(index: 0, distanceM: 1000, duration: Duration(minutes: 5)),
+      const Split(index: 1, distanceM: 500, duration: Duration(minutes: 3)),
+    ];
+    final a = await repo.createActiveRun(
+      DateTime(2026, 1, 1, 9),
+      goal: const DistanceGoal(3000),
+    );
+    await repo.completeRun(
+      a,
+      summary(
+        DateTime(2026, 1, 1, 9),
+        splits: splits,
+        points: [sample(DateTime(2026, 1, 1, 9), 37.5, 127.0)],
+      ),
+    );
+    final b = await repo.createActiveRun(
+      DateTime(2026, 1, 2, 9),
+      goal: const DistanceGoal(3000),
+    );
+    await repo.completeRun(b, summary(DateTime(2026, 1, 2, 9)));
+    final gone = await repo.createActiveRun(
+      DateTime(2026, 1, 3, 9),
+      goal: const DistanceGoal(3000),
+    );
+    await repo.completeRun(
+      gone,
+      summary(DateTime(2026, 1, 3, 9), splits: splits),
+    );
+    await repo.deleteRun(gone);
+    final all = await repo.listRunDetails();
+    expect(all.map((d) => d.run.id), [b, a]);
+    expect(all[0].splits, isEmpty);
+    expect(all[1].splits.map((s) => s.index), [0, 1]);
+    expect(all[1].splits, (await repo.getRun(a))!.splits);
+    expect(all.every((d) => d.route.isEmpty), isTrue);
+  });
+
   test('listRuns는 최신순이고 진행 중·삭제된 러닝은 제외한다', () async {
     final a = await repo.createActiveRun(
       DateTime(2026, 1, 1, 9),

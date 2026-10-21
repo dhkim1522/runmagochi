@@ -80,6 +80,10 @@ abstract interface class RunRepository {
   Future<List<RunListItem>> listRuns();
   Future<RunDetail?> getRun(String id);
 
+  /// 완료·미삭제 러닝 전체의 상세를 경로(route) 없이 한 번에 읽는다(최신순).
+  /// 통계·배지 판정용이라 경로 디코딩과 러닝별 조회를 피한다. `route` 는 비어 있다.
+  Future<List<RunDetail>> listRunDetails();
+
   /// 완료된 러닝의 `now` 가 속한 주(현지 월요일 0시 시작) 거리 합계와 횟수.
   Future<(double distanceM, int count)> weeklyTotal(DateTime now);
 

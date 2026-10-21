@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+
 import '../../achievement/app/achievement_service.dart';
 import '../../core/clock.dart';
 import '../../run/data/run_repository.dart';
@@ -156,8 +158,10 @@ class GrowthService {
     // 배지는 경험치와 별개다. 실패해도 성장 알림은 막지 않는다(다음 sync 에서 다시 시도).
     var newBadges = const <String>[];
     try {
-      newBadges = await _achievements?.awardNew() ?? const [];
-    } catch (_) {}
+      newBadges = await _achievements?.awardNew(runs) ?? const [];
+    } catch (e, st) {
+      debugPrint('배지 지급 실패: $e\n$st');
+    }
     return GrowthGain(
       newBadges: newBadges,
       distanceXp: distanceXpSum,

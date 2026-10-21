@@ -14,11 +14,18 @@ class AchievementService {
   /// 지금 기록으로 받을 수 있는 새 배지를 모두 주고 그 id 를 돌려준다(목록 순서).
   /// 지운 러닝은 판정에서 빠지지만 이미 받은 배지·코인은 그대로다.
   /// 동시에 부르지 않는다: `GrowthService.sync` 줄 안에서 부른다.
-  Future<List<String>> awardNew() async {
-    final items = await _runs.listRuns(); // 최신순
+  ///
+  /// [items] 는 호출한 쪽이 읽은 완료 러닝(최신순) 스냅샷이다. 그 사이 끼어든
+  /// 러닝은 이번 판정에 넣지 않는다. 배지를 모두 받았으면 상세를 읽지 않는다.
+  Future<List<String>> awardNew(List<RunListItem> items) async {
     if (items.isEmpty) return const [];
-    final details = [for (final item in items) ?await _runs.getRun(item.id)];
     final already = {for (final b in await _badges.earned()) b.badgeId};
+    if (badgeCatalog.every((b) => already.contains(b.id))) return const [];
+    final ids = {for (final i in items) i.id};
+    final details = [
+      for (final d in await _runs.listRunDetails())
+        if (ids.contains(d.run.id)) d,
+    ];
     final newIds = earnedBadgeIds(details, already: already);
     if (newIds.isEmpty) return const [];
     final latestRunId = items.first.id;

@@ -31,6 +31,9 @@ LocationSample _sample(DateTime time, double meters) => LocationSample(
 );
 
 class _Repo implements RunRepository {
+  @override
+  Future<List<RunDetail>> listRunDetails() => throw UnimplementedError();
+
   ActiveRun? activeRun;
 
   @override

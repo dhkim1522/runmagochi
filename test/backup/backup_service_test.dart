@@ -64,6 +64,9 @@ class _Growth implements GrowthService {
 
 /// [getRun] 이 상세를 읽은 뒤 [hold] 가 풀릴 때까지 멈춰, sync 가 도는 중인 상태를 만든다.
 class _HeldRuns implements RunRepository {
+  @override
+  Future<List<RunDetail>> listRunDetails() => throw UnimplementedError();
+
   _HeldRuns(this._inner);
   final RunRepository _inner;
   Completer<void>? hold;

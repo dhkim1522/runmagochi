@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../achievement/domain/badges.dart';
 import '../../core/format.dart';
 import '../../core/theme.dart';
-import '../../achievement/domain/badges.dart';
 import '../../core/ui/clay.dart';
 import '../../run/app/providers.dart';
 import '../../run/domain/run_goal.dart';

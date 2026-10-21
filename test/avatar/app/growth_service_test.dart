@@ -47,6 +47,23 @@ class FakeRunRepository implements RunRepository {
   Future<List<RunListItem>> listRuns() async {
     final l = runs.map((r) => r.run).toList()
       ..sort((a, b) => b.startedAt.compareTo(a.startedAt));
+    final hook = afterListRuns;
+    afterListRuns = null;
+    if (hook != null) Future.microtask(hook);
+    return l;
+  }
+
+  /// listRunDetails 를 부른 횟수.
+  int detailLoads = 0;
+
+  /// 지정하면 listRuns 가 값을 돌려준 직후 한 번 부른다(그 사이 끼어든 러닝 흉내).
+  void Function()? afterListRuns;
+
+  @override
+  Future<List<RunDetail>> listRunDetails() async {
+    detailLoads++;
+    final l = [...runs]
+      ..sort((a, b) => b.run.startedAt.compareTo(a.run.startedAt));
     return l;
   }
 

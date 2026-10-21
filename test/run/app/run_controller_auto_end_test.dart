@@ -41,6 +41,9 @@ double _dist(double a, double b) =>
     haversineMeters(_northOf(a), _lng0, _northOf(b), _lng0);
 
 class _Repo implements RunRepository {
+  @override
+  Future<List<RunDetail>> listRunDetails() => throw UnimplementedError();
+
   ActiveRun? activeRun;
   Object? completeError;
   final completed = <(String, RunSummary)>[];
