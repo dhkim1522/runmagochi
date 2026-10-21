@@ -38,6 +38,7 @@ class GrowthGain {
     required this.levelAfter,
     required this.stageBefore,
     required this.stageAfter,
+    this.newBadges = const [],
   });
 
   final int distanceXp;
@@ -51,13 +52,17 @@ class GrowthGain {
   final int stageBefore;
   final int stageAfter;
 
+  /// 이번 sync 에서 새로 받은 배지 id(목록 순서).
+  final List<String> newBadges;
+
   bool get leveledUp => levelAfter > levelBefore;
   bool get stageUp => stageAfter > stageBefore;
   bool get isEmpty =>
       distanceXp == 0 &&
       goalBonusXp == 0 &&
       distanceCoins == 0 &&
-      goalCoins == 0;
+      goalCoins == 0 &&
+      newBadges.isEmpty;
 
   /// 이 gain 을 받은 러닝을 다시 계산한 변화 [delta](`GrowthService.runRevised`)
   /// 를 더한 값. 경험치는 더하고, 레벨·단계는 이 gain 의 시작에서 [delta] 뒤
@@ -71,5 +76,6 @@ class GrowthGain {
     levelAfter: delta.levelAfter,
     stageBefore: stageBefore,
     stageAfter: delta.stageAfter,
+    newBadges: newBadges,
   );
 }

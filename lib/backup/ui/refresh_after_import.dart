@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../achievement/app/providers.dart';
 import '../../avatar/app/providers.dart';
 import '../../run/ui/history_screen.dart';
 import '../../run/ui/home_screen.dart';
@@ -13,6 +14,7 @@ void refreshAfterImport(WidgetRef ref) {
   ref.invalidate(weeklyTotalProvider);
   ref.invalidate(coinBalanceProvider);
   ref.invalidate(coinHistoryProvider);
+  ref.invalidate(earnedBadgesProvider);
   ref.invalidate(equippedProvider);
   ref.invalidate(ownedItemsProvider);
 }

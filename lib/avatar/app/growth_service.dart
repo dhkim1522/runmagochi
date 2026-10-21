@@ -1,3 +1,4 @@
+import '../../achievement/app/achievement_service.dart';
 import '../../core/clock.dart';
 import '../../run/data/run_repository.dart';
 import '../data/growth_repository.dart';
@@ -6,11 +7,12 @@ import '../domain/growth_state.dart';
 
 /// 완료된 러닝을 경험치로 옮기고, 화면이 보여 줄 상태를 만든다.
 class GrowthService {
-  GrowthService(this._runs, this._growth, this._clock);
+  GrowthService(this._runs, this._growth, this._clock, {this._achievements});
 
   final RunRepository _runs;
   final GrowthRepository _growth;
   final Clock _clock;
+  final AchievementService? _achievements;
 
   Future<void> _tail = Future.value();
 
@@ -151,7 +153,13 @@ class GrowthService {
     }
 
     final levelAfter = levelFor(await _growth.totalXp()).level;
+    // 배지는 경험치와 별개다. 실패해도 성장 알림은 막지 않는다(다음 sync 에서 다시 시도).
+    var newBadges = const <String>[];
+    try {
+      newBadges = await _achievements?.awardNew() ?? const [];
+    } catch (_) {}
     return GrowthGain(
+      newBadges: newBadges,
       distanceXp: distanceXpSum,
       goalBonusXp: bonusSum,
       distanceCoins: distanceCoinSum,

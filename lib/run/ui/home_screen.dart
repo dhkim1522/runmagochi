@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../achievement/app/providers.dart';
 import '../../avatar/app/providers.dart';
 import '../../avatar/domain/growth_rules.dart';
 import '../../avatar/domain/growth_state.dart';
@@ -104,6 +105,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     ref.invalidate(lastRunGoalProvider);
     ref.invalidate(coinBalanceProvider);
     ref.invalidate(coinHistoryProvider);
+    ref.invalidate(earnedBadgesProvider);
     setState(() => _goal = goal ?? _goal);
   }
 

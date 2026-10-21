@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../achievement/app/providers.dart';
 import '../../run/app/providers.dart';
 import '../data/drift_growth_repository.dart';
 import '../data/growth_repository.dart';
@@ -20,6 +21,7 @@ final growthServiceProvider = Provider<GrowthService>(
     ref.watch(runRepositoryProvider),
     ref.watch(growthRepositoryProvider),
     ref.watch(clockProvider),
+    achievements: ref.watch(achievementServiceProvider),
   ),
 );
 

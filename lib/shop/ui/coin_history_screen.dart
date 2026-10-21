@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/format.dart';
 import '../../core/theme.dart';
+import '../../achievement/domain/badges.dart';
 import '../../core/ui/clay.dart';
 import '../../run/app/providers.dart';
 import '../../run/domain/run_goal.dart';
@@ -26,6 +27,10 @@ final _coinRowsProvider = FutureProvider.autoDispose<List<_Row>>((ref) async {
       'runGoal' => switch (run?.goal) {
         final RunGoal goal => '목표 ${goal.label} 달성',
         null => '목표 달성',
+      },
+      'badge' => switch (badgeCatalog.where((b) => b.id == e.itemId)) {
+        final found when found.isNotEmpty => '배지: ${found.first.name}',
+        _ => '배지',
       },
       _ => switch (e.itemId == null ? null : itemById(e.itemId!)) {
         final item? => '${item.name} 구매',

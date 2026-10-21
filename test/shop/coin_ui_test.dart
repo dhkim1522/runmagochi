@@ -140,6 +140,31 @@ void main() {
       expect(find.text('목표 30분 달성'), findsOneWidget);
     });
 
+    testWidgets('배지 줄은 배지: 이름, 모르는 배지는 배지', (tester) async {
+      await pump(
+        tester,
+        const CoinHistoryScreen(),
+        FakeShop([
+          CoinEntry(
+            amount: 100,
+            reason: 'badge',
+            runId: null,
+            itemId: 'dist_5k',
+            at: DateTime(2026, 10, 17, 17, 51),
+          ),
+          CoinEntry(
+            amount: 50,
+            reason: 'badge',
+            runId: null,
+            itemId: 'nope',
+            at: DateTime(2026, 10, 16, 17, 51),
+          ),
+        ]),
+      );
+      expect(find.text('배지: 첫 5km'), findsOneWidget);
+      expect(find.text('배지'), findsOneWidget);
+    });
+
     testWidgets('비면 안내 문구', (tester) async {
       await pump(tester, const CoinHistoryScreen(), FakeShop([]));
       expect(find.text('달리면 코인이 쌓여요'), findsOneWidget);
