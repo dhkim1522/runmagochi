@@ -111,7 +111,7 @@
 
 ### D. 업적 (F19)
 
-- [ ] 7. 개인 기록과 배지 규칙
+- [x] 7. 개인 기록과 배지 규칙
   - 파일: `lib/achievement/domain/personal_records.dart`(새 파일), `lib/achievement/domain/badges.dart`(새 파일)
   - 개인 기록(지운 러닝 제외): 최장 거리, 최장 시간, 최고 1km(빠른 구간 제외 1km 구간 중 가장 빠름), 최고 5km(연속한 1km 구간 5개 합이 가장 짧음).
   - 배지 목록(초안, `const badgeCatalog`):
