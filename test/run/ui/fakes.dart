@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:runmagochi/avatar/app/growth_service.dart';
+import 'package:runmagochi/run/domain/run_goal.dart';
 import 'package:runmagochi/avatar/data/notification_scheduler.dart';
 import 'package:runmagochi/avatar/domain/growth_rules.dart';
 import 'package:runmagochi/avatar/domain/growth_state.dart';
@@ -178,15 +179,16 @@ class FakeRepo implements RunRepository {
   Completer<void>? holdWeekly;
 
   /// 가장 최근에 시작한 러닝의 목표(m). null 이면 없다.
-  double? lastGoal;
+  double? lastGoalM;
 
-  /// 지정하면 lastGoalM 이 이 Completer 가 끝날 때까지 기다린다.
+  /// 지정하면 lastGoal 이 이 Completer 가 끝날 때까지 기다린다.
   Completer<void>? holdLastGoal;
 
   @override
-  Future<double?> lastGoalM() async {
+  Future<RunGoal?> lastGoal() async {
     await holdLastGoal?.future;
-    return lastGoal;
+    final m = lastGoalM;
+    return m == null ? null : DistanceGoal(m);
   }
 
   @override
@@ -327,6 +329,14 @@ class FakeProfile implements ProfileRepository {
 
   /// true 면 markOnboarded 가 실패한다.
   bool markFails = false;
+
+  bool voice = true;
+
+  @override
+  Future<bool> voiceGuide() async => voice;
+
+  @override
+  Future<void> setVoiceGuide(bool on) async => voice = on;
 
   @override
   Future<bool> isOnboarded() async => onboarded;

@@ -17,21 +17,21 @@ void main() {
   test('encode 후 decode 하면 같은 값이다', () {
     final back = BackupCodec.decode(BackupCodec.encode(data));
     expect(back.exportedAt, data.exportedAt);
-    expect(back.schemaVersion, 5);
+    expect(back.schemaVersion, 6);
     expect(back.tables, data.tables);
   });
 
-  test('schemaVersion 3·4·5 는 받고 2 와 6 은 거부한다', () {
+  test('schemaVersion 3~6 은 받고 2 와 7 은 거부한다', () {
     String withSchema(int v) {
       final m = jsonDecode(BackupCodec.encode(data)) as Map<String, dynamic>;
       m['schemaVersion'] = v;
       return jsonEncode(m);
     }
 
-    for (final v in [3, 4, 5]) {
+    for (final v in [3, 4, 5, 6]) {
       expect(BackupCodec.decode(withSchema(v)).schemaVersion, v);
     }
-    for (final v in [2, 6]) {
+    for (final v in [2, 7]) {
       expect(
         () => BackupCodec.decode(withSchema(v)),
         throwsA(isA<BackupFormatException>()),
@@ -47,6 +47,18 @@ void main() {
     final back = BackupCodec.decode(jsonEncode(m));
     expect(back.tables['coinTxns'], isEmpty);
     expect(back.tables['ownedItems'], isEmpty);
+  });
+
+  test('6 미만 파일은 배지 테이블 없이 읽고 프로필에 음성 안내 true 를 채운다', () {
+    final m = jsonDecode(BackupCodec.encode(data)) as Map<String, dynamic>;
+    m['schemaVersion'] = 5;
+    (m['tables'] as Map).remove('badges');
+    (m['tables'] as Map)['profiles'] = [
+      {'id': 'p', 'weightKg': 60.0},
+    ];
+    final back = BackupCodec.decode(jsonEncode(m));
+    expect(back.tables['badges'], isEmpty);
+    expect(back.tables['profiles']!.single['voiceGuide'], true);
   });
 
   test('이상한 입력은 BackupFormatException', () {

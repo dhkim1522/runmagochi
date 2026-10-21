@@ -32,6 +32,7 @@ class DriftProfileRepository implements ProfileRepository {
                 id: _uuid.v4(),
                 weightKg: c.weightKg,
                 onboardedAt: c.onboardedAt,
+                voiceGuide: c.voiceGuide,
                 createdAt: now,
                 updatedAt: now,
               ),
@@ -49,6 +50,13 @@ class DriftProfileRepository implements ProfileRepository {
   @override
   Future<void> setWeightKg(double? kg) =>
       _write((_) => ProfilesCompanion(weightKg: Value(kg)));
+
+  @override
+  Future<bool> voiceGuide() async => (await _row())?.voiceGuide ?? true;
+
+  @override
+  Future<void> setVoiceGuide(bool on) =>
+      _write((_) => ProfilesCompanion(voiceGuide: Value(on)));
 
   @override
   Future<bool> isOnboarded() async => (await _row())?.onboardedAt != null;

@@ -5,6 +5,7 @@ import '../../core/clock.dart';
 import '../../core/week.dart';
 import '../domain/location_sample.dart';
 import '../domain/polyline_codec.dart';
+import '../domain/run_goal.dart';
 import '../domain/run_summary.dart';
 import 'app_database.dart';
 import 'run_repository.dart';
@@ -26,7 +27,7 @@ class DriftRunRepository implements RunRepository {
   @override
   Future<String> createActiveRun(
     DateTime startedAt, {
-    required double goalM,
+    required RunGoal goal,
   }) async {
     final id = _uuid.v4();
     final now = _now();
@@ -37,7 +38,8 @@ class DriftRunRepository implements RunRepository {
             id: id,
             startedAt: startedAt.toUtc(),
             status: _active,
-            goalM: Value(goalM),
+            goalM: Value(goal is DistanceGoal ? goal.meters : null),
+            goalSec: Value(goal is TimeGoal ? goal.time.inSeconds : null),
             createdAt: now,
             updatedAt: now,
           ),
@@ -46,13 +48,13 @@ class DriftRunRepository implements RunRepository {
   }
 
   @override
-  Future<double?> lastGoalM() async {
+  Future<RunGoal?> lastGoal() async {
     final run =
         await (_db.select(_db.runs)
               ..orderBy([(r) => OrderingTerm.desc(r.startedAt)])
               ..limit(1))
             .getSingleOrNull();
-    return run?.goalM;
+    return run == null ? null : RunGoal.fromColumns(run.goalM, run.goalSec);
   }
 
   @override
@@ -139,7 +141,7 @@ class DriftRunRepository implements RunRepository {
       startedAt: run.startedAt.toLocal(),
       segments: bySegment.values.toList(),
       movingTime: Duration(seconds: run.movingTimeS),
-      goalM: run.goalM,
+      goal: RunGoal.fromColumns(run.goalM, run.goalSec),
     );
   }
 
@@ -181,7 +183,7 @@ class DriftRunRepository implements RunRepository {
     distanceM: r.distanceM,
     movingTime: Duration(seconds: r.movingTimeS),
     avgPaceSecPerKm: r.avgPaceSecPerKm,
-    goalM: r.goalM,
+    goal: RunGoal.fromColumns(r.goalM, r.goalSec),
   );
 
   @override

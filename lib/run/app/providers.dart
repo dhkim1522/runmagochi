@@ -1,3 +1,4 @@
+import '../domain/run_goal.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../avatar/data/notification_scheduler.dart';
@@ -66,5 +67,6 @@ final runNotificationActionsProvider = Provider<Stream<String>>(
 
 /// 홈 목표 선택의 초기값(m): 가장 최근에 시작한 러닝의 목표, 없으면 3km.
 final lastRunGoalProvider = FutureProvider.autoDispose<double>(
-  (ref) async => await ref.read(runRepositoryProvider).lastGoalM() ?? 3000,
+  (ref) async =>
+      (await ref.read(runRepositoryProvider).lastGoal()).distanceGoalM ?? 3000,
 );

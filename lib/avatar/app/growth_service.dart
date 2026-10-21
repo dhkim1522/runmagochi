@@ -1,3 +1,4 @@
+import '../../run/domain/run_goal.dart';
 import '../../core/clock.dart';
 import '../../run/data/run_repository.dart';
 import '../data/growth_repository.dart';
@@ -64,7 +65,7 @@ class GrowthService {
   /// 반환값은 매긴 달성 보너스(경험치).
   Future<int> _rate(RunDetail detail, {required bool coins}) async {
     final run = detail.run;
-    final goalM = run.goalM;
+    final goalM = run.goal.distanceGoalM;
     final achieved =
         goalM != null &&
         goalAchieved(

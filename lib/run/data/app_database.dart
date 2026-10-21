@@ -17,6 +17,9 @@ class Runs extends Table {
 
   /// 시작 때 고른 오늘 목표 거리(m). 목표 없이 만든 예전 러닝은 null.
   RealColumn get goalM => real().nullable()();
+
+  /// 시작 때 고른 오늘 목표 시간(초). 거리 목표·예전 러닝은 null.
+  IntColumn get goalSec => integer().nullable()();
   DateTimeColumn get createdAt => dateTime()();
   DateTimeColumn get updatedAt => dateTime()();
   DateTimeColumn get deletedAt => dateTime().nullable()();
@@ -95,6 +98,9 @@ class Profiles extends Table {
   TextColumn get id => text()();
   RealColumn get weightKg => real().nullable()();
   DateTimeColumn get onboardedAt => dateTime().nullable()();
+
+  /// 러닝 중 음성 안내. 기본으로 켜져 있다.
+  BoolColumn get voiceGuide => boolean().withDefault(const Constant(true))();
   DateTimeColumn get createdAt => dateTime()();
   DateTimeColumn get updatedAt => dateTime()();
   DateTimeColumn get deletedAt => dateTime().nullable()();
@@ -158,6 +164,25 @@ class OwnedItems extends Table {
   ];
 }
 
+/// 받은 배지. 배지 id 마다 한 번만 받고, 러닝을 지워도 남는다.
+class Badges extends Table {
+  TextColumn get id => text()();
+  TextColumn get badgeId => text()();
+  TextColumn get runId => text().nullable().references(Runs, #id)();
+  DateTimeColumn get earnedAt => dateTime()();
+  DateTimeColumn get createdAt => dateTime()();
+  DateTimeColumn get updatedAt => dateTime()();
+  DateTimeColumn get deletedAt => dateTime().nullable()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+
+  @override
+  List<Set<Column>> get uniqueKeys => [
+    {badgeId},
+  ];
+}
+
 @DriftDatabase(
   tables: [
     Runs,
@@ -169,6 +194,7 @@ class OwnedItems extends Table {
     Profiles,
     CoinTxns,
     OwnedItems,
+    Badges,
   ],
 )
 class AppDatabase extends _$AppDatabase {
@@ -177,7 +203,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.production() : super(driftDatabase(name: 'runmagochi'));
 
   @override
-  int get schemaVersion => 5;
+  int get schemaVersion => 6;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -198,6 +224,12 @@ class AppDatabase extends _$AppDatabase {
           await m.addColumn(avatars, avatars.hatItemId);
           await m.addColumn(avatars, avatars.accessoryItemId);
         }
+      }
+      if (from < 6) {
+        // from < 3 은 위에서 최신 모양의 profiles 를 막 만들었으므로 열이 이미 있다.
+        await m.addColumn(runs, runs.goalSec);
+        if (from >= 3) await m.addColumn(profiles, profiles.voiceGuide);
+        await m.createTable(badges);
       }
     },
   );

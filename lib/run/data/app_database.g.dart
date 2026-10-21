@@ -125,6 +125,17 @@ class $RunsTable extends Runs with TableInfo<$RunsTable, Run> {
     type: DriftSqlType.double,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _goalSecMeta = const VerificationMeta(
+    'goalSec',
+  );
+  @override
+  late final GeneratedColumn<int> goalSec = GeneratedColumn<int>(
+    'goal_sec',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _createdAtMeta = const VerificationMeta(
     'createdAt',
   );
@@ -171,6 +182,7 @@ class $RunsTable extends Runs with TableInfo<$RunsTable, Run> {
     name,
     encodedRoute,
     goalM,
+    goalSec,
     createdAt,
     updatedAt,
     deletedAt,
@@ -265,6 +277,12 @@ class $RunsTable extends Runs with TableInfo<$RunsTable, Run> {
         goalM.isAcceptableOrUnknown(data['goal_m']!, _goalMMeta),
       );
     }
+    if (data.containsKey('goal_sec')) {
+      context.handle(
+        _goalSecMeta,
+        goalSec.isAcceptableOrUnknown(data['goal_sec']!, _goalSecMeta),
+      );
+    }
     if (data.containsKey('created_at')) {
       context.handle(
         _createdAtMeta,
@@ -340,6 +358,10 @@ class $RunsTable extends Runs with TableInfo<$RunsTable, Run> {
         DriftSqlType.double,
         data['${effectivePrefix}goal_m'],
       ),
+      goalSec: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}goal_sec'],
+      ),
       createdAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}created_at'],
@@ -375,6 +397,9 @@ class Run extends DataClass implements Insertable<Run> {
 
   /// 시작 때 고른 오늘 목표 거리(m). 목표 없이 만든 예전 러닝은 null.
   final double? goalM;
+
+  /// 시작 때 고른 오늘 목표 시간(초). 거리 목표·예전 러닝은 null.
+  final int? goalSec;
   final DateTime createdAt;
   final DateTime updatedAt;
   final DateTime? deletedAt;
@@ -390,6 +415,7 @@ class Run extends DataClass implements Insertable<Run> {
     required this.name,
     this.encodedRoute,
     this.goalM,
+    this.goalSec,
     required this.createdAt,
     required this.updatedAt,
     this.deletedAt,
@@ -415,6 +441,9 @@ class Run extends DataClass implements Insertable<Run> {
     }
     if (!nullToAbsent || goalM != null) {
       map['goal_m'] = Variable<double>(goalM);
+    }
+    if (!nullToAbsent || goalSec != null) {
+      map['goal_sec'] = Variable<int>(goalSec);
     }
     map['created_at'] = Variable<DateTime>(createdAt);
     map['updated_at'] = Variable<DateTime>(updatedAt);
@@ -445,6 +474,9 @@ class Run extends DataClass implements Insertable<Run> {
       goalM: goalM == null && nullToAbsent
           ? const Value.absent()
           : Value(goalM),
+      goalSec: goalSec == null && nullToAbsent
+          ? const Value.absent()
+          : Value(goalSec),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
       deletedAt: deletedAt == null && nullToAbsent
@@ -470,6 +502,7 @@ class Run extends DataClass implements Insertable<Run> {
       name: serializer.fromJson<String>(json['name']),
       encodedRoute: serializer.fromJson<String?>(json['encodedRoute']),
       goalM: serializer.fromJson<double?>(json['goalM']),
+      goalSec: serializer.fromJson<int?>(json['goalSec']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
       deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
@@ -490,6 +523,7 @@ class Run extends DataClass implements Insertable<Run> {
       'name': serializer.toJson<String>(name),
       'encodedRoute': serializer.toJson<String?>(encodedRoute),
       'goalM': serializer.toJson<double?>(goalM),
+      'goalSec': serializer.toJson<int?>(goalSec),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
       'deletedAt': serializer.toJson<DateTime?>(deletedAt),
@@ -508,6 +542,7 @@ class Run extends DataClass implements Insertable<Run> {
     String? name,
     Value<String?> encodedRoute = const Value.absent(),
     Value<double?> goalM = const Value.absent(),
+    Value<int?> goalSec = const Value.absent(),
     DateTime? createdAt,
     DateTime? updatedAt,
     Value<DateTime?> deletedAt = const Value.absent(),
@@ -525,6 +560,7 @@ class Run extends DataClass implements Insertable<Run> {
     name: name ?? this.name,
     encodedRoute: encodedRoute.present ? encodedRoute.value : this.encodedRoute,
     goalM: goalM.present ? goalM.value : this.goalM,
+    goalSec: goalSec.present ? goalSec.value : this.goalSec,
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
     deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
@@ -548,6 +584,7 @@ class Run extends DataClass implements Insertable<Run> {
           ? data.encodedRoute.value
           : this.encodedRoute,
       goalM: data.goalM.present ? data.goalM.value : this.goalM,
+      goalSec: data.goalSec.present ? data.goalSec.value : this.goalSec,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
       deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
@@ -568,6 +605,7 @@ class Run extends DataClass implements Insertable<Run> {
           ..write('name: $name, ')
           ..write('encodedRoute: $encodedRoute, ')
           ..write('goalM: $goalM, ')
+          ..write('goalSec: $goalSec, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('deletedAt: $deletedAt')
@@ -588,6 +626,7 @@ class Run extends DataClass implements Insertable<Run> {
     name,
     encodedRoute,
     goalM,
+    goalSec,
     createdAt,
     updatedAt,
     deletedAt,
@@ -607,6 +646,7 @@ class Run extends DataClass implements Insertable<Run> {
           other.name == this.name &&
           other.encodedRoute == this.encodedRoute &&
           other.goalM == this.goalM &&
+          other.goalSec == this.goalSec &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt &&
           other.deletedAt == this.deletedAt);
@@ -624,6 +664,7 @@ class RunsCompanion extends UpdateCompanion<Run> {
   final Value<String> name;
   final Value<String?> encodedRoute;
   final Value<double?> goalM;
+  final Value<int?> goalSec;
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
   final Value<DateTime?> deletedAt;
@@ -640,6 +681,7 @@ class RunsCompanion extends UpdateCompanion<Run> {
     this.name = const Value.absent(),
     this.encodedRoute = const Value.absent(),
     this.goalM = const Value.absent(),
+    this.goalSec = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.deletedAt = const Value.absent(),
@@ -657,6 +699,7 @@ class RunsCompanion extends UpdateCompanion<Run> {
     this.name = const Value.absent(),
     this.encodedRoute = const Value.absent(),
     this.goalM = const Value.absent(),
+    this.goalSec = const Value.absent(),
     required DateTime createdAt,
     required DateTime updatedAt,
     this.deletedAt = const Value.absent(),
@@ -678,6 +721,7 @@ class RunsCompanion extends UpdateCompanion<Run> {
     Expression<String>? name,
     Expression<String>? encodedRoute,
     Expression<double>? goalM,
+    Expression<int>? goalSec,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
     Expression<DateTime>? deletedAt,
@@ -695,6 +739,7 @@ class RunsCompanion extends UpdateCompanion<Run> {
       if (name != null) 'name': name,
       if (encodedRoute != null) 'encoded_route': encodedRoute,
       if (goalM != null) 'goal_m': goalM,
+      if (goalSec != null) 'goal_sec': goalSec,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (deletedAt != null) 'deleted_at': deletedAt,
@@ -714,6 +759,7 @@ class RunsCompanion extends UpdateCompanion<Run> {
     Value<String>? name,
     Value<String?>? encodedRoute,
     Value<double?>? goalM,
+    Value<int?>? goalSec,
     Value<DateTime>? createdAt,
     Value<DateTime>? updatedAt,
     Value<DateTime?>? deletedAt,
@@ -731,6 +777,7 @@ class RunsCompanion extends UpdateCompanion<Run> {
       name: name ?? this.name,
       encodedRoute: encodedRoute ?? this.encodedRoute,
       goalM: goalM ?? this.goalM,
+      goalSec: goalSec ?? this.goalSec,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       deletedAt: deletedAt ?? this.deletedAt,
@@ -774,6 +821,9 @@ class RunsCompanion extends UpdateCompanion<Run> {
     if (goalM.present) {
       map['goal_m'] = Variable<double>(goalM.value);
     }
+    if (goalSec.present) {
+      map['goal_sec'] = Variable<int>(goalSec.value);
+    }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
@@ -803,6 +853,7 @@ class RunsCompanion extends UpdateCompanion<Run> {
           ..write('name: $name, ')
           ..write('encodedRoute: $encodedRoute, ')
           ..write('goalM: $goalM, ')
+          ..write('goalSec: $goalSec, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('deletedAt: $deletedAt, ')
@@ -3521,6 +3572,21 @@ class $ProfilesTable extends Profiles with TableInfo<$ProfilesTable, Profile> {
     type: DriftSqlType.dateTime,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _voiceGuideMeta = const VerificationMeta(
+    'voiceGuide',
+  );
+  @override
+  late final GeneratedColumn<bool> voiceGuide = GeneratedColumn<bool>(
+    'voice_guide',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("voice_guide" IN (0, 1))',
+    ),
+    defaultValue: const Constant(true),
+  );
   static const VerificationMeta _createdAtMeta = const VerificationMeta(
     'createdAt',
   );
@@ -3559,6 +3625,7 @@ class $ProfilesTable extends Profiles with TableInfo<$ProfilesTable, Profile> {
     id,
     weightKg,
     onboardedAt,
+    voiceGuide,
     createdAt,
     updatedAt,
     deletedAt,
@@ -3593,6 +3660,12 @@ class $ProfilesTable extends Profiles with TableInfo<$ProfilesTable, Profile> {
           data['onboarded_at']!,
           _onboardedAtMeta,
         ),
+      );
+    }
+    if (data.containsKey('voice_guide')) {
+      context.handle(
+        _voiceGuideMeta,
+        voiceGuide.isAcceptableOrUnknown(data['voice_guide']!, _voiceGuideMeta),
       );
     }
     if (data.containsKey('created_at')) {
@@ -3638,6 +3711,10 @@ class $ProfilesTable extends Profiles with TableInfo<$ProfilesTable, Profile> {
         DriftSqlType.dateTime,
         data['${effectivePrefix}onboarded_at'],
       ),
+      voiceGuide: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}voice_guide'],
+      )!,
       createdAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}created_at'],
@@ -3663,6 +3740,9 @@ class Profile extends DataClass implements Insertable<Profile> {
   final String id;
   final double? weightKg;
   final DateTime? onboardedAt;
+
+  /// 러닝 중 음성 안내. 기본으로 켜져 있다.
+  final bool voiceGuide;
   final DateTime createdAt;
   final DateTime updatedAt;
   final DateTime? deletedAt;
@@ -3670,6 +3750,7 @@ class Profile extends DataClass implements Insertable<Profile> {
     required this.id,
     this.weightKg,
     this.onboardedAt,
+    required this.voiceGuide,
     required this.createdAt,
     required this.updatedAt,
     this.deletedAt,
@@ -3684,6 +3765,7 @@ class Profile extends DataClass implements Insertable<Profile> {
     if (!nullToAbsent || onboardedAt != null) {
       map['onboarded_at'] = Variable<DateTime>(onboardedAt);
     }
+    map['voice_guide'] = Variable<bool>(voiceGuide);
     map['created_at'] = Variable<DateTime>(createdAt);
     map['updated_at'] = Variable<DateTime>(updatedAt);
     if (!nullToAbsent || deletedAt != null) {
@@ -3701,6 +3783,7 @@ class Profile extends DataClass implements Insertable<Profile> {
       onboardedAt: onboardedAt == null && nullToAbsent
           ? const Value.absent()
           : Value(onboardedAt),
+      voiceGuide: Value(voiceGuide),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
       deletedAt: deletedAt == null && nullToAbsent
@@ -3718,6 +3801,7 @@ class Profile extends DataClass implements Insertable<Profile> {
       id: serializer.fromJson<String>(json['id']),
       weightKg: serializer.fromJson<double?>(json['weightKg']),
       onboardedAt: serializer.fromJson<DateTime?>(json['onboardedAt']),
+      voiceGuide: serializer.fromJson<bool>(json['voiceGuide']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
       deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
@@ -3730,6 +3814,7 @@ class Profile extends DataClass implements Insertable<Profile> {
       'id': serializer.toJson<String>(id),
       'weightKg': serializer.toJson<double?>(weightKg),
       'onboardedAt': serializer.toJson<DateTime?>(onboardedAt),
+      'voiceGuide': serializer.toJson<bool>(voiceGuide),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
       'deletedAt': serializer.toJson<DateTime?>(deletedAt),
@@ -3740,6 +3825,7 @@ class Profile extends DataClass implements Insertable<Profile> {
     String? id,
     Value<double?> weightKg = const Value.absent(),
     Value<DateTime?> onboardedAt = const Value.absent(),
+    bool? voiceGuide,
     DateTime? createdAt,
     DateTime? updatedAt,
     Value<DateTime?> deletedAt = const Value.absent(),
@@ -3747,6 +3833,7 @@ class Profile extends DataClass implements Insertable<Profile> {
     id: id ?? this.id,
     weightKg: weightKg.present ? weightKg.value : this.weightKg,
     onboardedAt: onboardedAt.present ? onboardedAt.value : this.onboardedAt,
+    voiceGuide: voiceGuide ?? this.voiceGuide,
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
     deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
@@ -3758,6 +3845,9 @@ class Profile extends DataClass implements Insertable<Profile> {
       onboardedAt: data.onboardedAt.present
           ? data.onboardedAt.value
           : this.onboardedAt,
+      voiceGuide: data.voiceGuide.present
+          ? data.voiceGuide.value
+          : this.voiceGuide,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
       deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
@@ -3770,6 +3860,7 @@ class Profile extends DataClass implements Insertable<Profile> {
           ..write('id: $id, ')
           ..write('weightKg: $weightKg, ')
           ..write('onboardedAt: $onboardedAt, ')
+          ..write('voiceGuide: $voiceGuide, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('deletedAt: $deletedAt')
@@ -3778,8 +3869,15 @@ class Profile extends DataClass implements Insertable<Profile> {
   }
 
   @override
-  int get hashCode =>
-      Object.hash(id, weightKg, onboardedAt, createdAt, updatedAt, deletedAt);
+  int get hashCode => Object.hash(
+    id,
+    weightKg,
+    onboardedAt,
+    voiceGuide,
+    createdAt,
+    updatedAt,
+    deletedAt,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -3787,6 +3885,7 @@ class Profile extends DataClass implements Insertable<Profile> {
           other.id == this.id &&
           other.weightKg == this.weightKg &&
           other.onboardedAt == this.onboardedAt &&
+          other.voiceGuide == this.voiceGuide &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt &&
           other.deletedAt == this.deletedAt);
@@ -3796,6 +3895,7 @@ class ProfilesCompanion extends UpdateCompanion<Profile> {
   final Value<String> id;
   final Value<double?> weightKg;
   final Value<DateTime?> onboardedAt;
+  final Value<bool> voiceGuide;
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
   final Value<DateTime?> deletedAt;
@@ -3804,6 +3904,7 @@ class ProfilesCompanion extends UpdateCompanion<Profile> {
     this.id = const Value.absent(),
     this.weightKg = const Value.absent(),
     this.onboardedAt = const Value.absent(),
+    this.voiceGuide = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.deletedAt = const Value.absent(),
@@ -3813,6 +3914,7 @@ class ProfilesCompanion extends UpdateCompanion<Profile> {
     required String id,
     this.weightKg = const Value.absent(),
     this.onboardedAt = const Value.absent(),
+    this.voiceGuide = const Value.absent(),
     required DateTime createdAt,
     required DateTime updatedAt,
     this.deletedAt = const Value.absent(),
@@ -3824,6 +3926,7 @@ class ProfilesCompanion extends UpdateCompanion<Profile> {
     Expression<String>? id,
     Expression<double>? weightKg,
     Expression<DateTime>? onboardedAt,
+    Expression<bool>? voiceGuide,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
     Expression<DateTime>? deletedAt,
@@ -3833,6 +3936,7 @@ class ProfilesCompanion extends UpdateCompanion<Profile> {
       if (id != null) 'id': id,
       if (weightKg != null) 'weight_kg': weightKg,
       if (onboardedAt != null) 'onboarded_at': onboardedAt,
+      if (voiceGuide != null) 'voice_guide': voiceGuide,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (deletedAt != null) 'deleted_at': deletedAt,
@@ -3844,6 +3948,7 @@ class ProfilesCompanion extends UpdateCompanion<Profile> {
     Value<String>? id,
     Value<double?>? weightKg,
     Value<DateTime?>? onboardedAt,
+    Value<bool>? voiceGuide,
     Value<DateTime>? createdAt,
     Value<DateTime>? updatedAt,
     Value<DateTime?>? deletedAt,
@@ -3853,6 +3958,7 @@ class ProfilesCompanion extends UpdateCompanion<Profile> {
       id: id ?? this.id,
       weightKg: weightKg ?? this.weightKg,
       onboardedAt: onboardedAt ?? this.onboardedAt,
+      voiceGuide: voiceGuide ?? this.voiceGuide,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       deletedAt: deletedAt ?? this.deletedAt,
@@ -3871,6 +3977,9 @@ class ProfilesCompanion extends UpdateCompanion<Profile> {
     }
     if (onboardedAt.present) {
       map['onboarded_at'] = Variable<DateTime>(onboardedAt.value);
+    }
+    if (voiceGuide.present) {
+      map['voice_guide'] = Variable<bool>(voiceGuide.value);
     }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
@@ -3893,6 +4002,7 @@ class ProfilesCompanion extends UpdateCompanion<Profile> {
           ..write('id: $id, ')
           ..write('weightKg: $weightKg, ')
           ..write('onboardedAt: $onboardedAt, ')
+          ..write('voiceGuide: $voiceGuide, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('deletedAt: $deletedAt, ')
@@ -4780,6 +4890,476 @@ class OwnedItemsCompanion extends UpdateCompanion<OwnedItem> {
   }
 }
 
+class $BadgesTable extends Badges with TableInfo<$BadgesTable, Badge> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $BadgesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _badgeIdMeta = const VerificationMeta(
+    'badgeId',
+  );
+  @override
+  late final GeneratedColumn<String> badgeId = GeneratedColumn<String>(
+    'badge_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _runIdMeta = const VerificationMeta('runId');
+  @override
+  late final GeneratedColumn<String> runId = GeneratedColumn<String>(
+    'run_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES runs (id)',
+    ),
+  );
+  static const VerificationMeta _earnedAtMeta = const VerificationMeta(
+    'earnedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> earnedAt = GeneratedColumn<DateTime>(
+    'earned_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _deletedAtMeta = const VerificationMeta(
+    'deletedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> deletedAt = GeneratedColumn<DateTime>(
+    'deleted_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    badgeId,
+    runId,
+    earnedAt,
+    createdAt,
+    updatedAt,
+    deletedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'badges';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<Badge> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('badge_id')) {
+      context.handle(
+        _badgeIdMeta,
+        badgeId.isAcceptableOrUnknown(data['badge_id']!, _badgeIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_badgeIdMeta);
+    }
+    if (data.containsKey('run_id')) {
+      context.handle(
+        _runIdMeta,
+        runId.isAcceptableOrUnknown(data['run_id']!, _runIdMeta),
+      );
+    }
+    if (data.containsKey('earned_at')) {
+      context.handle(
+        _earnedAtMeta,
+        earnedAt.isAcceptableOrUnknown(data['earned_at']!, _earnedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_earnedAtMeta);
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    if (data.containsKey('deleted_at')) {
+      context.handle(
+        _deletedAtMeta,
+        deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  List<Set<GeneratedColumn>> get uniqueKeys => [
+    {badgeId},
+  ];
+  @override
+  Badge map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return Badge(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      badgeId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}badge_id'],
+      )!,
+      runId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}run_id'],
+      ),
+      earnedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}earned_at'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+      deletedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}deleted_at'],
+      ),
+    );
+  }
+
+  @override
+  $BadgesTable createAlias(String alias) {
+    return $BadgesTable(attachedDatabase, alias);
+  }
+}
+
+class Badge extends DataClass implements Insertable<Badge> {
+  final String id;
+  final String badgeId;
+  final String? runId;
+  final DateTime earnedAt;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  final DateTime? deletedAt;
+  const Badge({
+    required this.id,
+    required this.badgeId,
+    this.runId,
+    required this.earnedAt,
+    required this.createdAt,
+    required this.updatedAt,
+    this.deletedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['badge_id'] = Variable<String>(badgeId);
+    if (!nullToAbsent || runId != null) {
+      map['run_id'] = Variable<String>(runId);
+    }
+    map['earned_at'] = Variable<DateTime>(earnedAt);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    if (!nullToAbsent || deletedAt != null) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt);
+    }
+    return map;
+  }
+
+  BadgesCompanion toCompanion(bool nullToAbsent) {
+    return BadgesCompanion(
+      id: Value(id),
+      badgeId: Value(badgeId),
+      runId: runId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(runId),
+      earnedAt: Value(earnedAt),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+      deletedAt: deletedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deletedAt),
+    );
+  }
+
+  factory Badge.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return Badge(
+      id: serializer.fromJson<String>(json['id']),
+      badgeId: serializer.fromJson<String>(json['badgeId']),
+      runId: serializer.fromJson<String?>(json['runId']),
+      earnedAt: serializer.fromJson<DateTime>(json['earnedAt']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'badgeId': serializer.toJson<String>(badgeId),
+      'runId': serializer.toJson<String?>(runId),
+      'earnedAt': serializer.toJson<DateTime>(earnedAt),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'deletedAt': serializer.toJson<DateTime?>(deletedAt),
+    };
+  }
+
+  Badge copyWith({
+    String? id,
+    String? badgeId,
+    Value<String?> runId = const Value.absent(),
+    DateTime? earnedAt,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+    Value<DateTime?> deletedAt = const Value.absent(),
+  }) => Badge(
+    id: id ?? this.id,
+    badgeId: badgeId ?? this.badgeId,
+    runId: runId.present ? runId.value : this.runId,
+    earnedAt: earnedAt ?? this.earnedAt,
+    createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+    deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
+  );
+  Badge copyWithCompanion(BadgesCompanion data) {
+    return Badge(
+      id: data.id.present ? data.id.value : this.id,
+      badgeId: data.badgeId.present ? data.badgeId.value : this.badgeId,
+      runId: data.runId.present ? data.runId.value : this.runId,
+      earnedAt: data.earnedAt.present ? data.earnedAt.value : this.earnedAt,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('Badge(')
+          ..write('id: $id, ')
+          ..write('badgeId: $badgeId, ')
+          ..write('runId: $runId, ')
+          ..write('earnedAt: $earnedAt, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    badgeId,
+    runId,
+    earnedAt,
+    createdAt,
+    updatedAt,
+    deletedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is Badge &&
+          other.id == this.id &&
+          other.badgeId == this.badgeId &&
+          other.runId == this.runId &&
+          other.earnedAt == this.earnedAt &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt &&
+          other.deletedAt == this.deletedAt);
+}
+
+class BadgesCompanion extends UpdateCompanion<Badge> {
+  final Value<String> id;
+  final Value<String> badgeId;
+  final Value<String?> runId;
+  final Value<DateTime> earnedAt;
+  final Value<DateTime> createdAt;
+  final Value<DateTime> updatedAt;
+  final Value<DateTime?> deletedAt;
+  final Value<int> rowid;
+  const BadgesCompanion({
+    this.id = const Value.absent(),
+    this.badgeId = const Value.absent(),
+    this.runId = const Value.absent(),
+    this.earnedAt = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  BadgesCompanion.insert({
+    required String id,
+    required String badgeId,
+    this.runId = const Value.absent(),
+    required DateTime earnedAt,
+    required DateTime createdAt,
+    required DateTime updatedAt,
+    this.deletedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       badgeId = Value(badgeId),
+       earnedAt = Value(earnedAt),
+       createdAt = Value(createdAt),
+       updatedAt = Value(updatedAt);
+  static Insertable<Badge> custom({
+    Expression<String>? id,
+    Expression<String>? badgeId,
+    Expression<String>? runId,
+    Expression<DateTime>? earnedAt,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
+    Expression<DateTime>? deletedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (badgeId != null) 'badge_id': badgeId,
+      if (runId != null) 'run_id': runId,
+      if (earnedAt != null) 'earned_at': earnedAt,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (deletedAt != null) 'deleted_at': deletedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  BadgesCompanion copyWith({
+    Value<String>? id,
+    Value<String>? badgeId,
+    Value<String?>? runId,
+    Value<DateTime>? earnedAt,
+    Value<DateTime>? createdAt,
+    Value<DateTime>? updatedAt,
+    Value<DateTime?>? deletedAt,
+    Value<int>? rowid,
+  }) {
+    return BadgesCompanion(
+      id: id ?? this.id,
+      badgeId: badgeId ?? this.badgeId,
+      runId: runId ?? this.runId,
+      earnedAt: earnedAt ?? this.earnedAt,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      deletedAt: deletedAt ?? this.deletedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (badgeId.present) {
+      map['badge_id'] = Variable<String>(badgeId.value);
+    }
+    if (runId.present) {
+      map['run_id'] = Variable<String>(runId.value);
+    }
+    if (earnedAt.present) {
+      map['earned_at'] = Variable<DateTime>(earnedAt.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (deletedAt.present) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('BadgesCompanion(')
+          ..write('id: $id, ')
+          ..write('badgeId: $badgeId, ')
+          ..write('runId: $runId, ')
+          ..write('earnedAt: $earnedAt, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -4792,6 +5372,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $ProfilesTable profiles = $ProfilesTable(this);
   late final $CoinTxnsTable coinTxns = $CoinTxnsTable(this);
   late final $OwnedItemsTable ownedItems = $OwnedItemsTable(this);
+  late final $BadgesTable badges = $BadgesTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -4806,6 +5387,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     profiles,
     coinTxns,
     ownedItems,
+    badges,
   ];
 }
 
@@ -4822,6 +5404,7 @@ typedef $$RunsTableCreateCompanionBuilder =
       Value<String> name,
       Value<String?> encodedRoute,
       Value<double?> goalM,
+      Value<int?> goalSec,
       required DateTime createdAt,
       required DateTime updatedAt,
       Value<DateTime?> deletedAt,
@@ -4840,6 +5423,7 @@ typedef $$RunsTableUpdateCompanionBuilder =
       Value<String> name,
       Value<String?> encodedRoute,
       Value<double?> goalM,
+      Value<int?> goalSec,
       Value<DateTime> createdAt,
       Value<DateTime> updatedAt,
       Value<DateTime?> deletedAt,
@@ -4924,6 +5508,25 @@ final class $$RunsTableReferences
       manager.$state.copyWith(prefetchedData: cache),
     );
   }
+
+  static MultiTypedResultKey<$BadgesTable, List<Badge>> _badgesRefsTable(
+    _$AppDatabase db,
+  ) => MultiTypedResultKey.fromTable(
+    db.badges,
+    aliasName: 'runs__id__badges__run_id',
+  );
+
+  $$BadgesTableProcessedTableManager get badgesRefs {
+    final manager = $$BadgesTableTableManager(
+      $_db,
+      $_db.badges,
+    ).filter((f) => f.runId.id.sqlEquals($_itemColumn<String>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_badgesRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
 }
 
 class $$RunsTableFilterComposer extends Composer<_$AppDatabase, $RunsTable> {
@@ -4986,6 +5589,11 @@ class $$RunsTableFilterComposer extends Composer<_$AppDatabase, $RunsTable> {
 
   ColumnFilters<double> get goalM => $composableBuilder(
     column: $table.goalM,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get goalSec => $composableBuilder(
+    column: $table.goalSec,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -5103,6 +5711,31 @@ class $$RunsTableFilterComposer extends Composer<_$AppDatabase, $RunsTable> {
     );
     return f(composer);
   }
+
+  Expression<bool> badgesRefs(
+    Expression<bool> Function($$BadgesTableFilterComposer f) f,
+  ) {
+    final $$BadgesTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.badges,
+      getReferencedColumn: (t) => t.runId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$BadgesTableFilterComposer(
+            $db: $db,
+            $table: $db.badges,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
 }
 
 class $$RunsTableOrderingComposer extends Composer<_$AppDatabase, $RunsTable> {
@@ -5165,6 +5798,11 @@ class $$RunsTableOrderingComposer extends Composer<_$AppDatabase, $RunsTable> {
 
   ColumnOrderings<double> get goalM => $composableBuilder(
     column: $table.goalM,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get goalSec => $composableBuilder(
+    column: $table.goalSec,
     builder: (column) => ColumnOrderings(column),
   );
 
@@ -5231,6 +5869,9 @@ class $$RunsTableAnnotationComposer
 
   GeneratedColumn<double> get goalM =>
       $composableBuilder(column: $table.goalM, builder: (column) => column);
+
+  GeneratedColumn<int> get goalSec =>
+      $composableBuilder(column: $table.goalSec, builder: (column) => column);
 
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
@@ -5340,6 +5981,31 @@ class $$RunsTableAnnotationComposer
     );
     return f(composer);
   }
+
+  Expression<T> badgesRefs<T extends Object>(
+    Expression<T> Function($$BadgesTableAnnotationComposer a) f,
+  ) {
+    final $$BadgesTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.badges,
+      getReferencedColumn: (t) => t.runId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$BadgesTableAnnotationComposer(
+            $db: $db,
+            $table: $db.badges,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
 }
 
 class $$RunsTableTableManager
@@ -5360,6 +6026,7 @@ class $$RunsTableTableManager
             bool splitsRefs,
             bool xpTxnsRefs,
             bool coinTxnsRefs,
+            bool badgesRefs,
           })
         > {
   $$RunsTableTableManager(_$AppDatabase db, $RunsTable table)
@@ -5386,6 +6053,7 @@ class $$RunsTableTableManager
                 Value<String> name = const Value.absent(),
                 Value<String?> encodedRoute = const Value.absent(),
                 Value<double?> goalM = const Value.absent(),
+                Value<int?> goalSec = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<DateTime?> deletedAt = const Value.absent(),
@@ -5402,6 +6070,7 @@ class $$RunsTableTableManager
                 name: name,
                 encodedRoute: encodedRoute,
                 goalM: goalM,
+                goalSec: goalSec,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 deletedAt: deletedAt,
@@ -5420,6 +6089,7 @@ class $$RunsTableTableManager
                 Value<String> name = const Value.absent(),
                 Value<String?> encodedRoute = const Value.absent(),
                 Value<double?> goalM = const Value.absent(),
+                Value<int?> goalSec = const Value.absent(),
                 required DateTime createdAt,
                 required DateTime updatedAt,
                 Value<DateTime?> deletedAt = const Value.absent(),
@@ -5436,6 +6106,7 @@ class $$RunsTableTableManager
                 name: name,
                 encodedRoute: encodedRoute,
                 goalM: goalM,
+                goalSec: goalSec,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 deletedAt: deletedAt,
@@ -5455,6 +6126,7 @@ class $$RunsTableTableManager
                 splitsRefs = false,
                 xpTxnsRefs = false,
                 coinTxnsRefs = false,
+                badgesRefs = false,
               }) {
                 return PrefetchHooks(
                   db: db,
@@ -5463,6 +6135,7 @@ class $$RunsTableTableManager
                     if (splitsRefs) db.splits,
                     if (xpTxnsRefs) db.xpTxns,
                     if (coinTxnsRefs) db.coinTxns,
+                    if (badgesRefs) db.badges,
                   ],
                   addJoins: null,
                   getPrefetchedDataCallback: (items) async {
@@ -5522,6 +6195,19 @@ class $$RunsTableTableManager
                               ),
                           typedResults: items,
                         ),
+                      if (badgesRefs)
+                        await $_getPrefetchedData<Run, $RunsTable, Badge>(
+                          currentTable: table,
+                          referencedTable: $$RunsTableReferences
+                              ._badgesRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$RunsTableReferences(db, table, p0).badgesRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.runId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
                     ];
                   },
                 );
@@ -5547,6 +6233,7 @@ typedef $$RunsTableProcessedTableManager =
         bool splitsRefs,
         bool xpTxnsRefs,
         bool coinTxnsRefs,
+        bool badgesRefs,
       })
     >;
 typedef $$RunPointsTableCreateCompanionBuilder =
@@ -7246,6 +7933,7 @@ typedef $$ProfilesTableCreateCompanionBuilder =
       required String id,
       Value<double?> weightKg,
       Value<DateTime?> onboardedAt,
+      Value<bool> voiceGuide,
       required DateTime createdAt,
       required DateTime updatedAt,
       Value<DateTime?> deletedAt,
@@ -7256,6 +7944,7 @@ typedef $$ProfilesTableUpdateCompanionBuilder =
       Value<String> id,
       Value<double?> weightKg,
       Value<DateTime?> onboardedAt,
+      Value<bool> voiceGuide,
       Value<DateTime> createdAt,
       Value<DateTime> updatedAt,
       Value<DateTime?> deletedAt,
@@ -7283,6 +7972,11 @@ class $$ProfilesTableFilterComposer
 
   ColumnFilters<DateTime> get onboardedAt => $composableBuilder(
     column: $table.onboardedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get voiceGuide => $composableBuilder(
+    column: $table.voiceGuide,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -7326,6 +8020,11 @@ class $$ProfilesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<bool> get voiceGuide => $composableBuilder(
+    column: $table.voiceGuide,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
@@ -7359,6 +8058,11 @@ class $$ProfilesTableAnnotationComposer
 
   GeneratedColumn<DateTime> get onboardedAt => $composableBuilder(
     column: $table.onboardedAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get voiceGuide => $composableBuilder(
+    column: $table.voiceGuide,
     builder: (column) => column,
   );
 
@@ -7403,6 +8107,7 @@ class $$ProfilesTableTableManager
                 Value<String> id = const Value.absent(),
                 Value<double?> weightKg = const Value.absent(),
                 Value<DateTime?> onboardedAt = const Value.absent(),
+                Value<bool> voiceGuide = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<DateTime?> deletedAt = const Value.absent(),
@@ -7411,6 +8116,7 @@ class $$ProfilesTableTableManager
                 id: id,
                 weightKg: weightKg,
                 onboardedAt: onboardedAt,
+                voiceGuide: voiceGuide,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 deletedAt: deletedAt,
@@ -7421,6 +8127,7 @@ class $$ProfilesTableTableManager
                 required String id,
                 Value<double?> weightKg = const Value.absent(),
                 Value<DateTime?> onboardedAt = const Value.absent(),
+                Value<bool> voiceGuide = const Value.absent(),
                 required DateTime createdAt,
                 required DateTime updatedAt,
                 Value<DateTime?> deletedAt = const Value.absent(),
@@ -7429,6 +8136,7 @@ class $$ProfilesTableTableManager
                 id: id,
                 weightKg: weightKg,
                 onboardedAt: onboardedAt,
+                voiceGuide: voiceGuide,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 deletedAt: deletedAt,
@@ -8045,6 +8753,361 @@ typedef $$OwnedItemsTableProcessedTableManager =
       OwnedItem,
       PrefetchHooks Function()
     >;
+typedef $$BadgesTableCreateCompanionBuilder =
+    BadgesCompanion Function({
+      required String id,
+      required String badgeId,
+      Value<String?> runId,
+      required DateTime earnedAt,
+      required DateTime createdAt,
+      required DateTime updatedAt,
+      Value<DateTime?> deletedAt,
+      Value<int> rowid,
+    });
+typedef $$BadgesTableUpdateCompanionBuilder =
+    BadgesCompanion Function({
+      Value<String> id,
+      Value<String> badgeId,
+      Value<String?> runId,
+      Value<DateTime> earnedAt,
+      Value<DateTime> createdAt,
+      Value<DateTime> updatedAt,
+      Value<DateTime?> deletedAt,
+      Value<int> rowid,
+    });
+
+final class $$BadgesTableReferences
+    extends BaseReferences<_$AppDatabase, $BadgesTable, Badge> {
+  $$BadgesTableReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static $RunsTable _runIdTable(_$AppDatabase db) =>
+      db.runs.createAlias('badges__run_id__runs__id');
+
+  $$RunsTableProcessedTableManager? get runId {
+    final $_column = $_itemColumn<String>('run_id');
+    if ($_column == null) return null;
+    final manager = $$RunsTableTableManager(
+      $_db,
+      $_db.runs,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_runIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$BadgesTableFilterComposer
+    extends Composer<_$AppDatabase, $BadgesTable> {
+  $$BadgesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get badgeId => $composableBuilder(
+    column: $table.badgeId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get earnedAt => $composableBuilder(
+    column: $table.earnedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$RunsTableFilterComposer get runId {
+    final $$RunsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.runId,
+      referencedTable: $db.runs,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$RunsTableFilterComposer(
+            $db: $db,
+            $table: $db.runs,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$BadgesTableOrderingComposer
+    extends Composer<_$AppDatabase, $BadgesTable> {
+  $$BadgesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get badgeId => $composableBuilder(
+    column: $table.badgeId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get earnedAt => $composableBuilder(
+    column: $table.earnedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$RunsTableOrderingComposer get runId {
+    final $$RunsTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.runId,
+      referencedTable: $db.runs,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$RunsTableOrderingComposer(
+            $db: $db,
+            $table: $db.runs,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$BadgesTableAnnotationComposer
+    extends Composer<_$AppDatabase, $BadgesTable> {
+  $$BadgesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get badgeId =>
+      $composableBuilder(column: $table.badgeId, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get earnedAt =>
+      $composableBuilder(column: $table.earnedAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get deletedAt =>
+      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
+
+  $$RunsTableAnnotationComposer get runId {
+    final $$RunsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.runId,
+      referencedTable: $db.runs,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$RunsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.runs,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$BadgesTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $BadgesTable,
+          Badge,
+          $$BadgesTableFilterComposer,
+          $$BadgesTableOrderingComposer,
+          $$BadgesTableAnnotationComposer,
+          $$BadgesTableCreateCompanionBuilder,
+          $$BadgesTableUpdateCompanionBuilder,
+          (Badge, $$BadgesTableReferences),
+          Badge,
+          PrefetchHooks Function({bool runId})
+        > {
+  $$BadgesTableTableManager(_$AppDatabase db, $BadgesTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$BadgesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$BadgesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$BadgesTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> badgeId = const Value.absent(),
+                Value<String?> runId = const Value.absent(),
+                Value<DateTime> earnedAt = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<DateTime?> deletedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => BadgesCompanion(
+                id: id,
+                badgeId: badgeId,
+                runId: runId,
+                earnedAt: earnedAt,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String badgeId,
+                Value<String?> runId = const Value.absent(),
+                required DateTime earnedAt,
+                required DateTime createdAt,
+                required DateTime updatedAt,
+                Value<DateTime?> deletedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => BadgesCompanion.insert(
+                id: id,
+                badgeId: badgeId,
+                runId: runId,
+                earnedAt: earnedAt,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$BadgesTable, Badge>(table),
+                  $$BadgesTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({runId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (runId) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.runId,
+                                referencedTable: $$BadgesTableReferences
+                                    ._runIdTable(db),
+                                referencedColumn: $$BadgesTableReferences
+                                    ._runIdTable(db)
+                                    .id,
+                              )
+                              as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$BadgesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $BadgesTable,
+      Badge,
+      $$BadgesTableFilterComposer,
+      $$BadgesTableOrderingComposer,
+      $$BadgesTableAnnotationComposer,
+      $$BadgesTableCreateCompanionBuilder,
+      $$BadgesTableUpdateCompanionBuilder,
+      (Badge, $$BadgesTableReferences),
+      Badge,
+      PrefetchHooks Function({bool runId})
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -8066,4 +9129,6 @@ class $AppDatabaseManager {
       $$CoinTxnsTableTableManager(_db, _db.coinTxns);
   $$OwnedItemsTableTableManager get ownedItems =>
       $$OwnedItemsTableTableManager(_db, _db.ownedItems);
+  $$BadgesTableTableManager get badges =>
+      $$BadgesTableTableManager(_db, _db.badges);
 }

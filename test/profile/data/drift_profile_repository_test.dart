@@ -20,6 +20,26 @@ void main() {
     expect(await db.select(db.profiles).get(), isEmpty);
   });
 
+  test('음성 안내는 행이 없어도 기본으로 켜져 있고 끄고 켤 수 있다', () async {
+    expect(await repo.voiceGuide(), isTrue);
+    expect(await db.select(db.profiles).get(), isEmpty);
+    await repo.setVoiceGuide(false);
+    expect(await repo.voiceGuide(), isFalse);
+    await repo.setVoiceGuide(true);
+    expect(await repo.voiceGuide(), isTrue);
+    expect(await db.select(db.profiles).get(), hasLength(1));
+  });
+
+  test('음성 안내를 바꿔도 체중·첫 실행 표시는 그대로다', () async {
+    await repo.setWeightKg(70);
+    await repo.markOnboarded();
+    await repo.setVoiceGuide(false);
+    expect(await repo.weightKg(), 70);
+    expect(await repo.isOnboarded(), isTrue);
+    await repo.setWeightKg(71);
+    expect(await repo.voiceGuide(), isFalse);
+  });
+
   test('체중을 저장하고 읽고 지울 수 있다', () async {
     await repo.setWeightKg(58.5);
     expect(await repo.weightKg(), 58.5);

@@ -1,3 +1,4 @@
+import '../domain/run_goal.dart';
 import 'dart:async';
 
 import 'package:flutter/foundation.dart' show debugPrint;
@@ -179,7 +180,10 @@ class RunController extends Notifier<RunViewState> {
     _starting = true;
     try {
       final clock = ref.read(clockProvider);
-      final runId = await _repository.createActiveRun(clock(), goalM: goalM);
+      final runId = await _repository.createActiveRun(
+        clock(),
+        goal: DistanceGoal(goalM),
+      );
       _weightKg = await _readWeight();
       final engine = RunEngine(clock: clock)..start();
       _engine = engine;
@@ -352,9 +356,9 @@ class RunController extends Notifier<RunViewState> {
       restoredMovingTime: active.movingTime,
     );
     _runId = active.id;
-    _goalM = active.goalM;
+    _goalM = active.goal.distanceGoalM;
     // 이미 넘긴 목표는 알리지 않는다(사용자가 이미 알았거나 앱이 죽어 있었다).
-    final goal = active.goalM;
+    final goal = active.goal.distanceGoalM;
     _goalReached =
         goal != null && distanceReachesGoal(engine.snapshot.distanceM, goal);
     _weightKg = await _readWeight();

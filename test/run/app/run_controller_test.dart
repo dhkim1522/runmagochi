@@ -4,6 +4,7 @@ import 'dart:math' as math;
 import 'package:fake_async/fake_async.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:runmagochi/run/domain/run_goal.dart';
 import 'package:flutter/widgets.dart' show AppLifecycleState;
 import 'package:runmagochi/profile/app/providers.dart';
 import 'package:runmagochi/profile/data/profile_repository.dart';
@@ -63,12 +64,12 @@ class _FakeRunRepository implements RunRepository {
   final log = <String>[];
 
   @override
-  Future<double?> lastGoalM() async => null;
+  Future<RunGoal?> lastGoal() async => null;
 
   @override
   Future<String> createActiveRun(
     DateTime startedAt, {
-    required double goalM,
+    required RunGoal goal,
   }) async {
     log.add('createActiveRun');
     return _runId;
@@ -142,6 +143,11 @@ class _FakeProfileRepository implements ProfileRepository {
   Future<double?> weightKg() async => weight;
   @override
   Future<void> setWeightKg(double? kg) async => weight = kg;
+  bool voice = true;
+  @override
+  Future<bool> voiceGuide() async => voice;
+  @override
+  Future<void> setVoiceGuide(bool on) async => voice = on;
   @override
   Future<bool> isOnboarded() async => false;
   @override

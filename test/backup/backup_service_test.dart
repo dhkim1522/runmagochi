@@ -4,6 +4,7 @@ import 'dart:typed_data';
 
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:runmagochi/run/domain/run_goal.dart';
 import 'package:runmagochi/avatar/app/growth_service.dart';
 import 'package:runmagochi/avatar/data/drift_growth_repository.dart';
 import 'package:runmagochi/avatar/domain/growth_state.dart';
@@ -205,7 +206,10 @@ void main() {
       points: const [],
     );
     Future<String> complete(RunRepository repo, DateTime at, double m) async {
-      final id = await repo.createActiveRun(at, goalM: 10000);
+      final id = await repo.createActiveRun(
+        at,
+        goal: const DistanceGoal(10000),
+      );
       await repo.completeRun(id, summary(at, m));
       return id;
     }

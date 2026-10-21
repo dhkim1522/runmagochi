@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:runmagochi/run/domain/run_goal.dart';
 import 'package:runmagochi/avatar/app/providers.dart';
 import 'package:runmagochi/avatar/domain/growth_rules.dart';
 import 'package:runmagochi/avatar/domain/growth_state.dart';
@@ -376,7 +377,7 @@ void main() {
             distanceM: 0,
             movingTime: Duration.zero,
             avgPaceSecPerKm: null,
-            goalM: 3000,
+            goal: const DistanceGoal(3000),
           ),
           calories: 0,
           route: const [],
@@ -513,7 +514,7 @@ void main() {
       await pumpHome(
         tester,
         FakeController(),
-        repo: FakeRepo((0, 0))..lastGoal = 5000,
+        repo: FakeRepo((0, 0))..lastGoalM = 5000,
       );
       await settle(tester);
       final primary = AppColors.of(
@@ -527,7 +528,7 @@ void main() {
       await pumpHome(
         tester,
         FakeController(),
-        repo: FakeRepo((0, 0))..lastGoal = 12000,
+        repo: FakeRepo((0, 0))..lastGoalM = 12000,
       );
       await settle(tester);
       expect(find.text('12km'), findsOneWidget);
@@ -584,13 +585,13 @@ void main() {
     }
 
     testWidgets('러닝이 끝나 돌아오면 최근 목표를 다시 보인다', (tester) async {
-      final repo = FakeRepo((0, 0))..lastGoal = 5000;
+      final repo = FakeRepo((0, 0))..lastGoalM = 5000;
       await pumpHome(tester, FakeController(), repo: repo);
       await settle(tester);
       await tester.tap(find.text('10km'));
       await tester.pump();
       await startAndWait(tester);
-      repo.lastGoal = 10000;
+      repo.lastGoalM = 10000;
       tester.state<NavigatorState>(find.byType(Navigator)).pop();
       await settle(tester);
       final primary = AppColors.of(
@@ -614,7 +615,7 @@ void main() {
 
     testWidgets('읽는 동안에도 선택 영역과 시작 버튼 자리가 같다', (tester) async {
       final repo = FakeRepo((0, 0))
-        ..lastGoal = 5000
+        ..lastGoalM = 5000
         ..holdLastGoal = Completer<void>();
       await pumpHome(tester, FakeController(), repo: repo);
       await settle(tester);
@@ -641,7 +642,7 @@ void main() {
                 FakeGate(GateResult.ready),
               ),
               runRepositoryProvider.overrideWithValue(
-                FakeRepo((0, 0))..lastGoal = 12000,
+                FakeRepo((0, 0))..lastGoalM = 12000,
               ),
               growthServiceProvider.overrideWithValue(
                 FakeGrowthService(growthState()),

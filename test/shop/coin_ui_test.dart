@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:runmagochi/run/domain/run_goal.dart';
 import 'package:runmagochi/core/theme.dart';
 import 'package:runmagochi/run/app/providers.dart';
 import 'package:runmagochi/run/data/run_repository.dart';
@@ -28,7 +29,7 @@ RunDetail _detail(String id, double distanceM, double? goalM) => RunDetail(
     distanceM: distanceM,
     movingTime: const Duration(minutes: 20),
     avgPaceSecPerKm: 360,
-    goalM: goalM,
+    goal: goalM == null ? null : DistanceGoal(goalM),
   ),
   calories: 0,
   route: const [],

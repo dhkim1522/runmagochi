@@ -162,7 +162,7 @@ void main() {
     final m = jsonDecode(json) as Map<String, dynamic>;
     expect(m['format'], 'runmagochi-backup');
     expect(m['version'], 1);
-    expect(m['schemaVersion'], 5);
+    expect(m['schemaVersion'], 6);
     expect(m['exportedAt'], '2026-10-18T01:00:00.000Z');
     final tables = m['tables'] as Map<String, dynamic>;
     expect(tables.keys, isNot(contains('runPoints')));
@@ -294,6 +294,78 @@ void main() {
     expect((await dst.select(dst.avatars).get()).single.hatItemId, 'hat1');
   });
 
+  test('v6 왕복에 시간 목표·배지·음성 안내가 유지된다', () async {
+    await _seed(src);
+    await (src.update(src.runs)..where((r) => r.id.equals('r1'))).write(
+      const RunsCompanion(goalM: Value(null), goalSec: Value(1800)),
+    );
+    await src
+        .into(src.badges)
+        .insert(
+          BadgesCompanion.insert(
+            id: 'b1',
+            badgeId: 'first-run',
+            runId: const Value('r1'),
+            earnedAt: _t,
+            createdAt: _t,
+            updatedAt: _t,
+          ),
+        );
+    await src
+        .into(src.badges)
+        .insert(
+          BadgesCompanion.insert(
+            id: 'b2',
+            badgeId: 'streak-3',
+            earnedAt: _t,
+            createdAt: _t,
+            updatedAt: _t,
+          ),
+        );
+    await (src.update(
+      src.profiles,
+    )).write(const ProfilesCompanion(voiceGuide: Value(false)));
+    final json = await DriftBackupRepository(src).exportJson(_now);
+    await _seed(dst, suffix: '-old');
+    await DriftBackupRepository(dst).importJson(json);
+
+    final r1 = (await dst.select(dst.runs).get()).firstWhere(
+      (r) => r.id == 'r1',
+    );
+    expect(r1.goalM, isNull);
+    expect(r1.goalSec, 1800);
+    final badges = await dst.select(dst.badges).get();
+    expect(
+      badges.map((b) => b.badgeId),
+      unorderedEquals(['first-run', 'streak-3']),
+    );
+    expect(badges.firstWhere((b) => b.id == 'b1').runId, 'r1');
+    expect((await dst.select(dst.profiles).get()).single.voiceGuide, isFalse);
+    expect(await DriftBackupRepository(dst).exportJson(_now), json);
+  });
+
+  test('v5 백업 파일(시간 목표·배지·음성 안내 없음)을 가져온다', () async {
+    await _seed(src);
+    final m =
+        jsonDecode(await DriftBackupRepository(src).exportJson(_now))
+            as Map<String, dynamic>;
+    m['schemaVersion'] = 5;
+    (m['tables'] as Map).remove('badges');
+    for (final r in (m['tables'] as Map)['runs'] as List) {
+      (r as Map).remove('goalSec');
+    }
+    for (final r in (m['tables'] as Map)['profiles'] as List) {
+      (r as Map).remove('voiceGuide');
+    }
+    await _seed(dst, suffix: '-old');
+    await DriftBackupRepository(dst).importJson(jsonEncode(m));
+    final runs = await dst.select(dst.runs).get();
+    expect(runs.map((r) => r.goalM), [5000, 5000]);
+    expect(runs.map((r) => r.goalSec), [null, null]);
+    expect(await dst.select(dst.badges).get(), isEmpty);
+    expect((await dst.select(dst.profiles).get()).single.voiceGuide, isTrue);
+  });
+
   test('가져오면 기존 데이터를 모두 바꾼다 (진행 중 러닝·점 포함)', () async {
     await _seed(src);
     final json = await DriftBackupRepository(src).exportJson(_now);
@@ -342,7 +414,7 @@ void main() {
       return expectRejected(jsonEncode(parsed()..['version'] = 2));
     });
     test('스키마 버전이 다름', () async {
-      await expectRejected(jsonEncode(parsed()..['schemaVersion'] = 6));
+      await expectRejected(jsonEncode(parsed()..['schemaVersion'] = 7));
       await expectRejected(jsonEncode(parsed()..['schemaVersion'] = 2));
     });
     test('테이블이 없음', () {

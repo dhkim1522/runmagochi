@@ -5,6 +5,7 @@ import 'package:fake_async/fake_async.dart';
 import 'package:flutter/widgets.dart' show AppLifecycleState;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:runmagochi/run/domain/run_goal.dart';
 import 'package:runmagochi/avatar/data/notification_scheduler.dart';
 import 'package:runmagochi/profile/app/providers.dart';
 import 'package:runmagochi/profile/data/profile_repository.dart';
@@ -31,11 +32,11 @@ LocationSample _sample(DateTime time, double meters) => LocationSample(
 
 class _Repo implements RunRepository {
   @override
-  Future<double?> lastGoalM() async => null;
+  Future<RunGoal?> lastGoal() async => null;
   @override
   Future<String> createActiveRun(
     DateTime startedAt, {
-    required double goalM,
+    required RunGoal goal,
   }) async => 'run-1';
   @override
   Future<void> appendPoints(

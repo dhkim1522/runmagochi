@@ -1,4 +1,5 @@
 import '../domain/location_sample.dart';
+import '../domain/run_goal.dart';
 import '../domain/run_summary.dart';
 
 class RunListItem {
@@ -9,7 +10,7 @@ class RunListItem {
     required this.distanceM,
     required this.movingTime,
     required this.avgPaceSecPerKm,
-    this.goalM,
+    this.goal,
   });
 
   final String id;
@@ -19,8 +20,8 @@ class RunListItem {
   final Duration movingTime;
   final double? avgPaceSecPerKm;
 
-  /// 시작 때 고른 오늘 목표 거리(m). 목표 없이 만든 예전 러닝은 null.
-  final double? goalM;
+  /// 시작 때 고른 오늘 목표. 목표 없이 만든 예전 러닝은 null.
+  final RunGoal? goal;
 }
 
 class RunDetail {
@@ -43,7 +44,7 @@ class ActiveRun {
     required this.startedAt,
     required this.segments,
     required this.movingTime,
-    this.goalM,
+    this.goal,
   });
 
   final String id;
@@ -51,17 +52,17 @@ class ActiveRun {
   final List<List<LocationSample>> segments;
   final Duration movingTime;
 
-  /// 시작 때 고른 오늘 목표 거리(m).
-  final double? goalM;
+  /// 시작 때 고른 오늘 목표.
+  final RunGoal? goal;
 }
 
 abstract interface class RunRepository {
-  /// 진행 중 러닝을 만든다. [goalM] 은 시작 때 고른 오늘 목표 거리(m).
-  Future<String> createActiveRun(DateTime startedAt, {required double goalM});
+  /// 진행 중 러닝을 만든다. [goal] 은 시작 때 고른 오늘 목표(거리 또는 시간).
+  Future<String> createActiveRun(DateTime startedAt, {required RunGoal goal});
 
-  /// 시작 시각이 가장 늦은 러닝(진행 중·완료·삭제 표시 모두)의 목표 거리(m).
+  /// 시작 시각이 가장 늦은 러닝(진행 중·완료·삭제 표시 모두)의 목표(종류 포함).
   /// 러닝이 없거나 그 러닝에 목표가 없으면 null.
-  Future<double?> lastGoalM();
+  Future<RunGoal?> lastGoal();
 
   /// 점을 구간 번호와 함께 저장하고 진행 중 러닝의 움직인 시간을 [movingTime] 으로 갱신한다.
   /// [points] 가 비어 있어도 움직인 시간은 갱신한다.

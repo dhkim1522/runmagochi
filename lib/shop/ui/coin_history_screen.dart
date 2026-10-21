@@ -1,3 +1,4 @@
+import '../../run/domain/run_goal.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -23,7 +24,9 @@ final _coinRowsProvider = FutureProvider.autoDispose<List<_Row>>((ref) async {
     final label = switch (e.reason) {
       'distance' => run == null ? '러닝' : '러닝 ${formatKm(run.distanceM)}km',
       'runGoal' =>
-        run?.goalM == null ? '목표 달성' : '목표 ${formatTargetKm(run!.goalM!)}km 달성',
+        run?.goal.distanceGoalM == null
+            ? '목표 달성'
+            : '목표 ${formatTargetKm(run!.goal.distanceGoalM!)}km 달성',
       _ => switch (e.itemId == null ? null : itemById(e.itemId!)) {
         final item? => '${item.name} 구매',
         null => '아이템 구매',

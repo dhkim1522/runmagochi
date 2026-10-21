@@ -1,6 +1,7 @@
 import 'package:drift/drift.dart' show Value;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:runmagochi/run/domain/run_goal.dart';
 import 'package:runmagochi/avatar/app/growth_service.dart';
 import 'package:runmagochi/avatar/data/drift_growth_repository.dart';
 import 'package:runmagochi/avatar/domain/growth_rules.dart';
@@ -31,7 +32,7 @@ class FakeRunRepository implements RunRepository {
           distanceM: distanceM,
           movingTime: const Duration(minutes: 30),
           avgPaceSecPerKm: 360,
-          goalM: goalM,
+          goal: goalM == null ? null : DistanceGoal(goalM),
         ),
         calories: 0,
         route: const [],
@@ -63,10 +64,10 @@ class FakeRunRepository implements RunRepository {
   }
 
   @override
-  Future<double?> lastGoalM() async => null;
+  Future<RunGoal?> lastGoal() async => null;
 
   @override
-  Future<String> createActiveRun(DateTime startedAt, {required double goalM}) =>
+  Future<String> createActiveRun(DateTime startedAt, {required RunGoal goal}) =>
       throw UnimplementedError();
   @override
   Future<void> appendPoints(
@@ -97,7 +98,7 @@ class FakeRunRepository implements RunRepository {
     final i = runs.indexWhere((r) => r.run.id == id);
     final old = runs[i].run;
     runs.removeAt(i);
-    add(id, old.startedAt, distanceM, goalM: old.goalM);
+    add(id, old.startedAt, distanceM, goalM: old.goal.distanceGoalM);
     if (at != null) revisedAt[id] = at;
   }
 

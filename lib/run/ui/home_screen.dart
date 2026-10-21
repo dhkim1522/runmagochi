@@ -1,3 +1,4 @@
+import '../domain/run_goal.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -126,7 +127,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final runId = ref.read(runControllerProvider).lastRunId;
     if (runId == null) return null;
     try {
-      return (await ref.read(runRepositoryProvider).getRun(runId))?.run.goalM;
+      return (await ref.read(runRepositoryProvider).getRun(runId))
+          ?.run
+          .goal
+          .distanceGoalM;
     } catch (_) {
       return null;
     }

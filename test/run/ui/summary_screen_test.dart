@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart' hide Split;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:runmagochi/run/domain/run_goal.dart';
 import 'package:runmagochi/avatar/app/providers.dart';
 import 'package:runmagochi/avatar/domain/growth_state.dart';
 import 'package:runmagochi/core/theme.dart';
@@ -305,7 +306,7 @@ void main() {
             distanceM: 5020,
             movingTime: const Duration(minutes: 30),
             avgPaceSecPerKm: 360,
-            goalM: goalM,
+            goal: goalM == null ? null : DistanceGoal(goalM),
           ),
           calories: 168,
           route: const [],
