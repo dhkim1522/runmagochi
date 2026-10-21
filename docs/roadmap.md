@@ -4,9 +4,9 @@
 
 ## 현재 위치
 
-**페이즈 5 확장 착수 전.** 페이즈 4 는 지금 확인할 수 있는 항목을 마쳤다 ([계획](plans/phase-4.md)).
+**페이즈 6 디자인 완성 착수 전.** 페이즈 5 는 지금 확인할 수 있는 항목을 마쳤다 ([계획](plans/phase-5.md)).
 
-페이즈 1~3 의 실기기 확인과 지인 베타는 페이즈 7 에서 Android·iPhone 함께 한다 ([1](plans/phase-1.md), [2](plans/phase-2.md), [2.5](plans/phase-2.5.md), [3](plans/phase-3.md), [3.5](plans/phase-3.5.md), [4](plans/phase-4.md) 의 "사람 확인", 결정 0017).
+페이즈 1~3 의 실기기 확인과 지인 베타는 페이즈 7 에서 Android·iPhone 함께 한다 ([1](plans/phase-1.md), [2](plans/phase-2.md), [2.5](plans/phase-2.5.md), [3](plans/phase-3.md), [3.5](plans/phase-3.5.md), [4](plans/phase-4.md), [5](plans/phase-5.md) 의 "사람 확인", 결정 0017).
 
 ## 페이즈
 
