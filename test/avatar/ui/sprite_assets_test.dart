@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:image/image.dart' as img;
 import 'package:runmagochi/avatar/domain/growth_rules.dart';
 import 'package:runmagochi/avatar/ui/sprite_sheet.dart';
+import 'package:runmagochi/shop/domain/catalog.dart';
 
 void main() {
   void expectSheet(String path, AvatarAction a) {
@@ -43,6 +44,30 @@ void main() {
         }
       }
     }
+  });
+
+  test('아이템 시트 경로 규칙', () {
+    expect(
+      itemSheet(AvatarKind.chick, itemById('cap')!, AvatarAction.walk),
+      'assets/sprites/chick/hat/cap_walk.png',
+    );
+    expect(
+      itemSheet(AvatarKind.acorn, itemById('flower_pin')!, AvatarAction.idle),
+      'assets/sprites/acorn/accessory/flower_pin_idle.png',
+    );
+  });
+
+  test('모든 아이템 시트(6개 × 3종 × 3동작)가 (프레임 수 × 32) × 32 이다', () {
+    var n = 0;
+    for (final k in AvatarKind.values) {
+      for (final item in catalog) {
+        for (final a in AvatarAction.values) {
+          expectSheet(itemSheet(k, item, a), a);
+          n++;
+        }
+      }
+    }
+    expect(n, 6 * 3 * 3);
   });
 
   test('모든 face 시트가 (프레임 수 × 32) × 32 이다', () {

@@ -3,13 +3,17 @@
 // 결과:
 //   assets/sprites/<kind>/body/stage<n>_<action>.png
 //   assets/sprites/<kind>/face/<mood>_<action>.png
+//   assets/sprites/<kind>/<hat|accessory>/<id>_<action>.png
 //   design/character/<kind>.png — 8배 미리보기. 줄 = 단계 1~4(normal 표정을 겹침),
 //   칸 = idle 2 · walk 4 · run 4. 마지막 줄 = 표정(normal·sleepy·asleep) × 단계 1·4.
+//   design/character/items.png — 8배 아이템 미리보기. 줄 = 아이템 없음 + 아이템 6개,
+//   칸 = 종류 3 × 단계 1~4 (idle 첫 프레임).
 // 그리기 로직은 tool/sprites/render.dart (동기 검사 테스트와 공유).
 import 'dart:io';
 
 import 'package:image/image.dart' as img;
 
+import 'sprites/items.dart';
 import 'sprites/pet_art.dart';
 import 'sprites/pets.dart';
 import 'sprites/render.dart';
@@ -32,6 +36,20 @@ void main() {
         }
       }
     }
+    for (final item in items) {
+      for (final a in petActions) {
+        final frames = itemFrames(pet, item, a);
+        for (var i = 0; i < frames.length; i++) {
+          problems.addAll(
+            validateFrame(
+              '${pet.name} ${item.id} $a #$i',
+              frames[i],
+              petPalette,
+            ),
+          );
+        }
+      }
+    }
   }
   if (problems.isNotEmpty) {
     stderr.writeln(problems.join('\n'));
@@ -44,7 +62,8 @@ void main() {
   for (final pet in pets) {
     _save('design/character/${pet.name}.png', preview(pet));
   }
-  stdout.writeln('시트 ${sheets.length}개, 미리보기 ${pets.length}개');
+  _save('design/character/items.png', itemsPreview());
+  stdout.writeln('시트 ${sheets.length}개, 미리보기 ${pets.length + 1}개');
 }
 
 void _save(String path, img.Image im) {

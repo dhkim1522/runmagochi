@@ -1,3 +1,4 @@
+import '../../shop/domain/catalog.dart';
 import '../domain/growth_rules.dart';
 
 /// 스프라이트 한 프레임의 한 변(px). 규격은 docs/specs/sprite-spec.md.
@@ -24,6 +25,10 @@ String bodySheet(AvatarKind kind, int stage, AvatarAction a) =>
 /// 표정 시트 경로.
 String faceSheet(AvatarKind kind, AvatarMood m, AvatarAction a) =>
     'assets/sprites/${kind.name}/face/${m.name}_${a.name}.png';
+
+/// 아이템 시트 경로. 부위 폴더(hat·accessory) 아래. 4단계가 같은 그림을 쓴다.
+String itemSheet(AvatarKind kind, Item item, AvatarAction a) =>
+    'assets/sprites/${kind.name}/${item.slot.name}/${item.id}_${a.name}.png';
 
 /// 겹치는 순서(아래 → 위). 페이즈 2는 body·face 만 쓴다.
 const spriteLayerOrder = [

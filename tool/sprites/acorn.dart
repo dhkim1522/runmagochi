@@ -15,6 +15,9 @@ const _face = FaceArt(
 final acorn = PetKind(
   name: 'acorn',
   face: _face,
+  // 아이템: 모자 챙은 y=17(도토리 모자 아랫줄), 소품은 눈 윗줄 y=20 기준.
+  hatAnchor: (x: 16, y: 17),
+  accessoryAnchor: (x: 16, y: 20),
   stages: [
     // 1 작은 도토리
     StageArt(

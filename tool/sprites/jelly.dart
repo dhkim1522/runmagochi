@@ -15,6 +15,9 @@ const _face = FaceArt(
 final jelly = PetKind(
   name: 'jelly',
   face: _face,
+  // 아이템: 모자 챙은 y=18(머리 위), 소품은 눈 윗줄 y=20 기준.
+  hatAnchor: (x: 16, y: 18),
+  accessoryAnchor: (x: 16, y: 20),
   stages: [
     // 1 새싹 젤리
     StageArt(

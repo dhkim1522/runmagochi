@@ -1,5 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:runmagochi/shop/domain/catalog.dart';
 
+import '../../tool/sprites/items.dart';
 import '../../tool/sprites/pet_art.dart';
 import '../../tool/sprites/pets.dart';
 import '../../tool/sprites/sprite_data.dart';
@@ -26,6 +28,15 @@ void main() {
     return -1;
   }
 
+  int topY(SpriteFrame f) {
+    for (var y = 0; y < spriteSize; y++) {
+      for (var x = 0; x < spriteSize; x++) {
+        if (opaque(f, x, y)) return y;
+      }
+    }
+    return -1;
+  }
+
   Set<String> chars(StageArt s) => {
     for (final a in petActions)
       for (final f in bodyFrames(s, a))
@@ -39,7 +50,74 @@ void main() {
     }
   });
 
+  test('아이템 그림은 상점 목록과 id·부위가 같다', () {
+    expect(
+      [for (final i in items) (i.id, i.slot)],
+      [for (final i in catalog) (i.id, i.slot.name)],
+    );
+  });
+
   for (final pet in pets) {
+    group('${pet.name} 아이템', () {
+      test('모든 아이템 프레임이 검사를 통과하고 프레임 수가 맞다', () {
+        for (final item in items) {
+          for (final a in petActions) {
+            final frames = itemFrames(pet, item, a);
+            expect(frames, hasLength(petActionFrames[a]));
+            for (var i = 0; i < frames.length; i++) {
+              final name = '${pet.name} ${item.id} $a #$i';
+              expect(validateFrame(name, frames[i], petPalette), isEmpty);
+              expect(frames[i].width, spriteSize, reason: name);
+              expect(frames[i].height, footY + 1, reason: name);
+              expect(topY(frames[i]), isNot(-1), reason: '$name 빈 프레임');
+            }
+          }
+        }
+      });
+
+      test('프레임마다 아이템 세로 이동이 face 세로 이동과 같다', () {
+        final face0 = topY(faceFrames(pet, 'normal', 'idle').first);
+        for (final item in items) {
+          final item0 = topY(itemFrames(pet, item, 'idle').first);
+          for (final a in petActions) {
+            final faces = faceFrames(pet, 'normal', a);
+            final frames = itemFrames(pet, item, a);
+            for (var i = 0; i < frames.length; i++) {
+              expect(
+                topY(frames[i]) - item0,
+                topY(faces[i]) - face0,
+                reason: '${pet.name} ${item.id} $a #$i',
+              );
+            }
+          }
+        }
+      });
+
+      test('모자는 face 픽셀을 가리지 않는다', () {
+        for (final item in items.where((i) => i.slot == 'hat')) {
+          for (final a in petActions) {
+            final frames = itemFrames(pet, item, a);
+            for (final m in petMoods) {
+              final faces = faceFrames(pet, m, a);
+              for (var i = 0; i < frames.length; i++) {
+                for (var y = 0; y < spriteSize; y++) {
+                  for (var x = 0; x < spriteSize; x++) {
+                    final ch = charAt(faces[i], x, y);
+                    if (ch == '.' || ch == sleepZ) continue;
+                    expect(
+                      opaque(frames[i], x, y),
+                      isFalse,
+                      reason: '${pet.name} ${item.id} $a #$i $m ($x,$y)',
+                    );
+                  }
+                }
+              }
+            }
+          }
+        }
+      });
+    });
+
     group(pet.name, () {
       test('모든 body·face 프레임이 검사를 통과하고 프레임 수가 맞다', () {
         for (var s = 0; s < 4; s++) {

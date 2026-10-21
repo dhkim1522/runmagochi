@@ -2,6 +2,7 @@
 // tool/render_sprites.dart(파일 저장)와 test/tool/sprite_render_sync_test.dart(PNG 동기 검사)가 함께 쓴다.
 import 'package:image/image.dart' as img;
 
+import 'items.dart';
 import 'pet_art.dart';
 import 'pets.dart';
 import 'sprite_data.dart';
@@ -11,7 +12,8 @@ const int _gap = 16;
 const int _groupGap = 48;
 const int _bg = 0xFFFFF7ED; // cream
 
-/// 저장소 루트 기준 경로 → 시트 이미지. 모든 종류 × 단계 × 동작(몸), 표정 × 동작(얼굴).
+/// 저장소 루트 기준 경로 → 시트 이미지. 모든 종류 × 단계 × 동작(몸), 표정 × 동작(얼굴),
+/// 아이템 × 동작(모자·소품).
 Map<String, img.Image> allSheets() {
   final out = <String, img.Image>{};
   for (final pet in pets) {
@@ -27,6 +29,12 @@ Map<String, img.Image> allSheets() {
         out['assets/sprites/${pet.name}/face/${m}_$a.png'] = sheet(
           faceFrames(pet, m, a),
         );
+      }
+    }
+    for (final item in items) {
+      for (final a in petActions) {
+        out['assets/sprites/${pet.name}/${item.slot}/${item.id}_$a.png'] =
+            sheet(itemFrames(pet, item, a));
       }
     }
   }
@@ -103,6 +111,52 @@ img.Image preview(PetKind pet) {
       drawFrame(im, body, colX[c], oy, _scale);
       drawFrame(im, face, colX[c], oy, _scale);
       c++;
+    }
+  }
+  return im;
+}
+
+/// 아이템 미리보기. 줄 = 아이템 없음 + 아이템 6개, 칸 = 종류 3 × 단계 1~4 (idle 첫 프레임).
+img.Image itemsPreview() {
+  final tile = spriteSize * _scale;
+  final cols = <(PetKind, int)>[
+    for (final pet in pets)
+      for (var s = 0; s < pet.stages.length; s++) (pet, s),
+  ];
+  final colX = <int>[];
+  var x = _gap;
+  for (var c = 0; c < cols.length; c++) {
+    if (c > 0 && cols[c].$1 != cols[c - 1].$1) x += _groupGap - _gap;
+    colX.add(x);
+    x += tile + _gap;
+  }
+  final width = x + _gap;
+  final rows = <ItemArt?>[null, ...items];
+  final height = rows.length * (tile + _gap) + _gap;
+  final im = img.Image(width: width, height: height);
+  img.fill(im, color: _color(_bg));
+  for (var r = 0; r < rows.length; r++) {
+    final oy = _gap + r * (tile + _gap);
+    for (var c = 0; c < cols.length; c++) {
+      final (pet, s) = cols[c];
+      drawFrame(
+        im,
+        bodyFrames(pet.stages[s], 'idle').first,
+        colX[c],
+        oy,
+        _scale,
+      );
+      drawFrame(
+        im,
+        faceFrames(pet, 'normal', 'idle').first,
+        colX[c],
+        oy,
+        _scale,
+      );
+      final item = rows[r];
+      if (item != null) {
+        drawFrame(im, itemFrames(pet, item, 'idle').first, colX[c], oy, _scale);
+      }
     }
   }
   return im;

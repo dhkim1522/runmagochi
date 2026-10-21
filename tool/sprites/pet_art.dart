@@ -42,6 +42,17 @@ const Palette petPalette = {
   'e': 0xFFFDE047, // 메달
   'E': 0xFFA16207, // 메달 테두리
   'z': 0xFF60A5FA, // 잠든 z
+  // 아이템(작업 8, tool/sprites/items.dart)
+  'T': 0xFF2DD4BF, // 러닝 캡
+  'U': 0xFF0F766E, // 러닝 캡 챙
+  'v': 0xFFC4B5FD, // 비니
+  'V': 0xFF8B5CF6, // 비니 골
+  's': 0xFFFDE68A, // 밀짚
+  'S': 0xFFD4A24C, // 밀짚 결
+  'L': 0xFF1E293B, // 선글라스 알
+  'u': 0xFF94A3B8, // 헤드폰 머리띠
+  'R': 0xFFEF4444, // 헤드폰 귀덮개
+  'f': 0xFFF472B6, // 꽃잎
 };
 
 /// 가운데 정렬 그림. [rows] 첫 줄이 y=[top] 에 놓인다.
@@ -97,13 +108,50 @@ class FaceArt {
   final Map<String, List<String>> moods;
 }
 
+/// 아이템 기준점. [x] 는 그림 가로 가운데, [y] 는 그림 위치를 재는 줄([ItemArt.top]).
+typedef Anchor = ({int x, int y});
+
 class PetKind {
-  const PetKind({required this.name, required this.stages, required this.face});
+  const PetKind({
+    required this.name,
+    required this.stages,
+    required this.face,
+    required this.hatAnchor,
+    required this.accessoryAnchor,
+  });
 
   /// 폴더 이름: chick·jelly·acorn.
   final String name;
   final List<StageArt> stages;
   final FaceArt face;
+
+  /// 모자 챙 맨 아랫줄 자리. 4단계가 같은 자리를 쓴다(face 처럼 머리 위치가 같다).
+  final Anchor hatAnchor;
+
+  /// 소품 기준점: 눈 윗줄.
+  final Anchor accessoryAnchor;
+}
+
+/// 아이템 그림 한 장. 4단계·3종이 같은 그림을 쓰고, 종류의 기준점에 맞춰 놓는다.
+class ItemArt {
+  const ItemArt({
+    required this.id,
+    required this.slot,
+    required this.top,
+    required this.rows,
+  });
+
+  /// 상점 목록(lib/shop/domain/catalog.dart)의 id.
+  final String id;
+
+  /// 폴더 이름: hat·accessory.
+  final String slot;
+
+  /// 첫 줄의 y 를 기준점 y 에서 잰 값(위쪽이 음수).
+  final int top;
+
+  /// 가로 길이가 짝수여야 가운데에 맞는다.
+  final List<String> rows;
 }
 
 /// 한 프레임의 자세.
@@ -312,6 +360,22 @@ SpriteFrame _faceFrame(FaceArt f, String mood, int dy, int frame) {
     // 머리 위 허공에 떠오르는 z. 프레임마다 1px 오르내린다.
     _stamp(g, const ['zzzz', '..z.', '.z..', 'zzzz'], 24, 4 - frame % 2);
   }
+  return _toFrame(g);
+}
+
+/// 아이템 하나, 동작 하나의 프레임들. face 와 같은 [headOffsets] 로 움직인다.
+List<SpriteFrame> itemFrames(PetKind kind, ItemArt item, String action) {
+  final anchor = item.slot == 'hat' ? kind.hatAnchor : kind.accessoryAnchor;
+  final x0 = anchor.x - item.rows.first.length ~/ 2;
+  final y0 = anchor.y + item.top;
+  return [
+    for (final dy in headOffsets(action)) _itemFrame(item.rows, x0, y0 + dy),
+  ];
+}
+
+SpriteFrame _itemFrame(List<String> rows, int x0, int y0) {
+  final g = _empty();
+  _stamp(g, rows, x0, y0);
   return _toFrame(g);
 }
 

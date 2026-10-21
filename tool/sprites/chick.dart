@@ -15,6 +15,9 @@ const _face = FaceArt(
 final chick = PetKind(
   name: 'chick',
   face: _face,
+  // 아이템: 모자 챙은 y=18(껍데기·머리 위), 소품은 눈 윗줄 y=20 기준.
+  hatAnchor: (x: 16, y: 18),
+  accessoryAnchor: (x: 16, y: 20),
   stages: [
     // 1 알: 발이 없어 통통 튄다.
     const StageArt(

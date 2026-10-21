@@ -72,10 +72,16 @@ flutter:
   assets:
     - assets/sprites/chick/body/
     - assets/sprites/chick/face/
+    - assets/sprites/chick/hat/
+    - assets/sprites/chick/accessory/
     - assets/sprites/jelly/body/
     - assets/sprites/jelly/face/
+    - assets/sprites/jelly/hat/
+    - assets/sprites/jelly/accessory/
     - assets/sprites/acorn/body/
     - assets/sprites/acorn/face/
+    - assets/sprites/acorn/hat/
+    - assets/sprites/acorn/accessory/
 
   fonts:
     # 둘 다 SIL OFL (assets/fonts/OFL-*.txt). 네트워크 없이 동작하도록 번들한다.
