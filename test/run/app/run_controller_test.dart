@@ -370,8 +370,9 @@ void main() {
       controller.start(goal: DistanceGoal(3000));
       async.flushMicrotasks();
       runKm(async, location, repository);
+      stepTo(async, location, 1008); // 진행 중인 저장이 들고 갈 점 1개
       final gate = repository.appendGate = Completer<void>();
-      async.elapse(const Duration(seconds: 10));
+      async.elapse(const Duration(seconds: 9));
       expect(repository.log, ['appendPoints']);
 
       controller.end();
@@ -382,7 +383,7 @@ void main() {
       gate.complete();
       async.flushMicrotasks();
       expect(repository.log, ['appendPoints', 'appendPoints', 'completeRun']);
-      expect(repository.appendCalls[0].points, isEmpty);
+      expect(repository.appendCalls[0].points, hasLength(1));
       expect(repository.appendCalls[1].points, isEmpty);
     });
   });

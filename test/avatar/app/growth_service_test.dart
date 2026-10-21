@@ -14,10 +14,10 @@ import 'package:runmagochi/run/domain/run_summary.dart';
 import 'package:runmagochi/shop/data/drift_shop_repository.dart';
 
 class FakeRunRepository implements RunRepository {
+  final List<RunDetail> runs = [];
+
   @override
   Future<void> discardActiveRun(String runId) => throw UnimplementedError();
-
-  final List<RunDetail> runs = [];
 
   void add(
     String id,

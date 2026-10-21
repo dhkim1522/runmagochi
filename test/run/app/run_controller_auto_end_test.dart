@@ -634,19 +634,18 @@ void main() {
   });
 
   group('복원', () {
-    // 마지막 점은 시작 4초 뒤.
-    const lastPointOffset = Duration(seconds: 4);
+    // 마지막 점은 시작 400초 뒤(1,200m).
+    const lastPointOffset = Duration(seconds: 400);
     ActiveRun active(DateTime startedAt) => ActiveRun(
       id: _runId,
       startedAt: startedAt,
       segments: [
         [
-          _sample(startedAt, 0),
-          _sample(startedAt.add(const Duration(seconds: 2)), 600),
-          _sample(startedAt.add(lastPointOffset), 1200),
+          for (var i = 0; i <= 400; i++)
+            _sample(startedAt.add(Duration(seconds: i)), i * 3.0),
         ],
       ],
-      movingTime: const Duration(seconds: 4),
+      movingTime: lastPointOffset,
     );
 
     test('마지막 점 뒤 30분이어도 6시간 전이면 그대로 복원한다', () {
@@ -695,7 +694,7 @@ void main() {
         env.async.elapse(const Duration(seconds: 30));
         final summary = env.repo.completed.single.$2;
         expect(summary.endedAt, startedAt.add(lastPointOffset));
-        expect(summary.movingTime, const Duration(seconds: 4));
+        expect(summary.movingTime, lastPointOffset);
         expect(env.view.autoEnded, isTrue);
         expect(env.notifier.shown.single.$1, _title);
       });
@@ -727,10 +726,15 @@ void main() {
         expect(restored, isFalse);
         final summary = env.repo.completed.single.$2;
         expect(summary.endedAt, startedAt.add(lastPointOffset));
-        expect(summary.movingTime, const Duration(seconds: 4));
+        expect(summary.movingTime, lastPointOffset);
         expect(
           summary.distanceM,
-          closeTo(_dist(0, 600) + _dist(600, 1200), 1e-9),
+          closeTo(
+            [
+              for (var i = 0; i < 400; i++) _dist(i * 3.0, (i + 1) * 3.0),
+            ].reduce((a, b) => a + b),
+            1e-9,
+          ),
         );
         expect(env.view.autoEnded, isTrue);
         expect(env.view.lastSummary, same(summary));

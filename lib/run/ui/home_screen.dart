@@ -78,7 +78,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('종료하고 저장'),
+            child: const Text('종료하기'),
           ),
           FilledButton(
             onPressed: () => Navigator.of(context).pop(true),

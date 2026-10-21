@@ -223,11 +223,11 @@ void main() {
     expect(find.text('1km 미만은 기록하지 않아요'), findsOneWidget);
   });
 
-  testWidgets('복구 다이얼로그의 종료하고 저장이 1km 미만이면 안내를 보인다', (tester) async {
+  testWidgets('복구 다이얼로그의 종료하기가 1km 미만이면 안내를 보인다', (tester) async {
     final c = _DiscardController(restore: true);
     await _pumpHome(tester, c);
     await _settle(tester);
-    await tester.tap(find.text('종료하고 저장'));
+    await tester.tap(find.text('종료하기'));
     await _settle(tester);
 
     expect(c.calls, ['restore', 'end']);

@@ -35,6 +35,7 @@ flowchart LR
     InRun <--> Paused["3 일시정지"]
     InRun -- "멈춤" --> Paused
     Paused -- "길게 눌러 종료" --> Summary["4 러닝 요약"]
+    Paused -- "1km 미만 종료" --> Home
     Summary --> Home
     Home -- "탭" --> Activity["5 기록"]
     Home -- "탭" --> Avatar["6 아바타"]

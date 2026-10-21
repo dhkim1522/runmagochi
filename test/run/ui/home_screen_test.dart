@@ -200,7 +200,7 @@ void main() {
     expect(find.text('러니 Lv.3'), findsOneWidget);
 
     g.holdLoad = Completer<void>();
-    await tester.tap(find.text('종료하고 저장'));
+    await tester.tap(find.text('종료하기'));
     await settle(tester);
     // load 가 아직 끝나지 않았다.
     expect(find.text('러니 Lv.3'), findsOneWidget);
@@ -210,7 +210,7 @@ void main() {
     expect(find.text('러니 Lv.3'), findsOneWidget);
   });
 
-  testWidgets('복구 다이얼로그에서 종료하고 저장은 end 후 홈에 남는다', (tester) async {
+  testWidgets('복구 다이얼로그에서 종료하기는 end 후 홈에 남는다', (tester) async {
     final g = FakeGrowthService(growthState(name: '콩떡'));
     final c = FakeController(restore: true);
     await pumpHome(tester, c, growth: g);
@@ -218,7 +218,7 @@ void main() {
     expect(find.text('콩떡 Lv.3'), findsOneWidget);
     final before = g.loads;
     g.state = growthState(name: '말랑이');
-    await tester.tap(find.text('종료하고 저장'));
+    await tester.tap(find.text('종료하기'));
     await settle(tester);
     expect(c.calls, ['restore', 'end']);
     expect(find.byType(InRunScreen), findsNothing);
