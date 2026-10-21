@@ -13,7 +13,7 @@ Flutter로 개발한다. 근거는 [결정 0004](decisions/0004-flutter.md).
 | 로컬 DB | `drift` (SQLite) | 마이그레이션·타입 안전 쿼리, 서버 동기화에 맞는 관계형 구조 |
 | 상태 관리 | `riverpod` (코드 생성 없이) | 기록 엔진의 이벤트 스트림을 화면에 연결 |
 | 아바타 렌더링 | 일반 위젯 + 스프라이트 시트 | 프레임을 Ticker 로 넘긴다. 게임 엔진 불필요 |
-| 로컬 알림 | `flutter_local_notifications` | 러닝 자동 종료·목표 달성 즉시 알림 |
+| 로컬 알림 | `flutter_local_notifications` | 러닝 진행 알림(거리·시간·목표 진행, 일시정지·재개 버튼), 종료 예고 알림, 자동 종료·목표 달성 즉시 알림 |
 
 배경 지도가 필요해지면 `maplibre_gl` 또는 `flutter_map` 에 OpenFreeMap 타일을 쓴다. Google Maps는 API 키와 Google Cloud 프로젝트가 필요해 쓰지 않는다.
 
@@ -21,7 +21,7 @@ Flutter로 개발한다. 근거는 [결정 0004](decisions/0004-flutter.md).
 
 ```mermaid
 flowchart TB
-    UI["화면 6개 · 하단 탭 3개"]
+    UI["화면 7개 · 하단 탭 4개(러닝·기록·아바타·상점)"]
     subgraph Domain["도메인"]
         Engine["기록 엔진<br/>GPS 수집·필터<br/>거리·페이스·구간"]
         Growth["성장 로직<br/>경험치·레벨·상태"]
@@ -57,14 +57,17 @@ flowchart TB
 | 엔티티 | 주요 필드 |
 | --- | --- |
 | Profile | 체중(kg, 없으면 칼로리 65kg 기준), 첫 실행 완료 시각 |
-| Avatar | 이름, 종류(chick·jelly·acorn 중 무작위, 바뀌지 않음, 결정 0011) (레벨·경험치는 XpTxn 합계, 마지막 러닝은 Runs 에서 계산) |
+| Avatar | 이름, 종류(chick·jelly·acorn 중 무작위, 바뀌지 않음, 결정 0011), 장착한 모자·소품 아이템 번호(없으면 비어 있음) (레벨·경험치는 XpTxn 합계, 마지막 러닝은 Runs 에서 계산) |
 | Run | 시작·종료 시각, 거리(m), 움직인 시간(초), 평균 페이스, 칼로리, 이름, 압축 경로, 오늘 목표 거리(m, 2026-10-20 이전 러닝은 없음) |
 | RunPoint | runId, segment, 시각, 위도, 경도, 정확도, 속도 (러닝 중에만 존재) |
 | Split | runId, km 순번, 시간, 페이스 |
 | WeeklyGoal | 주 시작일(현지 `YYYY-MM-DD`, 고유), 목표 거리(m), 달성 시각(없으면 미달성). 주간 목표가 후속 범위가 되어(결정 0018) 새로 쓰지 않고 기존 행만 남는다 |
 | XpTxn | 경험치(+), 사유(거리·오늘 목표 달성·주간 목표), runId 또는 주 시작일. (runId, 사유)·(주 시작일, 사유)는 고유해서 같은 러닝·주에 두 번 쌓이지 않는다. 주간 목표 행은 기존 것만 남는다 |
 
-경험치와 레벨은 XpTxn 합계로 계산한다. 코인(CoinTxn), 아이템, 배지 테이블은 후속 페이즈에서 같은 원칙으로 추가한다.
+| CoinTxn | 코인(지급 +, 구매 −), 사유(distance·runGoal·purchase), runId 또는 itemId. (runId, 사유)는 고유해서 같은 러닝에 두 번 쌓이지 않는다 |
+| OwnedItem | 보유한 아이템 번호. 아이템 번호는 고유해서 같은 아이템을 두 번 사지 않는다 |
+
+경험치와 레벨은 XpTxn 합계로, 코인 잔액은 CoinTxn 합계로 계산한다. 아이템 목록(이름·부위·가격)은 코드의 카탈로그(`lib/shop/domain/catalog.dart`)에 있고 DB 에는 보유와 장착만 둔다. 배지 테이블은 후속 페이즈에서 같은 원칙으로 추가한다.
 
 ### 경로 저장
 
