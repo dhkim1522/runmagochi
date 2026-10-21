@@ -32,4 +32,14 @@ void main() {
     expect(path.last.$1, greaterThan(37.5));
     expect(path.last.$2, greaterThan(127.0));
   });
+
+  test('멈춤 구간은 같은 좌표를 이어 보낸 뒤 경로를 이어 간다', () {
+    final path = buildPath(seconds: 4, speedMps: 3.0, lat: 37.5, lng: 127.0);
+    final stopped = withStop(path, stopAt: 2, stopFor: 3);
+
+    expect(stopped, hasLength(path.length + 3));
+    expect(stopped.take(3), path.take(3));
+    expect(stopped.sublist(3, 6), everyElement(path[2]));
+    expect(stopped.skip(6), path.skip(3));
+  });
 }

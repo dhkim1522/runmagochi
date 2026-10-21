@@ -1,6 +1,7 @@
 // 에뮬레이터에 가상 GPS 를 1초마다 주입한다.
 // 사용: fvm dart run tool/fake_run.dart --minutes 5 --speed 3.0 --lat 37.5260 --lng 126.9240
-// 선택: --seconds <초> (--minutes 대신), --adb <adb 경로>
+// 선택: --seconds <초> (--minutes 대신), --adb <adb 경로>,
+//       --stop-at <초> --stop-for <초> (그 초부터 그 시간 동안 같은 좌표를 보내 멈춘 기기를 흉내 낸 뒤 경로를 이어 간다)
 import 'dart:io';
 
 import 'package:runmagochi/run/domain/geo.dart';
@@ -19,8 +20,18 @@ Future<void> main(List<String> args) async {
   final lat = double.parse(opts['lat'] ?? '37.5260');
   final lng = double.parse(opts['lng'] ?? '126.9240');
   final adb = opts['adb'] ?? _findAdb();
+  final stopAt = int.tryParse(opts['stop-at'] ?? '');
+  final stopFor = int.parse(opts['stop-for'] ?? '0');
 
-  final path = buildPath(seconds: seconds, speedMps: speed, lat: lat, lng: lng);
+  final moving = buildPath(
+    seconds: seconds,
+    speedMps: speed,
+    lat: lat,
+    lng: lng,
+  );
+  final path = stopAt == null || stopFor <= 0
+      ? moving
+      : withStop(moving, stopAt: stopAt, stopFor: stopFor);
   var total = 0.0;
   for (var i = 0; i < path.length; i++) {
     final (pLat, pLng) = path[i];

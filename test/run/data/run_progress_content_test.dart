@@ -21,7 +21,7 @@ void main() {
       expect(c.title, '러닝 중 · 2.31km');
       expect(c.body, '목표 5km까지 2.69km');
       expect(c.elapsed, const Duration(minutes: 12, seconds: 34));
-      expect(c.action, RunProgressAction.pause);
+      expect(c.actions, [RunProgressAction.pause]);
     });
 
     test('목표 달성', () {
@@ -39,7 +39,7 @@ void main() {
       expect(c.title, '일시정지 · 2.31km · 12:34');
       expect(c.body, '목표 5km까지 2.69km');
       expect(c.elapsed, isNull);
-      expect(c.action, RunProgressAction.resume);
+      expect(c.actions, [RunProgressAction.resume]);
     });
 
     test('목표 달성·없음 본문은 기록 중과 같다', () {
@@ -49,12 +49,12 @@ void main() {
   });
 
   group('자동 일시정지', () {
-    test('멈춘 문구, 크로노미터 끔, 재개 버튼', () {
+    test('멈춘 문구, 크로노미터 끔, 재개·일시정지 버튼', () {
       final c = _content(RunState.autoPaused);
       expect(c.title, '멈춰서 일시정지했어요 · 2.31km');
       expect(c.body, '움직이면 이어져요');
       expect(c.elapsed, isNull);
-      expect(c.action, RunProgressAction.resume);
+      expect(c.actions, [RunProgressAction.resume, RunProgressAction.pause]);
     });
 
     test('목표와 상관없이 본문이 같다', () {

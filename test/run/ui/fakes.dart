@@ -347,6 +347,10 @@ class FakeProfile implements ProfileRepository {
 class FakeRunProgressNotifier implements RunProgressNotifier {
   final shown = <RunProgressContent>[];
   int cancels = 0;
+
+  /// 띄운 종료 예고의 끝날 시각.
+  final warnings = <DateTime>[];
+  int warningCancels = 0;
   bool fails = false;
 
   @override
@@ -359,5 +363,17 @@ class FakeRunProgressNotifier implements RunProgressNotifier {
   Future<void> cancel() async {
     if (fails) throw StateError('알림 실패');
     cancels++;
+  }
+
+  @override
+  Future<void> showEndWarning(DateTime deadline) async {
+    if (fails) throw StateError('알림 실패');
+    warnings.add(deadline);
+  }
+
+  @override
+  Future<void> cancelEndWarning() async {
+    if (fails) throw StateError('알림 실패');
+    warningCancels++;
   }
 }

@@ -129,6 +129,7 @@ class _Env {
   final location = _Location();
   final lifecycle = _Lifecycle();
   final notifier = _Notifier();
+  final progress = FakeRunProgressNotifier();
 
   RunController get controller =>
       container.read(runControllerProvider.notifier);
@@ -154,9 +155,7 @@ void _run(
       overrides: [
         runRepositoryProvider.overrideWithValue(env.repo),
         profileRepositoryProvider.overrideWithValue(_Profile()),
-        runProgressNotifierProvider.overrideWithValue(
-          FakeRunProgressNotifier(),
-        ),
+        runProgressNotifierProvider.overrideWithValue(env.progress),
         locationSourceProvider.overrideWithValue(env.location),
         appLifecycleProvider.overrideWithValue(env.lifecycle),
         clockProvider.overrideWithValue(() => _t0.add(async.elapsed)),
@@ -189,81 +188,205 @@ void main() {
     for (var i = 1; i < 5; i++) _dist(i * 3.0, (i + 1) * 3.0),
   ].reduce((a, b) => a + b);
 
-  test('기록 중 멈추면 자동 일시정지하고 10분 무점 규칙으로 끝내지 않는다', () {
-    _run((env) {
-      runFiveSamples(env);
-      env.async.elapse(const Duration(minutes: 30));
-      expect(env.view.snapshot.state, RunState.autoPaused);
-      expect(env.repo.completed, isEmpty);
-      env.controller.end();
-      env.async.flushMicrotasks();
+  /// 시작 기준 [at] 까지 흐르게 한다.
+  void elapseTo(_Env env, Duration at) =>
+      env.async.elapse(at - env.async.elapsed);
+
+  // 5초 점 뒤 10초(15초 틱)에 자동 일시정지하고, 멈춘 시각은 5초 점이다.
+  group('자동 일시정지 5분', () {
+    test('4분 59초엔 예고 없음, 5분에 예고 1회, 5분 29초 계속, 5분 30초에 멈춘 시각으로 끝낸다', () {
+      _run((env) {
+        runFiveSamples(env);
+        elapseTo(
+          env,
+          lastPointOffset + const Duration(minutes: 4, seconds: 59),
+        );
+        expect(env.view.snapshot.state, RunState.autoPaused);
+        expect(env.progress.warnings, isEmpty);
+
+        elapseTo(env, lastPointOffset + const Duration(minutes: 5));
+        final deadline = lastPoint.add(const Duration(minutes: 5, seconds: 30));
+        expect(env.progress.warnings, [deadline]);
+
+        elapseTo(
+          env,
+          lastPointOffset + const Duration(minutes: 5, seconds: 29),
+        );
+        expect(env.progress.warnings, hasLength(1));
+        expect(env.repo.completed, isEmpty);
+        expect(env.view.snapshot.state, RunState.autoPaused);
+
+        elapseTo(
+          env,
+          lastPointOffset + const Duration(minutes: 5, seconds: 30),
+        );
+        final summary = env.repo.completed.single.$2;
+        expect(summary.endedAt, lastPoint);
+        expect(summary.distanceM, closeTo(fiveDistance, 1e-9));
+        expect(summary.points, hasLength(5));
+        expect(summary.movingTime, const Duration(seconds: 5));
+        expect(env.view.autoEnded, isTrue);
+        expect(env.view.snapshot.state, RunState.idle);
+        expect(env.progress.warnings, hasLength(1));
+        expect(env.progress.warningCancels, 1);
+        expect(env.notifier.shown, [(_title, '0.01km 기록을 저장했어요. 요약에서 확인하세요.')]);
+      });
+    });
+
+    test('예고 중 움직이면 예고를 지우고 이어 간다', () {
+      _run((env) {
+        runFiveSamples(env);
+        elapseTo(env, lastPointOffset + const Duration(minutes: 5, seconds: 5));
+        expect(env.progress.warnings, hasLength(1));
+
+        // 10m 넘게 움직인 점 3개로 자동 재개한다.
+        final from = env.async.elapsed;
+        for (var i = 1; i <= 3; i++) {
+          env.sampleAt(from + Duration(seconds: i), 15.0 + i * 6);
+        }
+        expect(env.view.snapshot.state, RunState.recording);
+        expect(env.progress.warningCancels, 1);
+
+        for (var i = 4; i <= 40; i++) {
+          env.sampleAt(from + Duration(seconds: i), 15.0 + i * 6);
+        }
+        expect(env.repo.completed, isEmpty);
+        expect(env.view.snapshot.state, RunState.recording);
+        expect(env.progress.warnings, hasLength(1));
+        env.controller.end();
+        env.async.flushMicrotasks();
+      });
+    });
+
+    test('예고 중 재개를 누르면 예고를 지우고 이어 간다', () {
+      _run((env) {
+        runFiveSamples(env);
+        elapseTo(env, lastPointOffset + const Duration(minutes: 5, seconds: 5));
+        expect(env.progress.warnings, hasLength(1));
+
+        env.controller.resume();
+        expect(env.view.snapshot.state, RunState.recording);
+        expect(env.progress.warningCancels, 1);
+
+        env.async.elapse(const Duration(minutes: 1));
+        expect(env.repo.completed, isEmpty);
+        env.controller.end();
+        env.async.flushMicrotasks();
+      });
+    });
+
+    test('멈춘 뒤 제자리에서 받은 점은 끝낼 때 잘라낸다', () {
+      _run((env) {
+        runFiveSamples(env);
+        // 6~14초 점은 5m 안에서 흔들려 받아들이지만 움직임은 아니다.
+        for (var i = 6; i <= 14; i++) {
+          env.sampleAt(Duration(seconds: i), i.isEven ? 16.0 : 15.0);
+        }
+        elapseTo(
+          env,
+          lastPointOffset + const Duration(minutes: 5, seconds: 30),
+        );
+        final summary = env.repo.completed.single.$2;
+        expect(summary.endedAt, lastPoint);
+        expect(summary.points, hasLength(5));
+        expect(summary.distanceM, closeTo(fiveDistance, 1e-9));
+        // 움직인 시간은 멈춘 시각에서 이미 멈춰 있다.
+        expect(summary.movingTime, const Duration(seconds: 5));
+      });
+    });
+
+    test('3분 뒤 사용자 일시정지로 바꾸면 거기서 1시간을 세고 처음 멈춘 시각으로 끝낸다', () {
+      _run((env) {
+        runFiveSamples(env);
+        final switchAt = lastPointOffset + const Duration(minutes: 3);
+        elapseTo(env, switchAt);
+        env.controller.pause();
+        expect(env.view.snapshot.state, RunState.paused);
+
+        elapseTo(env, switchAt + const Duration(minutes: 59, seconds: 59));
+        expect(env.repo.completed, isEmpty);
+        expect(env.progress.warnings, isEmpty);
+
+        elapseTo(env, switchAt + const Duration(hours: 1));
+        expect(env.progress.warnings, [
+          _t0.add(switchAt + const Duration(hours: 1, seconds: 30)),
+        ]);
+        elapseTo(env, switchAt + const Duration(hours: 1, seconds: 30));
+        final summary = env.repo.completed.single.$2;
+        expect(summary.endedAt, lastPoint);
+        expect(summary.movingTime, const Duration(seconds: 5));
+        expect(env.view.autoEnded, isTrue);
+        expect(env.notifier.shown.single.$1, _title);
+      });
+    });
+
+    test('예고 중 사용자 일시정지로 바꾸면 예고를 지우고 1시간을 다시 센다', () {
+      _run((env) {
+        runFiveSamples(env);
+        elapseTo(env, lastPointOffset + const Duration(minutes: 5, seconds: 5));
+        expect(env.progress.warnings, hasLength(1));
+
+        env.controller.pause();
+        expect(env.progress.warningCancels, 1);
+        env.async.elapse(const Duration(minutes: 30));
+        expect(env.repo.completed, isEmpty);
+        expect(env.progress.warnings, hasLength(1));
+        env.controller.end();
+        env.async.flushMicrotasks();
+      });
     });
   });
 
-  test('기록 중 마지막 점 뒤 무점 기준 1초 전엔 계속, 기준엔 마지막 점으로 끝낸다', () {
-    // 자동 일시정지(마지막 점 뒤 10초)보다 짧은 기준으로 기록 중 규칙을 본다.
-    _run(config: const RunGuardConfig(idle: Duration(seconds: 8)), (env) {
-      runFiveSamples(env);
-      env.async.elapse(const Duration(seconds: 7));
-      expect(env.view.snapshot.state, RunState.recording);
-      expect(env.repo.completed, isEmpty);
+  group('사용자 일시정지 1시간', () {
+    test('1시간에 예고하고 1시간 30초에 일시정지한 시각으로 끝낸다', () {
+      _run((env) {
+        runFiveSamples(env);
+        env.controller.pause();
+        elapseTo(
+          env,
+          lastPointOffset + const Duration(minutes: 59, seconds: 59),
+        );
+        expect(env.view.snapshot.state, RunState.paused);
+        expect(env.progress.warnings, isEmpty);
 
-      env.async.elapse(const Duration(seconds: 1));
-      final (runId, summary) = env.repo.completed.single;
-      expect(runId, _runId);
-      expect(summary.endedAt, lastPoint);
-      expect(summary.distanceM, closeTo(fiveDistance, 1e-9));
-      expect(summary.points, hasLength(5));
-      // 잘라낸 시간은 움직인 시간에서 빠진다.
-      expect(summary.movingTime, const Duration(seconds: 5));
-      expect(env.view.autoEnded, isTrue);
-      expect(env.view.lastSummary, same(summary));
-      expect(env.view.snapshot.state, RunState.idle);
-      expect(env.view.runId, isNull);
-      expect(env.notifier.shown, [(_title, '0.01km 기록을 저장했어요. 요약에서 확인하세요.')]);
+        elapseTo(env, lastPointOffset + const Duration(hours: 1));
+        expect(env.progress.warnings, [
+          lastPoint.add(const Duration(hours: 1, seconds: 30)),
+        ]);
+        elapseTo(env, lastPointOffset + const Duration(hours: 1, seconds: 29));
+        expect(env.repo.completed, isEmpty);
+
+        elapseTo(env, lastPointOffset + const Duration(hours: 1, seconds: 30));
+        final summary = env.repo.completed.single.$2;
+        expect(summary.endedAt, lastPoint);
+        expect(summary.distanceM, closeTo(fiveDistance, 1e-9));
+        expect(summary.movingTime, const Duration(seconds: 5));
+        expect(env.view.autoEnded, isTrue);
+        expect(env.progress.warningCancels, 1);
+        expect(env.notifier.shown.single.$1, _title);
+      });
+    });
+
+    test('30분이 지나도 끝내지 않는다', () {
+      _run((env) {
+        runFiveSamples(env);
+        env.controller.pause();
+        env.async.elapse(const Duration(minutes: 30));
+        expect(env.view.snapshot.state, RunState.paused);
+        expect(env.repo.completed, isEmpty);
+        expect(env.notifier.shown, isEmpty);
+        env.controller.end();
+        env.async.flushMicrotasks();
+      });
     });
   });
 
-  test('일시정지 중에는 30분이 지나도 끝내지 않는다', () {
-    _run((env) {
-      runFiveSamples(env);
-      env.controller.pause();
-      env.async.elapse(const Duration(minutes: 30));
-      expect(env.view.snapshot.state, RunState.paused);
-      expect(env.repo.completed, isEmpty);
-      expect(env.notifier.shown, isEmpty);
-      env.controller.end();
-      env.async.flushMicrotasks();
-    });
-  });
-
-  test('재개하면 무점 기준을 재개 시각부터 다시 센다', () {
-    _run(config: const RunGuardConfig(idle: Duration(seconds: 8)), (env) {
-      runFiveSamples(env);
-      env.controller.pause();
-      env.async.elapse(const Duration(minutes: 30));
-      env.controller.resume();
-      final resumedAt = _t0.add(env.async.elapsed);
-      env.async.elapse(const Duration(seconds: 7));
-      expect(env.repo.completed, isEmpty);
-
-      env.async.elapse(const Duration(seconds: 1));
-      final summary = env.repo.completed.single.$2;
-      expect(summary.endedAt, resumedAt);
-      expect(summary.distanceM, closeTo(fiveDistance, 1e-9));
-      // 일시정지 전 움직인 시간만 남는다.
-      expect(summary.movingTime, const Duration(seconds: 5));
-    });
-  });
-
-  test('일시정지 중에도 시작 6시간이면 끝내고 끝 시각은 마지막 점', () {
-    _run((env) {
+  test('일시정지 중에도 시작부터 상한이면 끝내고 끝 시각은 마지막 점', () {
+    _run(config: const RunGuardConfig(max: Duration(minutes: 30)), (env) {
       runFiveSamples(env);
       env.async.elapse(const Duration(seconds: 5));
       env.controller.pause();
-      env.async.elapse(
-        const Duration(hours: 5, minutes: 59, seconds: 59) - env.async.elapsed,
-      );
+      elapseTo(env, const Duration(minutes: 29, seconds: 59));
       expect(env.repo.completed, isEmpty);
 
       env.async.elapse(const Duration(seconds: 1));
@@ -292,22 +415,36 @@ void main() {
   });
 
   test('provider 로 줄인 기준을 따른다', () {
-    _run(config: const RunGuardConfig(idle: Duration(seconds: 9)), (env) {
+    const config = RunGuardConfig(
+      still: Duration(seconds: 20),
+      warning: Duration(seconds: 5),
+    );
+    _run(config: config, (env) {
       runFiveSamples(env);
-      env.async.elapse(const Duration(seconds: 8));
+      elapseTo(env, lastPointOffset + const Duration(seconds: 20));
+      expect(env.progress.warnings, [
+        lastPoint.add(const Duration(seconds: 25)),
+      ]);
+      elapseTo(env, lastPointOffset + const Duration(seconds: 24));
       expect(env.repo.completed, isEmpty);
-      env.async.elapse(const Duration(seconds: 1));
+      elapseTo(env, lastPointOffset + const Duration(seconds: 25));
       expect(env.repo.completed.single.$2.endedAt, lastPoint);
     });
   });
 
   test('화면으로 돌아올 때도 판정한다', () {
-    _run(config: const RunGuardConfig(idle: Duration(milliseconds: 1500)), (
-      env,
-    ) {
+    const config = RunGuardConfig(
+      still: Duration(seconds: 11),
+      warning: Duration(milliseconds: 500),
+    );
+    _run(config: config, (env) {
       runFiveSamples(env);
-      // 다음 틱(1초 단위) 전에 화면 복귀로 판정한다.
-      env.async.elapse(const Duration(milliseconds: 1600));
+      // 15초 틱에 자동 일시정지, 16초 틱에 예고. 17초 틱 전에 화면 복귀로 판정한다.
+      env.async.elapse(
+        lastPointOffset +
+            const Duration(seconds: 11, milliseconds: 600) -
+            env.async.elapsed,
+      );
       expect(env.repo.completed, isEmpty);
       env.lifecycle.set(AppLifecycleState.resumed);
       env.async.flushMicrotasks();
@@ -316,7 +453,7 @@ void main() {
   });
 
   test('저장이 실패하면 lastError, 다시 end 하면 자동 종료로 저장하고 알린다', () {
-    _run(config: const RunGuardConfig(idle: Duration(seconds: 8)), (env) {
+    _run((env) {
       runFiveSamples(env);
       env.repo.completeError = StateError('db');
       env.async.elapse(const Duration(minutes: 20));
@@ -334,8 +471,9 @@ void main() {
   });
 
   test('알림이 실패해도 러닝은 저장된다', () {
-    _run(config: const RunGuardConfig(idle: Duration(seconds: 8)), (env) {
+    _run((env) {
       env.notifier.fails = true;
+      env.progress.fails = true;
       runFiveSamples(env);
       env.async.elapse(const Duration(minutes: 20));
       expect(env.repo.completed, hasLength(1));
@@ -484,7 +622,7 @@ void main() {
       movingTime: const Duration(seconds: 4),
     );
 
-    test('마지막 점 뒤 30분이어도 6시간 전이면 그대로 복원한다 (10분 규칙 미적용)', () {
+    test('마지막 점 뒤 30분이어도 6시간 전이면 그대로 복원한다', () {
       final startedAt = _t0.subtract(
         lastPointOffset + const Duration(minutes: 30),
       );
@@ -500,6 +638,28 @@ void main() {
         expect(env.notifier.shown, isEmpty);
         env.controller.end();
         env.async.flushMicrotasks();
+      });
+    });
+
+    test('복원한 러닝은 사용자 일시정지로 열려 복원 시각부터 1시간 규칙을 따른다', () {
+      final startedAt = _t0.subtract(const Duration(minutes: 30));
+      _run(activeRun: active(startedAt), (env) {
+        env.controller.restoreIfAny();
+        env.async.flushMicrotasks();
+        expect(env.view.snapshot.state, RunState.paused);
+
+        env.async.elapse(const Duration(minutes: 59, seconds: 59));
+        expect(env.progress.warnings, isEmpty);
+        env.async.elapse(const Duration(seconds: 1));
+        expect(env.progress.warnings, [
+          _t0.add(const Duration(hours: 1, seconds: 30)),
+        ]);
+        env.async.elapse(const Duration(seconds: 30));
+        final summary = env.repo.completed.single.$2;
+        expect(summary.endedAt, startedAt.add(lastPointOffset));
+        expect(summary.movingTime, const Duration(seconds: 4));
+        expect(env.view.autoEnded, isTrue);
+        expect(env.notifier.shown.single.$1, _title);
       });
     });
 

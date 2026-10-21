@@ -103,15 +103,25 @@ void main() {
     expect(find.textContaining('kcal'), findsNothing);
   });
 
-  testWidgets('자동 일시정지면 멈춘 제목과 안내, 재개·종료 버튼이 보인다', (tester) async {
+  testWidgets('자동 일시정지면 멈춘 제목과 안내, 재개·일시정지·종료 버튼이 보인다', (tester) async {
     final c = await open(tester, initial: snap(RunState.autoPaused));
     expect(find.text('멈춰서 일시정지했어요'), findsOneWidget);
     expect(find.text('움직이면 이어져요'), findsOneWidget);
-    expect(find.text('일시정지'), findsNothing);
+    expect(find.widgetWithText(ClayButton, '일시정지'), findsOneWidget);
     expect(find.text('길게 눌러 종료'), findsOneWidget);
     await tester.tap(find.text('재개'));
     await tester.pump();
     expect(c.calls, ['resume']);
+  });
+
+  testWidgets('자동 일시정지에서 일시정지를 누르면 pause 가 불리고 사용자 일시정지가 된다', (tester) async {
+    final c = await open(tester, initial: snap(RunState.autoPaused));
+    await tester.tap(find.widgetWithText(ClayButton, '일시정지'));
+    await tester.pump();
+    expect(c.calls, ['pause']);
+    expect(find.text('멈춰서 일시정지했어요'), findsNothing);
+    expect(find.widgetWithText(ClayButton, '일시정지'), findsNothing);
+    expect(find.text('재개'), findsOneWidget);
   });
 
   testWidgets('재개 버튼은 resume 을 부른다', (tester) async {

@@ -14,7 +14,7 @@ class RunProgressContent {
     required this.title,
     required this.body,
     required this.elapsed,
-    required this.action,
+    required this.actions,
   });
 
   final String title;
@@ -22,7 +22,9 @@ class RunProgressContent {
 
   /// 있으면 알림이 크로노미터로 시간을 올린다(`when = 지금 - elapsed`).
   final Duration? elapsed;
-  final RunProgressAction action;
+
+  /// 알림 버튼. 앞에서부터 놓인다.
+  final List<RunProgressAction> actions;
 
   @override
   bool operator ==(Object other) =>
@@ -30,23 +32,29 @@ class RunProgressContent {
       other.title == title &&
       other.body == body &&
       other.elapsed == elapsed &&
-      other.action == action;
+      listEquals(other.actions, actions);
 
   @override
-  int get hashCode => Object.hash(title, body, elapsed, action);
+  int get hashCode =>
+      Object.hash(title, body, elapsed, Object.hashAll(actions));
 
   @override
   String toString() =>
-      'RunProgressContent($title | $body | $elapsed | $action)';
+      'RunProgressContent($title | $body | $elapsed | $actions)';
 }
 
-/// 러닝 중 알림창에 거리·시간·목표 진행을 보인다.
+/// 러닝 중 알림창에 거리·시간·목표 진행을 보이고, 오래 멈추면 종료를 예고한다.
 abstract interface class RunProgressNotifier {
   Future<void> show(RunProgressContent content);
   Future<void> cancel();
+
+  /// [deadline] 에 러닝을 끝낸다고 진동과 카운트다운으로 알린다 (결정 0020).
+  Future<void> showEndWarning(DateTime deadline);
+  Future<void> cancelEndWarning();
 }
 
 /// 상태·거리·목표로 알림 문구를 만든다. 기록 중과 일시정지·자동 일시정지 중만 다룬다.
+/// 자동 일시정지는 재개와 함께 사용자 일시정지로 바꾸는 버튼을 둔다(오래 쉴 때).
 RunProgressContent runProgressContent({
   required RunState state,
   required double distanceM,
@@ -60,7 +68,7 @@ RunProgressContent runProgressContent({
       title: '멈춰서 일시정지했어요 · $km',
       body: '움직이면 이어져요',
       elapsed: null,
-      action: RunProgressAction.resume,
+      actions: [RunProgressAction.resume, RunProgressAction.pause],
     );
   }
   final String body;
@@ -76,14 +84,14 @@ RunProgressContent runProgressContent({
       title: '일시정지 · $km · ${formatDuration(movingTime)}',
       body: body,
       elapsed: null,
-      action: RunProgressAction.resume,
+      actions: [RunProgressAction.resume],
     );
   }
   return RunProgressContent(
     title: '러닝 중 · $km',
     body: body,
     elapsed: movingTime,
-    action: RunProgressAction.pause,
+    actions: [RunProgressAction.pause],
   );
 }
 
@@ -100,13 +108,27 @@ class LocalRunProgressNotifier implements RunProgressNotifier {
   static const pauseActionId = 'run_pause';
   static const resumeActionId = 'run_resume';
 
+  /// 종료 예고 알림. 러닝 알림과 따로 띄워 진동한다.
+  static const endWarningId = 1001;
+  static const endWarningChannelId = 'run_end_warning';
+
+  static const _pauseAction = AndroidNotificationAction(
+    pauseActionId,
+    '일시정지',
+    showsUserInterface: false,
+  );
+  static const _resumeAction = AndroidNotificationAction(
+    resumeActionId,
+    '재개',
+    showsUserInterface: false,
+  );
+
   final FlutterLocalNotificationsPlugin _plugin;
 
   @override
   Future<void> show(RunProgressContent content) async {
     try {
       await ensureLocalNotificationsInitialized(_plugin);
-      final resume = content.action == RunProgressAction.resume;
       final elapsed = content.elapsed;
       await _plugin.show(
         id: notificationId,
@@ -130,11 +152,11 @@ class LocalRunProgressNotifier implements RunProgressNotifier {
                 : DateTime.now().subtract(elapsed).millisecondsSinceEpoch,
             usesChronometer: elapsed != null,
             actions: [
-              AndroidNotificationAction(
-                resume ? resumeActionId : pauseActionId,
-                resume ? '재개' : '일시정지',
-                showsUserInterface: false,
-              ),
+              for (final action in content.actions)
+                switch (action) {
+                  RunProgressAction.resume => _resumeAction,
+                  RunProgressAction.pause => _pauseAction,
+                },
             ],
           ),
         ),
@@ -152,6 +174,47 @@ class LocalRunProgressNotifier implements RunProgressNotifier {
       await _plugin.cancel(id: notificationId);
     } catch (e, st) {
       debugPrint('알림: 러닝 진행 알림 취소 실패 $e\n$st');
+      rethrow;
+    }
+  }
+
+  @override
+  Future<void> showEndWarning(DateTime deadline) async {
+    try {
+      await ensureLocalNotificationsInitialized(_plugin);
+      await _plugin.show(
+        id: endWarningId,
+        title: '움직이지 않으면 러닝을 마쳐요',
+        body: '30초 안에 움직이거나 재개를 누르세요',
+        notificationDetails: NotificationDetails(
+          android: AndroidNotificationDetails(
+            endWarningChannelId,
+            '러닝 종료 예고',
+            channelDescription: '오래 멈추면 러닝을 마치기 전에 알려 줘요',
+            importance: Importance.high,
+            priority: Priority.high,
+            enableVibration: true,
+            showWhen: true,
+            when: deadline.millisecondsSinceEpoch,
+            usesChronometer: true,
+            chronometerCountDown: true,
+            actions: const [_resumeAction],
+          ),
+        ),
+      );
+    } catch (e, st) {
+      debugPrint('알림: 종료 예고 알림 실패 $e\n$st');
+      rethrow;
+    }
+  }
+
+  @override
+  Future<void> cancelEndWarning() async {
+    try {
+      await ensureLocalNotificationsInitialized(_plugin);
+      await _plugin.cancel(id: endWarningId);
+    } catch (e, st) {
+      debugPrint('알림: 종료 예고 알림 취소 실패 $e\n$st');
       rethrow;
     }
   }

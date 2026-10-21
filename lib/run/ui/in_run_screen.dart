@@ -208,7 +208,29 @@ class _InRunScreenState extends ConsumerState<InRunScreen> {
                     ),
                   ]),
                   Expanded(child: Center(child: avatarStage)),
-                  if (!ended) ...[
+                  if (autoPaused) ...[
+                    // 오래 쉴 때는 사용자 일시정지로 바꿔 5분 자동 종료를 피한다.
+                    Row(
+                      children: [
+                        Expanded(
+                          child: ClayButton.accent(
+                            context,
+                            label: '재개',
+                            onPressed: _ending ? null : controller.resume,
+                          ),
+                        ),
+                        const SizedBox(width: Gap.s3),
+                        Expanded(
+                          child: ClayButton.secondary(
+                            context,
+                            label: '일시정지',
+                            onPressed: _ending ? null : controller.pause,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: Gap.s2),
+                  ] else if (!ended) ...[
                     ClayButton.accent(
                       context,
                       label: '재개',

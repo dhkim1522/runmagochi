@@ -119,6 +119,9 @@ class RunController extends Notifier<RunViewState> {
   String? _progressKm;
   DateTime? _progressShownAt;
 
+  /// 띄워 둔 종료 예고의 끝날 시각. 예고가 없으면 null.
+  DateTime? _endWarningDeadline;
+
   /// 진행 중 러닝의 목표(m).
   double? _goalM;
 
@@ -322,11 +325,11 @@ class RunController extends Notifier<RunViewState> {
   }
 
   /// 복구한 러닝이 있으면 true, 상태 paused. 위치 구독은 resume 때 한다.
+  /// 복구한 러닝은 사용자 일시정지로 보고 복구 시각부터 1시간 규칙을 센다.
   ///
   /// 복구한 러닝이 시작 6시간을 넘었으면 묻지 않고 끝내고 false 를 돌려준다
-  /// (상태 autoEnded, lastSummary 에 요약). 일시정지 여부를 저장하지 않아
-  /// 10분 규칙은 적용하지 않는다. 자동 종료 저장이 실패하면 러닝을 남기고
-  /// true 를 돌려준다.
+  /// (상태 autoEnded, lastSummary 에 요약). 자동 종료 저장이 실패하면 러닝을
+  /// 남기고 true 를 돌려준다.
   Future<bool> restoreIfAny() async {
     _requireNoRun();
     final active = await _repository.findActiveRun();
@@ -348,8 +351,9 @@ class RunController extends Notifier<RunViewState> {
     final decision = checkAutoEnd(
       now: ref.read(clockProvider)(),
       startedAt: active.startedAt,
-      // 일시정지 여부를 저장하지 않으므로 6시간 상한만 본다.
-      recording: false,
+      state: engine.state,
+      pausedAt: engine.pausedAt,
+      stateSince: engine.stateSince,
       lastPointAt: engine.lastPointAt,
       recordingSince: null,
       config: ref.read(runGuardConfigProvider),
@@ -363,6 +367,7 @@ class RunController extends Notifier<RunViewState> {
       }
     }
     _startFlushTimer();
+    _startTick();
     return true;
   }
 
@@ -371,7 +376,6 @@ class RunController extends Notifier<RunViewState> {
     final engine = _engine;
     if (engine == null || _ending || _pendingSummary != null) return false;
     final runState = engine.state;
-    // 자동 일시정지도 일시정지처럼 6시간 상한만 본다.
     if (runState != RunState.recording &&
         runState != RunState.paused &&
         runState != RunState.autoPaused) {
@@ -380,7 +384,9 @@ class RunController extends Notifier<RunViewState> {
     final decision = checkAutoEnd(
       now: ref.read(clockProvider)(),
       startedAt: engine.startedAt!,
-      recording: runState == RunState.recording,
+      state: runState,
+      pausedAt: engine.pausedAt,
+      stateSince: engine.stateSince,
       lastPointAt: engine.lastPointAt,
       recordingSince: engine.recordingSince,
       fastSince: engine.fastSince,
@@ -407,17 +413,29 @@ class RunController extends Notifier<RunViewState> {
   }
 
   /// [summary] 의 끝을 [endAt] 으로 당긴다. 기록 중에 끝낸 요약은 잘라내기로
-  /// 다시 계산한다. 일시정지 중에 끝낸 요약은 [endAt] 뒤에 점이 없고 움직인
-  /// 시간도 멈춰 있으므로 끝 시각만 바꾼다(잘라내기는 일시정지 시간까지
-  /// 움직인 시간에서 뺀다).
+  /// 다시 계산한다.
+  ///
+  /// 일시정지·자동 일시정지 중에 끝낸 요약은 움직인 시간이 기록이 멈춘 시각
+  /// 에서 이미 멈춰 있다. [endAt] 뒤에 점이 없으면 끝 시각만 바꾼다(잘라내기
+  /// 는 일시정지 시간까지 움직인 시간에서 뺀다). 멈춘 뒤 제자리에서 받아들인
+  /// 점이 있으면 마지막 구간이 그 점까지 기록된 것으로 보고 잘라내, 점·거리는
+  /// 버리고 움직인 시간은 그대로 둔다.
   RunSummary _endAt(RunSummary summary, DateTime endAt, {required bool trim}) {
     if (!endAt.isBefore(summary.endedAt)) return summary;
     if (trim) return trimRunEnd(summary, endAt, weightKg: _weightKg);
-    return RunSummary(
+    final last = summary.segments.lastOrNull;
+    final lastAt = last?.last.time;
+    final afterEnd = lastAt != null && lastAt.isAfter(endAt);
+    final recordedFrom = !afterEnd || last!.first.time.isBefore(endAt)
+        ? endAt
+        : last.first.time;
+    final asRecorded = RunSummary(
       startedAt: summary.startedAt,
-      endedAt: endAt,
+      endedAt: afterEnd ? lastAt : endAt,
       distanceM: summary.distanceM,
-      movingTime: summary.movingTime,
+      movingTime: afterEnd
+          ? summary.movingTime + lastAt.difference(recordedFrom)
+          : summary.movingTime,
       avgPaceSecPerKm: summary.avgPaceSecPerKm,
       calories: summary.calories,
       name: summary.name,
@@ -425,6 +443,8 @@ class RunController extends Notifier<RunViewState> {
       points: summary.points,
       segments: summary.segments,
     );
+    if (!afterEnd) return asRecorded;
+    return trimRunEnd(asRecorded, endAt, weightKg: _weightKg);
   }
 
   /// 알림 실패는 러닝 저장과 상관없으므로 버린다.
@@ -631,6 +651,43 @@ class RunController extends Notifier<RunViewState> {
     state = _copyState(snapshot: snapshot, runId: _runId, clearError: clear);
     if (reachedNow) _notifyGoalReached(goal);
     _updateProgress(snapshot);
+    _syncEndWarning(engine);
+  }
+
+  /// 오래 멈춤 예고 구간에 들어가면 종료 예고를 한 번 띄우고, 구간을 벗어나면
+  /// (재개·일시정지 상태 바뀜·종료) 지운다. 알림 실패는 러닝과 상관없으므로 버린다.
+  void _syncEndWarning(RunEngine engine) {
+    final deadline = _ending || _pendingSummary != null
+        ? null
+        : autoEndWarningDeadline(
+            now: ref.read(clockProvider)(),
+            state: engine.state,
+            stateSince: engine.stateSince,
+            config: ref.read(runGuardConfigProvider),
+          );
+    if (deadline == _endWarningDeadline) return;
+    final shown = _endWarningDeadline != null;
+    _endWarningDeadline = deadline;
+    final notifier = ref.read(runProgressNotifierProvider);
+    try {
+      if (deadline == null) {
+        if (shown) {
+          unawaited(
+            notifier.cancelEndWarning().catchError(
+              (Object e) => debugPrint('알림: 종료 예고 취소 실패 $e'),
+            ),
+          );
+        }
+      } else {
+        unawaited(
+          notifier
+              .showEndWarning(deadline)
+              .catchError((Object e) => debugPrint('알림: 종료 예고 실패 $e')),
+        );
+      }
+    } catch (e) {
+      debugPrint('알림: 종료 예고 실패 $e');
+    }
   }
 
   /// 러닝 알림을 갱신한다. 상태가 바뀌면 바로, 기록 중 거리만 바뀌면 화면

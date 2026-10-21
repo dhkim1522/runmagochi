@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:runmagochi/run/app/run_guard.dart';
+import 'package:runmagochi/run/domain/run_engine.dart';
 
 final _start = DateTime(2026, 10, 18, 7);
 
@@ -7,13 +8,17 @@ DateTime _at(Duration d) => _start.add(d);
 
 void main() {
   parseTests();
-  test('기본값은 10분·6시간', () {
-    expect(autoEndIdle, const Duration(minutes: 10));
+  test('기본값은 자동 일시정지 5분·사용자 일시정지 1시간·예고 30초·6시간·빠른 이동 30초', () {
+    expect(autoEndStill, const Duration(minutes: 5));
+    expect(autoEndPaused, const Duration(hours: 1));
+    expect(autoEndWarning, const Duration(seconds: 30));
     expect(autoEndMax, const Duration(hours: 6));
-    const config = RunGuardConfig();
-    expect(config.idle, autoEndIdle);
-    expect(config.max, autoEndMax);
     expect(autoEndFast, const Duration(seconds: 30));
+    const config = RunGuardConfig();
+    expect(config.still, autoEndStill);
+    expect(config.paused, autoEndPaused);
+    expect(config.warning, autoEndWarning);
+    expect(config.max, autoEndMax);
     expect(config.fast, autoEndFast);
   });
 
@@ -23,15 +28,17 @@ void main() {
 
     AutoEndDecision? check(
       Duration afterFast, {
-      bool recording = true,
+      RunState state = RunState.recording,
       DateTime? beforeFastAt,
       DateTime? lastPointAt,
     }) => checkAutoEnd(
       now: fastSince.add(afterFast),
       startedAt: _start,
-      recording: recording,
+      state: state,
+      pausedAt: state == RunState.recording ? null : before,
+      stateSince: state == RunState.recording ? _start : fastSince,
       lastPointAt: lastPointAt ?? before,
-      recordingSince: _start,
+      recordingSince: state == RunState.recording ? _start : null,
       fastSince: fastSince,
       fastLastAt: fastSince.add(afterFast),
       beforeFastAt: beforeFastAt,
@@ -53,7 +60,9 @@ void main() {
       final d = checkAutoEnd(
         now: fastSince.add(const Duration(seconds: 30)),
         startedAt: _start,
-        recording: true,
+        state: RunState.recording,
+        pausedAt: null,
+        stateSince: _start,
         lastPointAt: null,
         recordingSince: null,
         fastSince: fastSince,
@@ -66,7 +75,9 @@ void main() {
       final d = checkAutoEnd(
         now: fastSince.add(const Duration(minutes: 5)),
         startedAt: _start,
-        recording: true,
+        state: RunState.recording,
+        pausedAt: null,
+        stateSince: _start,
         lastPointAt: before,
         recordingSince: _start,
         fastSince: fastSince,
@@ -76,36 +87,22 @@ void main() {
       expect(d, isNull);
     });
 
-    test('일시정지 중에는 적용하지 않는다', () {
-      expect(
-        check(
-          const Duration(minutes: 1),
-          recording: false,
-          beforeFastAt: before,
-        ),
-        isNull,
-      );
-    });
-
-    test('10분 규칙보다 먼저 본다', () {
-      final d = checkAutoEnd(
-        now: _at(const Duration(minutes: 40)),
-        startedAt: _start,
-        recording: true,
-        lastPointAt: _start,
-        recordingSince: _start,
-        fastSince: _at(const Duration(minutes: 39, seconds: 30)),
-        fastLastAt: _at(const Duration(minutes: 40)),
-        beforeFastAt: _at(const Duration(minutes: 1)),
-      );
-      expect(d?.reason, AutoEndReason.fast);
+    test('일시정지·자동 일시정지 중에는 적용하지 않는다', () {
+      for (final state in [RunState.paused, RunState.autoPaused]) {
+        expect(
+          check(const Duration(minutes: 1), state: state, beforeFastAt: before),
+          isNull,
+        );
+      }
     });
 
     test('config.fast 로 줄인다', () {
       final d = checkAutoEnd(
         now: fastSince.add(const Duration(seconds: 5)),
         startedAt: _start,
-        recording: true,
+        state: RunState.recording,
+        pausedAt: null,
+        stateSince: _start,
         lastPointAt: before,
         recordingSince: _start,
         fastSince: fastSince,
@@ -117,87 +114,147 @@ void main() {
     });
   });
 
-  group('기록 중 10분 규칙', () {
-    final lastPoint = _at(const Duration(minutes: 10));
+  group('오래 멈춤 규칙', () {
+    final pausedAt = _at(const Duration(minutes: 10));
 
-    test('마지막 점 뒤 9분 59초면 계속', () {
-      final d = checkAutoEnd(
-        now: lastPoint.add(const Duration(minutes: 9, seconds: 59)),
+    AutoEndDecision? check(
+      RunState state,
+      Duration afterStateSince, {
+      DateTime? stateSince,
+      RunGuardConfig config = const RunGuardConfig(),
+    }) {
+      final since = stateSince ?? pausedAt;
+      return checkAutoEnd(
+        now: since.add(afterStateSince),
         startedAt: _start,
-        recording: true,
-        lastPointAt: lastPoint,
-        recordingSince: _start,
-      );
-      expect(d, isNull);
-    });
-
-    test('마지막 점 뒤 10분이면 종료, 끝 시각은 마지막 점', () {
-      final d = checkAutoEnd(
-        now: lastPoint.add(const Duration(minutes: 10)),
-        startedAt: _start,
-        recording: true,
-        lastPointAt: lastPoint,
-        recordingSince: _start,
-      );
-      expect(d?.reason, AutoEndReason.idle);
-      expect(d?.endAt, lastPoint);
-    });
-
-    test('재개 뒤에는 재개 시각부터 다시 센다', () {
-      final resumedAt = _at(const Duration(minutes: 40));
-      final keep = checkAutoEnd(
-        now: resumedAt.add(const Duration(minutes: 9)),
-        startedAt: _start,
-        recording: true,
-        lastPointAt: lastPoint,
-        recordingSince: resumedAt,
-      );
-      expect(keep, isNull);
-
-      final end = checkAutoEnd(
-        now: resumedAt.add(const Duration(minutes: 10)),
-        startedAt: _start,
-        recording: true,
-        lastPointAt: lastPoint,
-        recordingSince: resumedAt,
-      );
-      expect(end?.reason, AutoEndReason.idle);
-      expect(end?.endAt, resumedAt);
-    });
-
-    test('점이 하나도 없으면 기록 시작 시각으로 끝낸다', () {
-      final d = checkAutoEnd(
-        now: _at(const Duration(minutes: 20)),
-        startedAt: _start,
-        recording: true,
-        lastPointAt: null,
-        recordingSince: _start,
-      );
-      expect(d?.reason, AutoEndReason.idle);
-      expect(d?.endAt, _start);
-    });
-
-    test('일시정지 중에는 적용하지 않는다', () {
-      final d = checkAutoEnd(
-        now: lastPoint.add(const Duration(minutes: 30)),
-        startedAt: _start,
-        recording: false,
-        lastPointAt: lastPoint,
+        state: state,
+        pausedAt: pausedAt,
+        stateSince: since,
+        lastPointAt: pausedAt,
         recordingSince: null,
+        config: config,
       );
-      expect(d, isNull);
+    }
+
+    DateTime? deadline(
+      RunState state,
+      Duration afterStateSince, {
+      DateTime? stateSince,
+      RunGuardConfig config = const RunGuardConfig(),
+    }) {
+      final since = stateSince ?? pausedAt;
+      return autoEndWarningDeadline(
+        now: since.add(afterStateSince),
+        state: state,
+        stateSince: since,
+        config: config,
+      );
+    }
+
+    test('자동 일시정지 4분 59초엔 예고 없음, 5분~5분 29초는 예고, 5분 30초에 pausedAt 으로 종료', () {
+      const s = RunState.autoPaused;
+      final end = pausedAt.add(const Duration(minutes: 5, seconds: 30));
+      expect(check(s, const Duration(minutes: 4, seconds: 59)), isNull);
+      expect(deadline(s, const Duration(minutes: 4, seconds: 59)), isNull);
+
+      expect(check(s, const Duration(minutes: 5)), isNull);
+      expect(deadline(s, const Duration(minutes: 5)), end);
+      expect(check(s, const Duration(minutes: 5, seconds: 29)), isNull);
+      expect(deadline(s, const Duration(minutes: 5, seconds: 29)), end);
+
+      final d = check(s, const Duration(minutes: 5, seconds: 30));
+      expect(d?.reason, AutoEndReason.still);
+      expect(d?.endAt, pausedAt);
+      expect(deadline(s, const Duration(minutes: 5, seconds: 30)), isNull);
     });
 
-    test('짧게 바꾼 설정을 따른다', () {
-      final d = checkAutoEnd(
-        now: lastPoint.add(const Duration(seconds: 30)),
-        startedAt: _start,
-        recording: true,
-        lastPointAt: lastPoint,
-        recordingSince: _start,
-        config: const RunGuardConfig(idle: Duration(seconds: 30)),
+    test('사용자 일시정지 1시간에 예고, 1시간 30초에 pausedAt 으로 종료', () {
+      const s = RunState.paused;
+      expect(deadline(s, const Duration(minutes: 59, seconds: 59)), isNull);
+      expect(
+        deadline(s, const Duration(hours: 1)),
+        pausedAt.add(const Duration(hours: 1, seconds: 30)),
       );
-      expect(d?.reason, AutoEndReason.idle);
+      expect(check(s, const Duration(hours: 1, seconds: 29)), isNull);
+      final d = check(s, const Duration(hours: 1, seconds: 30));
+      expect(d?.reason, AutoEndReason.paused);
+      expect(d?.endAt, pausedAt);
+    });
+
+    test('자동 일시정지에서 바꾼 사용자 일시정지는 바꾼 시각부터 1시간을 세고 처음 멈춘 시각에 끝낸다', () {
+      final switchedAt = pausedAt.add(const Duration(minutes: 3));
+      expect(
+        check(
+          RunState.paused,
+          const Duration(minutes: 30),
+          stateSince: switchedAt,
+        ),
+        isNull,
+      );
+      final d = check(
+        RunState.paused,
+        const Duration(hours: 1, seconds: 30),
+        stateSince: switchedAt,
+      );
+      expect(d?.reason, AutoEndReason.paused);
+      expect(d?.endAt, pausedAt);
+    });
+
+    test('기록 중에는 점이 오래 없어도 끝내지 않고 예고도 없다', () {
+      final d = checkAutoEnd(
+        now: pausedAt.add(const Duration(hours: 2)),
+        startedAt: _start,
+        state: RunState.recording,
+        pausedAt: null,
+        stateSince: pausedAt,
+        lastPointAt: pausedAt,
+        recordingSince: pausedAt,
+      );
+      expect(d, isNull);
+      expect(
+        autoEndWarningDeadline(
+          now: pausedAt.add(const Duration(hours: 2)),
+          state: RunState.recording,
+          stateSince: pausedAt,
+        ),
+        isNull,
+      );
+    });
+
+    test('config 로 줄인 기준을 따른다', () {
+      const config = RunGuardConfig(
+        still: Duration(seconds: 20),
+        paused: Duration(seconds: 40),
+        warning: Duration(seconds: 5),
+      );
+      expect(
+        deadline(
+          RunState.autoPaused,
+          const Duration(seconds: 20),
+          config: config,
+        ),
+        pausedAt.add(const Duration(seconds: 25)),
+      );
+      expect(
+        check(
+          RunState.autoPaused,
+          const Duration(seconds: 25),
+          config: config,
+        )?.reason,
+        AutoEndReason.still,
+      );
+      expect(
+        check(RunState.paused, const Duration(seconds: 44), config: config),
+        isNull,
+      );
+      expect(
+        check(
+          RunState.paused,
+          const Duration(seconds: 45),
+          config: config,
+        )?.reason,
+        AutoEndReason.paused,
+      );
     });
   });
 
@@ -207,7 +264,9 @@ void main() {
       final d = checkAutoEnd(
         now: now,
         startedAt: _start,
-        recording: true,
+        state: RunState.recording,
+        pausedAt: null,
+        stateSince: _start,
         lastPointAt: now.subtract(const Duration(seconds: 1)),
         recordingSince: _start,
       );
@@ -220,7 +279,9 @@ void main() {
       final d = checkAutoEnd(
         now: now,
         startedAt: _start,
-        recording: true,
+        state: RunState.recording,
+        pausedAt: null,
+        stateSince: _start,
         lastPointAt: lastPoint,
         recordingSince: _start,
       );
@@ -230,10 +291,13 @@ void main() {
 
     test('일시정지 중에도 6시간이면 종료, 끝 시각은 마지막 점', () {
       final lastPoint = _at(const Duration(hours: 1));
+      final now = _at(const Duration(hours: 6));
       final d = checkAutoEnd(
-        now: _at(const Duration(hours: 6)),
+        now: now,
         startedAt: _start,
-        recording: false,
+        state: RunState.paused,
+        pausedAt: lastPoint,
+        stateSince: now.subtract(const Duration(minutes: 10)),
         lastPointAt: lastPoint,
         recordingSince: null,
       );
@@ -246,7 +310,9 @@ void main() {
       final d = checkAutoEnd(
         now: now,
         startedAt: _start,
-        recording: false,
+        state: RunState.paused,
+        pausedAt: _start,
+        stateSince: now.subtract(const Duration(minutes: 10)),
         lastPointAt: null,
         recordingSince: null,
       );
@@ -258,37 +324,42 @@ void main() {
 
 void parseTests() {
   group('runGuardConfigFromSeconds', () {
-    test('둘 다 비면 null', () {
-      expect(runGuardConfigFromSeconds(idleSec: '', maxSec: ''), isNull);
+    test('모두 비면 null', () {
+      expect(runGuardConfigFromSeconds(), isNull);
     });
 
     test('준 값만 초로 바꾸고 나머지는 기본값', () {
-      final c = runGuardConfigFromSeconds(idleSec: '30', maxSec: '');
-      expect(c?.idle, const Duration(seconds: 30));
-      expect(c?.max, autoEndMax);
-      final d = runGuardConfigFromSeconds(idleSec: '', maxSec: '120');
-      expect(d?.idle, autoEndIdle);
-      expect(d?.max, const Duration(minutes: 2));
-      expect(d?.fast, autoEndFast);
-      final e = runGuardConfigFromSeconds(
-        idleSec: '',
-        maxSec: '',
+      final c = runGuardConfigFromSeconds(stillSec: '30', maxSec: '120');
+      expect(c?.still, const Duration(seconds: 30));
+      expect(c?.max, const Duration(minutes: 2));
+      expect(c?.paused, autoEndPaused);
+      expect(c?.warning, autoEndWarning);
+      expect(c?.fast, autoEndFast);
+      final d = runGuardConfigFromSeconds(
+        pausedSec: '60',
+        warningSec: '10',
         fastSec: '10',
       );
-      expect(e?.fast, const Duration(seconds: 10));
-      expect(e?.idle, autoEndIdle);
+      expect(d?.paused, const Duration(minutes: 1));
+      expect(d?.warning, const Duration(seconds: 10));
+      expect(d?.fast, const Duration(seconds: 10));
+      expect(d?.still, autoEndStill);
+      expect(d?.max, autoEndMax);
     });
 
     test('숫자가 아니거나 0 이하면 기본값', () {
-      final c = runGuardConfigFromSeconds(idleSec: 'x', maxSec: '0');
-      expect(c?.idle, autoEndIdle);
-      expect(c?.max, autoEndMax);
-      final f = runGuardConfigFromSeconds(
-        idleSec: '',
-        maxSec: '',
+      final c = runGuardConfigFromSeconds(
+        stillSec: 'x',
+        pausedSec: '0',
+        warningSec: '-3',
+        maxSec: '0',
         fastSec: '-3',
       );
-      expect(f?.fast, autoEndFast);
+      expect(c?.still, autoEndStill);
+      expect(c?.paused, autoEndPaused);
+      expect(c?.warning, autoEndWarning);
+      expect(c?.max, autoEndMax);
+      expect(c?.fast, autoEndFast);
     });
   });
 }

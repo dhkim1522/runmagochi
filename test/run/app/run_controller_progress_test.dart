@@ -98,6 +98,12 @@ class _Progress implements RunProgressNotifier {
     if (fails) throw StateError('알림 실패');
     cancels++;
   }
+
+  @override
+  Future<void> showEndWarning(DateTime deadline) async {}
+
+  @override
+  Future<void> cancelEndWarning() async {}
 }
 
 void _run(
@@ -144,7 +150,7 @@ void main() {
       async.flushMicrotasks();
       expect(progress.shown, hasLength(1));
       expect(progress.shown.single.title, '러닝 중 · 0.00km');
-      expect(progress.shown.single.action, RunProgressAction.pause);
+      expect(progress.shown.single.actions, [RunProgressAction.pause]);
     });
   });
 
@@ -182,11 +188,11 @@ void main() {
       async.flushMicrotasks();
       controller.pause();
       async.flushMicrotasks();
-      expect(progress.shown.last.action, RunProgressAction.resume);
+      expect(progress.shown.last.actions, [RunProgressAction.resume]);
       expect(progress.shown.last.title, startsWith('일시정지 · 0.00km'));
       controller.resume();
       async.flushMicrotasks();
-      expect(progress.shown.last.action, RunProgressAction.pause);
+      expect(progress.shown.last.actions, [RunProgressAction.pause]);
       expect(progress.shown, hasLength(3));
     });
   });
