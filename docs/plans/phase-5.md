@@ -96,7 +96,7 @@
 
 ### C. 음성 안내 (F14)
 
-- [ ] 6. 음성 안내
+- [x] 6. 음성 안내
   - 파일: `pubspec.yaml`(`flutter_tts`), `lib/run/app/voice_guide.dart`(새 파일), `lib/run/data/tts_speaker.dart`(새 파일), `lib/run/app/run_controller.dart`(이벤트 연결), `lib/settings/ui/settings_screen.dart`, `docs/decisions/0024-voice-share-packages.md`(새 결정, Task 10 의 share_plus 도 함께 적는다)
   - 인터페이스: `abstract interface class Speaker { Future<void> speak(String text); }`, `String? voiceLine(VoiceEvent e)` 순수 함수, `VoiceGuide` 가 켜짐 여부를 보고 `Speaker` 를 부른다(실패는 로그만).
   - 말하는 때와 문구:
