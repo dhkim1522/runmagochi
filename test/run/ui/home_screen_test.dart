@@ -519,7 +519,7 @@ void main() {
       expect(c.startGoals, [12000]);
     });
 
-    for (final text in ['2', '101', '']) {
+    for (final text in ['2', '43', '']) {
       testWidgets('직접 입력 "$text" 는 저장할 수 없다', (tester) async {
         await pumpHome(tester, FakeController());
         await settle(tester);
@@ -531,7 +531,7 @@ void main() {
           find.widgetWithText(FilledButton, '저장'),
         );
         expect(save.onPressed, isNull);
-        expect(find.textContaining('3~100km'), findsWidgets);
+        expect(find.textContaining('3~42km'), findsWidgets);
       });
     }
 

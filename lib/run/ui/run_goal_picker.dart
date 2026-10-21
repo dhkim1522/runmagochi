@@ -10,7 +10,7 @@ const List<int> _presetKm = [3, 5, 10];
 
 /// 직접 입력할 수 있는 목표 범위(km).
 const int minGoalKm = 3;
-const int maxGoalKm = 100;
+const int maxGoalKm = 42;
 
 /// 홈의 "오늘 목표" 선택. 3·5·10km 알약 칩과 직접 입력 칩.
 ///
@@ -139,7 +139,7 @@ class _GoalChip extends StatelessWidget {
   }
 }
 
-/// 직접 입력 창. 3~100 사이 정수만 저장할 수 있다.
+/// 직접 입력 창. 3~42 사이 정수만 저장할 수 있다.
 class _GoalDialog extends StatefulWidget {
   const _GoalDialog({required this.initial});
   final String initial;
