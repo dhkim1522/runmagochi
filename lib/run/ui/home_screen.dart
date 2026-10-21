@@ -223,6 +223,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final c = AppColors.of(context);
     final t = AppText.of(context);
     final GrowthState? g = ref.watch(growthStateProvider).value;
+    final equipped = ref.watch(equippedProvider).value;
     final goalM = _goalM ?? ref.watch(lastRunGoalProvider).value ?? 3000;
     final nextLevelKm = g == null
         ? null
@@ -265,6 +266,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                     mood: g.mood,
                                     action: AvatarAction.idle,
                                     scale: 4,
+                                    hatItemId: equipped?.hatItemId,
+                                    accessoryItemId: equipped?.accessoryItemId,
                                   ),
                                 const SizedBox(height: Gap.s3),
                                 Text(

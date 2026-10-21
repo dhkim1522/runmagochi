@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:runmagochi/avatar/domain/growth_rules.dart';
 import 'package:runmagochi/avatar/domain/growth_state.dart';
 import 'package:runmagochi/avatar/ui/avatar_view.dart';
 import 'package:runmagochi/avatar/ui/growth_summary.dart';
 import 'package:runmagochi/core/theme.dart';
+import 'package:runmagochi/shop/app/providers.dart';
+
+import '../../run/ui/fakes.dart';
 
 GrowthGain gain({
   int distanceXp = 50,
@@ -22,17 +26,24 @@ GrowthGain gain({
   stageAfter: stageAfter,
 );
 
+Widget _scope(Widget child) => ProviderScope(
+  overrides: [shopRepositoryProvider.overrideWithValue(FakeShop())],
+  child: child,
+);
+
 Future<void> pumpIt(WidgetTester tester, GrowthGain g) async {
   await tester.pumpWidget(
-    MaterialApp(
-      theme: appLightTheme(),
-      home: Scaffold(
-        body: GrowthSummary(
-          kind: AvatarKind.chick,
-          gain: g,
-          distanceM: 5020,
-          goalM: null,
-          achieved: false,
+    _scope(
+      MaterialApp(
+        theme: appLightTheme(),
+        home: Scaffold(
+          body: GrowthSummary(
+            kind: AvatarKind.chick,
+            gain: g,
+            distanceM: 5020,
+            goalM: null,
+            achieved: false,
+          ),
         ),
       ),
     ),
@@ -99,15 +110,17 @@ void main() {
 
   testWidgets('종류를 모르면 아바타 대신 같은 크기의 빈 자리를 둔다', (tester) async {
     await tester.pumpWidget(
-      MaterialApp(
-        theme: appLightTheme(),
-        home: Scaffold(
-          body: GrowthSummary(
-            kind: null,
-            gain: gain(stageAfter: 2),
-            distanceM: 5020,
-            goalM: null,
-            achieved: false,
+      _scope(
+        MaterialApp(
+          theme: appLightTheme(),
+          home: Scaffold(
+            body: GrowthSummary(
+              kind: null,
+              gain: gain(stageAfter: 2),
+              distanceM: 5020,
+              goalM: null,
+              achieved: false,
+            ),
           ),
         ),
       ),
@@ -124,18 +137,20 @@ void main() {
       double scale = 1.0,
     }) async {
       await tester.pumpWidget(
-        MaterialApp(
-          theme: appLightTheme(),
-          home: MediaQuery(
-            data: MediaQueryData(textScaler: TextScaler.linear(scale)),
-            child: Scaffold(
-              body: GrowthSummary(
-                kind: AvatarKind.chick,
-                gain: gain(),
-                distanceM: 5020,
-                goalM: null,
-                achieved: false,
-                excludedM: excludedM,
+        _scope(
+          MaterialApp(
+            theme: appLightTheme(),
+            home: MediaQuery(
+              data: MediaQueryData(textScaler: TextScaler.linear(scale)),
+              child: Scaffold(
+                body: GrowthSummary(
+                  kind: AvatarKind.chick,
+                  gain: gain(),
+                  distanceM: 5020,
+                  goalM: null,
+                  achieved: false,
+                  excludedM: excludedM,
+                ),
               ),
             ),
           ),
@@ -171,18 +186,20 @@ void main() {
       double scale = 1.0,
     }) async {
       await tester.pumpWidget(
-        MaterialApp(
-          theme: appLightTheme(),
-          home: MediaQuery(
-            data: MediaQueryData(textScaler: TextScaler.linear(scale)),
-            child: Scaffold(
-              body: GrowthSummary(
-                kind: AvatarKind.chick,
-                gain: gain(goalBonusXp: bonus),
-                distanceM: distanceM,
-                goalM: goalM,
-                achieved: achieved,
-                excludedM: excludedM,
+        _scope(
+          MaterialApp(
+            theme: appLightTheme(),
+            home: MediaQuery(
+              data: MediaQueryData(textScaler: TextScaler.linear(scale)),
+              child: Scaffold(
+                body: GrowthSummary(
+                  kind: AvatarKind.chick,
+                  gain: gain(goalBonusXp: bonus),
+                  distanceM: distanceM,
+                  goalM: goalM,
+                  achieved: achieved,
+                  excludedM: excludedM,
+                ),
               ),
             ),
           ),
@@ -283,17 +300,19 @@ void coinTests() {
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
     await tester.pumpWidget(
-      MaterialApp(
-        theme: dark ? appDarkTheme() : appLightTheme(),
-        home: MediaQuery(
-          data: MediaQueryData(textScaler: TextScaler.linear(scale)),
-          child: Scaffold(
-            body: GrowthSummary(
-              kind: AvatarKind.chick,
-              gain: g,
-              distanceM: 3130,
-              goalM: 3000,
-              achieved: true,
+      _scope(
+        MaterialApp(
+          theme: dark ? appDarkTheme() : appLightTheme(),
+          home: MediaQuery(
+            data: MediaQueryData(textScaler: TextScaler.linear(scale)),
+            child: Scaffold(
+              body: GrowthSummary(
+                kind: AvatarKind.chick,
+                gain: g,
+                distanceM: 3130,
+                goalM: 3000,
+                achieved: true,
+              ),
             ),
           ),
         ),

@@ -1,10 +1,12 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/format.dart';
 import '../../core/theme.dart';
 import '../../core/ui/clay.dart';
+import '../../shop/app/providers.dart';
 import '../domain/growth_rules.dart';
 import '../domain/growth_state.dart';
 import 'avatar_view.dart';
@@ -171,12 +173,19 @@ class _GrowthSummaryState extends State<GrowthSummary>
             scale: scale,
             child: kind == null
                 ? const AvatarSlot(scale: 6)
-                : AvatarView(
-                    kind: kind,
-                    stage: stage,
-                    mood: AvatarMood.normal,
-                    action: AvatarAction.idle,
-                    scale: 6,
+                : Consumer(
+                    builder: (context, ref, _) {
+                      final equipped = ref.watch(equippedProvider).value;
+                      return AvatarView(
+                        kind: kind,
+                        stage: stage,
+                        mood: AvatarMood.normal,
+                        action: AvatarAction.idle,
+                        scale: 6,
+                        hatItemId: equipped?.hatItemId,
+                        accessoryItemId: equipped?.accessoryItemId,
+                      );
+                    },
                   ),
           );
         },

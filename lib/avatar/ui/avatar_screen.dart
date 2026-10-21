@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../shop/app/providers.dart';
 import '../../core/format.dart';
 import '../../core/theme.dart';
 import '../../core/ui/clay.dart';
@@ -37,6 +38,7 @@ class AvatarScreen extends ConsumerWidget {
     // 갱신 중에도 이전 값을 유지한다.
     final g = ref.watch(growthStateProvider).value;
     if (g == null) return const SizedBox.shrink();
+    final equipped = ref.watch(equippedProvider).value;
     final c = AppColors.of(context);
     final t = AppText.of(context);
     return SafeArea(
@@ -66,6 +68,8 @@ class AvatarScreen extends ConsumerWidget {
                         mood: g.mood,
                         action: AvatarAction.idle,
                         scale: 4,
+                        hatItemId: equipped?.hatItemId,
+                        accessoryItemId: equipped?.accessoryItemId,
                       ),
                     ),
                     const SizedBox(height: Gap.s2),

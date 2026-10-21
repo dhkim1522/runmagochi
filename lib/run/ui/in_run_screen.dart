@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show HapticFeedback;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../shop/app/providers.dart';
 import '../../avatar/app/providers.dart';
 import '../../avatar/domain/growth_rules.dart';
 import '../../avatar/ui/avatar_view.dart';
@@ -71,6 +72,7 @@ class _InRunScreenState extends ConsumerState<InRunScreen> {
     final t = AppText.of(context);
     // 종류를 읽기 전(또는 실패)에는 같은 크기의 빈자리만 둔다.
     final growth = ref.watch(growthStateProvider).value;
+    final equipped = ref.watch(equippedProvider).value;
 
     final avatarStage = _AvatarStage(
       child: growth == null
@@ -84,6 +86,8 @@ class _InRunScreenState extends ConsumerState<InRunScreen> {
                 currentPaceSecPerKm: snap.currentPaceSecPerKm,
               ),
               scale: 3,
+              hatItemId: equipped?.hatItemId,
+              accessoryItemId: equipped?.accessoryItemId,
             ),
     );
 

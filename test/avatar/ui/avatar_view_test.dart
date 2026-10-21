@@ -10,6 +10,8 @@ Widget _wrap({
   AvatarMood mood = AvatarMood.normal,
   AvatarAction action = AvatarAction.run,
   int scale = 4,
+  String? hat,
+  String? accessory,
 }) => Directionality(
   textDirection: TextDirection.ltr,
   child: Center(
@@ -19,6 +21,8 @@ Widget _wrap({
       mood: mood,
       action: action,
       scale: scale,
+      hatItemId: hat,
+      accessoryItemId: accessory,
     ),
   ),
 );
@@ -26,8 +30,36 @@ Widget _wrap({
 int _frame(WidgetTester t) =>
     t.state<AvatarViewState>(find.byType(AvatarView)).frameIndex;
 
+Map<String, String> _paths(WidgetTester t) =>
+    t.state<AvatarViewState>(find.byType(AvatarView)).layerPaths;
+
 void main() {
   rimTests();
+  testWidgets('장착한 모자·소품 레이어가 body, face 뒤 hat, accessory 순서로 붙는다', (
+    tester,
+  ) async {
+    await tester.pumpWidget(_wrap(hat: 'cap', accessory: 'sunglasses'));
+    expect(_paths(tester).keys.toList(), ['body', 'face', 'hat', 'accessory']);
+    expect(_paths(tester)['hat'], 'assets/sprites/chick/hat/cap_run.png');
+    expect(
+      _paths(tester)['accessory'],
+      'assets/sprites/chick/accessory/sunglasses_run.png',
+    );
+  });
+
+  testWidgets('장착이 바뀌면 레이어가 다시 맞춰진다', (tester) async {
+    await tester.pumpWidget(_wrap(hat: 'cap'));
+    await tester.pumpWidget(_wrap(hat: 'beanie'));
+    expect(_paths(tester)['hat'], contains('beanie_run'));
+    await tester.pumpWidget(_wrap());
+    expect(_paths(tester).containsKey('hat'), isFalse);
+  });
+
+  testWidgets('없는 id 와 부위가 다른 id 는 무시한다', (tester) async {
+    await tester.pumpWidget(_wrap(hat: 'nope', accessory: 'cap'));
+    expect(_paths(tester).keys.toList(), ['body', 'face']);
+  });
+
   testWidgets('run 은 10fps 4프레임으로 순환한다', (tester) async {
     await tester.pumpWidget(_wrap());
     await tester.pump();

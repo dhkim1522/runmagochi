@@ -17,3 +17,8 @@ final coinBalanceProvider = FutureProvider.autoDispose<int>(
 final coinHistoryProvider = FutureProvider.autoDispose<List<CoinEntry>>(
   (ref) => ref.read(shopRepositoryProvider).coinHistory(),
 );
+
+/// 장착 중인 모자·소품. 장착·구매 뒤 invalidate 한다.
+final equippedProvider = FutureProvider.autoDispose<Equipped>(
+  (ref) => ref.read(shopRepositoryProvider).equipped(),
+);

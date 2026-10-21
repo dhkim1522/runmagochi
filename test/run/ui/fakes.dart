@@ -382,9 +382,14 @@ class FakeRunProgressNotifier implements RunProgressNotifier {
 
 /// 잔액만 있는 상점 저장소.
 class FakeShop implements ShopRepository {
-  FakeShop([this.entries = const [], this.bal = 0]);
+  FakeShop([
+    this.entries = const [],
+    this.bal = 0,
+    this.equippedNow = const Equipped(),
+  ]);
   final List<CoinEntry> entries;
   final int bal;
+  Equipped equippedNow;
   @override
   Future<int> balance() async => bal;
   @override
@@ -394,7 +399,7 @@ class FakeShop implements ShopRepository {
   @override
   Future<void> purchase(String itemId, int price) async {}
   @override
-  Future<Equipped> equipped() async => const Equipped();
+  Future<Equipped> equipped() async => equippedNow;
   @override
   Future<void> equip(ItemSlot slot, String? itemId) async {}
 }

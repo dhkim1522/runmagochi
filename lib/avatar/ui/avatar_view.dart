@@ -6,6 +6,7 @@ import 'package:flutter/material.dart' show Theme;
 import 'package:flutter/widgets.dart';
 
 import '../../core/theme.dart';
+import '../../shop/domain/catalog.dart';
 import '../domain/growth_rules.dart';
 import 'sprite_sheet.dart';
 
@@ -20,6 +21,8 @@ class AvatarView extends StatefulWidget {
     required this.mood,
     required this.action,
     this.scale = 4,
+    this.hatItemId,
+    this.accessoryItemId,
   });
 
   final AvatarKind kind;
@@ -31,6 +34,10 @@ class AvatarView extends StatefulWidget {
 
   /// 정수 배율.
   final int scale;
+
+  /// 장착한 모자·소품 id. 없는 id 이거나 부위가 다르면 그리지 않는다.
+  final String? hatItemId;
+  final String? accessoryItemId;
 
   @override
   State<AvatarView> createState() => AvatarViewState();
@@ -117,19 +124,42 @@ class AvatarViewState extends State<AvatarView> with WidgetsBindingObserver {
 
   /// 현재 속성에 맞는 시트 경로로 레이어 이미지를 맞춘다.
   void _syncLayers() {
-    final paths = {
-      'body': bodySheet(widget.kind, widget.stage, widget.action),
-      'face': faceSheet(widget.kind, widget.mood, widget.action),
-    };
+    final paths = _wantedPaths();
     for (final name in spriteLayerOrder) {
       final path = paths[name];
-      if (path == null) continue;
+      if (path == null) {
+        // 장착을 풀면 그 레이어를 걷어낸다.
+        _layers.remove(name)?.dispose();
+        continue;
+      }
       final cur = _layers[name];
       if (cur != null && cur.path == path) continue;
       cur?.dispose();
       _layers[name] = _Layer(path, _onImage);
     }
   }
+
+  Map<String, String> _wantedPaths() {
+    String? item(String? id, ItemSlot slot) {
+      final it = id == null ? null : itemById(id);
+      if (it == null || it.slot != slot) return null;
+      return itemSheet(widget.kind, it, widget.action);
+    }
+
+    return {
+      'body': bodySheet(widget.kind, widget.stage, widget.action),
+      'face': faceSheet(widget.kind, widget.mood, widget.action),
+      'hat': ?item(widget.hatItemId, ItemSlot.hat),
+      'accessory': ?item(widget.accessoryItemId, ItemSlot.accessory),
+    };
+  }
+
+  /// 지금 불러온(또는 불러오는 중인) 레이어 이름 → 시트 경로, 겹침 순서대로.
+  @visibleForTesting
+  Map<String, String> get layerPaths => {
+    for (final name in spriteLayerOrder)
+      if (_layers[name] case final l?) name: l.path,
+  };
 
   void _onImage() {
     if (mounted) setState(() {});

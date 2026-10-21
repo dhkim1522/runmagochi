@@ -20,6 +20,7 @@ import 'package:runmagochi/run/ui/permission_screen.dart';
 import 'package:runmagochi/run/ui/run_goal_picker.dart';
 import 'package:runmagochi/run/ui/summary_screen.dart';
 import 'package:runmagochi/shop/app/providers.dart';
+import 'package:runmagochi/shop/data/shop_repository.dart';
 import 'package:runmagochi/shop/ui/coin_chip.dart';
 import 'package:runmagochi/shop/ui/coin_history_screen.dart';
 
@@ -33,6 +34,7 @@ Future<void> pumpHome(
   FakeGrowthService? growth,
   double textScale = 1,
   int coins = 0,
+  FakeShop? shop,
 }) async {
   await tester.pumpWidget(
     ProviderScope(
@@ -46,7 +48,9 @@ Future<void> pumpHome(
           growth ?? FakeGrowthService(growthState()),
         ),
         clockProvider.overrideWithValue(() => DateTime(2026, 10, 17)),
-        shopRepositoryProvider.overrideWithValue(FakeShop(const [], coins)),
+        shopRepositoryProvider.overrideWithValue(
+          shop ?? FakeShop(const [], coins),
+        ),
       ],
       child: MaterialApp(
         theme: appLightTheme(),
@@ -71,6 +75,27 @@ Future<void> settle(WidgetTester tester) async {
 }
 
 void main() {
+  testWidgets('장착을 바꾸면 홈 아바타가 새 아이템 레이어로 다시 그려진다', (tester) async {
+    final shop = FakeShop(const [], 0, const Equipped(hatItemId: 'cap'));
+    await pumpHome(tester, FakeController(), shop: shop);
+    await settle(tester);
+    Map<String, String> paths() =>
+        tester.state<AvatarViewState>(find.byType(AvatarView)).layerPaths;
+    expect(paths().keys.toList(), ['body', 'face', 'hat']);
+    expect(paths()['hat'], contains('/hat/cap_'));
+
+    shop.equippedNow = const Equipped(
+      hatItemId: 'beanie',
+      accessoryItemId: 'sunglasses',
+    );
+    ProviderScope.containerOf(
+      tester.element(find.byType(HomeScreen)),
+    ).invalidate(equippedProvider);
+    await settle(tester);
+    expect(paths().keys.toList(), ['body', 'face', 'hat', 'accessory']);
+    expect(paths()['hat'], contains('/hat/beanie_'));
+  });
+
   testWidgets('코인 칩이 천 단위 쉼표 잔액을 보이고 누르면 내역을 연다', (tester) async {
     await pumpHome(tester, FakeController(), coins: 1240);
     await tester.pump();
