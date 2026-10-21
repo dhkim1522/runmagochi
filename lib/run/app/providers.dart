@@ -6,6 +6,7 @@ import '../data/app_database.dart';
 import '../data/drift_run_repository.dart';
 import '../data/geolocator_location_source.dart';
 import '../data/location_source.dart';
+import '../data/run_progress_notifier.dart';
 import '../data/run_repository.dart';
 import 'app_lifecycle.dart';
 import 'run_controller.dart';
@@ -50,6 +51,11 @@ final localNotificationSchedulerProvider = Provider<LocalNotificationScheduler>(
 /// 러닝 자동 종료 알림.
 final instantNotifierProvider = Provider<InstantNotifier>(
   (ref) => ref.watch(localNotificationSchedulerProvider),
+);
+
+/// 러닝 중 알림창 진행 표시.
+final runProgressNotifierProvider = Provider<RunProgressNotifier>(
+  (_) => LocalRunProgressNotifier(),
 );
 
 /// 홈 목표 선택의 초기값(m): 가장 최근에 시작한 러닝의 목표, 없으면 3km.

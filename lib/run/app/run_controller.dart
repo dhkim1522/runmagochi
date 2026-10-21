@@ -8,6 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../avatar/domain/growth_rules.dart' show distanceReachesGoal;
 import '../../core/format.dart';
 import '../../profile/app/providers.dart';
+import '../data/run_progress_notifier.dart';
 import '../data/run_repository.dart';
 import '../domain/location_sample.dart';
 import '../domain/run_engine.dart';
@@ -18,6 +19,9 @@ import 'run_guard.dart';
 
 const Duration _flushInterval = Duration(seconds: 10);
 const Duration _tickInterval = Duration(seconds: 1);
+
+/// 거리만 바뀐 러닝 알림 갱신 사이의 최소 간격.
+const Duration _progressMinInterval = Duration(seconds: 3);
 
 /// 위치 스트림이 오류나 종료로 끊긴 뒤 다시 구독하기까지 기다리는 시간.
 const Duration _resubscribeInterval = Duration(seconds: 5);
@@ -110,6 +114,11 @@ class RunController extends Notifier<RunViewState> {
 
   double _weightKg = defaultWeightKg;
 
+  /// 러닝 알림에 마지막으로 띄운 상태·거리 표기·시각.
+  RunState? _progressState;
+  String? _progressKm;
+  DateTime? _progressShownAt;
+
   /// 진행 중 러닝의 목표(m).
   double? _goalM;
 
@@ -162,6 +171,7 @@ class RunController extends Notifier<RunViewState> {
         weightKg: _weightKg,
         goalM: goalM,
       );
+      _updateProgress(engine.snapshot);
     } finally {
       _starting = false;
     }
@@ -273,6 +283,7 @@ class RunController extends Notifier<RunViewState> {
       _runId = null;
       _goalM = null;
       _goalReached = false;
+      _cancelProgress();
       _pendingSummary = null;
       _pendingAutoEnd = null;
       _flushClosed = false;
@@ -577,6 +588,64 @@ class RunController extends Notifier<RunViewState> {
     if (reachedNow) _goalReached = true;
     state = _copyState(snapshot: snapshot, runId: _runId, clearError: clear);
     if (reachedNow) _notifyGoalReached(goal);
+    _updateProgress(snapshot);
+  }
+
+  /// 러닝 알림을 갱신한다. 상태가 바뀌면 바로, 기록 중 거리만 바뀌면 화면
+  /// 거리(10m 단위)가 바뀌었고 마지막 갱신에서 3초가 지났을 때만 띄운다.
+  /// 알림 실패는 러닝과 상관없으므로 버린다.
+  void _updateProgress(RunSnapshot snapshot) {
+    if (snapshot.state != RunState.recording &&
+        snapshot.state != RunState.paused) {
+      return;
+    }
+    final now = ref.read(clockProvider)();
+    final km = formatKm(snapshot.distanceM);
+    final stateChanged = snapshot.state != _progressState;
+    final shownAt = _progressShownAt;
+    if (!stateChanged) {
+      if (km == _progressKm) return;
+      if (shownAt != null && now.difference(shownAt) < _progressMinInterval) {
+        return;
+      }
+    }
+    _progressState = snapshot.state;
+    _progressKm = km;
+    _progressShownAt = now;
+    try {
+      unawaited(
+        ref
+            .read(runProgressNotifierProvider)
+            .show(
+              runProgressContent(
+                state: snapshot.state,
+                distanceM: snapshot.distanceM,
+                movingTime: snapshot.movingTime,
+                goalM: _goalM,
+                goalReached: _goalReached,
+              ),
+            )
+            .catchError((Object e) => debugPrint('알림: 러닝 진행 알림 실패 $e')),
+      );
+    } catch (e) {
+      debugPrint('알림: 러닝 진행 알림 실패 $e');
+    }
+  }
+
+  void _cancelProgress() {
+    _progressState = null;
+    _progressKm = null;
+    _progressShownAt = null;
+    try {
+      unawaited(
+        ref
+            .read(runProgressNotifierProvider)
+            .cancel()
+            .catchError((Object e) => debugPrint('알림: 러닝 진행 알림 취소 실패 $e')),
+      );
+    } catch (e) {
+      debugPrint('알림: 러닝 진행 알림 취소 실패 $e');
+    }
   }
 
   /// 알림 실패는 러닝과 상관없으므로 버린다.

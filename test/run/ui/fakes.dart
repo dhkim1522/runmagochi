@@ -7,6 +7,7 @@ import 'package:runmagochi/avatar/domain/growth_state.dart';
 import 'package:runmagochi/profile/data/profile_repository.dart';
 import 'package:runmagochi/run/app/permission_gate.dart';
 import 'package:runmagochi/run/app/run_controller.dart';
+import 'package:runmagochi/run/data/run_progress_notifier.dart';
 import 'package:runmagochi/run/data/run_repository.dart';
 import 'package:runmagochi/run/domain/run_engine.dart';
 import 'package:runmagochi/run/domain/run_summary.dart';
@@ -340,4 +341,23 @@ class FakeProfile implements ProfileRepository {
 
   @override
   Future<void> setWeightKg(double? kg) async => weight = kg;
+}
+
+/// 러닝 진행 알림 기록용 가짜.
+class FakeRunProgressNotifier implements RunProgressNotifier {
+  final shown = <RunProgressContent>[];
+  int cancels = 0;
+  bool fails = false;
+
+  @override
+  Future<void> show(RunProgressContent content) async {
+    if (fails) throw StateError('알림 실패');
+    shown.add(content);
+  }
+
+  @override
+  Future<void> cancel() async {
+    if (fails) throw StateError('알림 실패');
+    cancels++;
+  }
 }

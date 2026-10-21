@@ -1,6 +1,8 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
+import '../../core/local_notifications.dart';
+
 /// 예약된 알림 취소. 이전 버전이 예약해 둔 알림을 지우는 데 쓴다.
 abstract interface class NotificationScheduler {
   /// 예약만 기다리는 알림을 모두 취소한다. 이미 띄운 알림은 그대로 둔다.
@@ -42,30 +44,7 @@ class LocalNotificationScheduler
   static const _instantId = 1000;
 
   final FlutterLocalNotificationsPlugin _plugin;
-  Future<void>? _init;
-
-  Future<void> _ensureInit() async {
-    try {
-      await (_init ??= _initialize());
-    } catch (_) {
-      _init = null; // 다음 호출에서 다시 시도한다.
-      rethrow;
-    }
-  }
-
-  Future<void> _initialize() async {
-    await _plugin.initialize(
-      settings: const InitializationSettings(
-        android: AndroidInitializationSettings('@mipmap/ic_launcher'),
-        // 권한은 PermissionGate 가 묻는다. 초기화에서는 묻지 않는다.
-        iOS: DarwinInitializationSettings(
-          requestAlertPermission: false,
-          requestBadgePermission: false,
-          requestSoundPermission: false,
-        ),
-      ),
-    );
-  }
+  Future<void> _ensureInit() => ensureLocalNotificationsInitialized(_plugin);
 
   @override
   Future<void> cancelScheduled() async {

@@ -15,6 +15,7 @@ import 'package:runmagochi/profile/app/providers.dart';
 import 'package:runmagochi/profile/data/drift_profile_repository.dart';
 import 'package:runmagochi/run/app/app_lifecycle.dart';
 import 'package:runmagochi/run/app/providers.dart';
+import '../ui/fakes.dart' show FakeRunProgressNotifier;
 import 'package:runmagochi/run/app/run_editor.dart';
 import 'package:runmagochi/run/data/app_database.dart';
 import 'package:runmagochi/run/data/drift_run_repository.dart';
@@ -66,6 +67,9 @@ class _Harness {
         runRepositoryProvider.overrideWithValue(runs),
         growthRepositoryProvider.overrideWithValue(growth),
         profileRepositoryProvider.overrideWithValue(DriftProfileRepository(db)),
+        runProgressNotifierProvider.overrideWithValue(
+          FakeRunProgressNotifier(),
+        ),
         locationSourceProvider.overrideWithValue(location),
         clockProvider.overrideWithValue(clock),
         appLifecycleProvider.overrideWithValue(_AlwaysResumed()),

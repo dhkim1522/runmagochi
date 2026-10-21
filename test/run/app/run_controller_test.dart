@@ -9,6 +9,7 @@ import 'package:runmagochi/profile/app/providers.dart';
 import 'package:runmagochi/profile/data/profile_repository.dart';
 import 'package:runmagochi/run/app/app_lifecycle.dart';
 import 'package:runmagochi/run/app/providers.dart';
+import '../ui/fakes.dart' show FakeRunProgressNotifier;
 import 'package:runmagochi/run/app/run_controller.dart';
 import 'package:runmagochi/run/data/location_source.dart';
 import 'package:runmagochi/run/data/run_repository.dart';
@@ -199,6 +200,9 @@ void _run(
         runRepositoryProvider.overrideWithValue(repository),
         profileRepositoryProvider.overrideWithValue(
           _FakeProfileRepository(weightKg),
+        ),
+        runProgressNotifierProvider.overrideWithValue(
+          FakeRunProgressNotifier(),
         ),
         locationSourceProvider.overrideWithValue(location),
         appLifecycleProvider.overrideWithValue(lifecycle),
