@@ -176,9 +176,9 @@
 ## 완료 기준
 
 ### 자동 확인
-- [ ] `fvm flutter test` 통과
-- [ ] `fvm dart analyze` 오류·경고 0
-- [ ] `fvm flutter build apk --debug` 성공
+- [x] `fvm flutter test` 통과
+- [x] `fvm dart analyze` 오류·경고 0
+- [x] `fvm flutter build apk --debug` 성공
 
 ### E2E (에뮬레이터, `/e2e` 가 확인)
 - [ ] 러닝 중 화면을 끄면 알림이 하나만 있고 제목의 거리가 바뀐다(`dumpsys notification`). 알림 `일시정지` 버튼으로 일시정지, `재개` 로 재개된다.
