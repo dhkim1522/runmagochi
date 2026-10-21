@@ -52,7 +52,7 @@
   - 확인: `fvm flutter test test/run`
   - 스킬: ui-ux-pro-max:ui-ux-pro-max
 
-- [ ] 2. 구간 페이스 그래프
+- [x] 2. 구간 페이스 그래프
   - 파일: `lib/run/ui/split_pace_chart.dart`(새 파일), `lib/run/ui/summary_screen.dart`
   - 동작: 요약·기록 상세의 구간 표 위에 1km 구간별 페이스 막대(빠를수록 길게). 평균 페이스 가로선. 1km 미만 마지막 구간은 흐리게. 빠른 구간(경험치 제외 구간)은 `ink-muted` 로. 구간이 1개 이하면 그래프를 숨긴다.
   - 테스트: 막대 수 = 구간 수, 구간 0·1개면 숨김, 마지막 짧은 구간 표시, 360×640·글자 1.3배, 다크 테마.
