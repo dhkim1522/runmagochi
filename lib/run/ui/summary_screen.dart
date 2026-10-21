@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart' hide Split;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -6,17 +8,21 @@ import '../../avatar/app/providers.dart';
 import '../../avatar/domain/growth_rules.dart';
 import '../../avatar/domain/growth_state.dart';
 import '../../avatar/ui/growth_summary.dart';
+import '../../shop/app/providers.dart';
+import '../../shop/data/shop_repository.dart' show Equipped;
 import '../../core/format.dart';
 import '../../core/theme.dart';
 import '../../core/ui/clay.dart';
 import '../app/providers.dart';
 import '../app/run_editor.dart';
+import '../app/share_service.dart';
 import '../data/run_repository.dart';
 import '../domain/run_goal.dart';
 import '../domain/run_summary.dart';
 import 'history_screen.dart';
 import 'home_screen.dart';
 import 'route_painter.dart';
+import 'share_card.dart';
 import 'split_pace_chart.dart';
 import 'trim_sheet.dart';
 
@@ -57,6 +63,66 @@ class _SummaryScreenState extends ConsumerState<SummaryScreen> {
   late RunSummary? _summary = widget.summary;
   late GrowthGain? _gain = widget.gain;
   bool _busy = false;
+
+  /// 공유 카드를 만들고 공유 창을 여는 중. 끝날 때까지 버튼을 막는다.
+  bool _sharing = false;
+
+  Future<void> _share(_ShareInput input) async {
+    if (_sharing) return;
+    setState(() => _sharing = true);
+    try {
+      final growth = await ref.read(growthStateProvider.future);
+      Equipped? equipped;
+      try {
+        equipped = await ref.read(equippedProvider.future);
+      } catch (_) {
+        // 장착 정보를 못 읽으면 맨몸으로 그린다.
+      }
+      final kind = growth.kind;
+      final gain = _gain;
+      final card = ShareCard(
+        kind: kind,
+        stage: growth.stage,
+        mood: growth.mood,
+        hatItemId: equipped?.hatItemId,
+        accessoryItemId: equipped?.accessoryItemId,
+        startedAt: input.startedAt,
+        distanceM: input.distanceM,
+        movingTime: input.movingTime,
+        avgPaceSecPerKm: input.avgPaceSecPerKm,
+        goalLine: input.goalLine,
+        levelUpLine: gain != null && gain.leveledUp
+            ? '레벨 ${gain.levelAfter} 달성!'
+            : null,
+      );
+      if (!mounted) return;
+      final png = await renderShareCard(
+        context,
+        card,
+        sheets: ShareCard.sheetPaths(
+          kind: kind,
+          stage: growth.stage,
+          mood: growth.mood,
+          hatItemId: equipped?.hatItemId,
+          accessoryItemId: equipped?.accessoryItemId,
+        ),
+      );
+      final dir = await ref.read(shareTempDirProvider)();
+      final file = File(
+        '${dir.path}/runmagochi_${DateTime.now().millisecondsSinceEpoch}.png',
+      );
+      await file.writeAsBytes(png, flush: true);
+      await ref.read(sharerProvider).shareImage(file.path);
+    } catch (e) {
+      debugPrint('share failed: $e');
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('공유하지 못했어요')));
+    } finally {
+      if (mounted) setState(() => _sharing = false);
+    }
+  }
 
   Future<void> _openTrim() async {
     final end = await showTrimSheet(context, _summary!);
@@ -108,7 +174,16 @@ class _SummaryScreenState extends ConsumerState<SummaryScreen> {
     final s = _summary;
     final runId = widget.runId;
     final Widget body;
+    _ShareInput? share;
     if (s != null) {
+      share = _ShareInput.of(
+        s.startedAt,
+        s.distanceM,
+        s.movingTime,
+        s.avgPaceSecPerKm,
+        s.splits,
+        widget.goal,
+      );
       final g = _gain;
       final growthState = g == null
           ? null
@@ -153,20 +228,29 @@ class _SummaryScreenState extends ConsumerState<SummaryScreen> {
           .when(
             loading: () => const Center(child: CircularProgressIndicator()),
             error: (_, _) => const _Notice('기록을 찾을 수 없어요'),
-            data: (d) => d == null
-                ? const _Notice('기록을 찾을 수 없어요')
-                : _SummaryBody(
-                    goal: _detailGoal(d),
-                    footer: _DeleteRunButton(d.run),
-                    name: d.run.name,
-                    startedAt: d.run.startedAt,
-                    distanceM: d.run.distanceM,
-                    movingTime: d.run.movingTime,
-                    avgPaceSecPerKm: d.run.avgPaceSecPerKm,
-                    calories: d.calories,
-                    route: d.route,
-                    splits: d.splits,
-                  ),
+            data: (d) {
+              if (d == null) return const _Notice('기록을 찾을 수 없어요');
+              share = _ShareInput.of(
+                d.run.startedAt,
+                d.run.distanceM,
+                d.run.movingTime,
+                d.run.avgPaceSecPerKm,
+                d.splits,
+                d.run.goal,
+              );
+              return _SummaryBody(
+                goal: _detailGoal(d),
+                footer: _DeleteRunButton(d.run),
+                name: d.run.name,
+                startedAt: d.run.startedAt,
+                distanceM: d.run.distanceM,
+                movingTime: d.run.movingTime,
+                avgPaceSecPerKm: d.run.avgPaceSecPerKm,
+                calories: d.calories,
+                route: d.route,
+                splits: d.splits,
+              );
+            },
           );
     }
     return Scaffold(
@@ -174,9 +258,29 @@ class _SummaryScreenState extends ConsumerState<SummaryScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Padding(
-              padding: EdgeInsets.fromLTRB(Gap.s5, Gap.s6, Gap.s5, Gap.s4),
-              child: ScreenTitle('러닝 요약'),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                Gap.s5,
+                Gap.s6,
+                Gap.s5,
+                Gap.s4,
+              ),
+              child: Row(
+                children: [
+                  const Expanded(child: ScreenTitle('러닝 요약')),
+                  Builder(
+                    builder: (context) {
+                      final input = share;
+                      return TextButton(
+                        onPressed: input == null || _sharing
+                            ? null
+                            : () => _share(input),
+                        child: const Text('공유'),
+                      );
+                    },
+                  ),
+                ],
+              ),
             ),
             Expanded(child: body),
           ],
@@ -209,6 +313,44 @@ class _SummaryScreenState extends ConsumerState<SummaryScreen> {
       ),
     );
   }
+}
+
+/// 공유 카드에 넣을 값. 저장된 거리·구간으로 목표를 다시 판정해 문구를 만든다.
+class _ShareInput {
+  _ShareInput(
+    this.startedAt,
+    this.distanceM,
+    this.movingTime,
+    this.avgPaceSecPerKm,
+    this.goalLine,
+  );
+
+  factory _ShareInput.of(
+    DateTime startedAt,
+    double distanceM,
+    Duration movingTime,
+    double? avgPaceSecPerKm,
+    List<Split> splits,
+    RunGoal? goal,
+  ) {
+    String? line;
+    if (goal != null) {
+      final achieved = goalAchieved(
+        distanceM: distanceM,
+        splits: splits,
+        movingTime: movingTime,
+        goal: goal,
+      );
+      line = achieved ? '목표 ${goal.label} 달성' : '목표 ${goal.label}에 도전했어요';
+    }
+    return _ShareInput(startedAt, distanceM, movingTime, avgPaceSecPerKm, line);
+  }
+
+  final DateTime startedAt;
+  final double distanceM;
+  final Duration movingTime;
+  final double? avgPaceSecPerKm;
+  final String? goalLine;
 }
 
 /// 기록에서 연 상세의 "기록 삭제". 확인 뒤 지우고(받은 경험치는 그대로) 목록으로 돌아간다.
