@@ -15,6 +15,7 @@ import 'package:runmagochi/run/data/location_source.dart';
 import 'package:runmagochi/run/data/run_progress_notifier.dart';
 import 'package:runmagochi/run/data/run_repository.dart';
 import 'package:runmagochi/run/domain/location_sample.dart';
+import 'package:runmagochi/run/domain/run_engine.dart';
 import 'package:runmagochi/run/domain/run_summary.dart';
 import '../ui/fakes.dart' show FakeSpeaker;
 
@@ -219,6 +220,50 @@ void main() {
       async.flushMicrotasks();
       expect(progress.shown.last.actions, [RunProgressAction.pause]);
       expect(progress.shown, hasLength(3));
+    });
+  });
+
+  test('시간 목표는 GPS 점이 없어도 남은 시간이 15초 단계를 넘으면 갱신한다', () {
+    _run((async, container, progress, sampleAt) {
+      // 남은 시간이 움직인 시간 9초에 1800초 아래로 내려가 15초 단계가 바뀐다.
+      container
+          .read(runControllerProvider.notifier)
+          .start(goal: const TimeGoal(Duration(seconds: 1808)));
+      async.flushMicrotasks();
+      sampleAt(const Duration(seconds: 1), 0);
+      for (var s = 2; s <= 5; s++) {
+        sampleAt(Duration(seconds: s), (s - 1) * 4.0);
+      }
+      // 이후 점이 없다. 자동 일시정지(10초) 전까지 틱만 흐른다.
+      async.elapse(const Duration(seconds: 7));
+      expect(
+        container.read(runControllerProvider).snapshot.state,
+        RunState.recording,
+      );
+      expect(
+        progress.shown.last.elapsed,
+        greaterThanOrEqualTo(const Duration(seconds: 9)),
+      );
+      expect(progress.shown.last.body, startsWith('목표 30분까지 29:5'));
+    });
+  });
+
+  test('시간 목표를 달성하면 거리 표시가 그대로여도 알림이 달성 문구로 바뀐다', () {
+    _run((async, container, progress, sampleAt) {
+      container
+          .read(runControllerProvider.notifier)
+          .start(goal: const TimeGoal(Duration(seconds: 30)));
+      async.flushMicrotasks();
+      sampleAt(const Duration(seconds: 1), 0);
+      for (var s = 2; s <= 25; s++) {
+        sampleAt(Duration(seconds: s), (s - 1) * 4.0);
+      }
+      expect(progress.shown.last.body, startsWith('목표 0분까지'));
+      expect(container.read(runControllerProvider).goalReached, isFalse);
+      // 거리 화면 값(0.10km)이 같은 점으로 30초를 채운다.
+      sampleAt(const Duration(seconds: 31), 102);
+      expect(container.read(runControllerProvider).goalReached, isTrue);
+      expect(progress.shown.last.body, '목표 0분 달성!');
     });
   });
 

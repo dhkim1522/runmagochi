@@ -132,7 +132,7 @@ class XpTxns extends Table {
 class CoinTxns extends Table {
   TextColumn get id => text()();
   IntColumn get amount => integer()(); // 지급 +, 구매 −
-  TextColumn get reason => text()(); // distance | runGoal | purchase
+  TextColumn get reason => text()(); // distance | runGoal | badge | purchase
   TextColumn get runId => text().nullable().references(Runs, #id)();
   TextColumn get itemId => text().nullable()();
   DateTimeColumn get createdAt => dateTime()();

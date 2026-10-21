@@ -15,7 +15,7 @@
 - `docs/product.md` — 기획서: 목표, 요구사항(F1~F19), 사용자 시나리오
 - `docs/roadmap.md` — 페이즈별 범위·완료 기준, 현재 위치, 미결정 항목
 - `docs/architecture.md` — 기술 스택, 구조, 데이터 모델, 서버 이전 경로
-- `docs/screens.md` — MVP 화면 6개, 이동 흐름, UX 원칙
+- `docs/screens.md` — MVP 화면 7개, 이동 흐름, UX 원칙
 - `docs/specs/run-engine.md` — 기록 엔진 규칙
 - `docs/specs/game-rules.md` — 게임 규칙과 수치
 - `docs/specs/sprite-spec.md` — 스프라이트 규격: 프레임·레이어·파일 이름

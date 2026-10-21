@@ -1,4 +1,3 @@
-import '../domain/run_goal.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../avatar/data/notification_scheduler.dart';
@@ -11,6 +10,7 @@ import '../data/location_source.dart';
 import '../data/run_progress_notifier.dart';
 import '../data/run_repository.dart';
 import '../data/tts_speaker.dart';
+import '../domain/run_goal.dart';
 import 'app_lifecycle.dart';
 import 'run_controller.dart';
 import 'run_guard.dart';

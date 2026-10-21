@@ -24,6 +24,7 @@ const Duration _tickInterval = Duration(seconds: 1);
 
 /// 거리만 바뀐 러닝 알림 갱신 사이의 최소 간격.
 const Duration _progressMinInterval = Duration(seconds: 3);
+const int _progressTimeStepSeconds = 15;
 
 /// 위치 스트림이 오류나 종료로 끊긴 뒤 다시 구독하기까지 기다리는 시간.
 const Duration _resubscribeInterval = Duration(seconds: 5);
@@ -119,6 +120,8 @@ class RunController extends Notifier<RunViewState> {
   /// 러닝 알림에 마지막으로 띄운 상태·거리 표기·시각.
   RunState? _progressState;
   String? _progressKm;
+  int? _progressTimeStep;
+  bool _progressReached = false;
   DateTime? _progressShownAt;
 
   /// 띄워 둔 종료 예고의 끝날 시각. 예고가 없으면 null.
@@ -738,6 +741,7 @@ class RunController extends Notifier<RunViewState> {
 
   /// 러닝 알림을 갱신한다. 상태가 바뀌면 바로, 기록 중 거리만 바뀌면 화면
   /// 거리(10m 단위)가 바뀌었고 마지막 갱신에서 3초가 지났을 때만 띄운다.
+  /// 시간 목표는 남은 시간이 15초 단계를 넘거나 달성 여부가 바뀔 때도 같은 간격으로 띄운다.
   /// 알림 실패는 러닝과 상관없으므로 버린다.
   void _updateProgress(RunSnapshot snapshot) {
     if (snapshot.state != RunState.recording &&
@@ -747,16 +751,27 @@ class RunController extends Notifier<RunViewState> {
     }
     final now = ref.read(clockProvider)();
     final km = formatKm(snapshot.distanceM);
+    final goal = _goal;
+    final timeStep = goal is TimeGoal
+        ? (goal.time - snapshot.movingTime).inSeconds ~/
+              _progressTimeStepSeconds
+        : null;
     final stateChanged = snapshot.state != _progressState;
     final shownAt = _progressShownAt;
     if (!stateChanged) {
-      if (km == _progressKm) return;
+      if (km == _progressKm &&
+          timeStep == _progressTimeStep &&
+          _goalReached == _progressReached) {
+        return;
+      }
       if (shownAt != null && now.difference(shownAt) < _progressMinInterval) {
         return;
       }
     }
     _progressState = snapshot.state;
     _progressKm = km;
+    _progressTimeStep = timeStep;
+    _progressReached = _goalReached;
     _progressShownAt = now;
     try {
       unawaited(
@@ -781,6 +796,8 @@ class RunController extends Notifier<RunViewState> {
   void _cancelProgress() {
     _progressState = null;
     _progressKm = null;
+    _progressTimeStep = null;
+    _progressReached = false;
     _progressShownAt = null;
     try {
       unawaited(
