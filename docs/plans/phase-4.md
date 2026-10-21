@@ -80,7 +80,7 @@
   - 테스트: 초속 1m 로 걷는 점(2초 간격)이 이어지면 기록 중 유지. 마지막 점 뒤 10초면 자동 일시정지, 움직인 시간은 마지막 움직인 점까지. 정확도 15m 점이 제자리에서 4~8m 씩 흔들리면 풀리지 않는다. 10초 안에 3점·12m 이동이면 첫 점 시각으로 재개, 그 점들이 거리에 들어가고 자동 일시정지 동안은 움직인 시간에서 빠진다. 자동 일시정지 중 `pause()` → `paused`, `pausedAt` 유지. 화면 제목.
   - 확인: `fvm flutter test test/run`
 
-- [ ] 4. 오래 멈추면 예고 뒤 종료
+- [x] 4. 오래 멈추면 예고 뒤 종료
   - 파일: `lib/run/app/run_guard.dart`, `lib/run/app/run_controller.dart`, `lib/run/data/run_progress_notifier.dart`, `lib/main.dart`, `tool/fake_run.dart`, `docs/specs/run-engine.md`
   - 규칙: `autoEndIdle`·`AutoEndReason.idle`·`RUN_AUTO_END_IDLE_SEC` 를 없애고 아래로 바꾼다.
     - 상수 `autoEndStill = Duration(minutes: 5)`, `autoEndPaused = Duration(hours: 1)`, `autoEndWarning = Duration(seconds: 30)`. `RunGuardConfig` 에 `still`·`paused`·`warning`.
