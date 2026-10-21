@@ -87,87 +87,94 @@ class ShareCard extends StatelessWidget {
             ).copyWith(textScaler: TextScaler.noScaling),
             child: SizedBox.fromSize(
               size: shareCardSize,
-              child: ColoredBox(
-                color: c.cream,
-                child: Padding(
-                  padding: const EdgeInsets.all(Gap.s6),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            'runmagochi',
-                            style: t.heading.copyWith(color: c.primaryDeep),
-                          ),
-                          Flexible(
-                            child: FittedBox(
-                              fit: BoxFit.scaleDown,
-                              child: Text(
-                                formatRunDate(startedAt),
-                                style: t.caption.copyWith(color: c.inkMuted),
+              // 화면 밖 Overlay 에는 Material 이 없어 글자에 노란 밑줄이 그려진다.
+              child: Material(
+                type: MaterialType.transparency,
+                child: ColoredBox(
+                  color: c.cream,
+                  child: Padding(
+                    padding: const EdgeInsets.all(Gap.s6),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              'runmagochi',
+                              style: t.heading.copyWith(color: c.primaryDeep),
+                            ),
+                            Flexible(
+                              child: FittedBox(
+                                fit: BoxFit.scaleDown,
+                                child: Text(
+                                  formatRunDate(startedAt),
+                                  style: t.caption.copyWith(color: c.inkMuted),
+                                ),
                               ),
                             ),
-                          ),
-                        ],
-                      ),
-                      Expanded(
-                        child: Center(
-                          child: k == null
-                              ? const SizedBox.shrink()
-                              : AvatarView(
-                                  kind: k,
-                                  stage: stage,
-                                  mood: mood,
-                                  action: AvatarAction.idle,
-                                  scale: 5,
-                                  hatItemId: hatItemId,
-                                  accessoryItemId: accessoryItemId,
-                                ),
+                          ],
                         ),
-                      ),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.baseline,
-                        textBaseline: TextBaseline.alphabetic,
-                        children: [
-                          Text(formatKm(distanceM), style: t.numberL),
-                          const SizedBox(width: Gap.s2),
-                          Text(
-                            'km',
-                            style: t.titleS.copyWith(color: c.primaryDeep),
+                        Expanded(
+                          child: Center(
+                            child: k == null
+                                ? const SizedBox.shrink()
+                                : AvatarView(
+                                    kind: k,
+                                    stage: stage,
+                                    mood: mood,
+                                    action: AvatarAction.idle,
+                                    scale: 5,
+                                    hatItemId: hatItemId,
+                                    accessoryItemId: accessoryItemId,
+                                  ),
                           ),
-                        ],
-                      ),
-                      const SizedBox(height: Gap.s4),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: _Stat('평균 페이스', formatPace(avgPaceSecPerKm)),
-                          ),
-                          Expanded(
-                            child: _Stat('시간', formatDuration(movingTime)),
-                          ),
-                        ],
-                      ),
-                      if (goalLine != null) ...[
+                        ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.baseline,
+                          textBaseline: TextBaseline.alphabetic,
+                          children: [
+                            Text(formatKm(distanceM), style: t.numberL),
+                            const SizedBox(width: Gap.s2),
+                            Text(
+                              'km',
+                              style: t.titleS.copyWith(color: c.primaryDeep),
+                            ),
+                          ],
+                        ),
                         const SizedBox(height: Gap.s4),
-                        Text(
-                          goalLine!,
-                          textAlign: TextAlign.center,
-                          style: t.heading.copyWith(color: c.success),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: _Stat(
+                                '평균 페이스',
+                                formatPace(avgPaceSecPerKm),
+                              ),
+                            ),
+                            Expanded(
+                              child: _Stat('시간', formatDuration(movingTime)),
+                            ),
+                          ],
                         ),
+                        if (goalLine != null) ...[
+                          const SizedBox(height: Gap.s4),
+                          Text(
+                            goalLine!,
+                            textAlign: TextAlign.center,
+                            style: t.heading.copyWith(color: c.success),
+                          ),
+                        ],
+                        if (levelUpLine != null) ...[
+                          const SizedBox(height: Gap.s2),
+                          Text(
+                            levelUpLine!,
+                            textAlign: TextAlign.center,
+                            style: t.heading.copyWith(color: c.accentDeep),
+                          ),
+                        ],
                       ],
-                      if (levelUpLine != null) ...[
-                        const SizedBox(height: Gap.s2),
-                        Text(
-                          levelUpLine!,
-                          textAlign: TextAlign.center,
-                          style: t.heading.copyWith(color: c.accentDeep),
-                        ),
-                      ],
-                    ],
+                    ),
                   ),
                 ),
               ),

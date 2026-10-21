@@ -134,6 +134,57 @@ void main() {
     expect(find.text('10월 16일 (금) 오후 5:51'), findsOneWidget);
   });
 
+  testWidgets('오프스크린으로 그린 카드 글자에는 밑줄이 없다', (tester) async {
+    late BuildContext ctx;
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: appLightTheme(),
+        home: Builder(
+          builder: (c) {
+            ctx = c;
+            return const SizedBox();
+          },
+        ),
+      ),
+    );
+    // 서비스처럼 Overlay 에 Scaffold·Material 없이 올린다.
+    unawaited(
+      renderShareCard(
+        ctx,
+        ShareCard(
+          kind: AvatarKind.chick,
+          stage: 1,
+          mood: AvatarMood.normal,
+          startedAt: DateTime(2026, 10, 16, 17, 51),
+          distanceM: 3200,
+          movingTime: const Duration(minutes: 20, seconds: 5),
+          avgPaceSecPerKm: 390,
+          goalLine: '목표 3km 달성',
+          levelUpLine: '레벨 4 달성!',
+        ),
+      ),
+    );
+    await tester.pump();
+    final texts = tester
+        .widgetList<RichText>(
+          find.descendant(
+            of: find.byType(ShareCard),
+            matching: find.byType(RichText),
+          ),
+        )
+        .toList();
+    expect(texts, isNotEmpty);
+    for (final t in texts) {
+      final d = t.text.style?.decoration;
+      expect(
+        d == null || d == TextDecoration.none,
+        isTrue,
+        reason: '${t.text.toPlainText()} 에 $d',
+      );
+    }
+    await tester.pump(const Duration(milliseconds: 50));
+  });
+
   testWidgets('공유 버튼 -> 가짜 Sharer 가 비어 있지 않은 PNG 경로를 받는다', (tester) async {
     final s = await _pump(tester);
     await tester.tap(find.text('공유'));
