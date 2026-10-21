@@ -49,8 +49,22 @@ abstract interface class RunProgressNotifier {
   Future<void> cancel();
 
   /// [deadline] 에 러닝을 끝낸다고 진동과 카운트다운으로 알린다 (결정 0020).
-  Future<void> showEndWarning(DateTime deadline);
+  /// [paused] 가 true 면 사용자 일시정지라 움직여도 풀리지 않으므로 재개만 안내한다.
+  Future<void> showEndWarning(DateTime deadline, {required bool paused});
   Future<void> cancelEndWarning();
+}
+
+/// 종료 예고 알림 문구. 자동 일시정지는 움직여도 풀리지만 사용자 일시정지는 재개만 푼다.
+({String title, String body}) endWarningContent({required bool paused}) =>
+    paused
+    ? (title: '일시정지가 길어 러닝을 마쳐요', body: '30초 안에 재개를 누르세요')
+    : (title: '움직이지 않으면 러닝을 마쳐요', body: '30초 안에 움직이거나 재개를 누르세요');
+
+/// 종료 예고 알림이 스스로 사라질 때까지의 밀리초. 끝날 시각까지 남은 시간에
+/// 여유 5초를 더해, 앱이 죽어도 알림이 러닝보다 오래 남지 않게 한다.
+int endWarningTimeoutMs(DateTime deadline, DateTime now) {
+  final left = deadline.difference(now);
+  return (left.isNegative ? Duration.zero : left).inMilliseconds + 5000;
 }
 
 /// 상태·거리·목표로 알림 문구를 만든다. 기록 중과 일시정지·자동 일시정지 중만 다룬다.
@@ -179,13 +193,14 @@ class LocalRunProgressNotifier implements RunProgressNotifier {
   }
 
   @override
-  Future<void> showEndWarning(DateTime deadline) async {
+  Future<void> showEndWarning(DateTime deadline, {required bool paused}) async {
     try {
       await ensureLocalNotificationsInitialized(_plugin);
+      final content = endWarningContent(paused: paused);
       await _plugin.show(
         id: endWarningId,
-        title: '움직이지 않으면 러닝을 마쳐요',
-        body: '30초 안에 움직이거나 재개를 누르세요',
+        title: content.title,
+        body: content.body,
         notificationDetails: NotificationDetails(
           android: AndroidNotificationDetails(
             endWarningChannelId,
@@ -198,6 +213,7 @@ class LocalRunProgressNotifier implements RunProgressNotifier {
             when: deadline.millisecondsSinceEpoch,
             usesChronometer: true,
             chronometerCountDown: true,
+            timeoutAfter: endWarningTimeoutMs(deadline, DateTime.now()),
             actions: const [_resumeAction],
           ),
         ),

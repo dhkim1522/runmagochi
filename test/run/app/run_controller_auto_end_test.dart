@@ -207,6 +207,7 @@ void main() {
         elapseTo(env, lastPointOffset + const Duration(minutes: 5));
         final deadline = lastPoint.add(const Duration(minutes: 5, seconds: 30));
         expect(env.progress.warnings, [deadline]);
+        expect(env.progress.warningPaused, [false]);
 
         elapseTo(
           env,
@@ -311,6 +312,7 @@ void main() {
         expect(env.progress.warnings, [
           _t0.add(switchAt + const Duration(hours: 1, seconds: 30)),
         ]);
+        expect(env.progress.warningPaused, [true]);
         elapseTo(env, switchAt + const Duration(hours: 1, seconds: 30));
         final summary = env.repo.completed.single.$2;
         expect(summary.endedAt, lastPoint);
@@ -636,6 +638,17 @@ void main() {
         expect(env.view.snapshot.state, RunState.paused);
         expect(env.view.autoEnded, isFalse);
         expect(env.notifier.shown, isEmpty);
+        env.controller.end();
+        env.async.flushMicrotasks();
+      });
+    });
+
+    test('복원하면 앞 프로세스가 남긴 종료 예고 알림을 지운다', () {
+      final startedAt = _t0.subtract(const Duration(minutes: 30));
+      _run(activeRun: active(startedAt), (env) {
+        env.controller.restoreIfAny();
+        env.async.flushMicrotasks();
+        expect(env.progress.warningCancels, 1);
         env.controller.end();
         env.async.flushMicrotasks();
       });

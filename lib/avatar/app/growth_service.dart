@@ -86,9 +86,11 @@ class GrowthService {
   /// 바뀐(잘라낸) 러닝의 경험치를 새 기록으로 다시 매긴다. 러닝이 없으면 아무 일도 없다.
   Future<void> _runChanged(String runId) async {
     final detail = await _runs.getRun(runId);
-    // 코인이 없는 러닝(업데이트 전에 경험치를 받음)은 잘라내도 코인을 받지 않는다.
+    // 경험치 행이 아직 없는 새 러닝은 코인도 받는다. 경험치만 있고 코인이 없는
+    // 러닝(업데이트 전에 경험치를 받음)은 잘라내도 코인을 받지 않는다.
     if (detail != null) {
-      await _rate(detail, coins: await _growth.hasRunCoins(runId));
+      final isNew = !(await _growth.runIdsWithDistanceXp()).contains(runId);
+      await _rate(detail, coins: isNew || await _growth.hasRunCoins(runId));
     }
   }
 

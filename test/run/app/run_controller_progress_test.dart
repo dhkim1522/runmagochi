@@ -100,7 +100,10 @@ class _Progress implements RunProgressNotifier {
   }
 
   @override
-  Future<void> showEndWarning(DateTime deadline) async {}
+  Future<void> showEndWarning(
+    DateTime deadline, {
+    required bool paused,
+  }) async {}
 
   @override
   Future<void> cancelEndWarning() async {}

@@ -394,6 +394,34 @@ void main() {
       expect(rows.where((r) => r.deletedAt != null), hasLength(1));
     });
 
+    test('첫 sync 전에 잘라낸 새 러닝도 코인을 받는다', () async {
+      runs.add('a', at, 5000, goalM: 5000);
+      runs.revise('a', 3000);
+      await service.runRevised('a', at);
+      expect(await balance(), greaterThan(0));
+      expect(await db.select(db.coinTxns).get(), isNotEmpty);
+
+      // 이어진 sync 도 같은 러닝을 새 러닝으로 다시 주지 않는다.
+      final before = await balance();
+      await service.sync();
+      expect(await balance(), before);
+    });
+
+    test('경험치만 있는 예전 러닝은 잘라내도 코인 0', () async {
+      runs.add('a', at, 5000, goalM: 5000);
+      await growth.setRunRewards(
+        'a',
+        distanceXp: 50,
+        goalBonusXp: 25,
+        distanceCoins: null,
+        goalCoins: null,
+      );
+      runs.revise('a', 3000);
+      await service.runRevised('a', at);
+      expect(await balance(), 0);
+      expect(await db.select(db.coinTxns).get(), isEmpty);
+    });
+
     test('러닝 삭제 뒤 잔액 그대로', () async {
       runs.add('a', at, 5000, goalM: 5000);
       await service.sync();
@@ -431,6 +459,21 @@ void main() {
       final again = await service.sync();
       expect(again.isEmpty, isTrue);
       expect(await growth.totalXp(), 90);
+    });
+
+    test('코인이 있는 새 러닝을 잘라낸 뒤 runRevised 가 없었으면 sync 가 코인도 고친다', () async {
+      final at = DateTime(2026, 10, 13, 7);
+      runs.add('a', at, 5000, goalM: 5000);
+      await service.sync();
+      final shop = DriftShopRepository(db);
+      expect(await shop.balance(), 50);
+
+      wall = wall.add(const Duration(minutes: 1));
+      runs.revise('a', 4000, at: wall);
+      wall = wall.add(const Duration(minutes: 1));
+      await service.sync();
+
+      expect(await shop.balance(), 20);
     });
 
     test('runRevised 까지 끝났으면 sync 는 다시 매기지 않는다', () async {

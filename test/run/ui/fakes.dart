@@ -352,6 +352,9 @@ class FakeRunProgressNotifier implements RunProgressNotifier {
 
   /// 띄운 종료 예고의 끝날 시각.
   final warnings = <DateTime>[];
+
+  /// [warnings] 와 같은 순서로, 사용자 일시정지 문구로 띄웠는지.
+  final warningPaused = <bool>[];
   int warningCancels = 0;
   bool fails = false;
 
@@ -368,9 +371,10 @@ class FakeRunProgressNotifier implements RunProgressNotifier {
   }
 
   @override
-  Future<void> showEndWarning(DateTime deadline) async {
+  Future<void> showEndWarning(DateTime deadline, {required bool paused}) async {
     if (fails) throw StateError('알림 실패');
     warnings.add(deadline);
+    warningPaused.add(paused);
   }
 
   @override

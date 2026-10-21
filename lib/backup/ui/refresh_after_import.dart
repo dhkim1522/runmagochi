@@ -13,4 +13,6 @@ void refreshAfterImport(WidgetRef ref) {
   ref.invalidate(weeklyTotalProvider);
   ref.invalidate(coinBalanceProvider);
   ref.invalidate(coinHistoryProvider);
+  ref.invalidate(equippedProvider);
+  ref.invalidate(ownedItemsProvider);
 }

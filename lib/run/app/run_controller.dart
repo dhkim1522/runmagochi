@@ -332,6 +332,17 @@ class RunController extends Notifier<RunViewState> {
   /// 남기고 true 를 돌려준다.
   Future<bool> restoreIfAny() async {
     _requireNoRun();
+    // 앞선 프로세스가 죽으면서 남긴 종료 예고 알림은 이 러닝과 상관없다.
+    try {
+      unawaited(
+        ref
+            .read(runProgressNotifierProvider)
+            .cancelEndWarning()
+            .catchError((Object e) => debugPrint('알림: 종료 예고 취소 실패 $e')),
+      );
+    } catch (e) {
+      debugPrint('알림: 종료 예고 취소 실패 $e');
+    }
     final active = await _repository.findActiveRun();
     if (active == null) return false;
     final engine = _engine = RunEngine(
@@ -681,7 +692,7 @@ class RunController extends Notifier<RunViewState> {
       } else {
         unawaited(
           notifier
-              .showEndWarning(deadline)
+              .showEndWarning(deadline, paused: engine.state == RunState.paused)
               .catchError((Object e) => debugPrint('알림: 종료 예고 실패 $e')),
         );
       }

@@ -15,6 +15,7 @@ RunProgressContent _content(
 );
 
 void main() {
+  endWarningTests();
   group('기록 중', () {
     test('목표 있음: 남은 거리, 크로노미터 켬, 일시정지 버튼', () {
       final c = _content(RunState.recording);
@@ -60,6 +61,34 @@ void main() {
     test('목표와 상관없이 본문이 같다', () {
       expect(_content(RunState.autoPaused, reached: true).body, '움직이면 이어져요');
       expect(_content(RunState.autoPaused, goalM: null).body, '움직이면 이어져요');
+    });
+  });
+}
+
+void endWarningTests() {
+  group('종료 예고 알림', () {
+    test('자동 일시정지면 움직이거나 재개하라고 알린다', () {
+      final c = endWarningContent(paused: false);
+      expect(c.title, '움직이지 않으면 러닝을 마쳐요');
+      expect(c.body, '30초 안에 움직이거나 재개를 누르세요');
+    });
+
+    test('사용자 일시정지면 재개만 안내한다', () {
+      final c = endWarningContent(paused: true);
+      expect(c.title, '일시정지가 길어 러닝을 마쳐요');
+      expect(c.body, '30초 안에 재개를 누르세요');
+    });
+
+    test('남은 시간에 여유 5초를 더해 알림을 스스로 거둔다', () {
+      final now = DateTime(2026, 10, 17, 12);
+      expect(
+        endWarningTimeoutMs(now.add(const Duration(seconds: 30)), now),
+        35000,
+      );
+      expect(
+        endWarningTimeoutMs(now.subtract(const Duration(seconds: 3)), now),
+        5000,
+      );
     });
   });
 }
