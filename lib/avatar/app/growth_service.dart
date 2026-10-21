@@ -75,12 +75,13 @@ class GrowthService {
             )
         ? goalBonusXp(goal)
         : 0;
+    final coinBonus = bonus > 0 ? goalBonusCoins(goal!) : 0;
     await _growth.setRunRewards(
       run.id,
       distanceXp: distanceXp(run.distanceM, detail.splits),
       goalBonusXp: bonus,
       distanceCoins: coins ? distanceCoins(run.distanceM, detail.splits) : null,
-      goalCoins: coins ? bonus : null, // 코인 보너스는 경험치 보너스와 같다.
+      goalCoins: coins ? coinBonus : null,
     );
     return bonus;
   }

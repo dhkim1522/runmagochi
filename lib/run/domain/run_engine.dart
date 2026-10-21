@@ -206,6 +206,19 @@ class RunEngine {
     );
   }
 
+  /// 자동 일시정지가 되돌려도 남는 움직인 시간. 기록 중이면 마지막으로 움직인
+  /// 시각까지만 센다(서 있던 10초 창은 자동 일시정지 때 빠진다). 기록 중이 아니면
+  /// [snapshot] 의 움직인 시간과 같다. 시간 목표 달성은 이 값으로 판정한다.
+  Duration get confirmedMovingTime {
+    final since = _recordingSince;
+    if (since == null) return _movingBase;
+    final now = _clock();
+    var movedAt = _movedAt ?? since;
+    if (movedAt.isBefore(since)) movedAt = since;
+    if (movedAt.isAfter(now)) movedAt = now;
+    return _movingBase + movedAt.difference(since);
+  }
+
   void start() {
     _startedAt = _transition(RunState.idle, RunState.recording);
   }

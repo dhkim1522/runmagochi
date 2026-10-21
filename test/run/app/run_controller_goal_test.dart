@@ -15,6 +15,7 @@ import '../ui/fakes.dart' show FakeRunProgressNotifier;
 import 'package:runmagochi/run/data/location_source.dart';
 import 'package:runmagochi/run/data/run_repository.dart';
 import 'package:runmagochi/run/domain/location_sample.dart';
+import 'package:runmagochi/run/domain/run_summary.dart';
 
 const _lat0 = 37.5;
 const _lng0 = 127.0;
@@ -48,6 +49,9 @@ class _Repo implements RunRepository {
     required List<LocationSample> points,
     required Duration movingTime,
   }) async {}
+
+  @override
+  Future<void> completeRun(String runId, RunSummary summary) async {}
 
   @override
   Future<ActiveRun?> findActiveRun() async => activeRun;
@@ -274,28 +278,47 @@ void main() {
   group('시간 목표 30분', () {
     const goal = TimeGoal(Duration(minutes: 30));
 
-    test('움직인 시간 29:59 까지 알림 0회, 30:00 에 점이 없어도 1초 틱에서 1회', () {
+    test('계속 움직여 30:00 을 넘기면 알림 1회, 끝 판정도 달성', () {
       _run((async, container, notifier, sampleAt) {
         final controller = container.read(runControllerProvider.notifier);
         controller.start(goal: goal);
         async.flushMicrotasks();
         sampleAt(const Duration(seconds: 1), 0);
-        // 29분 55초 지점까지 곧게 달린다(3km).
         sampleAt(const Duration(minutes: 29, seconds: 55), 3000);
-        async.elapse(const Duration(seconds: 4)); // 29:59
         var view = container.read(runControllerProvider);
-        expect(view.snapshot.movingTime, lessThan(goal.time));
         expect(view.goalReached, isFalse);
         expect(notifier.shown, isEmpty);
 
-        async.elapse(const Duration(seconds: 1)); // 30:00, 새 점 없음
+        sampleAt(const Duration(minutes: 30, seconds: 3), 3020);
         view = container.read(runControllerProvider);
-        expect(view.snapshot.movingTime, greaterThanOrEqualTo(goal.time));
         expect(view.goalReached, isTrue);
         expect(notifier.shown, [('목표 달성!', '30분 목표를 채웠어요. 종료할 때까지 기록은 이어져요')]);
 
-        async.elapse(const Duration(seconds: 30));
+        sampleAt(const Duration(minutes: 30, seconds: 8), 3030);
+        async.elapse(const Duration(minutes: 1));
         expect(notifier.shown, hasLength(1));
+        late RunSummary summary;
+        controller.end().then((v) => summary = v);
+        async.flushMicrotasks();
+        expect(summary.movingTime, greaterThanOrEqualTo(goal.time));
+      });
+    });
+
+    test('29:55 에 멈추면 30:30 이 지나도 알리지 않고 끝 판정도 미달', () {
+      _run((async, container, notifier, sampleAt) {
+        final controller = container.read(runControllerProvider.notifier);
+        controller.start(goal: goal);
+        async.flushMicrotasks();
+        sampleAt(const Duration(seconds: 1), 0);
+        sampleAt(const Duration(minutes: 29, seconds: 55), 3000);
+        async.elapse(const Duration(minutes: 30, seconds: 30) - async.elapsed);
+        final view = container.read(runControllerProvider);
+        expect(view.goalReached, isFalse);
+        expect(notifier.shown, isEmpty);
+        late RunSummary summary;
+        controller.end().then((v) => summary = v);
+        async.flushMicrotasks();
+        expect(summary.movingTime, lessThan(goal.time));
       });
     });
 
@@ -327,7 +350,7 @@ void main() {
         final view = container.read(runControllerProvider);
         expect(view.snapshot.movingTime, lessThan(const Duration(minutes: 21)));
         expect(view.goalReached, isFalse);
-        expect(notifier.shown, isEmpty);
+        expect(notifier.shown.where((n) => n.$1 == '목표 달성!'), isEmpty);
       });
     });
 

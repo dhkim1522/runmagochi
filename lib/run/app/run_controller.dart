@@ -72,7 +72,7 @@ class RunViewState {
   /// [lastSummary] 러닝의 저장소 id. 끝부분 잘라내기에 쓴다.
   final String? lastRunId;
 
-  /// 진행 중 러닝의 오늘 목표(m). 러닝 중·복원 때만 채우고 목표 없는 옛 러닝은 null.
+  /// 진행 중 러닝의 오늘 목표. 러닝 중·복원 때만 채우고 목표 없는 옛 러닝은 null.
   final RunGoal? goal;
 
   /// 거리 목표일 때의 미터 값. 시간 목표·목표 없음은 null.
@@ -126,7 +126,7 @@ class RunController extends Notifier<RunViewState> {
   /// 띄워 둔 종료 예고의 끝날 시각. 예고가 없으면 null.
   DateTime? _endWarningDeadline;
 
-  /// 진행 중 러닝의 목표(m).
+  /// 진행 중 러닝의 목표.
   RunGoal? _goal;
 
   /// 목표 달성을 이미 알렸거나(복원 포함) 알릴 필요가 없다.
@@ -655,7 +655,8 @@ class RunController extends Notifier<RunViewState> {
       snapshot.distanceM,
       meters,
     ),
-    TimeGoal(:final time) => snapshot.movingTime >= time,
+    // 자동 일시정지가 되돌려도 남는 시간으로 판정해, 알린 뒤 끝 판정이 미달이 되지 않게 한다.
+    TimeGoal(:final time) => _engine!.confirmedMovingTime >= time,
   };
 
   /// [clearLocationError] 면 위치 스트림 오류 문구를 지운다. 다른 오류는 둔다.
