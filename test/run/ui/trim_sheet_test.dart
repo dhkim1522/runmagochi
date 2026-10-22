@@ -93,6 +93,7 @@ Future<List<(DateTime, GrowthGain?)>> _pump(
   int nullGain = 0,
   double scale = 1,
   Size size = const Size(800, 2400),
+  ThemeData? theme,
 }) async {
   tester.view.physicalSize = size;
   tester.view.devicePixelRatio = 1;
@@ -110,7 +111,7 @@ Future<List<(DateTime, GrowthGain?)>> _pump(
         ),
       ],
       child: MaterialApp(
-        theme: appLightTheme(),
+        theme: theme ?? appLightTheme(),
         builder: (context, child) => MediaQuery(
           data: MediaQuery.of(
             context,
@@ -164,6 +165,21 @@ void main() {
     expect(find.text('끝 시각 17:51:00'), findsOneWidget);
     expect(find.text(_preview(s)), findsNothing);
   });
+
+  for (final (name, theme, colors) in [
+    ('라이트', appLightTheme(), AppColors.light),
+    ('다크', appDarkTheme(), AppColors.dark),
+  ]) {
+    testWidgets('슬라이더 채움은 연두가 아니라 primaryDeep 이다 ($name)', (tester) async {
+      await _pump(tester, SummaryScreen.fromSummary(_summary()), theme: theme);
+      await _openSheet(tester);
+      final s = SliderTheme.of(tester.element(find.byType(Slider)));
+      expect(s.activeTrackColor, colors.primaryDeep);
+      expect(s.thumbColor, colors.primaryDeep);
+      expect(s.inactiveTrackColor, colors.surfaceSoft);
+      expect(s.activeTrackColor, isNot(colors.primary));
+    });
+  }
 
   testWidgets('원래 끝에서는 잘라내기가 눌리지 않는다', (tester) async {
     final log = await _pump(tester, SummaryScreen.fromSummary(_summary()));

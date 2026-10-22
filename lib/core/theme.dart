@@ -716,6 +716,16 @@ ThemeData _build(AppColors c, Brightness brightness) {
       selectionHandleColor: c.primaryDeep,
     ),
     progressIndicatorTheme: ProgressIndicatorThemeData(color: c.primaryDeep),
+    // 슬라이더: 연두는 눌림·채움 상태 전용(결정 0029)이라 트랙·손잡이는 ProgressBar 와
+    // 같이 primaryDeep 채움 + surfaceSoft 바탕으로 한다.
+    sliderTheme: SliderThemeData(
+      activeTrackColor: c.primaryDeep,
+      inactiveTrackColor: c.surfaceSoft,
+      thumbColor: c.primaryDeep,
+      activeTickMarkColor: c.surface,
+      inactiveTickMarkColor: c.inkMuted,
+      overlayColor: c.primaryDeep.withValues(alpha: 0.12),
+    ),
     // 스위치: 켜짐은 연두 면 + primary-edge 경계(연두 면 규칙), 꺼짐은 트랙 + line-strong.
     switchTheme: SwitchThemeData(
       thumbColor: WidgetStateProperty.resolveWith(
