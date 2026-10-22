@@ -21,13 +21,19 @@ final jelly = PetKind(
   // 아이템: 모자 챙은 y=18(머리 위), 소품은 눈 윗줄 y=20 기준.
   hatAnchor: (x: 16, y: 18),
   accessoryAnchor: (x: 16, y: 20),
+  // 모자 위로 나오는 잎 두 장: 4단계 잎 모양을 1줄 올려(y=8~10) 모자 꼭대기(y=11)에 얹는다.
+  hatSprout: (
+    x: 10,
+    top: -10,
+    rows: ['.oo......oo.', 'oGGo....oGGo', 'oGggo..oggGo'],
+  ),
   stages: [
     // 1 새싹 젤리: 작은 발로 걷는다.
     StageArt(
       body: const Art(12, [
         '....oo....oo....',
-        '...oGGo..oGgo...',
-        '....oGgooggo....',
+        '...oGGo..oGGo...',
+        '....oGgoogGo....',
         '....oooooooo....',
         '..ooiiiibbbboo..',
         '.oiiihbbbbbbbBo.',
@@ -51,8 +57,8 @@ final jelly = PetKind(
     StageArt(
       body: const Art(11, [
         '....oo......oo....',
-        '...oGGo....oGgo...',
-        '...oGggo..ogggo...',
+        '...oGGo....oGGo...',
+        '...oGggo..oggGo...',
         '....oooggggooo....',
         '.....oooooooo.....',
         '...ooiiiibbbboo...',
@@ -75,8 +81,8 @@ final jelly = PetKind(
     StageArt(
       body: const Art(10, [
         '.....oo......oo.....',
-        '....oGGo....oGgo....',
-        '....oGggo..ogggo....',
+        '....oGGo....oGGo....',
+        '....oGggo..oggGo....',
         '.....oooggggooo.....',
         '.....oooooooooo.....',
         '...ooiiiiibbbbboo...',
@@ -101,8 +107,8 @@ final jelly = PetKind(
     StageArt(
       body: const Art(9, [
         '......oo......oo......',
-        '.....oGGo....oGgo.....',
-        '.....oGggo..ogggo.....',
+        '.....oGGo....oGGo.....',
+        '.....oGggo..oggGo.....',
         '......oooggggooo......',
         '......oooooooooo......',
         '....ooiiiiibbbbboo....',

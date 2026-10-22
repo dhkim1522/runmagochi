@@ -281,6 +281,89 @@ void main() {
           }
         }
       });
+
+      // 아이템 그림은 단계를 가리지 않고 한 장이라(파일 이름에 단계가 없다) 가장 큰
+      // 4단계 머리에 맞춘다. 챙 줄과 그 위의 몸은 단계와 상관없이 모두 모자에 덮이고,
+      // 모자 위로 보이는 병아리 볏·젤리 잎·도토리 꼭지는 종류의 hatSprout 그림이다.
+      // 그래서 4단계 모두 모자 위 모습이 같다(1단계도 잎·볏이 모자 밖으로 나온다).
+      test('모자는 4단계 모두 챙 줄과 그 위의 몸을 덮는다', () {
+        for (final item in items.where((i) => i.slot == 'hat')) {
+          for (var s = 0; s < 4; s++) {
+            for (final a in petActions) {
+              final bodies = bodyFrames(pet.stages[s], a);
+              final frames = itemFrames(pet, item, a);
+              final dys = headOffsets(a);
+              for (var i = 0; i < frames.length; i++) {
+                final brim = pet.hatAnchor.y + dys[i];
+                for (var y = 0; y <= brim; y++) {
+                  for (var x = 0; x < spriteSize; x++) {
+                    if (!opaque(bodies[i], x, y)) continue;
+                    expect(
+                      opaque(frames[i], x, y),
+                      isTrue,
+                      reason: '${pet.name} s${s + 1} ${item.id} $a #$i ($x,$y)',
+                    );
+                  }
+                }
+              }
+            }
+          }
+        }
+      });
+
+      test('헤드폰 귀덮개는 4단계 모두 머리 옆에 붙고 머리 밖으로 나온다', () {
+        // 팔(날개)을 뺀 기본 그림의 머리 폭과 idle 첫 프레임으로 잰다.
+        final phones = itemFrames(
+          pet,
+          items.firstWhere((i) => i.id == 'headphones'),
+          'idle',
+        ).first;
+        for (var s = 0; s < 4; s++) {
+          final art = pet.stages[s].body;
+          final left = (spriteSize - art.rows.first.length) ~/ 2;
+          // 귀덮개 줄: 눈 윗줄부터 3줄.
+          for (var y = 20; y < 23; y++) {
+            final row = art.rows[y - art.top];
+            final body = [
+              for (var c = 0; c < row.length; c++)
+                if (row[c] != '.') left + c,
+            ];
+            final xs = [
+              for (var x = 0; x < spriteSize; x++)
+                if (body.contains(x) || opaque(phones, x, y)) x,
+            ];
+            final reason = '${pet.name} s${s + 1} y=$y';
+            expect(xs.last - xs.first + 1, xs.length, reason: '$reason 뜸');
+            expect(xs.first, lessThan(body.first), reason: reason);
+            expect(xs.last, greaterThan(body.last), reason: reason);
+          }
+        }
+      });
+
+      test('선글라스 알은 눈(normal)을 모두 덮는다', () {
+        final glasses = items.firstWhere((i) => i.id == 'sunglasses');
+        for (final a in petActions) {
+          final frames = itemFrames(pet, glasses, a);
+          final faces = faceFrames(pet, 'normal', a);
+          for (var i = 0; i < frames.length; i++) {
+            for (var y = 0; y < spriteSize; y++) {
+              for (var x = 0; x < spriteSize; x++) {
+                final ch = charAt(faces[i], x, y);
+                if (ch != 'k' && ch != 'w') continue;
+                if (y != 20 + headOffsets(a)[i] &&
+                    y != 21 + headOffsets(a)[i]) {
+                  continue;
+                }
+                expect(
+                  opaque(frames[i], x, y),
+                  isTrue,
+                  reason: '${pet.name} $a #$i ($x,$y)',
+                );
+              }
+            }
+          }
+        }
+      });
     });
 
     group(pet.name, () {
@@ -430,6 +513,28 @@ void main() {
         expect(pet.stages[2].body.rows.join().contains('a'), isFalse);
         expect(pet.stages[3].body.rows.join().contains('a'), isTrue);
       });
+
+      test('4단계 헤어밴드는 눈 위 두 줄이다(한 줄은 모자 테처럼 보인다)', () {
+        final art = pet.stages[3].body;
+        final bandYs = [
+          for (var r = 0; r < art.rows.length; r++)
+            if (art.rows[r].contains('a') || art.rows[r].contains('A'))
+              art.top + r,
+        ];
+        expect(bandYs, hasLength(2), reason: pet.name);
+        expect(bandYs.last - bandYs.first, 1, reason: pet.name);
+        expect(bandYs.last, lessThan(20), reason: pet.name);
+      });
     });
   }
+
+  test('젤리 잎은 단계마다 좌우 대칭이다', () {
+    final jelly = pets.firstWhere((p) => p.name == 'jelly');
+    for (var s = 0; s < 4; s++) {
+      for (final row in jelly.stages[s].body.rows) {
+        if (!row.contains('g') && !row.contains('G')) continue;
+        expect(row, row.split('').reversed.join(), reason: 'jelly s${s + 1}');
+      }
+    }
+  });
 }

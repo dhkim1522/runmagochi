@@ -22,6 +22,8 @@ final acorn = PetKind(
   // 아이템: 모자 챙은 y=17(도토리 모자 아랫줄), 소품은 눈 윗줄 y=20 기준.
   hatAnchor: (x: 16, y: 17),
   accessoryAnchor: (x: 16, y: 20),
+  // 모자 위로 나오는 꼭지(y=8·9). 4단계 꼭지 끝(y=9)을 덮는다.
+  hatSprout: (x: 14, top: -9, rows: ['.oo.', 'oxco']),
   stages: [
     // 1 작은 도토리: 작은 발로 걷는다.
     StageArt(
@@ -97,7 +99,7 @@ final acorn = PetKind(
       arm: Limb(5, 21, clayArmRows('t', 'n', 'N', band: true)),
       foot: const Limb(9, 0, clayShoeFoot),
     ),
-    // 4 마라토너 도토리: + 헤어밴드(모자 바로 아래 y=18) + 완주 메달.
+    // 4 마라토너 도토리: + 헤어밴드(모자 바로 아래 y=18·19 두 줄) + 완주 메달.
     // 메달은 목 아래 가로 끈(y=25)에 매단다. 입 바로 아래 세로 끈은 입처럼 보인다.
     StageArt(
       body: const Art(9, [
@@ -111,8 +113,8 @@ final acorn = PetKind(
         'oxCCcCCcCCcCCcCCcCccco',
         'occcccccccccccccccccco',
         '.oAAAAAAAaaaaaaaaaaao.',
+        '.oaaaaaaaaaaaaaaaaaao.',
         '.otnnnnnnnnnnnnnnnnNo.',
-        '.onnnnnnnnnnnnnnnnnNo.',
         '.onnnnnnnnnnnnnnnnnNo.',
         '.onnnnnnnnnnnnnnnnnNo.',
         '.onnnnnnnnnnnnnnnnnNo.',

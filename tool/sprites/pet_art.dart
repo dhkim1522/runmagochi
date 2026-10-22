@@ -51,17 +51,28 @@ const Palette petPalette = {
   'e': 0xFFFDE047, // 메달
   'E': 0xFFA16207, // 메달 테두리
   'z': 0xFF60A5FA, // 잠든 z
-  // 아이템(작업 8, tool/sprites/items.dart)
+  // 아이템(작업 8, 페이즈 6 작업 5 말랑 클레이, tool/sprites/items.dart).
+  // 몸처럼 3단 명암(하이라이트·기본·그림자)이다.
+  'H': 0xFF99F6E4, // 러닝 캡 하이라이트
   'T': 0xFF2DD4BF, // 러닝 캡
+  'W': 0xFF14B8A6, // 러닝 캡 그림자
   'U': 0xFF0F766E, // 러닝 캡 챙
+  'I': 0xFFEDE9FE, // 비니 하이라이트·방울
   'v': 0xFFC4B5FD, // 비니
-  'V': 0xFF8B5CF6, // 비니 골
+  'V': 0xFF8B5CF6, // 비니 그림자·골
+  'F': 0xFFFEF9C3, // 밀짚 하이라이트
   's': 0xFFFDE68A, // 밀짚
-  'S': 0xFFD4A24C, // 밀짚 결
+  'S': 0xFFD4A24C, // 밀짚 그림자·결
+  'J': 0xFF475569, // 선글라스 알 반사
   'L': 0xFF1E293B, // 선글라스 알
+  'X': 0xFFCBD5E1, // 헤드폰 머리띠 하이라이트
   'u': 0xFF94A3B8, // 헤드폰 머리띠
-  'R': 0xFFEF4444, // 헤드폰 귀덮개
+  'Z': 0xFF64748B, // 헤드폰 머리띠 그림자·쿠션
+  'Q': 0xFFFCA5A5, // 헤드폰 귀덮개 하이라이트
+  'R': 0xFFEF4444, // 헤드폰 귀덮개 (그림자는 d)
+  'P': 0xFFFBCFE8, // 꽃잎 하이라이트
   'f': 0xFFF472B6, // 꽃잎
+  'K': 0xFFDB2777, // 꽃잎 그림자
 };
 
 /// 가운데 정렬 그림. [rows] 첫 줄이 y=[top] 에 놓인다.
@@ -120,6 +131,10 @@ class FaceArt {
 /// 아이템 기준점. [x] 는 그림 가로 가운데, [y] 는 그림 위치를 재는 줄([ItemArt.top]).
 typedef Anchor = ({int x, int y});
 
+/// 모자 위로 나오는 종류의 표시(병아리 볏·젤리 잎·도토리 꼭지). 왼쪽 위가
+/// ([x], 모자 기준점 y + [top]). 모자 그림 뒤에 그려 모자 밖으로 나온 부분만 보인다.
+typedef Sprout = ({int x, int top, List<String> rows});
+
 class PetKind {
   const PetKind({
     required this.name,
@@ -127,6 +142,7 @@ class PetKind {
     required this.face,
     required this.hatAnchor,
     required this.accessoryAnchor,
+    this.hatSprout,
   });
 
   /// 폴더 이름: chick·jelly·acorn.
@@ -139,6 +155,10 @@ class PetKind {
 
   /// 소품 기준점: 눈 윗줄.
   final Anchor accessoryAnchor;
+
+  /// 모자를 쓰면 몸의 볏·잎·꼭지는 모자에 덮이고, 대신 이 그림이 모자 위로 나온다.
+  /// 단계마다 솟은 높이가 달라도 모자 위 모습이 4단계 모두 같다. 후보(candidates/)는 없다.
+  final Sprout? hatSprout;
 }
 
 /// 아이템 그림 한 장. 4단계·3종이 같은 그림을 쓰고, 종류의 기준점에 맞춰 놓는다.
@@ -393,18 +413,31 @@ SpriteFrame _faceFrame(FaceArt f, String mood, int dy, int frame) {
 }
 
 /// 아이템 하나, 동작 하나의 프레임들. face 와 같은 [headOffsets] 로 움직인다.
+/// 모자는 종류의 [PetKind.hatSprout] 를 뒤에 함께 그린다.
 List<SpriteFrame> itemFrames(PetKind kind, ItemArt item, String action) {
-  final anchor = item.slot == 'hat' ? kind.hatAnchor : kind.accessoryAnchor;
+  final hat = item.slot == 'hat';
+  final anchor = hat ? kind.hatAnchor : kind.accessoryAnchor;
   final x0 = anchor.x - item.rows.first.length ~/ 2;
   final y0 = anchor.y + item.top;
+  final sprout = hat ? kind.hatSprout : null;
   return [
-    for (final dy in headOffsets(action)) _itemFrame(item.rows, x0, y0 + dy),
+    for (final dy in headOffsets(action))
+      _itemFrame(item.rows, x0, y0 + dy, sprout, anchor.y + dy),
   ];
 }
 
-SpriteFrame _itemFrame(List<String> rows, int x0, int y0) {
+SpriteFrame _itemFrame(
+  List<String> rows,
+  int x0,
+  int y0,
+  Sprout? sprout,
+  int anchorY,
+) {
   final g = _empty();
   _stamp(g, rows, x0, y0);
+  if (sprout != null) {
+    _stamp(g, sprout.rows, sprout.x, anchorY + sprout.top, under: true);
+  }
   return _toFrame(g);
 }
 
