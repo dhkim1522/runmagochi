@@ -119,7 +119,7 @@
   - 테스트: 컴포넌트별 최소 48×48, 글자 2배에서 넘침 없음, 다크 테마, 눌림 상태
   - 확인: `fvm flutter test test/core`
 
-- [ ] 12. 홈·러닝 중·일시정지
+- [x] 12. 홈·러닝 중·일시정지
   - 고른 시안대로 `home_screen.dart`·`run_goal_picker.dart`·`in_run_screen.dart` 개편. 거리 숫자가 가장 크다는 원칙 유지.
   - 테스트: 기존 화면 테스트 통과, 360×640·글자 1.3배 넘침 없음, 다크 테마
   - 확인: `fvm flutter test test/run`
