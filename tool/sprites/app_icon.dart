@@ -72,7 +72,7 @@ const int _splashDp = 144;
 const int _splashScale = 4;
 const double _splashRadius = 28;
 
-/// 병아리가 아이콘 폭에서 차지하길 바라는 비율과 넘지 않을 비율(적응형과 같은 비율).
+/// 병아리 긴 변이 아이콘 한 변에서 차지하길 바라는 비율과 넘지 않을 비율(적응형과 같은 비율).
 const double _targetFill = 0.61;
 const double _maxFill = 0.8;
 
@@ -185,19 +185,23 @@ void roundCorners(img.Image im, double radius) {
   }
 }
 
-/// [size] 에 맞는 정수 배율: 병아리 폭이 [_targetFill] 에 가장 가깝고 [_maxFill] 을 넘지
-/// 않는 값. 1배도 들어가지 않으면 null.
-int? _fitScale(int size) {
+/// [size] 에 맞는 정수 배율: [boxW]×[boxH] 그림의 긴 변이 [_targetFill] 에 가장 가깝고
+/// [_maxFill] 을 넘지 않는 값. 폭·높이 중 긴 쪽으로 재야 높은 그림도 꽉 차지 않는다.
+/// 1배도 들어가지 않으면 null.
+int? fitIconScale({required int size, required int boxW, required int boxH}) {
+  final side = math.max(boxW, boxH);
   int? best;
-  for (var s = 1; math.max(_boxW, _boxH) * s <= size * _maxFill; s++) {
+  for (var s = 1; side * s <= size * _maxFill; s++) {
     if (best == null ||
-        (_boxW * s / size - _targetFill).abs() <
-            (_boxW * best / size - _targetFill).abs()) {
+        (side * s / size - _targetFill).abs() <
+            (side * best / size - _targetFill).abs()) {
       best = s;
     }
   }
   return best;
 }
+
+int? _fitScale(int size) => fitIconScale(size: size, boxW: _boxW, boxH: _boxH);
 
 /// 꽉 찬 무대 아이콘. 1배도 들어가지 않는 작은 크기(iOS 20px)는 두 배로 그려 평균으로 줄인다.
 img.Image _fullIcon(IconColors c, int size, {int channels = 4}) {

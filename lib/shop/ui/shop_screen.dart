@@ -178,10 +178,10 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
                       LayoutBuilder(
                         builder: (context, box) {
                           double height(int s) =>
-                              spriteFramePx * s +
-                              Stage.groundHeightCompact -
-                              Stage.footSink -
-                              spriteFootGapRows * s +
+                              PetStage.fitHeight(
+                                scale: s,
+                                groundHeight: Stage.groundHeightCompact,
+                              ) +
                               Gap.s3;
                           final scale =
                               PetStage.largestScale(
@@ -212,13 +212,7 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
                                   : equipped.accessoryItemId,
                             ),
                           );
-                          return SizedBox(
-                            height:
-                                spriteFramePx * scale +
-                                stage.petBottom +
-                                Gap.s3,
-                            child: stage,
-                          );
+                          return SizedBox(height: height(scale), child: stage);
                         },
                       ),
                       const SizedBox(height: Gap.s4),
@@ -302,11 +296,11 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
 const int _previewScale = 3;
 
 /// 미리보기 무대 높이: 펫 상자 + 펫 아래(땅 − 묻힘 − 발끝 아래 빈 줄) + 위 여백 4.
-const double _previewHeight =
-    spriteFramePx * _previewScale +
-    Stage.groundHeightMini -
-    Stage.footSink -
-    spriteFootGapRows * _previewScale +
+final double _previewHeight =
+    PetStage.fitHeight(
+      scale: _previewScale,
+      groundHeight: Stage.groundHeightMini,
+    ) +
     Gap.s1;
 
 class _ItemCard extends StatelessWidget {

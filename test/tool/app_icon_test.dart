@@ -52,6 +52,16 @@ void main() {
     );
   });
 
+  test('아이콘 배율은 긴 변(폭·높이 중 큰 쪽)으로 목표 비율에 맞춘다', () {
+    // 지금 병아리(22×20)는 폭이 길다: 1024 → 28배(폭 0.60), 넘지 않을 비율 0.8.
+    expect(fitIconScale(size: 1024, boxW: 22, boxH: 20), 28);
+    // 높이가 긴 그림이면 높이로 고른다(폭으로 고르면 6배, 높이 0.78 로 꽉 찬다).
+    expect(fitIconScale(size: 100, boxW: 10, boxH: 13), 5);
+    expect(fitIconScale(size: 100, boxW: 13, boxH: 10), 5);
+    // 1배도 0.8 안에 안 들어가면 null.
+    expect(fitIconScale(size: 20, boxW: 22, boxH: 20), isNull);
+  });
+
   test('Android 런처 아이콘은 48·72·96·144·192 px 다', () {
     final sizes = [
       for (final d in densities.keys)

@@ -201,8 +201,11 @@ class _PressableState extends State<Pressable> {
 
   void _down() {
     _hold?.cancel();
+    _hold = null;
     _released = false;
     _set(true);
+    // 애니메이션 줄이기면 붙잡지 않는다: 누른 동안만 눌린 모양, 놓으면 바로 돌아온다.
+    if (Motion.reduced(context)) return;
     _hold = Timer(Motion.press, () {
       _hold = null;
       if (_released) _set(false);
@@ -776,6 +779,10 @@ class _TabItemState extends State<_TabItem> {
 /// (docs/specs/sprite-spec.md 기준점). 기준점이 바뀌면 함께 고친다.
 const int spriteFootGapRows = 2;
 
+/// 스프라이트 프레임 한 변(sprite-spec 32×32). avatar 의 `spriteFramePx` 와 같은 값이다
+/// (core 는 avatar 에 기대지 않아 따로 둔다. components_test 의 fitHeight 가 같은지 본다).
+const int _spriteFramePx = 32;
+
 /// 스프라이트 프레임 위쪽에서 늘 비는 줄 수. 가장 높은 그림(도토리 비니)도 y=5 부터라
 /// 무대의 말풍선이 이만큼은 펫 상자와 겹쳐도 그림을 가리지 않는다(sprite_assets_test 확인).
 const int spriteTopGapRows = 5;
@@ -826,8 +833,17 @@ class PetStage extends StatelessWidget {
   }
 
   /// 무대 아래에서 펫 상자 아래까지.
-  double get petBottom =>
+  double get petBottom => _petBottom(scale, groundHeight);
+
+  static double _petBottom(int scale, double groundHeight) =>
       groundHeight - Stage.footSink - spriteFootGapRows * scale;
+
+  /// 펫 상자 위끝이 무대 위끝에 닿는 무대 높이: 펫 상자(`32 × scale`) + [petBottom].
+  /// 화면이 무대 높이를 펫에 맞춰 잡을 때 쓴다(여백은 더해서 쓴다).
+  static double fitHeight({
+    required int scale,
+    double groundHeight = Stage.groundHeight,
+  }) => _spriteFramePx * scale + _petBottom(scale, groundHeight);
 
   @override
   Widget build(BuildContext context) {
@@ -1028,7 +1044,8 @@ class EmptyState extends StatelessWidget {
   const EmptyState.error({super.key, required this.message, this.action})
     : icon = null;
 
-  /// 그림 크기(빈 상태 그림을 넘길 때도 이 크기로 맞춘다).
+  /// 그림 크기. [EmptyState.error] 의 느낌표가 이 크기다. [icon] 은 크기를 바꾸지 않고 그대로
+  /// 놓으니, 넘기는 쪽이 이 값으로 그린다(예: `CoinIcon(size: EmptyState.iconSize)`).
   static const double iconSize = 40;
 
   final Widget? icon;

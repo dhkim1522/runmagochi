@@ -78,7 +78,7 @@ class CoinHistoryScreen extends ConsumerWidget {
                   data: (list) => list.isEmpty
                       ? const SingleChildScrollView(
                           child: EmptyState(
-                            icon: CoinIcon(size: 40),
+                            icon: CoinIcon(size: EmptyState.iconSize),
                             message: '달리면 코인이 쌓여요',
                           ),
                         )

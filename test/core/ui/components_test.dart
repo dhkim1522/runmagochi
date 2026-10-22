@@ -675,6 +675,33 @@ void _stageTests() {
     });
   }
 
+  for (final (scale, ground) in [
+    (8, Stage.groundHeight),
+    (6, Stage.groundHeightCompact),
+    (3, Stage.groundHeightMini),
+  ]) {
+    testWidgets('PetStage.fitHeight($scale배): 펫 상자 위끝이 무대 위끝에 닿는 높이', (
+      tester,
+    ) async {
+      final h = PetStage.fitHeight(scale: scale, groundHeight: ground);
+      final stage = PetStage(
+        scale: scale,
+        groundHeight: ground,
+        pet: pet(scale),
+      );
+      expect(h, spriteFramePx * scale + stage.petBottom);
+      await _pump(
+        tester,
+        Column(
+          children: [SizedBox(height: h, child: stage)],
+        ),
+      );
+      final s = tester.getRect(find.byType(PetStage));
+      final p = tester.getRect(find.byKey(const Key('pet')));
+      expect(p.top, s.top);
+    });
+  }
+
   for (final dark in [false, true]) {
     final name = dark ? '다크' : '라이트';
     testWidgets('PetStage 기본 겹: 하늘 stageSky, 땅 stageGround + 윗선 4px ($name)', (

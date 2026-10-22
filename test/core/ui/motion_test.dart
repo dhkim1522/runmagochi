@@ -188,6 +188,25 @@ void main() {
       expect(_scale(tester, button), 1);
     });
 
+    testWidgets('애니메이션 줄이기면 짧게 톡 눌러도 놓자마자 돌아온다', (tester) async {
+      await _pump(
+        tester,
+        Scaffold(
+          body: Center(
+            child: AppButton(label: '시작', onPressed: () {}),
+          ),
+        ),
+        reduce: true,
+      );
+      final button = find.byType(AppButton);
+      final g = await tester.startGesture(tester.getCenter(button));
+      await tester.pump();
+      expect(_scale(tester, button), Pressable.pressedScale, reason: '누른 동안');
+      await g.up();
+      await tester.pump();
+      expect(_scale(tester, button), 1, reason: 'Motion.press 만큼 붙잡지 않는다');
+    });
+
     testWidgets('누른 채 화면이 사라져도 타이머가 남지 않는다', (tester) async {
       await _pump(
         tester,

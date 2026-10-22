@@ -129,7 +129,7 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                             icon: TabIcon(
                               glyph: TabGlyph.history,
                               color: c.inkMuted,
-                              size: 40,
+                              size: EmptyState.iconSize,
                             ),
                             message: '아직 기록이 없어요',
                           ),
