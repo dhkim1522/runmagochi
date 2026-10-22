@@ -113,7 +113,7 @@
   - 확인: `fvm flutter test test/core`
   - 스킬: ui-ux-pro-max:ui-ux-pro-max
 
-- [ ] 11. 공통 컴포넌트
+- [x] 11. 공통 컴포넌트
   - `lib/core/ui/clay.dart` 의 버튼·카드·칩·진행 막대·다이얼로그·탭바·코인 칩을 새 시스템으로. 누름 반응(눌림·되돌아옴) 포함. 화면 배경 위젯.
   - 파일: `lib/core/ui/clay.dart`(이름이 방향과 맞지 않으면 `components.dart` 로 바꾸고 import 정리), `lib/shop/ui/coin_chip.dart`, `test/core/ui/`
   - 테스트: 컴포넌트별 최소 48×48, 글자 2배에서 넘침 없음, 다크 테마, 눌림 상태
