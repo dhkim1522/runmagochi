@@ -7,9 +7,10 @@
 /* 레이아웃: 옅은 풀빛 작업대 위에 폰 아트보드를 흐름 순서로 늘어놓은 설계 보드.
    표지 → 전체 보드 → 흐름도 → 화면별 상세 → 와이어프레임 → 부품 순서로 내려간다.
    색·글자는 앱 토큰(docs/design/tokens.json)을 그대로 쓴다. 도트 글꼴은 번호에만. */
+/* 앱에 번들한 Pretendard 서브셋(SIL OFL, fonts/OFL-Pretendard.txt). 앱과 같은 글자 모양. */
 @font-face {
-  font-family: "Pretendard";
-  src: url("fonts/PretendardVariable.woff2") format("woff2-variations"), url("fonts/PretendardVariable.woff2") format("woff2");
+  font-family: "Runmagochi Sans";
+  src: url("fonts/RunmagochiSans.ttf") format("truetype-variations"), url("fonts/RunmagochiSans.ttf") format("truetype");
   font-weight: 45 920;
   font-display: swap;
 }
@@ -49,8 +50,14 @@
   --night-ink: #EEF4E6;
   --night-muted: #A3AE99;
   --night-line: #2E3A28;
+  --night-accent: #5DD08A;
+  --night-surface: #1A2316;
+  --night-sky: #1D2C15;
+  --night-stage-ink: #B6EE84;
+  --night-edge: rgba(238, 244, 230, .16);
+  --night-shadow: rgba(0, 0, 0, .7);
 
-  --font-sans: "Pretendard", "Pretendard Variable", "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", system-ui, sans-serif;
+  --font-sans: "Runmagochi Sans", "Pretendard", "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", system-ui, sans-serif;
   --font-dot: "DotGothic16", ui-monospace, "SFMono-Regular", Menlo, monospace;
 
   --r-sm: 12px; --r-md: 20px; --r-lg: 24px; --r-xl: 28px;
@@ -161,6 +168,9 @@ section.part { padding-block: 56px 8px; scroll-margin-top: 64px; }
 .group-head .reqs { display: flex; flex-wrap: wrap; gap: 4px; margin-left: auto; }
 .req { display: inline-flex; align-items: center; height: 24px; padding: 0 9px; border-radius: 999px; background: var(--surface); color: var(--green); font-size: 13px; font-weight: 700; font-variant-numeric: tabular-nums; }
 .artboards { display: grid; grid-template-columns: repeat(auto-fill, minmax(156px, 1fr)); gap: 22px 18px; }
+.artboards.wide { grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); align-items: start; }
+.artboards.wide .shot { border-radius: 14px; }
+.group-note { margin: -6px 0 14px; font-size: 14px; font-weight: 600; color: var(--muted); max-width: 52em; }
 .art { margin: 0; min-width: 0; }
 .art button { all: unset; display: block; width: 100%; cursor: zoom-in; border-radius: 18px; }
 .art button:focus-visible { outline: 3px solid var(--green); outline-offset: 4px; }
@@ -175,12 +185,12 @@ section.part { padding-block: 56px 8px; scroll-margin-top: 64px; }
 
 .band { border-radius: var(--r-xl); padding: 28px clamp(14px, 2.6vw, 32px); }
 .band.night { background: var(--night); color: var(--night-ink); box-shadow: inset 0 0 0 1px var(--night-line); }
-.band.night .group-head .letter { color: #5DD08A; }
-.band.night .group-head .count, .band.night .art .state { color: var(--night-muted); }
-.band.night .art .no { color: #5DD08A; }
-.band.night .req { background: #1A2316; color: #5DD08A; }
-.band.night .shot { box-shadow: 0 0 0 1px rgba(238,244,230,.16), 0 18px 36px -22px rgba(0,0,0,.7); background: #1A2316; }
-.band.night .art .flag { background: #1D2C15; color: #B6EE84; }
+.band.night .group-head .letter { color: var(--night-accent); }
+.band.night .group-head .count, .band.night .art .state, .band.night .group-note { color: var(--night-muted); }
+.band.night .art .no { color: var(--night-accent); }
+.band.night .req { background: var(--night-surface); color: var(--night-accent); }
+.band.night .shot { box-shadow: 0 0 0 1px var(--night-edge), 0 18px 36px -22px var(--night-shadow); background: var(--night-surface); }
+.band.night .art .flag { background: var(--night-sky); color: var(--night-stage-ink); }
 .band.ios { background: var(--surface); }
 .bands { display: grid; gap: 22px; margin-top: 22px; }
 
@@ -594,7 +604,7 @@ dialog.zoom button { min-height: 44px; min-width: 44px; border-radius: 999px; bo
         <article>
           <h3>환경과 예시 데이터</h3>
           <ul>
-            <li>Android: AVD <code>runmagochi</code>(Pixel 7, Android 16 · API 36), 릴리스 빌드 0.3.0 베타. 상태바는 시스템 데모 모드로 9:41 고정.</li>
+            <li>Android: AVD <code>runmagochi</code>(Pixel 7, Android 16 · API 36), 릴리스 빌드 0.3.0 베타. 상태바는 시스템 데모 모드로 9:41 고정. 글꼴은 앱에 번들한 서브셋(Runmagochi Sans)을 이 페이지에도 씀.</li>
             <li>iPhone: iPhone 16 Pro 시뮬레이터(iOS 18.6), 디버그 빌드에서 디버그 띠를 끄고 찍음.</li>
             <li>예시 데이터: 2025-11 ~ 2026-10 러닝 33회를 백업 6판 형식으로 만들어 설정 › 가져오기로 넣음. 게임 규칙대로 경험치·코인·배지를 맞춰 Lv.9, 배지 9개, 코인 315 에서 시작.</li>
             <li>러닝 화면·요약·알림은 실제 러닝 2회를 가상 GPS(여의도 둘레 고리 경로)로 돌려 찍음. 3.60km(목표 3km 달성, Lv.10·새 외형 단계, 배지 목표 달성 30번), 1.56km(목표 10km 미달, 5분 넘게 멈춰 종료 예고 알림).</li>
@@ -605,10 +615,11 @@ dialog.zoom button { min-height: 44px; min-width: 44px; border-radius: 999px; bo
           <h3>찍으면서 본 것</h3>
           <ul>
             <li><span class="sev">확인 필요</span>첫 러닝의 "목표 달성!" 알림이 러닝이 끝난 뒤에도 남아 12분 뒤 다음 러닝 중에도 보였어요(39 종료 예고 알림 화면).</li>
+            <li><span class="sev">확인 필요</span>위치 권한을 두 번 거부하면 시스템 창이 더 뜨지 않는데, 권한 안내가 "권한 허용" 에 머물러 "설정에서 위치 권한을 허용해 주세요 · 설정 열기" 로 바뀌지 않아요. 앱을 다시 켜도 같아요. 그래서 거부 상태 화면은 찍지 못했어요.</li>
             <li><span class="sev">확인 필요</span>끝부분 잘라내기 슬라이더의 트랙이 연두로 채워져요. 디자인 시스템은 연두를 막대 채움에 쓰지 않기로 했어요(밝은 바탕 위 1.2:1).</li>
             <li><span class="sev">관찰</span>알림 작은 아이콘이 빈 동그라미로 보여요. 앱 아이콘 모양 단색 아이콘을 두면 알림창에서 더 잘 알아봐요.</li>
             <li><span class="sev">관찰</span>카운트다운 동안 탭바가 보여요. 누르면 다른 탭으로 갈 수 있는지 확인이 필요해요.</li>
-            <li><span class="sev">관찰</span>공유 카드는 시스템 공유 창 미리보기에서 잘라냈어요. 오른쪽 아래 연필은 Android 의 편집 버튼이에요.</li>
+            <li><span class="sev">관찰</span>공유 카드는 시스템 공유 창 미리보기에서 잘라냈어요. 오른쪽 아래 연필은 Android 의 편집 버튼이에요. 알림은 알림창에서 앱 카드만 잘라냈어요.</li>
             <li><span class="sev">관찰</span>iPhone 요약의 직선 경로는 시뮬레이터가 위치 점을 직선으로 이어서 생긴 것이에요.</li>
           </ul>
         </article>
@@ -646,7 +657,7 @@ dialog.zoom button { min-height: 44px; min-width: 44px; border-radius: 999px; bo
       ['09', '09-home-goal-input', '목표 직접 입력', '3~42km 정수'],
       ['10', '10-countdown', '카운트다운', '3 · 2 · 1'],
     ]},
-    { k: 'C', t: '러닝 중·일시정지', reqs: ['F1', 'F2', 'F4', 'F6', 'F8', 'F14'], items: [
+    { k: 'C', t: '러닝 중·일시정지', reqs: ['F1', 'F2', 'F4', 'F6', 'F6-2', 'F8', 'F14'], items: [
       ['11', '11-run', '러닝 중', '2.03km · 목표 3km 진행'],
       ['12', '12-run-goal', '러닝 중 · 목표 달성', '진동 + "목표 달성!"'],
       ['13', '13-run-autopause', '자동 일시정지', '재개 · 일시정지 두 버튼'],
@@ -657,7 +668,7 @@ dialog.zoom button { min-height: 44px; min-width: 44px; border-radius: 999px; bo
       ['16', '16-summary-levelup', '요약 · 레벨 업', 'Lv.9→10 · 목표 달성 · 새 배지', '긴 화면'],
       ['17', '17-summary-missed', '요약 · 목표 미달', '10km까지 8.44km 남음'],
       ['18', '18-summary-trim', '끝부분 잘라내기', '끝 시각 당기기 시트'],
-      ['19', '19-share-card', '공유 카드', '1080×1350 카드 · 공유 창'],
+      ['19', '19-share-card-crop', '공유 카드', '1080×1350 카드 · 공유 창 미리보기'],
     ]},
     { k: 'E', t: '기록', reqs: ['F5', 'F5-2', 'F16'], items: [
       ['20', '20-history-week', '기록 · 주', '19.86km · 5회'],
@@ -683,14 +694,14 @@ dialog.zoom button { min-height: 44px; min-width: 44px; border-radius: 999px; bo
       ['34', '34-settings', '설정', '체중 · 이름 · 음성 · 백업'],
       ['35', '35-settings-import', '백업 가져오기 확인', '되돌릴 수 없어요'],
     ]},
-    { k: 'I', t: '알림', reqs: ['F20', 'F4'], items: [
+    { k: 'I', t: '알림', reqs: ['F20', 'F4'], wide: true, note: '알림창에서 앱 알림 카드만 잘라냈어요. 39 아래 카드는 앞 러닝에서 남은 목표 달성 알림이에요(촬영 메모 참고).', items: [
       ['36', '36-notif-run', '러닝 알림', '거리 · 목표까지 남은 양 · 일시정지'],
       ['37', '37-notif-goal', '목표 달성 알림', '3km 목표를 채웠어요'],
       ['38', '38-notif-autopause', '자동 일시정지 알림', '재개 · 일시정지'],
       ['39', '39-notif-autoend', '종료 예고 알림', '30초 카운트다운'],
     ]},
   ];
-  const DARK = { k: 'N', t: '다크 모드 · 대표 화면', reqs: [], items: [
+  const DARK = { k: 'N', t: '다크 모드 · 대표 화면', reqs: [], note: '라이트 보드를 찍은 뒤 실제 러닝 2회를 마친 데이터라 숫자가 달라요(Lv.10 · 코인 555 · 러닝 35회).', items: [
     ['40', '40-dark-home', '홈', '5km 목표'],
     ['41', '41-dark-run', '러닝 중', '0.12km'],
     ['42', '42-dark-autopause', '자동 일시정지', '밝은 판 재개'],
@@ -708,13 +719,14 @@ dialog.zoom button { min-height: 44px; min-width: 44px; border-radius: 999px; bo
     ['54', '54-ios-shop', '상점', '러닝 캡 장착 중'],
   ]};
   const SIZE = { ios: [390, 848], def: [390, 866] };
+  const DIM = { '19-share-card-crop': [390, 489], '36-notif-run': [390, 165], '37-notif-goal': [390, 116], '38-notif-autopause': [390, 165], '39-notif-autoend': [390, 240] };
   const LONG = { '16-summary-levelup': '16-summary-levelup-full', '25-run-detail': '25-run-detail-full', '26-avatar': '26-avatar-full', '27-achievements': '27-achievements-full' };
   const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const tick = (s) => esc(s).replace(/`([^`]+)`/g, '<code>$1</code>');
 
   function art(it, isIos) {
     const [no, file, name, state, flag] = it;
-    const [w, h] = isIos ? SIZE.ios : SIZE.def;
+    const [w, h] = DIM[file] || (isIos ? SIZE.ios : SIZE.def);
     const zoom = LONG[file] || file;
     return `<figure class="art"><button type="button" data-zoom="${zoom}" data-title="${esc(no + ' ' + name)}" aria-label="${esc(name)} 크게 보기">` +
       `<img class="shot" src="web/${file}.png" alt="${esc(name + ': ' + state)}" width="${w}" height="${h}" loading="lazy" decoding="async"></button>` +
@@ -724,7 +736,8 @@ dialog.zoom button { min-height: 44px; min-width: 44px; border-radius: 999px; bo
   function group(g, isIos) {
     const reqs = g.reqs.length ? `<span class="reqs">${g.reqs.map((r) => `<span class="req">${r}</span>`).join('')}</span>` : '';
     return `<div><div class="group-head"><span class="letter">${g.k}</span><h3>${esc(g.t)}</h3><span class="count">${g.items.length}장</span>${reqs}</div>` +
-      `<div class="artboards">${g.items.map((it) => art(it, isIos)).join('')}</div></div>`;
+      (g.note ? `<p class="group-note">${esc(g.note)}</p>` : '') +
+      `<div class="artboards${g.wide ? ' wide' : ''}">${g.items.map((it) => art(it, isIos)).join('')}</div></div>`;
   }
   document.getElementById('board-light').innerHTML = GROUPS.map((g) => group(g)).join('');
   document.getElementById('board-dark').innerHTML = group(DARK);
@@ -739,7 +752,7 @@ dialog.zoom button { min-height: 44px; min-width: 44px; border-radius: 999px; bo
     run: [574, 56, '11', '러닝 중', '11-run'],
     pause: [734, 56, '14', '일시정지', '14-paused'],
     sum: [914, 56, '16', '러닝 요약', '16-summary-levelup'],
-    share: [1074, 56, '19', '공유 카드', '19-share-card'],
+    share: [1074, 56, '19', '공유 카드', '19-share-card-crop'],
     set: [24, 450, '34', '설정', '34-settings'],
     hist: [224, 450, '20', '기록', '20-history-week'],
     det: [384, 450, '25', '기록 상세', '25-run-detail'],
@@ -809,20 +822,20 @@ dialog.zoom button { min-height: 44px; min-width: 44px; border-radius: 999px; bo
       pins: [[14, 10], [50, 30], [50, 92.3]],
       els: [['제목', '권한 안내'], ['안내 카드', '왜 필요한지 한 문장. 위치는 기기에만 저장'], ['권한 허용', '시스템 권한 창을 띄움. 거부되면 `설정 열기`']],
       variants: [['04-permission-precise', '정확한 위치'], ['05-permission-battery', '배터리 최적화']],
-      ix: ['대략 위치만 허용하면 "정확한 위치를 허용해야 거리가 기록됩니다" 를 더해 다시 물음', '배터리 최적화는 `설정 열기` 와 `나중에` 글자 버튼', '모두 통과하면 3초 카운트다운 뒤 러닝 시작'] },
+      ix: ['대략 위치만 허용하면 "정확한 위치를 허용해야 거리가 기록됩니다" 를 더해 다시 물음', '배터리 최적화는 `설정 열기` 와 `나중에` 글자 버튼', '거부 상태("설정에서 위치 권한을 허용해 주세요" + `설정 열기`)는 찍지 못함: Android 에서 두 번 거부해도 이 상태로 바뀌지 않음(촬영 메모)', '모두 통과하면 3초 카운트다운 뒤 러닝 시작'] },
     { id: 'd-home', img: '06-home', route: '탭 › 러닝', title: '홈', reqs: ['F1', 'F6', 'F6-2', 'F7', 'F18'],
       desc: '오늘 목표는 지난번 값이 골라져 있어 시작 한 번으로 달려요. 마스코트가 화면의 주인공.',
       pins: [[13.5, 10], [89, 10], [72, 18.3], [50, 33], [50, 53.6], [50, 67.6], [50, 74.2], [50, 84], [50, 93]],
       els: [['코인 칩', '잔액. 누르면 상점'], ['설정', '동그라미 톱니 버튼'], ['말풍선', '다음 레벨까지 남은 거리(km)'], ['무대 + 아바타', '8배. 장착 아이템을 입고, 경과일에 따라 표정이 졸림·잠듦으로'], ['이름 Lv. + 레벨 막대', '레벨 안 진행을 초록 막대로'], ['목표 종류', '거리·시간 분할 선택'], ['목표 값', '3·5·10km 또는 20·30·60분, `직접`'], ['시작', '화면의 유일한 연두 버튼'], ['탭바', '러닝·기록·아바타·상점']],
       variants: [['07-home-first-day', '첫날'], ['08-home-time-goal', '시간 목표'], ['09-home-goal-input', '직접 입력'], ['10-countdown', '카운트다운']],
       ix: ['목표 칩을 누르면 바로 바뀌고 다음 러닝의 기본값이 됨', '`직접` 은 다이얼로그: 거리 3~42km, 시간 15~180분 정수', '시작 → (처음이면 권한 안내) → 3·2·1 → 러닝 중'] },
-    { id: 'd-run', img: '11-run', route: '홈 › 시작', title: '러닝 중', reqs: ['F1', 'F2', 'F4', 'F6', 'F8', 'F14', 'F20'],
+    { id: 'd-run', img: '11-run', route: '홈 › 시작', title: '러닝 중', reqs: ['F1', 'F2', 'F4', 'F6', 'F6-2', 'F8', 'F14', 'F20'],
       desc: '거리 하나를 화면 1/3 크기로. 페이스는 GPS 로 흔들리는 현재 페이스보다 평균 페이스를 먼저 둬요.',
       pins: [[14, 10], [50, 21], [50, 32], [50, 41.7], [50, 66], [50, 90.6]],
       els: [['제목', '러닝 중 → 자동 일시정지면 "멈춰서 일시정지했어요"'], ['거리', '128/800 고정폭 숫자 + km'], ['목표 줄·막대', '거리 목표는 기록 거리, 시간 목표는 움직인 시간으로 진행'], ['지표 카드', '평균 페이스 · 현재 페이스 · 시간'], ['무대(6배)', '9\'00" 보다 빠르면 달리기, 느리면 걷기 동작'], ['일시정지', '어두운 판 버튼']],
       variants: [['12-run-goal', '목표 달성'], ['13-run-autopause', '자동 일시정지'], ['36-notif-run', '러닝 알림']],
       ix: ['목표에 처음 닿으면 진동 + "목표 달성!" 한 번, 기록은 이어짐', '멈추면 자동 일시정지(재개·일시정지 두 버튼), 다시 움직이면 스스로 풀림', '자동 일시정지 5분이면 종료 예고 알림, 30초 뒤 자동 종료', '화면을 꺼도 알림창·음성으로 진행을 알려 줌'] },
-    { id: 'd-paused', img: '14-paused', route: '러닝 중 › 일시정지', title: '일시정지', reqs: ['F1', 'F4', 'F16'],
+    { id: 'd-paused', img: '14-paused', route: '러닝 중 › 일시정지', title: '일시정지', reqs: ['F1', 'F4'],
       desc: '종료는 길게 눌러야만 돼요. 실수로 끝내지 않게.',
       pins: [[50, 17.7], [50, 25], [50, 35], [50, 60], [50, 83.2], [50, 90.6]],
       els: [['거리', '64/800으로 줄어듦'], ['목표 줄', '진행 막대 유지'], ['지표 카드', '평균 페이스 · 시간 · 칼로리'], ['무대(idle)', '서 있는 동작'], ['재개', '어두운 판 버튼'], ['길게 눌러 종료', '누르는 동안 회색이 차오르고 다 차면 종료']],
@@ -832,7 +845,7 @@ dialog.zoom button { min-height: 44px; min-width: 44px; border-radius: 999px; bo
       desc: '기록과 성장(경험치·레벨 업·배지·코인)을 한 화면에서 보여 줘요. 이 예시는 Lv.9 → 10, 새 외형 단계, 목표 3km 달성, 배지 "목표 달성 30번".',
       pins: [[84, 4.8], [50, 18.3], [82, 32.3], [16, 38.2], [22, 45], [50, 51], [50, 60.6], [50, 75], [50, 85], [50, 93.3], [50, 96.6]],
       els: [['공유', '카드 이미지를 만들어 시스템 공유 창'], ['성장 카드', '레벨 업! · 이전→지금 레벨 · 새 외형 단계 알약 · 8배 무대'], ['경험치·코인 줄', '거리 경험치, 목표 보너스. 줄마다 `코인 +N`'], ['배지 줄', '새로 받은 배지와 코인'], ['날짜·이름·거리', '요일·시간대로 지은 이름, 거리 64'], ['지표 카드', '평균 페이스 · 시간 · 칼로리'], ['경로', '1km 구간마다 느림·보통·빠름 색 + 범례. 시작 연두, 끝 검정 점'], ['구간 막대', '평균선 위아래 막대, 1km 미만 마지막 구간은 흐리게'], ['구간 표', 'km · 페이스'], ['끝부분 잘라내기', '흰 보조 버튼'], ['확인', '홈으로']],
-      variants: [['17-summary-missed', '목표 미달'], ['18-summary-trim', '잘라내기'], ['19-share-card-crop', '공유 카드'], ['19-share-card', '공유 창']],
+      variants: [['17-summary-missed', '목표 미달'], ['18-summary-trim', '잘라내기'], ['19-share-card-crop', '공유 카드'], ['19-share-card', '시스템 공유 창']],
       ix: ['잘라내기 시트에서 끝 시각을 당기면 거리·시간·경험치·목표 판정을 다시 매김', '미달이면 "목표 10km까지 8.44km 남았어요" 처럼 남은 양', '빠른 구간이 있으면 "빠른 이동 1.20km는 경험치에서 뺐어요"'] },
     { id: 'd-history', img: '20-history-week', route: '탭 › 기록', title: '기록', reqs: ['F5', 'F5-2'],
       desc: '주·월·년·전체 기간을 바꿔 합계와 막대 그래프를 봐요. 아래는 최근 러닝 목록.',
@@ -876,16 +889,16 @@ dialog.zoom button { min-height: 44px; min-width: 44px; border-radius: 999px; bo
       els: [['내 정보', '체중(칼로리 계산에만 씀)'], ['러닝 · 아바타', '아바타 이름, 음성 안내 스위치'], ['백업', '내보내기 · 가져오기, 설명 한 줄'], ['정보', '오픈소스 라이선스 · 버전']],
       variants: [['35-settings-import', '가져오기 확인']],
       ix: ['러닝 중에는 내보내기·가져오기를 막음', '가져오면 "백업을 가져왔어요" 스낵바'] },
-    { id: 'd-notif', img: '36-notif-run', route: '알림창 · 잠금화면', title: '러닝 알림', reqs: ['F20', 'F4'],
+    { id: 'd-notif', img: '36-notif-run', route: '알림창', title: '러닝 알림', reqs: ['F20', 'F4'],
       desc: '화면을 켜지 않고 진행을 봐요. 상태에 따라 버튼과 문구가 바뀌어요.',
-      pins: [[50, 33.5], [50, 37.5], [26, 43.8]],
+      pins: [[30, 37], [30, 53], [22, 77]],
       els: [['제목', '러닝 중 · 0.55km (상태 · 거리)'], ['본문', '목표 3km까지 2.45km'], ['버튼', '일시정지 (자동 일시정지면 재개 · 일시정지)']],
-      variants: [['37-notif-goal', '목표 달성'], ['38-notif-autopause', '자동 일시정지'], ['39-notif-autoend', '종료 예고']],
+      variants: [['37-notif-goal', '목표 달성'], ['38-notif-autopause', '자동 일시정지'], ['39-notif-autoend', '종료 예고']], dim: [390, 165],
       ix: ['종료 예고: "움직이지 않으면 러닝을 마쳐요" + 30초 카운트다운, 재개 버튼', '움직이거나 재개를 누르면 예고를 지움'] },
   ];
   function detail(d) {
     const pins = d.pins.map(([x, y], i) => `<span class="pin" style="left:${x}%;top:${y}%">${i + 1}</span>`).join('');
-    const h = d.long ? null : 866;
+    const h = d.long ? null : (d.dim ? d.dim[1] : 866);
     const phone = `<div class="phone${d.long ? ' scroll' : ''}" ${d.long ? 'tabindex="0" aria-label="' + esc(d.title) + ' 긴 화면, 스크롤해서 보기"' : ''}><div style="position:relative">` +
       `<img class="shot" src="web/${d.img}.png" alt="${esc(d.title + ' 화면')}" width="390"${h ? ` height="${h}"` : ''} loading="lazy" decoding="async">` +
       `<div class="pin-layer">${pins}</div></div></div>`;
@@ -908,18 +921,23 @@ dialog.zoom button { min-height: 44px; min-width: 44px; border-radius: 999px; bo
   const back = `<div class="row" style="gap:8px"><span class="circ"></span><div class="ln s" style="height:12px;flex:none;width:38%"></div></div>`;
   const WF = [
     ['01', '첫 실행', `<div class="row" style="justify-content:center;gap:4px"><div class="ln" style="width:12%;flex:none"></div><div class="b" style="width:6%;height:6px;flex:none"></div></div>${st(46)}<div class="ln m" style="height:12px;align-self:center"></div>${ln('l')}${card(ln('m') + ln('l'))}<div class="foot"><div class="btn"></div></div>`],
+    ['02', '첫 실행 · 이름', `<div class="row" style="justify-content:center;gap:4px"><div class="b" style="width:6%;height:6px;flex:none"></div><div class="ln" style="width:12%;flex:none"></div></div><div class="ln m" style="height:12px"></div>${ln('l')}<div class="stage" style="height:40%"><i class="sprite"></i><span class="pill" style="position:absolute;right:8%;top:8%;width:26%;height:16px;background:var(--surface)"></span></div>${ln('s')}<div class="pill" style="height:26px;background:var(--surface);box-shadow:inset 0 0 0 2px var(--wf-deep)"></div><div class="foot"><div class="row"><div class="btn ghost" style="flex:.6"></div><div class="btn"></div></div></div>`],
     ['03', '권한 안내', `${title}${card('<div class="circ" style="align-self:center;width:30px;height:30px"></div>' + ln('l') + ln('m'))}<div class="foot"><div class="btn"></div><div class="ln s" style="align-self:center;width:22%"></div></div>`],
+    ['05', '권한 · 배터리', `${title}${card('<div class="circ" style="align-self:center;width:30px;height:30px"></div>' + ln('l') + ln('l') + ln('m'))}<div class="foot"><div class="btn"></div><div class="ln s" style="align-self:center;width:18%;background:var(--wf-block)"></div></div>`],
     ['06', '홈', `<div class="row"><div class="pill" style="flex:none;width:32%"></div><span style="flex:1"></span><span class="circ" style="width:26px;height:26px"></span></div>${st(30)}<div class="ln m" style="height:10px;align-self:center;width:40%"></div><div class="pill" style="height:8px"></div>${card(ln('s') + '<div class="row"><div class="pill on"></div><div class="pill"></div></div><div class="row" style="gap:4%"><div class="pill on"></div><div class="pill"></div><div class="pill"></div><div class="pill"></div></div>')}<div class="btn"></div>${tabs(0)}`],
     ['11', '러닝 중', `${title}<div class="big" style="height:54px;width:76%"></div>${ln('s')}<div class="pill" style="height:8px"></div>${card('<div class="row"><div class="ln"></div><div class="ln"></div><div class="ln"></div></div><div class="row"><div class="ln" style="height:10px"></div><div class="ln" style="height:10px"></div><div class="ln" style="height:10px"></div></div>')}${st(30)}<div class="foot" style="padding-bottom:9%"><div class="btn"></div></div>`],
     ['14', '일시정지', `${title}<div class="big" style="align-self:center;width:44%"></div>${ln('s')}<div class="pill" style="height:8px"></div>${card('<div class="row"><div class="ln"></div><div class="ln"></div><div class="ln"></div></div><div class="row"><div class="ln" style="height:10px"></div><div class="ln" style="height:10px"></div><div class="ln" style="height:10px"></div></div>')}${st(26)}<div class="foot" style="padding-bottom:9%"><div class="btn"></div><div class="btn ghost"></div></div>`],
     ['16', '러닝 요약', `<div class="row"><div class="ln m" style="height:12px"></div><div class="pill" style="flex:none;width:24%"></div></div>${card('<div class="ln s" style="align-self:center;height:10px"></div>' + ln('m') + '<div class="stage" style="height:70px"><i class="sprite"></i></div>', 0)}${card('<div class="row"><div class="ln m"></div><div class="ln s" style="flex:none;width:22%"></div></div><div class="row"><div class="ln m"></div><div class="ln s" style="flex:none;width:22%"></div></div>')}<div class="big" style="width:40%;height:24px"></div><div class="foot" style="padding-bottom:9%"><div class="btn ghost"></div><div class="btn"></div></div>`],
+    ['19', '공유 카드', `<div class="card" style="margin-top:6%;gap:9px"><div class="row"><div class="ln s"></div><div class="ln s" style="flex:none;width:34%"></div></div><div class="stage" style="height:70px"><i class="sprite" style="width:24%"></i></div><div class="row" style="align-items:stretch"><div class="b" style="flex:.8;height:58px"></div><div style="display:grid;gap:6px"><div class="big" style="height:22px;width:90%"></div>${ln('m')}${ln('m')}</div></div>${ln('l')}<div class="ln m" style="align-self:center;background:var(--wf-block)"></div></div><div class="foot"><div class="row" style="gap:5%">${'<span class="circ" style="width:26px;height:26px"></span>'.repeat(5)}</div></div>`],
     ['20', '기록', `${title}<div class="row" style="gap:4%"><div class="pill on"></div><div class="pill"></div><div class="pill"></div><div class="pill"></div></div>${card('<div class="row"><span class="circ"></span><div class="ln s" style="flex:none;width:40%"></div><span class="circ"></span></div><div class="big" style="height:22px;width:50%"></div><div class="bars"><i style="height:60%"></i><i style="height:35%"></i><i style="height:80%"></i><i style="height:55%"></i><i style="height:4%"></i><i style="height:4%"></i><i style="height:4%"></i></div>')}${ln('s')}${card(ln('s') + ln('m'))}${card(ln('s') + ln('m'))}${tabs(1)}`],
+    ['24', '기록 · 빈 상태', `${title}<div class="row" style="gap:4%"><div class="pill on"></div><div class="pill"></div><div class="pill"></div><div class="pill"></div></div>${card('<div class="row"><span class="circ"></span><div class="ln s" style="flex:none;width:40%"></div><span class="circ"></span></div><div class="big" style="height:22px;width:36%"></div><div class="bars"><i style="height:4%"></i><i style="height:4%"></i><i style="height:4%"></i><i style="height:4%"></i><i style="height:4%"></i><i style="height:4%"></i><i style="height:4%"></i></div>')}${ln('s')}${card('<div class="circ" style="align-self:center;width:26px;height:26px"></div><div class="ln m" style="align-self:center;background:var(--wf-block)"></div>')}${tabs(1)}`],
     ['25', '기록 상세', `<div class="row"><div class="ln m" style="height:12px"></div><div class="pill" style="flex:none;width:24%"></div></div>${card('<div class="row"><div class="ln m"></div><div class="ln s" style="flex:none;width:22%"></div></div>')}${ln('s')}<div class="big" style="width:44%;height:26px"></div>${card('<div class="row"><div class="ln"></div><div class="ln"></div><div class="ln"></div></div>')}<div class="card" style="flex:1 1 auto;min-height:0"><div class="b" style="flex:1;border-radius:10px"></div></div><div class="foot" style="margin-top:0;padding-bottom:9%"><div class="ln s" style="align-self:center;width:24%"></div><div class="btn"></div></div>`],
     ['26', '아바타', `${title}${st(32)}<div class="ln m" style="height:10px;align-self:center;width:40%"></div>${ln('m')}<div class="pill" style="height:8px"></div><div class="btn ghost"></div>${ln('s')}${card('<div class="row"><div class="b" style="flex:none;width:26%;aspect-ratio:1"></div><div style="display:grid;gap:6px">' + ln('l') + ln('m') + '</div></div>')}${tabs(2)}`],
     ['27', '업적', `${back}${ln('s')}${card('<div class="row"><div class="ln"></div><div class="ln"></div></div><div class="row"><div class="ln" style="height:10px"></div><div class="ln" style="height:10px"></div></div>')}${ln('s')}${card('<div class="grid3"><i></i><i></i><i></i><i></i><i style="opacity:.45"></i><i></i><i></i><i style="opacity:.45"></i><i></i></div>')}${card('<div class="row"><span class="circ"></span>' + ln('m') + '</div><div class="pill" style="height:8px"></div>')}`],
     ['28', '상점', `<div class="row"><div class="ln m" style="height:12px"></div><div class="pill" style="flex:none;width:30%"></div></div>${st(24)}<div class="row"><div class="pill on"></div><div class="pill"></div></div><div class="grid2"><div><div class="b"></div>${ln('m')}</div><div><div class="b"></div>${ln('m')}</div></div><div class="btn" style="margin-top:auto;margin-bottom:22%"></div>${tabs(3)}`],
     ['32', '코인 내역', `${back}${card('<div class="row"><div style="display:grid;gap:6px">' + ln('m') + ln('l') + '</div><div class="ln s" style="flex:none;width:14%"></div></div>')}${card('<div class="row"><div style="display:grid;gap:6px">' + ln('m') + ln('l') + '</div><div class="ln s" style="flex:none;width:14%"></div></div>')}${card('<div class="row"><div style="display:grid;gap:6px">' + ln('m') + ln('l') + '</div><div class="ln s" style="flex:none;width:14%"></div></div>')}${card('<div class="row"><div style="display:grid;gap:6px">' + ln('m') + ln('l') + '</div><div class="ln s" style="flex:none;width:14%"></div></div>')}`],
     ['34', '설정', `${back}${ln('s')}${card('<div class="row">' + ln('m') + '<div class="ln s" style="flex:none;width:16%"></div></div>')}${ln('s')}${card('<div class="row">' + ln('m') + '<div class="ln s" style="flex:none;width:16%"></div></div><div class="row">' + ln('m') + '<div class="pill on" style="flex:none;width:18%;height:14px"></div></div>')}${ln('s')}${card(ln('l') + '<div class="row"><div class="btn" style="height:24px"></div><div class="btn ghost" style="height:24px"></div></div>')}`],
+    ['36', '러닝 알림', `<div class="b" style="height:14%;border-radius:12px"></div>${card('<div class="row" style="gap:6px"><span class="circ" style="width:16px;height:16px"></span><div class="ln s" style="flex:none;width:36%"></div></div>' + ln('l') + ln('m') + '<div class="row" style="gap:10%"><div class="ln s" style="flex:none;width:22%;background:var(--wf-deep)"></div><div class="ln s" style="flex:none;width:22%;background:var(--wf-deep)"></div></div>')}${card('<div class="row" style="gap:6px"><span class="circ" style="width:16px;height:16px"></span>' + ln('m') + '</div>' + ln('l'))}`],
   ];
   document.getElementById('wf-board').innerHTML = WF.map(([no, name, html]) =>
     `<figure class="wf"><div class="wf-screen" role="img" aria-label="${esc(name)} 와이어프레임">${html}</div><figcaption><span class="no">${no}</span><span class="name">${esc(name)}</span></figcaption></figure>`).join('');
