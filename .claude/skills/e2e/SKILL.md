@@ -40,7 +40,7 @@ argument-hint: "[페이즈 번호]"
 1. `adb devices` 에 `emulator-` 로 시작하는 기기가 `device` 상태면 그것을 쓴다(이미 실행 중). 4번으로 간다.
 2. 준비 상태를 확인한다.
    - emulator 패키지: `<SDK>/emulator/emulator` 파일
-   - 시스템 이미지: `<SDK>/system-images/android-37.0/google_apis/<CPU>/` 폴더
+   - 시스템 이미지: `<SDK>/system-images/android-37.0/google_apis/<CPU>/` 폴더. 이미 받은 다른 판(예: `android-36`)이 있으면 그것으로 AVD 를 만들어도 된다
    - AVD: `emulator -list-avds` 에 `runmagochi` 가 있는지
    - 가속: `emulator -accel-check` 결과
 3. 모두 있으면 4번으로 간다.
@@ -76,7 +76,7 @@ argument-hint: "[페이즈 번호]"
    - `adb shell pm grant com.dhkim1522.runmagochi android.permission.ACCESS_FINE_LOCATION`
    - `adb shell pm grant com.dhkim1522.runmagochi android.permission.ACCESS_COARSE_LOCATION`
    - `adb shell pm grant com.dhkim1522.runmagochi android.permission.POST_NOTIFICATIONS`
-4. 실행: `adb shell monkey -p com.dhkim1522.runmagochi -c android.intent.category.LAUNCHER 1`
+4. 실행: `adb shell am start -n com.dhkim1522.runmagochi/.MainActivity`. API 36 이상에서는 `monkey` 로 앱이 뜨지 않는다
 5. 디버그 빌드는 첫 실행에 Flutter 로고 화면이 수십 초 갈 수 있다. 덤프에 `시작` 이 보일 때까지 Monitor 의 until 반복으로 기다린다.
 
 ## 6. 시나리오 진행
@@ -87,7 +87,7 @@ argument-hint: "[페이즈 번호]"
 - **요소 찾기**: `adb shell uiautomator dump /sdcard/ui.xml && adb exec-out cat /sdcard/ui.xml` 에서 문구(`text`·`content-desc`)의 `bounds` 를 찾아 가운데 좌표를 쓴다. Flutter 위젯 문구는 접근성 정보로 나온다.
 - **탭**: `adb shell input tap <x> <y>`
 - **길게 누르기**(예: 종료 버튼): `adb shell input swipe <x> <y> <x> <y> 2000`
-- **가상 러닝**: `fvm dart run tool/fake_run.dart --minutes <분> --speed <m/s> --adb <adb 경로>` 를 백그라운드로 돌린다. 앱에서 시작 버튼을 누르고 카운트다운이 끝난 뒤 시작한다.
+- **가상 러닝**: `fvm dart run tool/fake_run.dart --minutes <분> --speed <m/s> --adb <adb 경로>` 를 백그라운드로 돌린다. 앱에서 시작 버튼을 누르고 카운트다운이 끝난 뒤 시작한다. 1km 미만 러닝은 버려지므로(결정 0027) 요약을 봐야 하면 거리가 1km 를 넘게 고른다(예: 5분이면 `--speed 4.0` 이상).
 - **시스템 창**(권한·배터리 안내 등)이 뜨면 허용하고 계속한다. 그 사실을 결과에 적는다. 첫 시작 때 앱의 배터리 최적화 안내가 나오면 `나중에` 를 누른다.
 - **글자 입력**: 입력칸을 탭한 뒤 `adb shell input keyevent KEYCODE_MOVE_END`, `KEYCODE_DEL` 로 지우고 `adb shell input text <값>`.
 - **기다리기**: 셸 `sleep` 을 이어 붙이지 말고, 화면 값이 바뀔 때까지 Monitor 의 until 반복(덤프에서 문구 확인)으로 기다린다.
