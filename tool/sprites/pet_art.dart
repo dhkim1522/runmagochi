@@ -2,8 +2,9 @@
 //
 // 종류마다 단계별 기본 그림 한 장(몸 + 장비, 눈 없음)과 표정 그림을 둔다.
 // 동작 프레임은 기본 그림을 정해진 자세표(Pose)대로 변형해 만든다.
-//   - 숨쉬기·뛰어오름: [StageArt.squashRow] 위쪽(머리)을 위아래로 민다. 머리가
+//   - 숨쉬기·뛰어오름: [StageArt.squashRow] 위쪽(머리)을 위로 늘인다. 머리가
 //     움직인 만큼 face 프레임도 같이 움직인다(모든 단계 공통 자세표라 단계끼리 맞는다).
+//     눌림(머리 내리기)은 squashRow 줄을 지워 그 줄의 장비가 사라지므로 쓰지 않는다.
 //   - 발: 몸 뒤에 그린다. 든 발은 몸에 가려 접힌 것처럼 보인다.
 //   - 팔(날개): 몸 옆에 그리고 위아래로 흔든다.
 //   - 공중 프레임: 전체를 1px 올린다(발끝 y=28).
@@ -28,17 +29,22 @@ const Palette petPalette = {
   'B': 0xFFEA580C, // 젤리 그림자
   'g': 0xFF15803D, // 잎
   'G': 0xFF4ADE80, // 잎 밝은 쪽
+  'q': 0xFFFFFBF5, // 알 껍데기 하이라이트
   'y': 0xFFFFE9CC, // 알 껍데기 (눈 반짝임 흰색이 보이게 바탕 cream 보다 조금 진하게)
-  'Y': 0xFFFED7AA, // 알 껍데기 그림자
+  'Y': 0xFFF2C48D, // 알 껍데기 그림자
+  'l': 0xFFFEF08A, // 병아리 하이라이트
   'm': 0xFFFACC15, // 병아리 몸
-  'M': 0xFFCA8A04, // 병아리 그림자
+  'M': 0xFFD99A06, // 병아리 그림자
   'c': 0xFF92400E, // 도토리 모자
   'C': 0xFFB45309, // 도토리 모자 밝은 쪽
   'n': 0xFFF4A261, // 도토리 몸
   'N': 0xFFC2410C, // 도토리 몸 그림자
   'r': 0xFFF97316, // 러닝화 (primary)
+  'j': 0xFFC2410C, // 러닝화 그림자
   'a': 0xFF2563EB, // 헤어밴드·손목 밴드 (accent)
+  'A': 0xFF60A5FA, // 밴드 하이라이트
   'd': 0xFFDC2626, // 메달 끈
+  'D': 0xFF991B1B, // 메달 끈 그림자
   'e': 0xFFFDE047, // 메달
   'E': 0xFFA16207, // 메달 테두리
   'z': 0xFF60A5FA, // 잠든 z
@@ -187,8 +193,10 @@ class Pose {
   int get headDy => k - lift;
 }
 
+// 숨쉬기는 머리를 1px 늘인다. 달리기는 뜰 때 2px 오르고(늘이기 1 + 공중 1),
+// 팔을 ±2 흔들고, 발을 번갈아 든다(페이즈 6 후보 a 의 자세표).
 const Map<String, List<Pose>> walkerPoses = {
-  'idle': [Pose(), Pose(k: 1)],
+  'idle': [Pose(), Pose(k: -1)],
   'walk': [
     Pose(footL: (1, 0)),
     Pose(k: -1, armL: 1, armR: -1),
@@ -196,15 +204,15 @@ const Map<String, List<Pose>> walkerPoses = {
     Pose(k: -1, armL: -1, armR: 1),
   ],
   'run': [
-    Pose(footL: (0, 1), footR: (2, -1), armL: 1, armR: -2),
-    Pose(k: -1, lift: 1, footL: (2, 0), armR: -1),
-    Pose(footR: (0, 1), footL: (2, -1), armL: -2, armR: 1),
-    Pose(k: -1, lift: 1, footR: (2, 0), armL: -1),
+    Pose(footL: (0, 1), footR: (1, 0), armL: 2, armR: -2),
+    Pose(k: -1, lift: 1, footR: (1, 1), armL: 1, armR: -1),
+    Pose(footR: (0, 1), footL: (1, 0), armL: -2, armR: 2),
+    Pose(k: -1, lift: 1, footL: (1, 1), armL: -1, armR: 1),
   ],
 };
 
 const Map<String, List<Pose>> hopperPoses = {
-  'idle': [Pose(), Pose(k: 1)],
+  'idle': [Pose(), Pose(k: -1)],
   'walk': [
     Pose(tilt: -1),
     Pose(lift: 1, tilt: -1),
@@ -410,3 +418,22 @@ const List<String> nubFoot = ['oo'];
 
 /// 러닝화(primary) 앞모습: 흰 끈 한 점, 진한 밑창.
 const List<String> shoeFoot = ['orwro', 'ooooo'];
+
+// 말랑 클레이 그림체(페이즈 6 후보 a). 빛은 왼쪽 위, 3단 명암(하이라이트·기본·그림자).
+
+/// 날개: 몸 가장자리에 겹쳐 붙는다. [band] 면 아랫부분에 손목 밴드(accent)를 두른다.
+List<String> clayArmRows(
+  String light,
+  String fill,
+  String shadow, {
+  bool band = false,
+}) => [
+  '.oo',
+  'o$light$fill',
+  'o$fill$shadow',
+  band ? 'oaA' : 'o$shadow$shadow',
+  '.oo',
+];
+
+/// 러닝화 앞모습: 흰 끈 한 점, 그림자, 진한 밑창.
+const List<String> clayShoeFoot = ['orwro', 'orrjo', 'ooooo'];
