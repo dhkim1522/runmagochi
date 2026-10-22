@@ -149,7 +149,7 @@
   - 테스트: 도구 출력 크기(48·72·96·144·192, iOS 1024 포함), 투명 여백 비율(적응형 안전 영역 66%)
   - 확인: `fvm dart run tool/render_app_icon.dart`, `fvm flutter build apk --debug`
 
-- [ ] 17. 글꼴 줄이기
+- [x] 17. 글꼴 줄이기
   - Pretendard 가변 글꼴(결정 0029)을 KS X 1001 한글 2,350자 + 영문·숫자·기호 + 앱 문구에 쓰인 모든 글자로 서브셋한다(굵기 축 유지).
   - `tool/subset_fonts.py`(새 파일, fonttools, 실행 방법을 맨 위 주석에), `tool/font_chars.txt`(생성), `assets/fonts/*`
   - 테스트: `test/tool/font_chars_test.dart` — `lib/**.dart` 문자열 리터럴의 모든 글자가 `font_chars.txt` 에 있음
