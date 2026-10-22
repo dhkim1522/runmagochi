@@ -1,0 +1,27 @@
+<!-- @dsCard group="Data" height=330 subtitle="테두리 없는 흰 카드, 바탕과 톤 차이로" -->
+<style>
+body{margin:0;background:var(--background);color:var(--ink);font-family:var(--font-sans,"Pretendard",system-ui,sans-serif)}
+.row{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-start;padding:20px}
+.cap{font-size:13px;line-height:18px;font-weight:600;color:var(--ink-muted)}
+.stack{display:flex;flex-direction:column;gap:12px;max-width:350px;width:100%}
+.metrics{background:var(--surface);border-radius:20px;padding:20px 12px;display:grid;grid-template-columns:repeat(3,1fr);gap:4px}
+.m{display:flex;flex-direction:column;align-items:center;gap:4px}
+.k{font-size:14px;line-height:20px;font-weight:600;color:var(--ink-muted)}
+.v{font-size:22px;line-height:28px;font-weight:800;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.rows{background:var(--surface);border-radius:24px;padding:20px;display:flex;flex-direction:column;gap:18px}
+.r{display:flex;justify-content:space-between;align-items:center;gap:12px;font-size:17px;line-height:24px;font-weight:600}
+.xp{display:flex;flex-direction:column;align-items:flex-end}
+.xp b{font-weight:800;color:var(--primary-deep)}
+.xp span{font-size:14px;line-height:20px;font-weight:700;color:var(--coin)}
+</style>
+<div class="row"><div class="stack">
+  <div class="metrics">
+    <div class="m"><div class="k">평균 페이스</div><div class="v">6'08"</div></div>
+    <div class="m"><div class="k">시간</div><div class="v">32:09</div></div>
+    <div class="m"><div class="k">칼로리</div><div class="v">353</div></div>
+  </div>
+  <section class="rows">
+    <div class="r"><span>달린 거리 5.24km</span><span class="xp"><b>경험치 +52</b><span>코인 +26</span></span></div>
+    <div class="r"><span>목표 5km 달성</span><span class="xp"><b>보너스 +25</b><span>코인 +25</span></span></div>
+  </section>
+</div></div>

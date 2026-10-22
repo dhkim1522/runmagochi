@@ -1,0 +1,35 @@
+<!-- @dsCard group="Data" height=330 subtitle="느림·보통·빠름 3단, 색각 이상에서도 구분" -->
+<style>
+body{margin:0;background:var(--background);color:var(--ink);font-family:var(--font-sans,"Pretendard",system-ui,sans-serif)}
+.row{display:flex;flex-wrap:wrap;gap:16px;align-items:center;padding:20px}
+.cap{font-size:13px;line-height:18px;font-weight:600;color:var(--ink-muted)}
+.card{background:var(--surface);border-radius:24px;padding:20px;width:350px;max-width:100%;box-sizing:border-box;display:flex;flex-direction:column;gap:12px}
+svg{display:block;width:100%;height:auto}
+.s{fill:none;stroke-width:6;stroke-linecap:round;stroke-linejoin:round}
+.slow{stroke:var(--pace-slow)}.mid{stroke:var(--pace-mid)}.fast{stroke:var(--pace-fast)}
+.move{stroke:var(--ink-muted);stroke-dasharray:2 8}
+.start{fill:var(--primary);stroke:var(--on-primary);stroke-width:2.5}.end{fill:var(--panel);stroke:var(--surface);stroke-width:3}
+.legend{display:flex;flex-wrap:wrap;gap:12px;font-size:13px;line-height:18px;font-weight:600;color:var(--ink-muted)}
+.legend span{display:flex;align-items:center;gap:6px}
+.legend i{width:20px;height:6px;border-radius:3px;display:block}
+</style>
+<div class="row">
+<div class="card">
+  <svg viewBox="0 0 300 190" role="img" aria-label="러닝 경로, 구간 페이스 색">
+    <path class="s mid" d="M46 150C40 110 52 70 92 52"/>
+    <path class="s fast" d="M92 52C130 36 170 30 206 44"/>
+    <path class="s mid" d="M206 44C240 58 262 82 258 118"/>
+    <path class="s slow" d="M258 118C254 150 236 168 196 172"/>
+    <path class="s move" d="M196 172C160 176 120 176 88 166"/>
+    <path class="s slow" d="M88 166C70 162 60 158 62 146"/>
+    <circle class="start" cx="46" cy="150" r="9"/>
+    <circle class="end" cx="62" cy="146" r="8"/>
+  </svg>
+  <div class="legend">
+    <span><i style="background:var(--pace-slow)"></i>느림</span>
+    <span><i style="background:var(--pace-mid)"></i>보통</span>
+    <span><i style="background:var(--pace-fast)"></i>빠름</span>
+    <span><i style="background:var(--ink-muted)"></i>빠른 이동</span>
+  </div>
+</div>
+</div>

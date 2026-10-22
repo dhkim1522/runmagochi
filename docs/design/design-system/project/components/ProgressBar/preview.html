@@ -1,0 +1,18 @@
+<!-- @dsCard group="Data" height=170 subtitle="높이 12, 초록 채움" -->
+<style>
+body{margin:0;background:var(--background);color:var(--ink);font-family:var(--font-sans,"Pretendard",system-ui,sans-serif)}
+.row{display:flex;flex-wrap:wrap;gap:12px;align-items:center;padding:20px}
+.cap{font-size:13px;line-height:18px;font-weight:600;color:var(--ink-muted)}
+.col{display:flex;flex-direction:column;gap:8px;align-items:flex-start}
+.wrap{display:flex;flex-direction:column;gap:10px;padding:20px;max-width:350px}
+.name{font-size:26px;line-height:32px;font-weight:800;letter-spacing:-.02em;text-align:center}
+.bar{height:12px;border-radius:999px;background:var(--surface-soft);overflow:hidden}
+.bar>i{display:block;height:100%;border-radius:999px;background:var(--primary-deep)}
+.lab{font-size:14px;line-height:20px;font-weight:700;color:var(--ink-muted)}
+</style>
+<div class="wrap">
+  <div class="name">삐약이 Lv.19</div>
+  <div class="bar" role="progressbar" aria-label="레벨 경험치" aria-valuenow="94" aria-valuemin="0" aria-valuemax="100"><i style="width:94%"></i></div>
+  <div class="lab">목표 5km</div>
+  <div class="bar" role="progressbar" aria-label="목표 진행" aria-valuenow="68" aria-valuemin="0" aria-valuemax="100"><i style="width:68%"></i></div>
+</div>

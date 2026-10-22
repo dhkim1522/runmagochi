@@ -1,0 +1,49 @@
+<!-- @dsCard height=300 -->
+<style>
+  body { margin: 0; background: var(--background); }
+  .cover { position: relative; width: 960px; height: 300px; overflow: hidden; background: var(--background); }
+  .art { position: absolute; left: 480px; top: 0; }
+  .sky { fill: var(--stage-sky); }
+  .ground { fill: var(--stage-ground); }
+  .gline { fill: var(--stage-ground-line); }
+  .lime { fill: var(--primary); }
+  .edge { fill: none; stroke: var(--primary-edge); stroke-width: 2; }
+  .deep { fill: var(--primary-deep); }
+  .panel { fill: var(--panel); }
+  .card { fill: var(--surface); }
+  .coin { fill: var(--coin); }
+  .stage { rx: var(--radius-lg); }
+  .text { position: absolute; left: 40px; bottom: 36px; width: 420px; }
+  .name { margin: 0; font-family: var(--font-sans, "Pretendard", system-ui, sans-serif); font-weight: 800; font-size: 104px; line-height: .95; letter-spacing: -0.03em; color: var(--ink); }
+  .tag { margin: 12px 0 0 0; font-family: var(--font-sans, "Pretendard", system-ui, sans-serif); font-size: 14px; font-weight: 600; color: var(--ink-muted); }
+</style>
+<div class="cover">
+  <svg class="art" width="480" height="300" viewBox="0 0 480 300" aria-hidden="true">
+    <!--
+      blocks: stage-sky 240x260 slab (radius-lg 24) with stage-ground 56 band + stage-ground-line 4, primary-deep 120x168, panel 96x96, surface 160x96, coin disc 48
+      arrangement: one tall slab (the square stage) bleeding off the top with satellites to its right and below
+      pattern: lime pills 48 high (chip height, radius-pill) with primary-edge 2px rims — README "연두는 누를 것·선택된 것에만, 늘 경계선"
+      steps & radii: gaps space-5 20 / space-7 28, radius-lg 24, radius-md 20, pills half the short side (24)
+    -->
+    <rect class="sky stage" x="28" y="-24" width="240" height="260"></rect>
+    <clipPath id="stage-clip"><rect x="28" y="-24" width="240" height="260" rx="24"></rect></clipPath>
+    <g clip-path="url(#stage-clip)">
+      <rect class="ground" x="28" y="180" width="240" height="56"></rect>
+      <rect class="gline" x="28" y="180" width="240" height="4"></rect>
+    </g>
+    <rect class="deep" x="296" y="-20" width="120" height="168" rx="24"></rect>
+    <rect class="panel" x="436" y="40" width="96" height="96" rx="20"></rect>
+    <rect class="card" x="296" y="176" width="160" height="96" rx="20"></rect>
+    <circle class="coin" cx="420" cy="224" r="24"></circle>
+    <rect class="lime" x="60" y="252" width="120" height="48" rx="24"></rect>
+    <rect class="edge" x="61" y="253" width="118" height="46" rx="23"></rect>
+    <rect class="lime" x="80" y="60" width="96" height="48" rx="24"></rect>
+    <rect class="edge" x="81" y="61" width="94" height="46" rx="23"></rect>
+    <rect class="lime" x="316" y="196" width="72" height="48" rx="24"></rect>
+    <rect class="edge" x="317" y="197" width="70" height="46" rx="23"></rect>
+  </svg>
+  <div class="text">
+    <h1 class="name">런마고치</h1>
+    <p class="tag">달릴수록 자라는 도트 친구, 연두빛 무대 위에서.</p>
+  </div>
+</div>

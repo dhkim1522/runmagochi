@@ -1,0 +1,19 @@
+<!-- @dsCard group="Navigation" height=150 subtitle="선택은 어두운 알약, 아이콘은 앱 고유" -->
+<style>
+body{margin:0;background:var(--background);color:var(--ink);font-family:var(--font-sans,"Pretendard",system-ui,sans-serif)}
+.row{display:flex;flex-wrap:wrap;gap:16px;align-items:center;padding:20px}
+.cap{font-size:13px;line-height:18px;font-weight:600;color:var(--ink-muted)}
+nav{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;background:var(--surface);padding:8px 12px 12px;width:366px;max-width:100%;box-sizing:border-box;border-radius:24px}
+a{min-height:56px;border-radius:999px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;text-decoration:none;color:var(--ink-muted);font-size:13px;line-height:18px;font-weight:600}
+a[aria-current="page"]{background:var(--panel);color:var(--on-panel);font-weight:700}
+a:focus-visible{outline:3px solid var(--primary-deep);outline-offset:2px}
+svg{fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+</style>
+<div class="row">
+<nav aria-label="탭">
+  <a href="#" aria-current="page"><svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 15.5h7.5l2-3 3 1.5 4 .5c1 .1 1.5.8 1.5 1.8V18H3z"/><path d="M8 15.5 9.5 11"/><path d="M3 18v1.5h18"/></svg><span>러닝</span></a>
+  <a href="#"><svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 20v-6"/><path d="M12 20V6"/><path d="M19 20v-9"/><path d="M3 20h18"/></svg><span>기록</span></a>
+  <a href="#"><svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 14a7 7 0 0 1 14 0v2a4 4 0 0 1-4 4H9a4 4 0 0 1-4-4z"/><path d="M12 7V4.5"/><path d="M10 12.5h.01"/><path d="M14 12.5h.01"/><path d="M11 15.5h2l-1 1.2z"/></svg><span>아바타</span></a>
+  <a href="#"><svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13" r="7"/><circle cx="12" cy="13" r="3.5"/><path d="M8 4h8"/></svg><span>상점</span></a>
+</nav>
+</div>

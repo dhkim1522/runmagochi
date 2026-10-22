@@ -1,0 +1,15 @@
+<!-- @dsCard group="Data" height=170 subtitle="앱 코인 모양, $ 금지" -->
+<style>
+body{margin:0;background:var(--background);color:var(--ink);font-family:var(--font-sans,"Pretendard",system-ui,sans-serif)}
+.row{display:flex;flex-wrap:wrap;gap:16px;align-items:center;padding:20px}
+.cap{font-size:13px;line-height:18px;font-weight:600;color:var(--ink-muted)}
+.c-face{fill:var(--coin)}.c-ring{fill:none;stroke:var(--primary);stroke-width:2}.c-star{fill:var(--on-coin)}
+.chip{height:48px;padding:0 18px 0 12px;border:0;border-radius:999px;background:var(--surface);color:var(--ink);display:flex;align-items:center;gap:8px;font:800 17px/24px var(--font-sans,"Pretendard",sans-serif);letter-spacing:-.02em;font-variant-numeric:tabular-nums;cursor:pointer}
+.plus{font-size:14px;line-height:20px;font-weight:700;color:var(--coin)}
+.big{display:flex;flex-direction:column;align-items:center;gap:6px}
+</style>
+<div class="row">
+  <div class="big"><svg viewBox="0 0 26 26" width="48" height="48" aria-hidden="true"><circle class="c-face" cx="13" cy="13" r="12"/><circle class="c-ring" cx="13" cy="13" r="8"/><path class="c-star" d="M13 8.6l1.4 2.9 3.2.4-2.3 2.2.6 3.1-2.9-1.6-2.9 1.6.6-3.1-2.3-2.2 3.2-.4z"/></svg><span class="cap">코인 그림 48</span></div>
+  <button class="chip" aria-label="코인 1,860, 상점으로"><svg viewBox="0 0 26 26" width="24" height="24" aria-hidden="true"><circle class="c-face" cx="13" cy="13" r="12"/><circle class="c-ring" cx="13" cy="13" r="8"/><path class="c-star" d="M13 8.6l1.4 2.9 3.2.4-2.3 2.2.6 3.1-2.9-1.6-2.9 1.6.6-3.1-2.3-2.2 3.2-.4z"/></svg><span>1,860</span></button>
+  <span class="plus">코인 +200</span>
+</div>

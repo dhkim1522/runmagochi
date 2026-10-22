@@ -1,0 +1,19 @@
+<!-- @dsCard group="Actions" height=200 subtitle="높이 60 알약, 연두 면은 늘 경계선" -->
+<style>
+body{margin:0;background:var(--background);color:var(--ink);font-family:var(--font-sans,"Pretendard",system-ui,sans-serif)}
+.row{display:flex;flex-wrap:wrap;gap:12px;align-items:center;padding:20px}
+.cap{font-size:13px;line-height:18px;font-weight:600;color:var(--ink-muted)}
+.col{display:flex;flex-direction:column;gap:8px;align-items:flex-start}
+.btn{height:60px;min-width:160px;padding:0 28px;border-radius:30px;font:700 22px/28px var(--font-sans,"Pretendard",sans-serif);cursor:pointer}
+.primary{background:var(--primary);color:var(--on-primary);border:2px solid var(--primary-edge)}
+.secondary{background:var(--surface);color:var(--ink);border:2px solid var(--line-strong)}
+.panel{background:var(--panel);color:var(--on-panel);border:0}
+.btn:disabled{opacity:.5;cursor:default}
+.btn:focus-visible{outline:3px solid var(--primary-deep);outline-offset:3px}
+</style>
+<div class="row">
+  <div class="col"><button class="btn primary">시작</button><span class="cap">주요 · primary + primary-edge</span></div>
+  <div class="col"><button class="btn secondary">끝부분 잘라내기</button><span class="cap">보조 · surface + line-strong</span></div>
+  <div class="col"><button class="btn panel">일시정지</button><span class="cap">어두운 판 · panel</span></div>
+  <div class="col"><button class="btn primary" disabled>확인</button><span class="cap">비활성 · 50%</span></div>
+</div>
