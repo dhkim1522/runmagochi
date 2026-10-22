@@ -84,7 +84,7 @@
 
 ### B. 6-2 UI/UX 개편
 
-- [ ] 7. UI 후보 시안 6개 (두 트랙 × 3방향, 2026-10-22 사용자 결정)
+- [x] 7. UI 후보 시안 6개 (두 트랙 × 3방향, 2026-10-22 사용자 결정)
   - 홈·러닝 중·요약 3개 화면, 390px 폰 화면. 고른 캐릭터 PNG 를 넣는다. 라이트 기준, 같은 문구·같은 데이터.
   - 방향 3개(두 트랙 공통)
     - `a` 말랑 클레이 다듬기
@@ -156,7 +156,7 @@
   - 확인: 글꼴 두 파일 합계 4MB 이하, `fvm flutter build apk --debug` 크기가 줄어듦(전후 값을 계획에 적는다)
 
 - [ ] 18. 정리
-  - 고른 안을 `design/character/`·`design/mockups/`(`phase-6-screens/` 스크린샷, README 갱신)·`docs/design/tokens.json` 에 반영하고 `design/candidates/` 와 후보 도구 코드(`tool/sprites/candidates/`, `tool/render_candidates.dart`, 해당 테스트)를 지운다.
+  - 고른 안을 `design/character/`·`design/mockups/`(`phase-6-screens/` 스크린샷, README 갱신)·`docs/design/tokens.json` 에 반영하고 `design/candidates/` 와 후보 도구 코드(`tool/sprites/candidates/`, `tool/render_candidates.dart`, `tool/render_ui_candidate_pets.dart`, 해당 테스트)를 지운다.
   - 캐릭터 에셋 카탈로그 아티팩트(https://claude.ai/artifact/ECbG2Fh4TXQwcr5fNUWCXA, 원본 `design/character/asset-catalog.html`)를 최종 그림으로 다시 올린다
   - 문서: `docs/design/design-system.md`, `docs/specs/sprite-spec.md`(만드는 방법·배지), `docs/screens.md`, `docs/tooling.md`(pixel-plugin 6-1 사용 시점을 "쓰지 않음(결정 0028)" 으로, Impeccable·Taste Skill 사용 기록), `CLAUDE.md` 문서 지도
   - 확인: `fvm dart analyze`, `fvm flutter test`
@@ -198,6 +198,7 @@
 - [ ] 실기기(Android·iPhone)에서 아이콘·스플래시·글꼴·화면 확인 (페이즈 7)
 
 ## 관문 기록
+- UI 후보 캔버스(트랙 2): https://claude.ai/artifact/FxKS7MR2twYmmE3k6SzNhe
 - 관문 1 투표 페이지(2026-10-22): https://claude.ai/artifact/SBshrAFUGtLfBbaLHQxMnb . 저장 기능 없음(db 아티팩트는 조직 내부 전용이라 외부 사람이 못 엶). 고르면 `런마고치 캐릭터: A/B/C` 문구가 나오고 사용자가 표를 모은다. 결과: **A 말랑 클레이 확정**(2026-10-22 사용자). 기준점은 지금 값(모자 y=18, 소품 y=20) 유지
 
 ## 자동 결정
