@@ -211,29 +211,42 @@ enum _ButtonKind { primary, secondary, panel }
 /// - 기본: 연두 주요 버튼(primary + primaryEdge 경계선, onPrimary 글자). 화면마다 하나.
 /// - [AppButton.secondary]: 흰 보조 버튼(surface + lineStrong 경계선, ink 글자).
 /// - [AppButton.panel]: 어두운 판(panel + onPanel 글자). 일시정지·재개.
+/// - [small]: 높이 48, 글자 body-strong 17. 주요 버튼 옆 보조 행동(끝부분 잘라내기).
 ///
 /// 글자가 길거나 커지면 줄을 바꾸지 않고 버튼 안에서 작아진다.
 class AppButton extends StatelessWidget {
-  const AppButton({super.key, required this.label, required this.onPressed})
-    : _kind = _ButtonKind.primary;
+  const AppButton({
+    super.key,
+    required this.label,
+    required this.onPressed,
+    this.small = false,
+  }) : _kind = _ButtonKind.primary;
 
   const AppButton.secondary({
     super.key,
     required this.label,
     required this.onPressed,
+    this.small = false,
   }) : _kind = _ButtonKind.secondary;
 
   const AppButton.panel({
     super.key,
     required this.label,
     required this.onPressed,
+    this.small = false,
   }) : _kind = _ButtonKind.panel;
 
   /// 버튼 높이(최소). 글자가 아주 커지면 그만큼 커진다.
   static const double height = 60;
 
+  /// [small] 버튼 높이(최소). 누를 수 있는 가장 작은 크기.
+  static const double smallHeight = 48;
+
   final String label;
   final VoidCallback? onPressed;
+
+  /// 작은 버튼(높이 [smallHeight], 글자 body-strong).
+  final bool small;
   final _ButtonKind _kind;
 
   @override
@@ -244,6 +257,7 @@ class AppButton extends StatelessWidget {
       _ButtonKind.secondary => (c.surface, c.ink, c.lineStrong),
       _ButtonKind.panel => (c.panel, c.onPanel, null),
     };
+    final t = AppText.of(context);
     final enabled = onPressed != null;
     return Semantics(
       button: true,
@@ -264,12 +278,14 @@ class AppButton extends StatelessWidget {
                   : Border.all(color: edge, width: Borders.edge),
             ),
             child: ConstrainedBox(
-              constraints: const BoxConstraints(
-                minHeight: height,
+              constraints: BoxConstraints(
+                minHeight: small ? smallHeight : height,
                 minWidth: 48,
               ),
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: Gap.s6),
+                padding: EdgeInsets.symmetric(
+                  horizontal: small ? Gap.s5 : Gap.s6,
+                ),
                 child: Center(
                   heightFactor: 1,
                   child: FittedBox(
@@ -277,9 +293,9 @@ class AppButton extends StatelessWidget {
                     child: Text(
                       label,
                       maxLines: 1,
-                      style: AppText.of(
-                        context,
-                      ).button.copyWith(color: foreground),
+                      style: (small ? t.bodyStrong : t.button).copyWith(
+                        color: foreground,
+                      ),
                     ),
                   ),
                 ),
@@ -758,6 +774,19 @@ class PetStage extends StatelessWidget {
   final double radius;
   final double? height;
   final Widget? bubble;
+
+  /// [max] 부터 [min] 까지 내려가며 [fits] 가 참인 가장 큰 정수 배율. 없으면 null.
+  /// 화면마다 무대 높이·폭으로 펫 배율을 고를 때 쓴다(홈·러닝 중·요약·공유 카드).
+  static int? largestScale({
+    required int max,
+    required int min,
+    required bool Function(int scale) fits,
+  }) {
+    for (var s = max; s >= min; s--) {
+      if (fits(s)) return s;
+    }
+    return null;
+  }
 
   /// 무대 아래에서 펫 상자 아래까지.
   double get petBottom =>

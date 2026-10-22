@@ -8,8 +8,9 @@ import '../../core/theme.dart';
 import '../domain/run_summary.dart';
 
 /// 1km 구간별 페이스 막대 그래프. 빠를수록 길고, 평균 페이스는 가로선으로 그린다.
-/// 1km 미만 마지막 구간은 흐리게, 경험치에서 빠지는 빠른 구간은 `ink-muted` 로 그린다.
-/// 구간이 1개 이하면 아무것도 그리지 않는다.
+/// 막대는 primary-deep(연두로 채우지 않는다), 위끝 radius-sm 둥근 모서리. 1km 미만 마지막
+/// 구간은 흐리게, 경험치에서 빠지는 빠른 구간은 `ink-muted` 로 그린다. 막대 아래 라벨은
+/// 구간 표와 같은 이름([splitLabel]). 구간이 1개 이하면 아무것도 그리지 않는다.
 class SplitPaceChart extends StatelessWidget {
   const SplitPaceChart({
     super.key,
@@ -20,7 +21,8 @@ class SplitPaceChart extends StatelessWidget {
   final List<Split> splits;
   final double? avgPaceSecPerKm;
 
-  static const height = 132.0;
+  /// 막대 130 + 라벨 자리(시안 c).
+  static const height = 160.0;
 
   @override
   Widget build(BuildContext context) {
@@ -39,10 +41,14 @@ class SplitPaceChart extends StatelessWidget {
         child: CustomPaint(
           painter: SplitPacePainter(
             splits: splits,
+            labels: [
+              for (var i = 0; i < splits.length; i++) splitLabel(splits, i),
+            ],
             avgPaceSecPerKm: avgPaceSecPerKm,
-            barColor: c.primary,
+            barColor: c.primaryDeep,
             fastColor: c.inkMuted,
-            lineColor: c.primaryDeep,
+            lineColor: c.ink,
+            lineGapColor: c.surface,
             labelStyle: t.caption.copyWith(color: c.inkMuted),
             textScaler: MediaQuery.textScalerOf(context),
           ),
@@ -52,22 +58,48 @@ class SplitPaceChart extends StatelessWidget {
   }
 }
 
+/// 온전한 1km 구간은 번호, 마지막 짧은 구간은 누적 거리(km)로 부른다. 그래프 라벨과 구간 표가 같이 쓴다.
+String splitLabel(List<Split> splits, int i) {
+  final sp = splits[i];
+  if (sp.distanceM >= 1000) return '${sp.index}';
+  final cumulative = splits
+      .take(i + 1)
+      .fold<double>(0, (a, e) => a + e.distanceM);
+  return formatKm(cumulative).replaceFirst(RegExp(r'\.?0+$'), '');
+}
+
+/// 막대 사이 간격(가장 큰 값). 칸이 좁으면 칸의 30% 로 줄인다.
+const _barGap = Gap.s3;
+
+/// [slot] 폭 칸 안의 막대 폭.
+double paceBarWidth(double slot) => slot - math.min(_barGap, slot * 0.3);
+
 class SplitPacePainter extends CustomPainter {
   SplitPacePainter({
     required this.splits,
+    required this.labels,
     required this.avgPaceSecPerKm,
     required this.barColor,
     required this.fastColor,
     required this.lineColor,
+    required this.lineGapColor,
     required this.labelStyle,
     required this.textScaler,
   });
 
   final List<Split> splits;
+
+  /// 막대 아래 라벨([splitLabel]).
+  final List<String> labels;
   final double? avgPaceSecPerKm;
   final Color barColor;
   final Color fastColor;
+
+  /// 평균 페이스 가로선. 막대와 같은 초록이면 안 보여 진한 글자색을 쓴다.
   final Color lineColor;
+
+  /// 평균선 아래 깔아 막대와 떼어 놓는 카드 바탕색 띠.
+  final Color lineGapColor;
   final TextStyle labelStyle;
   final TextScaler textScaler;
 
@@ -75,15 +107,21 @@ class SplitPacePainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final n = splits.length;
     if (n == 0) return;
-    final tp = TextPainter(
-      text: TextSpan(text: '${splits.last.index}', style: labelStyle),
+    TextPainter label(String text) => TextPainter(
+      text: TextSpan(text: text, style: labelStyle),
       textDirection: TextDirection.ltr,
       textScaler: textScaler,
+      maxLines: 1,
     )..layout();
-    final plotH = size.height - tp.height - 4;
+    final widest = labels.fold<double>(
+      0,
+      (w, l) => math.max(w, label(l).width),
+    );
+    final labelH = label('0').height;
+    final plotH = size.height - labelH - Gap.s3;
     final slot = size.width / n;
-    final barW = math.min(slot * 0.62, 28.0);
-    final step = paceLabelStep(slot, tp.width);
+    final barW = paceBarWidth(slot);
+    final step = paceLabelStep(slot, widest);
     final layout = layoutPaceBars(
       splits: splits,
       avgPaceSecPerKm: avgPaceSecPerKm,
@@ -91,29 +129,35 @@ class SplitPacePainter extends CustomPainter {
       barColor: barColor,
       fastColor: fastColor,
     );
+    final top = Radius.circular(math.min(Radii.sm, barW / 2));
+    final bottom = Radius.circular(math.min(4, barW / 2));
     for (var i = 0; i < n; i++) {
       final cx = slot * i + slot / 2;
       final bar = layout.bars[i];
       canvas.drawRRect(
         RRect.fromRectAndCorners(
           Rect.fromLTWH(cx - barW / 2, plotH - bar.height, barW, bar.height),
-          topLeft: const Radius.circular(4),
-          topRight: const Radius.circular(4),
+          topLeft: top,
+          topRight: top,
+          bottomLeft: bottom,
+          bottomRight: bottom,
         ),
         Paint()..color = bar.color,
       );
       if (i % step == 0) {
-        final label = TextPainter(
-          text: TextSpan(text: '${splits[i].index}', style: labelStyle),
-          textDirection: TextDirection.ltr,
-          textScaler: textScaler,
-          maxLines: 1,
-        )..layout();
-        label.paint(canvas, Offset(cx - label.width / 2, plotH + 4));
+        final l = label(labels[i]);
+        l.paint(canvas, Offset(cx - l.width / 2, plotH + Gap.s3));
       }
     }
     final y = layout.avgLineY;
     if (y != null) {
+      canvas.drawLine(
+        Offset(0, y),
+        Offset(size.width, y),
+        Paint()
+          ..color = lineGapColor
+          ..strokeWidth = 6,
+      );
       canvas.drawLine(
         Offset(0, y),
         Offset(size.width, y),
@@ -131,6 +175,7 @@ class SplitPacePainter extends CustomPainter {
       old.barColor != barColor ||
       old.fastColor != fastColor ||
       old.lineColor != lineColor ||
+      old.lineGapColor != lineGapColor ||
       old.labelStyle != labelStyle ||
       old.textScaler != textScaler;
 }

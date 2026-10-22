@@ -129,4 +129,35 @@ void main() {
     expect(isFastSplit(_s(1, 300)), isFalse);
     expect(isFastSplit(_s(2, 50, 500)), isFalse);
   });
+
+  for (final dark in [false, true]) {
+    testWidgets(
+      '막대는 primary-deep, 빠른 구간 ink-muted, 평균선 ink (${dark ? '다크' : '라이트'})',
+      (tester) async {
+        await _pump(tester, [_s(1, 385), _s(2, 390)], dark: dark);
+        final c = dark ? AppColors.dark : AppColors.light;
+        final p = _painter(tester)!;
+        expect(p.barColor, c.primaryDeep);
+        expect(p.fastColor, c.inkMuted);
+        expect(p.lineColor, c.ink);
+        expect(p.lineGapColor, c.surface);
+      },
+    );
+  }
+
+  test('splitLabel: 온전한 구간은 번호, 마지막 짧은 구간은 누적 거리', () {
+    final sp = [_s(1, 360), _s(2, 360), _s(3, 90, 240)];
+    expect([for (var i = 0; i < 3; i++) splitLabel(sp, i)], ['1', '2', '2.24']);
+    expect(splitLabel([_s(1, 360), _s(2, 180, 500)], 1), '1.5');
+  });
+
+  test('막대 폭: 칸에서 사이 간격(최대 12, 칸의 30%)을 뺀다', () {
+    expect(paceBarWidth(50), 38);
+    expect(paceBarWidth(10), closeTo(7, 1e-9));
+  });
+
+  testWidgets('그래프 아래 라벨은 표와 같은 이름(마지막 짧은 구간은 누적 거리)', (tester) async {
+    await _pump(tester, [_s(1, 360), _s(2, 360), _s(3, 90, 240)]);
+    expect(_painter(tester)!.labels, ['1', '2', '2.24']);
+  });
 }

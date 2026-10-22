@@ -81,6 +81,31 @@ void _buttonTests() {
     expect(size.width, greaterThanOrEqualTo(48));
   });
 
+  testWidgets('AppButton.secondary small 은 높이 48, 글자 body-strong 17 의 흰 알약', (
+    tester,
+  ) async {
+    var taps = 0;
+    await _pump(
+      tester,
+      AppButton.secondary(
+        label: '끝부분 잘라내기',
+        small: true,
+        onPressed: () => taps++,
+      ),
+    );
+    final c = _c(false);
+    expect(
+      tester.getSize(find.byType(AppButton)).height,
+      AppButton.smallHeight,
+    );
+    expect(AppButton.smallHeight, 48);
+    final style = tester.widget<Text>(find.text('끝부분 잘라내기')).style!;
+    expect(style.fontSize, 17);
+    expect(style.color, c.ink);
+    await tester.tap(find.text('끝부분 잘라내기'));
+    expect(taps, 1);
+  });
+
   testWidgets('AppButton 은 onPressed 가 null 이면 눌리지 않고 50% 로 흐리다', (
     tester,
   ) async {
@@ -703,6 +728,16 @@ void _stageTests() {
     final ground = tester.getRect(find.byKey(const Key('park-ground')));
     expect(ground.height, Stage.groundHeight);
     expect(ground.bottom, stage.bottom);
+  });
+
+  test('PetStage.largestScale 는 들어가는 가장 큰 정수 배율, 없으면 null', () {
+    expect(
+      PetStage.largestScale(max: 8, min: 3, fits: (s) => s * 32 <= 200),
+      6,
+    );
+    expect(PetStage.largestScale(max: 8, min: 3, fits: (_) => true), 8);
+    expect(PetStage.largestScale(max: 8, min: 3, fits: (s) => s <= 3), 3);
+    expect(PetStage.largestScale(max: 6, min: 1, fits: (_) => false), isNull);
   });
 
   testWidgets('PetStage 높이를 주지 않으면 펫이 들어갈 만큼 커진다', (tester) async {

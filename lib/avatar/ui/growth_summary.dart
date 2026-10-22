@@ -60,10 +60,7 @@ class _GrowthSummaryState extends State<GrowthSummary>
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 600),
-    );
+    _controller = AnimationController(vsync: this, duration: Motion.celebrate);
     if (_animates) _controller.forward();
   }
 
@@ -96,126 +93,191 @@ class _GrowthSummaryState extends State<GrowthSummary>
     final c = AppColors.of(context);
     final t = AppText.of(context);
     final g = widget.gain;
-    final rows = Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        _XpRow(
-          '달린 거리 ${formatKm(widget.distanceM)}km',
-          '경험치 +${g.distanceXp}',
-          coins: g.distanceCoins,
-        ),
-        if (widget.excludedM > 0) ...[
-          const SizedBox(height: Gap.s2),
-          Text(
-            '빠른 이동 ${formatKm(widget.excludedM)}km는 경험치에서 뺐어요',
-            style: t.caption.copyWith(color: c.inkMuted),
+    // 행 사이는 간격만 두고 선을 긋지 않는다(시안 c).
+    final rows = AppCard(
+      padding: const EdgeInsets.all(Gap.s5),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _XpRow(
+            '달린 거리 ${formatKm(widget.distanceM)}km',
+            '경험치 +${g.distanceXp}',
+            coins: g.distanceCoins,
           ),
-        ],
-        if (widget.goal case final goal?) ...[
-          const SizedBox(height: Gap.s3),
-          GoalResult(
-            goal: goal,
-            distanceM: widget.distanceM,
-            movingTime: widget.movingTime,
-            excludedM: widget.excludedM,
-            achieved: widget.achieved,
-            bonusXp: g.goalBonusXp,
-            coins: g.goalCoins,
-          ),
-        ],
-        for (final id in g.newBadges)
-          if (badgeCatalog.where((b) => b.id == id).firstOrNull
-              case final badge?) ...[
-            const SizedBox(height: Gap.s3),
-            _XpRow(
-              '배지 획득: ${badge.name}',
-              '코인 +${badge.coins}',
-              valueColor: c.coin,
-              leading: BadgeImage(
-                badge.id,
-                key: ValueKey('new-badge-${badge.id}'),
-                earned: true,
-              ),
+          if (widget.excludedM > 0) ...[
+            const SizedBox(height: Gap.s2),
+            Text(
+              '빠른 이동 ${formatKm(widget.excludedM)}km는 경험치에서 뺐어요',
+              style: t.caption.copyWith(color: c.inkMuted),
             ),
           ],
-      ],
+          if (widget.goal case final goal?) ...[
+            const SizedBox(height: Gap.s4),
+            GoalResult(
+              goal: goal,
+              distanceM: widget.distanceM,
+              movingTime: widget.movingTime,
+              excludedM: widget.excludedM,
+              achieved: widget.achieved,
+              bonusXp: g.goalBonusXp,
+              coins: g.goalCoins,
+            ),
+          ],
+          for (final id in g.newBadges)
+            if (badgeCatalog.where((b) => b.id == id).firstOrNull
+                case final badge?) ...[
+              const SizedBox(height: Gap.s4),
+              // 배지 코인은 이 줄의 값이라 경험치 값과 같은 크기·굵기로 다른 코인 +N 보다
+              // 눈에 띈다(관문 2 비평).
+              _XpRow(
+                '배지 획득: ${badge.name}',
+                '코인 +${badge.coins}',
+                valueColor: c.coin,
+                leading: BadgeImage(
+                  badge.id,
+                  key: ValueKey('new-badge-${badge.id}'),
+                  earned: true,
+                ),
+              ),
+            ],
+        ],
+      ),
     );
     if (!_animates) return rows;
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: c.surfaceSoft,
-        borderRadius: BorderRadius.circular(Radii.xl),
-        border: Border.all(color: c.line, width: Borders.edge),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(Gap.s5),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            if (g.leveledUp) ...[
-              Text(
-                '레벨 업!',
-                textAlign: TextAlign.center,
-                style: t.title.copyWith(color: c.primaryDeep),
-              ),
-              const SizedBox(height: Gap.s2),
-              Text(
-                'Lv.${g.levelBefore} 에서 Lv.${g.levelAfter} 로',
-                textAlign: TextAlign.center,
-                style: t.label.copyWith(color: c.inkMuted),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        // 마스코트 판: 흰 카드 안에 문구, 그 아래 카드 폭 사각 무대. 무대 위에는 글자를 두지
+        // 않는다(무대 하늘 위 초록 글자는 큰 글자만 대비가 맞는다).
+        AppCard(
+          key: const ValueKey('level-up-card'),
+          radius: Radii.xl,
+          padding: const EdgeInsets.fromLTRB(Gap.s5, Gap.s6, Gap.s5, Gap.s5),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              if (g.leveledUp) ...[
+                Text(
+                  '레벨 업!',
+                  textAlign: TextAlign.center,
+                  style: t.title.copyWith(color: c.primaryDeep),
+                ),
+                const SizedBox(height: Gap.s1),
+                Text(
+                  'Lv.${g.levelBefore} 에서 Lv.${g.levelAfter} 로',
+                  textAlign: TextAlign.center,
+                  style: _weight(t.body, FontWeight.w600),
+                ),
+              ],
+              if (g.stageUp) ...[
+                const SizedBox(height: Gap.s2),
+                Center(
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: c.stageSky,
+                      borderRadius: BorderRadius.circular(Radii.pill),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: Gap.s4,
+                        vertical: 6,
+                      ),
+                      child: Text(
+                        '새 외형 단계!',
+                        textAlign: TextAlign.center,
+                        style: _weight(
+                          t.label.copyWith(color: c.stageInk),
+                          FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+              const SizedBox(height: Gap.s3),
+              LayoutBuilder(
+                builder: (context, box) {
+                  // 시안은 8배. 카드가 좁으면 폭에 들어가는 가장 큰 정수 배율로 줄인다.
+                  final scale =
+                      PetStage.largestScale(
+                        max: _maxScale,
+                        min: 1,
+                        fits: (s) => spriteFramePx * s <= box.maxWidth,
+                      ) ??
+                      1;
+                  return PetStage(
+                    scale: scale,
+                    radius: Stage.radiusInCard,
+                    height: _stageHeight(scale),
+                    pet: _avatar(scale),
+                  );
+                },
               ),
             ],
-            if (g.stageUp) ...[
-              const SizedBox(height: Gap.s2),
-              Text('새 외형 단계!', textAlign: TextAlign.center, style: t.heading),
-            ],
-            const SizedBox(height: Gap.s3),
-            _avatar(),
-            const SizedBox(height: Gap.s5),
-            rows,
-          ],
+          ),
         ),
-      ),
+        const SizedBox(height: Gap.s3),
+        rows,
+      ],
     );
   }
 
-  Widget _avatar() {
+  /// 마스코트 판 펫 배율(시안 8배).
+  static const int _maxScale = 8;
+
+  /// 레벨 업 때 커지는 정도. 발끝을 축으로 커져도 무대 안에 들어가게 0.15 로 둔다.
+  static const double _pop = 0.15;
+
+  /// [scale] 배 펫이 땅 위에 서는 무대 높이.
+  static double _stageHeight(int scale) =>
+      (spriteFramePx * scale +
+              Stage.groundHeight -
+              Stage.footSink -
+              spriteFootGapRows * scale)
+          .toDouble();
+
+  Widget _avatar(int petScale) {
     final g = widget.gain;
-    return Center(
-      child: AnimatedBuilder(
-        animation: _controller,
-        builder: (context, _) {
-          final t = _controller.value;
-          // 커졌다 돌아온다: 1 → 1.3 → 1.
-          final scale = g.leveledUp ? 1 + 0.3 * math.sin(math.pi * t) : 1.0;
-          // 절반이 지나면 이전 단계에서 새 단계로 바뀐다.
-          final stage = g.stageUp && t < 0.5 ? g.stageBefore : g.stageAfter;
-          final kind = widget.kind;
-          return Transform.scale(
-            key: const ValueKey('level-up-scale'),
-            scale: scale,
-            child: kind == null
-                ? const AvatarSlot(scale: 6)
-                : Consumer(
-                    builder: (context, ref, _) {
-                      final equipped = ref.watch(equippedProvider).value;
-                      return AvatarView(
-                        kind: kind,
-                        stage: stage,
-                        mood: AvatarMood.normal,
-                        action: AvatarAction.idle,
-                        scale: 6,
-                        hatItemId: equipped?.hatItemId,
-                        accessoryItemId: equipped?.accessoryItemId,
-                      );
-                    },
-                  ),
-          );
-        },
-      ),
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, _) {
+        final t = _controller.value;
+        // 커졌다 돌아온다: 1 → 1.15 → 1. 발끝을 축으로 커진다.
+        final scale = g.leveledUp ? 1 + _pop * math.sin(math.pi * t) : 1.0;
+        // 절반이 지나면 이전 단계에서 새 단계로 바뀐다.
+        final stage = g.stageUp && t < 0.5 ? g.stageBefore : g.stageAfter;
+        final kind = widget.kind;
+        return Transform.scale(
+          key: const ValueKey('level-up-scale'),
+          scale: scale,
+          alignment: Alignment.bottomCenter,
+          child: kind == null
+              ? AvatarSlot(scale: petScale)
+              : Consumer(
+                  builder: (context, ref, _) {
+                    final equipped = ref.watch(equippedProvider).value;
+                    return AvatarView(
+                      kind: kind,
+                      stage: stage,
+                      mood: AvatarMood.normal,
+                      action: AvatarAction.idle,
+                      scale: petScale,
+                      hatItemId: equipped?.hatItemId,
+                      accessoryItemId: equipped?.accessoryItemId,
+                    );
+                  },
+                ),
+        );
+      },
     );
   }
 }
+
+/// [style] 의 굵기를 [w] 로 바꾼다. 가변 글꼴이라 wght 축도 함께 바꾼다.
+TextStyle _weight(TextStyle style, FontWeight w) => style.copyWith(
+  fontWeight: w,
+  fontVariations: [FontVariation('wght', w.value.toDouble())],
+);
 
 /// 오늘 목표 결과 한 줄. 달성이면 보너스, 미달이면 남은 거리나 빠른 이동 안내.
 class GoalResult extends StatelessWidget {
@@ -267,7 +329,8 @@ class GoalResult extends StatelessWidget {
   }
 }
 
-/// 경험치 한 줄: 흰 카드, 값은 success 색 titleS 22. 코인이 있으면 값 아래에 한 줄 더한다.
+/// 경험치 한 줄(판 없음, 행 카드 안): 이름 17/600 왼쪽, 값 17/800 success 오른쪽.
+/// 코인이 있으면 값 아래에 코인 +N 14/600 한 줄을 더한다.
 class _XpRow extends StatelessWidget {
   const _XpRow(
     this.label,
@@ -290,31 +353,24 @@ class _XpRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = AppColors.of(context);
     final t = AppText.of(context);
-    return AppCard(
-      radius: Radii.md,
-      padding: const EdgeInsets.symmetric(vertical: 14, horizontal: Gap.s4),
-      child: Row(
-        children: [
-          if (leading case final leading?) ...[
-            leading,
-            const SizedBox(width: Gap.s3),
-          ],
-          Expanded(child: Text(label, style: t.body)),
-          const SizedBox(width: Gap.s2),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                xp,
-                style: t.titleS.copyWith(color: valueColor ?? c.success),
-              ),
-              if (coins > 0)
-                Text('코인 +$coins', style: t.caption.copyWith(color: c.coin)),
-            ],
-          ),
+    return Row(
+      children: [
+        if (leading case final leading?) ...[
+          leading,
+          const SizedBox(width: Gap.s3),
         ],
-      ),
+        Expanded(child: Text(label, style: _weight(t.body, FontWeight.w600))),
+        const SizedBox(width: Gap.s3),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(xp, style: t.heading.copyWith(color: valueColor ?? c.success)),
+            if (coins > 0)
+              Text('코인 +$coins', style: t.label.copyWith(color: c.coin)),
+          ],
+        ),
+      ],
     );
   }
 }

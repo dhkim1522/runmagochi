@@ -17,6 +17,7 @@ import '../app/providers.dart';
 import '../app/run_editor.dart';
 import '../app/share_service.dart';
 import '../data/run_repository.dart';
+import '../domain/route_pace.dart';
 import '../domain/run_goal.dart';
 import '../domain/run_summary.dart';
 import 'history_screen.dart';
@@ -90,6 +91,8 @@ class _SummaryScreenState extends ConsumerState<SummaryScreen> {
         distanceM: input.distanceM,
         movingTime: input.movingTime,
         avgPaceSecPerKm: input.avgPaceSecPerKm,
+        route: input.route,
+        splits: input.splits,
         goalLine: input.goalLine,
         levelUpLine: gain != null && gain.leveledUp
             ? '레벨 ${gain.levelAfter} 달성!'
@@ -176,11 +179,13 @@ class _SummaryScreenState extends ConsumerState<SummaryScreen> {
     final Widget body;
     _ShareInput? share;
     if (s != null) {
+      final route = [for (final p in s.points) (p.latitude, p.longitude)];
       share = _ShareInput.of(
         s.startedAt,
         s.distanceM,
         s.movingTime,
         s.avgPaceSecPerKm,
+        route,
         s.splits,
         widget.goal,
       );
@@ -219,7 +224,7 @@ class _SummaryScreenState extends ConsumerState<SummaryScreen> {
         movingTime: s.movingTime,
         avgPaceSecPerKm: s.avgPaceSecPerKm,
         calories: s.calories,
-        route: [for (final p in s.points) (p.latitude, p.longitude)],
+        route: route,
         splits: s.splits,
       );
     } else {
@@ -235,6 +240,7 @@ class _SummaryScreenState extends ConsumerState<SummaryScreen> {
                 d.run.distanceM,
                 d.run.movingTime,
                 d.run.avgPaceSecPerKm,
+                d.route,
                 d.splits,
                 d.run.goal,
               );
@@ -261,21 +267,22 @@ class _SummaryScreenState extends ConsumerState<SummaryScreen> {
             Padding(
               padding: const EdgeInsets.fromLTRB(
                 Gap.s5,
-                Gap.s6,
                 Gap.s5,
-                Gap.s4,
+                Gap.s5,
+                Gap.s3,
               ),
               child: Row(
                 children: [
                   const Expanded(child: ScreenTitle('러닝 요약')),
+                  const SizedBox(width: Gap.s3),
                   Builder(
                     builder: (context) {
                       final input = share;
-                      return TextButton(
+                      return _ShareButton(
+                        key: const ValueKey('share-button'),
                         onPressed: input == null || _sharing
                             ? null
                             : () => _share(input),
-                        child: const Text('공유'),
                       );
                     },
                   ),
@@ -294,8 +301,10 @@ class _SummaryScreenState extends ConsumerState<SummaryScreen> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               if (s != null) ...[
+                // 보조 행동이라 확인보다 작은 흰 알약(관문 2 비평).
                 AppButton.secondary(
                   label: '끝부분 잘라내기',
+                  small: true,
                   onPressed: _busy ? null : _openTrim,
                 ),
                 const SizedBox(height: Gap.s3),
@@ -319,6 +328,8 @@ class _ShareInput {
     this.distanceM,
     this.movingTime,
     this.avgPaceSecPerKm,
+    this.route,
+    this.splits,
     this.goalLine,
   );
 
@@ -327,6 +338,7 @@ class _ShareInput {
     double distanceM,
     Duration movingTime,
     double? avgPaceSecPerKm,
+    List<(double, double)> route,
     List<Split> splits,
     RunGoal? goal,
   ) {
@@ -340,14 +352,72 @@ class _ShareInput {
       );
       line = achieved ? '목표 ${goal.label} 달성' : '목표 ${goal.label}에 도전했어요';
     }
-    return _ShareInput(startedAt, distanceM, movingTime, avgPaceSecPerKm, line);
+    return _ShareInput(
+      startedAt,
+      distanceM,
+      movingTime,
+      avgPaceSecPerKm,
+      route,
+      splits,
+      line,
+    );
   }
 
   final DateTime startedAt;
   final double distanceM;
   final Duration movingTime;
   final double? avgPaceSecPerKm;
+  final List<(double, double)> route;
+  final List<Split> splits;
   final String? goalLine;
+}
+
+/// 머리줄 공유 버튼: 높이 48 흰 알약(surface), 공유 아이콘 + `공유`.
+/// 공유 카드를 만드는 동안은 [onPressed] 가 null 이라 흐리고 눌리지 않는다.
+class _ShareButton extends StatelessWidget {
+  const _ShareButton({super.key, required this.onPressed});
+
+  final VoidCallback? onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = AppColors.of(context);
+    final t = AppText.of(context);
+    final enabled = onPressed != null;
+    return Semantics(
+      button: true,
+      enabled: enabled,
+      label: '공유',
+      excludeSemantics: true,
+      onTap: onPressed,
+      child: Opacity(
+        opacity: enabled ? 1 : 0.5,
+        child: Pressable(
+          onTap: onPressed,
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              color: c.surface,
+              borderRadius: BorderRadius.circular(Radii.pill),
+            ),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(minHeight: 48, minWidth: 48),
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(14, 0, 18, 0),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.ios_share, size: 20, color: c.ink),
+                    const SizedBox(width: 6),
+                    Text('공유', style: t.bodyStrong),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 /// 기록에서 연 상세의 "기록 삭제". 확인 뒤 지우고(받은 경험치는 그대로) 목록으로 돌아간다.
@@ -479,18 +549,23 @@ class _SummaryBody extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = AppColors.of(context);
     final t = AppText.of(context);
+    final segments = routePaceSegments(route, splits);
+    // 시안 c: 섹션 사이 28, 카드 사이 12, 카드 안 20.
     return ListView(
-      padding: const EdgeInsets.fromLTRB(Gap.s5, 0, Gap.s5, Gap.s4),
+      padding: const EdgeInsets.fromLTRB(Gap.s5, Gap.s4, Gap.s5, Gap.s5),
       children: [
-        if (growth != null) ...[growth!, const SizedBox(height: Gap.s5)],
-        if (goal != null) ...[goal!, const SizedBox(height: Gap.s5)],
+        if (growth != null) ...[growth!, const SizedBox(height: Gap.s7)],
+        if (goal != null) ...[
+          AppCard(padding: const EdgeInsets.all(Gap.s5), child: goal!),
+          const SizedBox(height: Gap.s7),
+        ],
         Text(
           formatRunDate(startedAt),
-          style: t.caption.copyWith(color: c.inkMuted),
+          style: t.label.copyWith(color: c.inkMuted),
         ),
-        const SizedBox(height: 2),
-        Text(name, style: t.titleS),
-        const SizedBox(height: Gap.s5),
+        const SizedBox(height: Gap.s1),
+        Text(name, style: t.title),
+        const SizedBox(height: Gap.s1),
         Row(
           crossAxisAlignment: CrossAxisAlignment.baseline,
           textBaseline: TextBaseline.alphabetic,
@@ -502,104 +577,112 @@ class _SummaryBody extends StatelessWidget {
               ),
             ),
             const SizedBox(width: Gap.s2),
-            Text('km', style: t.titleS.copyWith(color: c.primaryDeep)),
+            Text('km', style: t.titleS.copyWith(color: c.inkMuted)),
           ],
         ),
-        const SizedBox(height: Gap.s5),
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              child: StatCard(
-                label: '평균 페이스',
-                value: formatPace(avgPaceSecPerKm),
-              ),
-            ),
-            const SizedBox(width: Gap.s3),
-            Expanded(
-              child: StatCard(label: '시간', value: formatDuration(movingTime)),
-            ),
-            const SizedBox(width: Gap.s3),
-            Expanded(
-              child: StatCard(label: '칼로리', value: '${calories.round()}'),
-            ),
+        const SizedBox(height: Gap.s3),
+        StatsCard(
+          cells: [
+            StatCard.cell(label: '평균 페이스', value: formatPace(avgPaceSecPerKm)),
+            StatCard.cell(label: '시간', value: formatDuration(movingTime)),
+            StatCard.cell(label: '칼로리', value: '${calories.round()}'),
           ],
         ),
-        const SizedBox(height: Gap.s5),
+        const SizedBox(height: Gap.s3),
         AppCard(
-          child: SizedBox(
-            height: 220,
-            child: route.isEmpty
-                ? Center(
-                    child: Text(
-                      '경로가 없어요',
-                      style: t.body.copyWith(color: c.inkMuted),
-                    ),
-                  )
-                : CustomPaint(
-                    size: Size.infinite,
-                    painter: RoutePainter(
-                      route,
-                      color: c.primary,
-                      startColor: c.primary,
-                      endColor: c.ink,
-                    ),
-                  ),
+          key: const ValueKey('route-card'),
+          padding: const EdgeInsets.all(Gap.s5),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              AspectRatio(
+                aspectRatio: 3 / 2,
+                child: route.isEmpty
+                    ? Center(
+                        child: Text(
+                          '경로가 없어요',
+                          style: t.body.copyWith(color: c.inkMuted),
+                        ),
+                      )
+                    : CustomPaint(
+                        size: Size.infinite,
+                        painter: RoutePainter(
+                          route,
+                          segments: segments,
+                          colors: RoutePaceColors.of(c),
+                          startColor: c.primary,
+                          startEdge: c.primaryEdge,
+                          endColor: c.ink,
+                          endRing: c.surface,
+                        ),
+                      ),
+              ),
+              if (RoutePaceLegend.shows(segments)) ...[
+                const SizedBox(height: Gap.s3),
+                RoutePaceLegend(
+                  key: const ValueKey('route-legend'),
+                  segments: segments,
+                ),
+              ],
+            ],
           ),
         ),
         if (splits.isNotEmpty) ...[
-          const SizedBox(height: Gap.s5),
-          Text('구간', style: t.heading),
-          const SizedBox(height: Gap.s2),
-          if (splits.length > 1) ...[
-            SplitPaceChart(splits: splits, avgPaceSecPerKm: avgPaceSecPerKm),
-            const SizedBox(height: Gap.s4),
-          ],
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: Gap.s1),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Text('km', style: t.label.copyWith(color: c.inkMuted)),
-                ),
-                Text('페이스', style: t.label.copyWith(color: c.inkMuted)),
-              ],
-            ),
-          ),
-          const SizedBox(height: Gap.s2),
+          const SizedBox(height: Gap.s3),
           AppCard(
-            radius: Radii.md,
+            padding: const EdgeInsets.all(Gap.s5),
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                for (final (i, sp) in splits.indexed)
-                  Column(
+                Text('구간', style: t.heading),
+                const SizedBox(height: Gap.s3),
+                if (splits.length > 1) ...[
+                  SplitPaceChart(
+                    splits: splits,
+                    avgPaceSecPerKm: avgPaceSecPerKm,
+                  ),
+                  const SizedBox(height: Gap.s2),
+                ],
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 6),
+                  child: Row(
                     children: [
-                      if (i > 0)
-                        Divider(
-                          height: 2,
-                          thickness: 2,
-                          indent: 0,
-                          color: c.surfaceSoft,
-                        ),
-                      Padding(
-                        key: const ValueKey('split-row'),
-                        padding: const EdgeInsets.symmetric(
-                          vertical: Gap.s3,
-                          horizontal: Gap.s4,
-                        ),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: Text(
-                                _splitLabel(splits, i),
-                                style: t.body,
-                              ),
-                            ),
-                            Text(formatPace(sp.paceSecPerKm), style: t.heading),
-                          ],
+                      Expanded(
+                        child: Text(
+                          'km',
+                          style: t.label.copyWith(color: c.inkMuted),
                         ),
                       ),
+                      Text('페이스', style: t.label.copyWith(color: c.inkMuted)),
                     ],
+                  ),
+                ),
+                for (final (i, sp) in splits.indexed)
+                  // 형제 줄은 key 가 겹치면 안 되어 번호로 한 겹 감싼다.
+                  KeyedSubtree(
+                    key: ValueKey('split-$i'),
+                    child: Padding(
+                      key: const ValueKey('split-row'),
+                      padding: const EdgeInsets.symmetric(vertical: Gap.s2),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              splitLabel(splits, i),
+                              style: t.bodyStrong,
+                            ),
+                          ),
+                          Text(
+                            formatPace(sp.paceSecPerKm),
+                            style: t.bodyStrong.copyWith(
+                              fontFeatures: const [
+                                FontFeature.tabularFigures(),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
               ],
             ),
@@ -609,16 +692,6 @@ class _SummaryBody extends StatelessWidget {
       ],
     );
   }
-}
-
-/// 온전한 1km 구간은 번호, 마지막 짧은 구간은 누적 거리(km)로 부른다.
-String _splitLabel(List<Split> splits, int i) {
-  final sp = splits[i];
-  if (sp.distanceM >= 1000) return '${sp.index}';
-  final cumulative = splits
-      .take(i + 1)
-      .fold<double>(0, (a, e) => a + e.distanceM);
-  return formatKm(cumulative).replaceFirst(RegExp(r'\.?0+$'), '');
 }
 
 class _Notice extends StatelessWidget {

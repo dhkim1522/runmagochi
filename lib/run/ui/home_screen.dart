@@ -370,13 +370,13 @@ class _HomeStage extends StatelessWidget {
       height: _needed(_minScale, bubbleHeight),
       child: LayoutBuilder(
         builder: (context, box) {
-          var scale = _minScale;
-          for (var s = _maxScale; s > _minScale; s--) {
-            if (_needed(s, bubbleHeight) <= box.maxHeight) {
-              scale = s;
-              break;
-            }
-          }
+          final scale =
+              PetStage.largestScale(
+                max: _maxScale,
+                min: _minScale,
+                fits: (s) => _needed(s, bubbleHeight) <= box.maxHeight,
+              ) ??
+              _minScale;
           return PetStage(
             key: const ValueKey('home-stage'),
             height: box.maxHeight,

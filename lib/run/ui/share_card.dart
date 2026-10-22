@@ -1,7 +1,7 @@
 import 'dart:typed_data';
 import 'dart:ui' as ui;
 
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Split;
 import 'package:flutter/rendering.dart';
 
 import '../../avatar/domain/growth_rules.dart';
@@ -9,13 +9,20 @@ import '../../avatar/ui/avatar_view.dart';
 import '../../avatar/ui/sprite_sheet.dart';
 import '../../core/format.dart';
 import '../../core/theme.dart';
+import '../../core/ui/components.dart';
 import '../../shop/domain/catalog.dart';
+import '../domain/route_pace.dart';
+import '../domain/run_summary.dart';
+import 'route_painter.dart';
 
 /// 카드의 논리 크기. 3배로 찍으면 1080×1350 PNG 가 된다.
 const shareCardSize = Size(360, 450);
 const shareCardPixelRatio = 3.0;
 
 /// 러닝 요약을 한 장으로 만든 공유 카드. 기기 테마·글자 크기와 상관없이 같은 모습이다.
+///
+/// 배치(연두 무드보드, 결정 0029): 머리줄(앱 이름·날짜) → 폭 전체 사각 무대 위 펫(남는
+/// 높이에 들어가는 가장 큰 배율) → 경로 칸(페이스 색) + 거리·지표 → 범례 → 목표·레벨 문구.
 class ShareCard extends StatelessWidget {
   const ShareCard({
     super.key,
@@ -26,6 +33,8 @@ class ShareCard extends StatelessWidget {
     required this.distanceM,
     required this.movingTime,
     required this.avgPaceSecPerKm,
+    this.route = const [],
+    this.splits = const [],
     this.hatItemId,
     this.accessoryItemId,
     this.goalLine,
@@ -42,6 +51,12 @@ class ShareCard extends StatelessWidget {
   final double distanceM;
   final Duration movingTime;
   final double? avgPaceSecPerKm;
+
+  /// (위도, 경도) 경로. 비어 있으면 경로 칸을 그리지 않는다.
+  final List<(double, double)> route;
+
+  /// 1km 구간. 경로 페이스 색을 정한다([routePaceSegments]).
+  final List<Split> splits;
 
   /// 목표 결과 한 줄. 목표 없는 예전 러닝은 null.
   final String? goalLine;
@@ -71,6 +86,20 @@ class ShareCard extends StatelessWidget {
     ];
   }
 
+  /// 펫 배율 범위. 무대 높이에 들어가는 가장 큰 정수 배율을 고른다.
+  static const int _maxScale = 6;
+  static const int _minScale = 2;
+
+  /// 경로 칸 한 변.
+  static const double _routeSide = 120;
+
+  /// [scale] 배 펫이 땅 위에 서는 무대 높이(땅 띠 [Stage.groundHeightCompact]).
+  static double _stageHeight(int scale) =>
+      spriteFramePx * scale +
+      Stage.groundHeightCompact -
+      Stage.footSink -
+      spriteFootGapRows * scale;
+
   @override
   Widget build(BuildContext context) {
     // 사용자 테마·글자 배율에 흔들리지 않게 라이트 토큰과 고정 배율로 그린다.
@@ -81,6 +110,7 @@ class ShareCard extends StatelessWidget {
           final c = AppColors.of(context);
           final t = AppText.of(context);
           final k = kind;
+          final segments = routePaceSegments(route, splits);
           return MediaQuery(
             data: MediaQuery.of(
               context,
@@ -115,50 +145,126 @@ class ShareCard extends StatelessWidget {
                             ),
                           ],
                         ),
+                        const SizedBox(height: Gap.s3),
                         Expanded(
-                          child: Center(
-                            child: k == null
-                                ? const SizedBox.shrink()
-                                : AvatarView(
-                                    kind: k,
-                                    stage: stage,
-                                    mood: mood,
-                                    action: AvatarAction.idle,
-                                    scale: 5,
-                                    hatItemId: hatItemId,
-                                    accessoryItemId: accessoryItemId,
-                                  ),
+                          child: LayoutBuilder(
+                            builder: (context, box) {
+                              final scale =
+                                  PetStage.largestScale(
+                                    max: _maxScale,
+                                    min: _minScale,
+                                    fits: (s) =>
+                                        _stageHeight(s) <= box.maxHeight,
+                                  ) ??
+                                  _minScale;
+                              return PetStage(
+                                height: box.maxHeight,
+                                scale: scale,
+                                groundHeight: Stage.groundHeightCompact,
+                                pet: k == null
+                                    ? SizedBox.square(
+                                        dimension: (spriteFramePx * scale)
+                                            .toDouble(),
+                                      )
+                                    : AvatarView(
+                                        kind: k,
+                                        stage: stage,
+                                        mood: mood,
+                                        action: AvatarAction.idle,
+                                        scale: scale,
+                                        hatItemId: hatItemId,
+                                        accessoryItemId: accessoryItemId,
+                                      ),
+                              );
+                            },
                           ),
                         ),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          crossAxisAlignment: CrossAxisAlignment.baseline,
-                          textBaseline: TextBaseline.alphabetic,
-                          children: [
-                            Text(formatKm(distanceM), style: t.numberL),
-                            const SizedBox(width: Gap.s2),
-                            Text(
-                              'km',
-                              style: t.titleS.copyWith(color: c.primaryDeep),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: Gap.s4),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: _Stat(
-                                '평균 페이스',
-                                formatPace(avgPaceSecPerKm),
+                        const SizedBox(height: Gap.s3),
+                        SizedBox(
+                          height: _routeSide,
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              if (route.isNotEmpty) ...[
+                                AppCard(
+                                  radius: Radii.md,
+                                  child: SizedBox.square(
+                                    dimension: _routeSide,
+                                    child: CustomPaint(
+                                      painter: RoutePainter(
+                                        route,
+                                        segments: segments,
+                                        colors: RoutePaceColors.of(c),
+                                        startColor: c.primary,
+                                        startEdge: c.primaryEdge,
+                                        endColor: c.ink,
+                                        endRing: c.surface,
+                                        lineWidth: 4,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: Gap.s3),
+                              ],
+                              Expanded(
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  crossAxisAlignment: route.isEmpty
+                                      ? CrossAxisAlignment.center
+                                      : CrossAxisAlignment.start,
+                                  children: [
+                                    FittedBox(
+                                      fit: BoxFit.scaleDown,
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.baseline,
+                                        textBaseline: TextBaseline.alphabetic,
+                                        children: [
+                                          Text(
+                                            formatKm(distanceM),
+                                            style: t.numberL,
+                                          ),
+                                          const SizedBox(width: Gap.s1),
+                                          Text(
+                                            'km',
+                                            style: t.titleS.copyWith(
+                                              color: c.inkMuted,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    const SizedBox(height: Gap.s1),
+                                    Row(
+                                      children: [
+                                        Expanded(
+                                          child: _Stat(
+                                            '평균 페이스',
+                                            formatPace(avgPaceSecPerKm),
+                                          ),
+                                        ),
+                                        const SizedBox(width: Gap.s2),
+                                        Expanded(
+                                          child: _Stat(
+                                            '시간',
+                                            formatDuration(movingTime),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
                               ),
-                            ),
-                            Expanded(
-                              child: _Stat('시간', formatDuration(movingTime)),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
+                        if (RoutePaceLegend.shows(segments)) ...[
+                          const SizedBox(height: Gap.s2),
+                          RoutePaceLegend(segments: segments),
+                        ],
                         if (goalLine != null) ...[
-                          const SizedBox(height: Gap.s4),
+                          const SizedBox(height: Gap.s3),
                           Text(
                             goalLine!,
                             textAlign: TextAlign.center,
@@ -166,7 +272,7 @@ class ShareCard extends StatelessWidget {
                           ),
                         ],
                         if (levelUpLine != null) ...[
-                          const SizedBox(height: Gap.s2),
+                          SizedBox(height: goalLine == null ? Gap.s3 : Gap.s1),
                           Text(
                             levelUpLine!,
                             textAlign: TextAlign.center,
@@ -186,6 +292,7 @@ class ShareCard extends StatelessWidget {
   }
 }
 
+/// 지표 한 칸: 라벨(label, inkMuted) 위, 값(stat) 아래. 폭이 모자라면 작아진다.
 class _Stat extends StatelessWidget {
   const _Stat(this.label, this.value);
   final String label;
@@ -196,9 +303,17 @@ class _Stat extends StatelessWidget {
     final c = AppColors.of(context);
     final t = AppText.of(context);
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
       children: [
-        Text(label, style: t.caption.copyWith(color: c.inkMuted)),
-        Text(value, style: t.stat),
+        FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Text(label, style: t.label.copyWith(color: c.inkMuted)),
+        ),
+        FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Text(value, style: t.stat),
+        ),
       ],
     );
   }

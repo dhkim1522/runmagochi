@@ -317,13 +317,11 @@ class _RunStage extends StatelessWidget {
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, box) {
-        int? scale;
-        for (var s = _maxScale; s >= _minScale; s--) {
-          if (_needed(s) <= box.maxHeight) {
-            scale = s;
-            break;
-          }
-        }
+        final scale = PetStage.largestScale(
+          max: _maxScale,
+          min: _minScale,
+          fits: (s) => _needed(s) <= box.maxHeight,
+        );
         if (scale == null) return const SizedBox.shrink();
         return PetStage(
           height: box.maxHeight,

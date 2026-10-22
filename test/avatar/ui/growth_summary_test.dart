@@ -7,6 +7,7 @@ import 'package:runmagochi/avatar/domain/growth_state.dart';
 import 'package:runmagochi/avatar/ui/avatar_view.dart';
 import 'package:runmagochi/avatar/ui/growth_summary.dart';
 import 'package:runmagochi/core/theme.dart';
+import 'package:runmagochi/core/ui/components.dart';
 import 'package:runmagochi/run/domain/run_goal.dart';
 import 'package:runmagochi/shop/app/providers.dart';
 
@@ -64,6 +65,7 @@ Future<void> settle(WidgetTester tester) async {
 
 void main() {
   coinTests();
+  layoutTests();
   testWidgets('레벨업이면 경험치 행과 레벨 업 문구가 보인다', (tester) async {
     await pumpIt(tester, gain(levelAfter: 2));
     expect(find.text('달린 거리 5.02km'), findsOneWidget);
@@ -188,7 +190,8 @@ void main() {
     );
     await settle(tester);
     expect(find.byType(AvatarView), findsNothing);
-    expect(tester.getSize(find.byType(AvatarSlot)), const Size(192, 192));
+    // 마스코트 판 무대의 8배 자리(작업 13, 예전 6배).
+    expect(tester.getSize(find.byType(AvatarSlot)), const Size(256, 256));
   });
 
   group('빠른 이동 안내', () {
@@ -445,4 +448,161 @@ void coinTests() {
       expect(tester.takeException(), isNull);
     });
   }
+}
+
+/// 시안 c 요약 배치(작업 13): 마스코트 판, 흰 카드 하나에 행들.
+void layoutTests() {
+  Future<void> pumpAt(
+    WidgetTester tester,
+    GrowthGain g, {
+    double width = 390,
+    bool dark = false,
+    double scale = 1,
+    RunGoal? goal = const DistanceGoal(5000),
+  }) async {
+    tester.view.physicalSize = Size(width, 1600);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    await tester.pumpWidget(
+      _scope(
+        MaterialApp(
+          theme: dark ? appDarkTheme() : appLightTheme(),
+          home: MediaQuery(
+            data: MediaQueryData(
+              size: Size(width, 1600),
+              textScaler: TextScaler.linear(scale),
+            ),
+            child: Scaffold(
+              body: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(horizontal: Gap.s5),
+                child: GrowthSummary(
+                  kind: AvatarKind.chick,
+                  gain: g,
+                  distanceM: 5240,
+                  goal: goal,
+                  movingTime: const Duration(minutes: 32),
+                  achieved: true,
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await settle(tester);
+  }
+
+  GrowthGain full({bool levelUp = true, bool stageUp = true}) => GrowthGain(
+    distanceXp: 52,
+    goalBonusXp: 25,
+    distanceCoins: 26,
+    goalCoins: 25,
+    levelBefore: 19,
+    levelAfter: levelUp ? 20 : 19,
+    stageBefore: 3,
+    stageAfter: stageUp ? 4 : 3,
+    newBadges: const ['goals_30'],
+  );
+
+  Rect card(WidgetTester tester, String text) => tester.getRect(
+    find.ancestor(of: find.text(text), matching: find.byType(AppCard)).first,
+  );
+
+  group('시안 배치(작업 13)', () {
+    for (final dark in [false, true]) {
+      testWidgets('마스코트 판: 흰 카드 안 카드 폭 사각 무대, 8배 펫 (${dark ? '다크' : '라이트'})', (
+        tester,
+      ) async {
+        await pumpAt(tester, full(), dark: dark);
+        final c = AppColors.of(tester.element(find.text('레벨 업!')));
+        final board = find.byKey(const ValueKey('level-up-card'));
+        final boardBox = tester.widget<AppCard>(board);
+        expect(boardBox.color ?? c.surface, c.surface);
+        expect(boardBox.radius, Radii.xl);
+        final stage = tester.widget<PetStage>(find.byType(PetStage));
+        expect(stage.radius, Stage.radiusInCard);
+        expect(stage.scale, 8);
+        expect(tester.widget<AvatarView>(find.byType(AvatarView)).scale, 8);
+        final boardRect = tester.getRect(board);
+        final stageRect = tester.getRect(find.byType(PetStage));
+        expect(stageRect.left, boardRect.left + Gap.s5);
+        expect(stageRect.right, boardRect.right - Gap.s5);
+        expect(stageRect.bottom, boardRect.bottom - Gap.s5);
+        // 무대 위에는 글자를 두지 않는다: 문구는 모두 무대 위쪽.
+        for (final t in ['레벨 업!', 'Lv.19 에서 Lv.20 로', '새 외형 단계!']) {
+          expect(tester.getRect(find.text(t)).bottom, lessThan(stageRect.top));
+        }
+        expect(
+          tester.widget<Text>(find.text('레벨 업!')).style!.color,
+          c.primaryDeep,
+        );
+      });
+    }
+
+    testWidgets('새 외형 단계! 는 무대색 알약에 stage-ink 글자', (tester) async {
+      await pumpAt(tester, full());
+      final c = AppColors.of(tester.element(find.text('새 외형 단계!')));
+      expect(
+        tester.widget<Text>(find.text('새 외형 단계!')).style!.color,
+        c.stageInk,
+      );
+      final pill = tester.widget<DecoratedBox>(
+        find
+            .ancestor(
+              of: find.text('새 외형 단계!'),
+              matching: find.byType(DecoratedBox),
+            )
+            .first,
+      );
+      expect((pill.decoration as BoxDecoration).color, c.stageSky);
+    });
+
+    testWidgets('카드 폭이 256 보다 좁으면 들어가는 가장 큰 배율로 줄인다', (tester) async {
+      // 320 - 좌우 20 - 판 안 20 × 2 = 240 → 7배(224).
+      await pumpAt(tester, full(), width: 320);
+      expect(tester.widget<PetStage>(find.byType(PetStage)).scale, 7);
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('행 3개(거리·목표·배지)는 흰 카드 하나 안에 있다', (tester) async {
+      await pumpAt(tester, full());
+      final rows = card(tester, '달린 거리 5.24km');
+      expect(card(tester, '목표 5km 달성'), rows);
+      expect(card(tester, '배지 획득: 목표 달성 30번'), rows);
+      // 마스코트 판과 행 카드 사이는 카드 사이 간격.
+      final board = tester.getRect(find.byKey(const ValueKey('level-up-card')));
+      expect(rows.top - board.bottom, Gap.s3);
+    });
+
+    testWidgets('레벨 업이 없으면 무대 없이 행 카드만', (tester) async {
+      await pumpAt(tester, full(levelUp: false, stageUp: false));
+      expect(find.byType(PetStage), findsNothing);
+      expect(find.byKey(const ValueKey('level-up-card')), findsNothing);
+      expect(card(tester, '달린 거리 5.24km'), card(tester, '목표 5km 달성'));
+    });
+
+    testWidgets('배지 줄 코인 +200 은 다른 코인 +N 보다 크고 굵다', (tester) async {
+      await pumpAt(tester, full());
+      final c = AppColors.of(tester.element(find.text('코인 +200')));
+      final badge = tester.widget<Text>(find.text('코인 +200')).style!;
+      final other = tester.widget<Text>(find.text('코인 +26')).style!;
+      expect(badge.color, c.coin);
+      expect(other.color, c.coin);
+      expect(badge.fontSize!, greaterThan(other.fontSize!));
+      expect(badge.fontWeight!.value, greaterThan(other.fontWeight!.value));
+      // 경험치 값과 같은 크기·굵기.
+      final xp = tester.widget<Text>(find.text('경험치 +52')).style!;
+      expect(badge.fontSize, xp.fontSize);
+      expect(badge.fontWeight, xp.fontWeight);
+    });
+
+    for (final dark in [false, true]) {
+      testWidgets('360 폭 글자 1.3배 넘침 없음 (${dark ? '다크' : '라이트'})', (
+        tester,
+      ) async {
+        await pumpAt(tester, full(), width: 360, dark: dark, scale: 1.3);
+        expect(tester.takeException(), isNull);
+      });
+    }
+  });
 }
