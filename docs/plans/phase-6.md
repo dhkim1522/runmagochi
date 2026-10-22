@@ -105,7 +105,7 @@
 - [x] 9. 관문 2: UI 방향 선택
   - 사용자가 6안 중 고를 때까지 **멈춘다**(조합 선택 가능, 예: a 방향의 캔버스 안). 고른 안과 고칠 점을 "관문 기록" 에 적는다.
 
-- [ ] 10. 디자인 시스템 갱신
+- [x] 10. 디자인 시스템 갱신
   - 고른 방향으로 `docs/design/tokens.json`·`docs/design/design-system.md`·`lib/core/theme.dart` 를 고친다. 라이트·다크.
   - Claude Design System 아티팩트도 새 토큰·컴포넌트로 갱신하고 `design-system.md` 의 원본 링크를 고친다.
   - 새로 정할 것: 코인 색(지금 `accent-deep` 차용), 경로 페이스 색 3단(느림·보통·빠름), 배경(무늬·그라데이션 여부), 화면 전환 시간·곡선 토큰
@@ -126,7 +126,7 @@
 
 - [ ] 13. 요약·경로 페이스 색·공유 카드
   - 요약 화면 개편(`summary_screen.dart`, `split_pace_chart.dart`).
-  - 경로 색: 경로 점을 누적 거리로 1km 구간에 나누고, 구간 페이스를 이 러닝의 가장 느린·빠른 구간 사이에서 3단 색으로 칠한다. 구간이 1개 이하이거나 모든 구간이 같으면 한 색(`primary`). 빠른 이동 구간은 `ink-muted`.
+  - 경로 색: 경로 점을 누적 거리로 1km 구간에 나누고, 구간 페이스를 이 러닝의 가장 느린·빠른 구간 사이에서 3단 색으로 칠한다. 구간이 1개 이하이거나 모든 구간이 같으면 한 색(`primary-deep`, 결정 0029 뒤 이름). 빠른 이동 구간은 `ink-muted`.
     - `List<RouteSegment> routePaceSegments(List<(double, double)> points, List<Split> splits)` — `lib/run/domain/route_pace.dart`(새 파일), `RouteSegment { List<(double, double)> points; RoutePace pace; }`, `enum RoutePace { slow, mid, fast, fastMove, single }`
     - `RoutePainter` 가 구간마다 토큰 색으로 그린다.
   - 공유 카드(`share_card.dart`) 디자인: 새 시스템, 경로 페이스 색 포함, 1080×1350 유지.
@@ -145,12 +145,12 @@
 
 - [ ] 16. 앱 아이콘·스플래시
   - 고른 캐릭터와 색으로 아이콘을 만든다. `tool/render_app_icon.dart`(새 파일)가 Android `mipmap-*/ic_launcher.png`, 적응형 아이콘(전경·배경 + `mipmap-anydpi-v26/ic_launcher.xml`), iOS `AppIcon.appiconset`, 스플래시 그림을 쓴다.
-  - 스플래시: `launch_background.xml`(라이트·다크), Android 12 이상 `values-v31`·`values-night-v31` 의 `windowSplashScreen*`. 바탕은 `cream` 토큰 값.
+  - 스플래시: `launch_background.xml`(라이트·다크), Android 12 이상 `values-v31`·`values-night-v31` 의 `windowSplashScreen*`. 바탕은 `background` 토큰 값(결정 0029 뒤 이름).
   - 테스트: 도구 출력 크기(48·72·96·144·192, iOS 1024 포함), 투명 여백 비율(적응형 안전 영역 66%)
   - 확인: `fvm dart run tool/render_app_icon.dart`, `fvm flutter build apk --debug`
 
 - [ ] 17. 글꼴 줄이기
-  - Noto Sans KR 가변 글꼴을 KS X 1001 한글 2,350자 + 영문·숫자·기호 + 앱 문구에 쓰인 모든 글자로 서브셋한다(굵기 축 유지). Jua 도 같은 글자 집합으로 줄인다.
+  - Pretendard 가변 글꼴(결정 0029)을 KS X 1001 한글 2,350자 + 영문·숫자·기호 + 앱 문구에 쓰인 모든 글자로 서브셋한다(굵기 축 유지).
   - `tool/subset_fonts.py`(새 파일, fonttools, 실행 방법을 맨 위 주석에), `tool/font_chars.txt`(생성), `assets/fonts/*`
   - 테스트: `test/tool/font_chars_test.dart` — `lib/**.dart` 문자열 리터럴의 모든 글자가 `font_chars.txt` 에 있음
   - 확인: 글꼴 두 파일 합계 4MB 이하, `fvm flutter build apk --debug` 크기가 줄어듦(전후 값을 계획에 적는다)
