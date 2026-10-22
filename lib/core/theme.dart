@@ -79,7 +79,8 @@ class Stage {
 }
 
 /// 움직임 토큰. 들어올 때 감속, 나갈 때 가속, 나가기는 들어오기의 약 2/3.
-/// 시스템 "애니메이션 줄이기" 처리는 작업 15 에서 이 토큰을 쓰는 곳에 붙인다.
+/// 시스템 "애니메이션 줄이기" 를 켜면 움직임을 빼고 바로 최종 상태를 보인다:
+/// 시간은 [Motion.of] 로 읽고, 컨트롤러로 돌리는 연출은 [Motion.reduced] 면 끝 값에 둔다.
 class Motion {
   Motion._();
 
@@ -109,6 +110,90 @@ class Motion {
 
   /// 보상 튀어 오름(끝에서 살짝 넘침).
   static const Curve pop = Curves.easeOutBack;
+
+  /// 시스템 "애니메이션 줄이기"(`MediaQuery.disableAnimations`)가 켜져 있는가.
+  static bool reduced(BuildContext context) =>
+      MediaQuery.maybeDisableAnimationsOf(context) ?? false;
+
+  /// [duration] 그대로, 애니메이션 줄이기면 0(바로 최종 상태).
+  static Duration of(BuildContext context, Duration duration) =>
+      reduced(context) ? Duration.zero : duration;
+}
+
+/// 앱 화면 전환(Android): 들어오는 화면이 [Motion.enter] 동안 살짝 아래에서 올라오며
+/// 나타나고([Motion.enterCurve]), 나갈 때는 [Motion.exit] 동안 거꾸로([Motion.exitCurve]).
+/// 애니메이션 줄이기면 전환 없이 바로 새 화면을 보인다.
+class AppPageTransitionsBuilder extends PageTransitionsBuilder {
+  const AppPageTransitionsBuilder();
+
+  /// 들어오는 화면이 올라오는 거리(화면 높이 비율).
+  static const double rise = 0.04;
+
+  @override
+  Duration get transitionDuration => Motion.enter;
+
+  @override
+  Duration get reverseTransitionDuration => Motion.exit;
+
+  @override
+  Widget buildTransitions<T>(
+    PageRoute<T> route,
+    BuildContext context,
+    Animation<double> animation,
+    Animation<double> secondaryAnimation,
+    Widget child,
+  ) {
+    if (Motion.reduced(context)) return child;
+    return _RiseTransition(animation: animation, child: child);
+  }
+}
+
+class _RiseTransition extends StatefulWidget {
+  const _RiseTransition({required this.animation, required this.child});
+
+  final Animation<double> animation;
+  final Widget child;
+
+  @override
+  State<_RiseTransition> createState() => _RiseTransitionState();
+}
+
+class _RiseTransitionState extends State<_RiseTransition> {
+  late CurvedAnimation _curve = _curved();
+  late Animation<Offset> _offset = _rise();
+
+  CurvedAnimation _curved() => CurvedAnimation(
+    parent: widget.animation,
+    curve: Motion.enterCurve,
+    reverseCurve: Motion.exitCurve,
+  );
+
+  Animation<Offset> _rise() => Tween(
+    begin: const Offset(0, AppPageTransitionsBuilder.rise),
+    end: Offset.zero,
+  ).animate(_curve);
+
+  @override
+  void didUpdateWidget(_RiseTransition old) {
+    super.didUpdateWidget(old);
+    if (old.animation != widget.animation) {
+      _curve.dispose();
+      _curve = _curved();
+      _offset = _rise();
+    }
+  }
+
+  @override
+  void dispose() {
+    _curve.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => FadeTransition(
+    opacity: _curve,
+    child: SlideTransition(position: _offset, child: widget.child),
+  );
 }
 
 /// Material ColorScheme 슬롯이 없는 토큰까지 모두 담은 색 확장.
@@ -524,6 +609,8 @@ ThemeData appDarkTheme() => _build(AppColors.dark, Brightness.dark);
 /// - surfaceContainerHighest = surface-soft, outline = line-strong, outlineVariant = line,
 ///   error = danger
 /// 나머지 토큰(primaryEdge, primaryDeep, coin, stage*, pace* 등)은 [AppColors] 로 읽는다.
+/// 입력칸·스위치·진행 표시·스낵바·화면 전환도 여기서 정한다(작업 15). 화면은 모양을 따로
+/// 주지 않는다.
 ThemeData _build(AppColors c, Brightness brightness) {
   final scheme = ColorScheme(
     brightness: brightness,
@@ -599,6 +686,69 @@ ThemeData _build(AppColors c, Brightness brightness) {
             ),
           ),
     ),
+    // 입력칸: 흰 판 + line-strong 2 경계(바탕·카드 모두 3:1), 포커스는 primary-deep 3
+    // (키보드 포커스 윤곽과 같은 두께), 오류는 danger. 모서리는 작은 카드와 같은 radius-md.
+    inputDecorationTheme: InputDecorationTheme(
+      filled: true,
+      fillColor: c.surface,
+      contentPadding: const EdgeInsets.symmetric(
+        horizontal: Gap.s4,
+        vertical: Gap.s4,
+      ),
+      border: _field(c.lineStrong, Borders.edge),
+      enabledBorder: _field(c.lineStrong, Borders.edge),
+      disabledBorder: _field(c.line, Borders.edge),
+      focusedBorder: _field(c.primaryDeep, Borders.focus),
+      errorBorder: _field(c.danger, Borders.edge),
+      focusedErrorBorder: _field(c.danger, Borders.focus),
+      hintStyle: text.body.copyWith(color: c.inkMuted),
+      suffixStyle: text.bodyStrong.copyWith(color: c.inkMuted),
+      helperStyle: text.caption.copyWith(color: c.inkMuted),
+      helperMaxLines: 2,
+      errorStyle: text.caption.copyWith(color: c.danger),
+      errorMaxLines: 2,
+      counterStyle: text.caption.copyWith(color: c.inkMuted),
+    ),
+    // 연두 커서는 흰 판 위 1.3:1 이라 보이지 않는다. 선택 바탕은 Material 기본(연두 40%).
+    textSelectionTheme: TextSelectionThemeData(
+      cursorColor: c.primaryDeep,
+      selectionHandleColor: c.primaryDeep,
+    ),
+    progressIndicatorTheme: ProgressIndicatorThemeData(color: c.primaryDeep),
+    // 스위치: 켜짐은 연두 면 + primary-edge 경계(연두 면 규칙), 꺼짐은 트랙 + line-strong.
+    switchTheme: SwitchThemeData(
+      thumbColor: WidgetStateProperty.resolveWith(
+        (s) => s.contains(WidgetState.selected) ? c.onPrimary : c.inkMuted,
+      ),
+      trackColor: WidgetStateProperty.resolveWith(
+        (s) => s.contains(WidgetState.selected) ? c.primary : c.surfaceSoft,
+      ),
+      trackOutlineColor: WidgetStateProperty.resolveWith(
+        (s) => s.contains(WidgetState.selected) ? c.primaryEdge : c.lineStrong,
+      ),
+      trackOutlineWidth: const WidgetStatePropertyAll(Borders.edge),
+    ),
+    // 알림 한 줄: 어두운 판(다크는 밝은 판) 위 on-panel 본문, 아래에 붙은 띠(위 모서리만
+    // radius-md), 그림자 없음. 떠 있는 카드는 화면 아래 주요 버튼을 더 많이 가려 붙인다.
+    snackBarTheme: SnackBarThemeData(
+      backgroundColor: c.panel,
+      contentTextStyle: text.body.copyWith(color: c.onPanel),
+      actionTextColor: c.onPanel,
+      behavior: SnackBarBehavior.fixed,
+      elevation: 0,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(Radii.md)),
+      ),
+    ),
+    // Android 화면 전환은 움직임 토큰으로. iOS 는 뒤로 밀기 제스처가 있는 기본 전환을 둔다.
+    pageTransitionsTheme: const PageTransitionsTheme(
+      builders: {TargetPlatform.android: AppPageTransitionsBuilder()},
+    ),
     extensions: [c, text],
   );
 }
+
+OutlineInputBorder _field(Color color, double width) => OutlineInputBorder(
+  borderRadius: BorderRadius.circular(Radii.md),
+  borderSide: BorderSide(color: color, width: width),
+);

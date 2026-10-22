@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../theme.dart';
@@ -10,7 +12,8 @@ import '../theme.dart';
 /// - 진행: [ProgressBar]
 /// - 코인: [CoinIcon]
 /// - 동그라미 아이콘 버튼: [CircleIconButton](뒤로·설정)
-/// - 빈 상태: [EmptyState]
+/// - 빈 상태·불러오기 실패: [EmptyState], [EmptyState.error]
+/// - 진짜 문제 알림(위치 신호 오류 등): [NoticeCard]
 /// - 탭바: [AppTabBar], [TabIcon]
 /// - 무대: [PetStage], [StageGround], [SpeechBubble]
 /// - 다이얼로그: `AlertDialog` 를 그대로 쓴다. 판·버튼 모양은 테마(theme.dart)가 정한다.
@@ -167,7 +170,9 @@ class ProgressBar extends StatelessWidget {
 }
 
 /// 누름 반응: 누르는 동안 [pressedScale] 로 살짝 작아졌다가 놓으면 돌아온다([Motion.press]).
-/// 크기만 그림으로 바뀌고 레이아웃 자리는 그대로다. [onTap] 이 null 이면 반응하지 않는다.
+/// 짧게 톡 눌러도 눌린 모양이 [Motion.press] 동안은 남아 보인다(누르고 바로 떼면 한 프레임도
+/// 그려지지 않아 반응이 안 보였다). 크기만 그림으로 바뀌고 레이아웃 자리는 그대로다.
+/// [onTap] 이 null 이면 반응하지 않는다. 애니메이션 줄이기면 크기가 시간 없이 바뀐다.
 class Pressable extends StatefulWidget {
   const Pressable({super.key, required this.onTap, required this.child});
 
@@ -183,8 +188,38 @@ class Pressable extends StatefulWidget {
 class _PressableState extends State<Pressable> {
   bool _pressed = false;
 
+  /// 눌린 모양을 최소한 남겨 두는 동안 돌아가는 타이머.
+  Timer? _hold;
+
+  /// 손을 뗐지만 [_hold] 가 끝나야 돌아온다.
+  bool _released = false;
+
   void _set(bool v) {
-    if (_pressed != v) setState(() => _pressed = v);
+    if (_pressed != v && mounted) setState(() => _pressed = v);
+  }
+
+  void _down() {
+    _hold?.cancel();
+    _released = false;
+    _set(true);
+    _hold = Timer(Motion.press, () {
+      _hold = null;
+      if (_released) _set(false);
+    });
+  }
+
+  void _up() {
+    if (_hold != null) {
+      _released = true;
+    } else {
+      _set(false);
+    }
+  }
+
+  @override
+  void dispose() {
+    _hold?.cancel();
+    super.dispose();
   }
 
   @override
@@ -192,13 +227,13 @@ class _PressableState extends State<Pressable> {
     final enabled = widget.onTap != null;
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
-      onTapDown: enabled ? (_) => _set(true) : null,
-      onTapUp: enabled ? (_) => _set(false) : null,
-      onTapCancel: enabled ? () => _set(false) : null,
+      onTapDown: enabled ? (_) => _down() : null,
+      onTapUp: enabled ? (_) => _up() : null,
+      onTapCancel: enabled ? _up : null,
       onTap: widget.onTap,
       child: AnimatedScale(
         scale: _pressed && enabled ? Pressable.pressedScale : 1,
-        duration: Motion.press,
+        duration: Motion.of(context, Motion.press),
         curve: Motion.standard,
         child: widget.child,
       ),
@@ -347,7 +382,7 @@ class AppChip extends StatelessWidget {
       child: Pressable(
         onTap: onTap,
         child: AnimatedContainer(
-          duration: Motion.quick,
+          duration: Motion.of(context, Motion.quick),
           curve: Motion.standard,
           constraints: const BoxConstraints(minHeight: height, minWidth: 48),
           alignment: Alignment.center,
@@ -677,7 +712,7 @@ class _TabItemState extends State<_TabItem> {
     );
     // 키보드 포커스는 Tab 으로 받고 Enter·Space 로 선택한다 (ActivateIntent).
     Widget content = AnimatedContainer(
-      duration: Motion.quick,
+      duration: Motion.of(context, Motion.quick),
       curve: Motion.standard,
       constraints: const BoxConstraints(minHeight: 56),
       padding: const EdgeInsets.symmetric(vertical: Gap.s1),
@@ -727,11 +762,8 @@ class _TabItemState extends State<_TabItem> {
             },
           ),
         },
-        child: GestureDetector(
-          behavior: HitTestBehavior.opaque,
-          onTap: widget.onTap,
-          child: content,
-        ),
+        // 누름 반응은 버튼·칩과 같다(작업 15).
+        child: Pressable(onTap: widget.onTap, child: content),
       ),
     );
   }
@@ -934,6 +966,7 @@ class _TailPainter extends CustomPainter {
 
 /// 흰 동그라미 아이콘 버튼(48×48, surface + ink 아이콘 24). 뒤로·설정처럼 머리줄의 작은 행동.
 /// 스크린 리더에는 [label] 버튼으로 읽힌다. 누르면 살짝 작아졌다 돌아온다.
+/// [onPressed] 가 null 이면 비활성(50%, 눌리지 않음).
 class CircleIconButton extends StatelessWidget {
   const CircleIconButton({
     super.key,
@@ -946,23 +979,28 @@ class CircleIconButton extends StatelessWidget {
 
   final IconData icon;
   final String label;
-  final VoidCallback onPressed;
+  final VoidCallback? onPressed;
 
   @override
   Widget build(BuildContext context) {
     final c = AppColors.of(context);
+    final enabled = onPressed != null;
     return Semantics(
       button: true,
+      enabled: enabled,
       label: label,
       excludeSemantics: true,
       onTap: onPressed,
-      child: Pressable(
-        onTap: onPressed,
-        child: DecoratedBox(
-          decoration: BoxDecoration(color: c.surface, shape: BoxShape.circle),
-          child: SizedBox.square(
-            dimension: size,
-            child: Icon(icon, size: 24, color: c.ink),
+      child: Opacity(
+        opacity: enabled ? 1 : 0.5,
+        child: Pressable(
+          onTap: onPressed,
+          child: DecoratedBox(
+            decoration: BoxDecoration(color: c.surface, shape: BoxShape.circle),
+            child: SizedBox.square(
+              dimension: size,
+              child: Icon(icon, size: 24, color: c.ink),
+            ),
           ),
         ),
       ),
@@ -972,11 +1010,25 @@ class CircleIconButton extends StatelessWidget {
 
 /// 빈 상태: 흰 카드(radius-lg) 가운데 그림 하나와 안내 문구(body, inkMuted).
 /// 그림은 앱 그림([TabIcon]·[CoinIcon] 등)을 넘긴다. 문구는 화면의 기존 문구 그대로.
+/// [EmptyState.error] 는 불러오기 실패: 같은 카드에 느낌표 동그라미(inkMuted). 사용자가 고칠
+/// 문제가 아니라 벌주지 않게 danger 를 쓰지 않는다. [action] 은 문구 아래(다시 시도 등).
 class EmptyState extends StatelessWidget {
-  const EmptyState({super.key, required this.icon, required this.message});
+  const EmptyState({
+    super.key,
+    required Widget this.icon,
+    required this.message,
+    this.action,
+  });
 
-  final Widget icon;
+  const EmptyState.error({super.key, required this.message, this.action})
+    : icon = null;
+
+  /// 그림 크기(빈 상태 그림을 넘길 때도 이 크기로 맞춘다).
+  static const double iconSize = 40;
+
+  final Widget? icon;
   final String message;
+  final Widget? action;
 
   @override
   Widget build(BuildContext context) {
@@ -986,13 +1038,56 @@ class EmptyState extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: Gap.s8, horizontal: Gap.s5),
       child: Column(
         mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          icon,
+          Center(
+            child:
+                icon ??
+                Icon(
+                  Icons.error_outline_rounded,
+                  size: iconSize,
+                  color: c.inkMuted,
+                ),
+          ),
           const SizedBox(height: Gap.s3),
           Text(
             message,
             textAlign: TextAlign.center,
             style: t.body.copyWith(color: c.inkMuted),
+          ),
+          if (action case final action?) ...[
+            const SizedBox(height: Gap.s5),
+            action,
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+/// 알림 줄: 흰 작은 카드(radius-md)에 danger 경계선·느낌표 그림·글자(body-strong).
+/// 위치 신호 오류·저장 실패처럼 지금 러닝에 영향이 있는 진짜 문제에만 쓴다.
+class NoticeCard extends StatelessWidget {
+  const NoticeCard({super.key, required this.message});
+
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = AppColors.of(context);
+    final t = AppText.of(context);
+    return AppCard(
+      radius: Radii.md,
+      borderColor: c.danger,
+      padding: const EdgeInsets.symmetric(vertical: Gap.s3, horizontal: Gap.s4),
+      child: Row(
+        children: [
+          ExcludeSemantics(
+            child: Icon(Icons.error_outline_rounded, size: 24, color: c.danger),
+          ),
+          const SizedBox(width: Gap.s3),
+          Expanded(
+            child: Text(message, style: t.bodyStrong.copyWith(color: c.danger)),
           ),
         ],
       ),

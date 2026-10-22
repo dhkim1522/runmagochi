@@ -138,7 +138,8 @@ void main() {
     await tester.pump();
     expect(scale(), Pressable.pressedScale);
     await g.up();
-    await tester.pump();
+    // 짧게 눌러도 Motion.press 동안은 눌린 모양이 남는다(작업 15).
+    await tester.pump(Motion.press);
     expect(scale(), 1);
   });
 

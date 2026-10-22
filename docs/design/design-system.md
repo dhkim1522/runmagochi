@@ -86,7 +86,11 @@ direction-c 이름과 토큰: `lime` = `primary`, `green` = `primary-deep`·`suc
 | `Motion.standard` | easeInOutCubic | 제자리 상태 변화 |
 | `Motion.pop` | easeOutBack | 보상 튀어 오름 |
 
-시스템 "애니메이션 줄이기" 를 켜면 움직임을 빼고 바로 최종 상태를 보인다(작업 15).
+시스템 "애니메이션 줄이기" 를 켜면 움직임을 빼고 바로 최종 상태를 보인다(작업 15). 화면은 시간을 `Motion.of(context, 토큰)` 으로 읽고(줄이기면 0), 컨트롤러로 돌리는 연출(레벨 업·배지 획득)은 `Motion.reduced(context)` 면 끝 값에 둔다.
+
+- 화면 전환(Android): `AppPageTransitionsBuilder` — 들어오는 화면이 화면 높이 4% 아래에서 올라오며 나타난다(`enter` + `enterCurve`), 나갈 때 거꾸로(`exit` + `exitCurve`). 테마 `pageTransitionsTheme` 이 정해 `MaterialPageRoute` 를 그대로 쓴다. iOS 는 뒤로 밀기 제스처가 있는 기본 전환.
+- 누름: 짧게 톡 눌러도 눌린 모양(0.97)이 `press` 동안 남는다(바로 떼면 한 프레임도 안 그려져 반응이 안 보였다). 탭바 탭도 같은 `Pressable`.
+- 첫 실행 장 넘김: `enter`/`exit` 교차 페이드. 레벨 업 커짐·배지 획득 튀어 오름: `celebrate` + `pop`.
 
 ## 다크 모드
 
@@ -103,6 +107,15 @@ direction-c 이름과 토큰: `lime` = `primary`, `green` = `primary-deep`·`suc
 - 채움 전용 쌍(글자로 쓰지 않는다): `stage-sky` 위 `ink-muted`, `surface-soft` 위 `primary-deep`(막대 채움은 그림 3:1 로 검사). `stage-sky` 위 `primary-deep` 은 24px 이상 큰 글자로만 쓴다. 무대 위 작은 글자는 `stage-ink`, 말풍선은 `bubble` 위 `ink`.
 - 누를 수 있는 것은 48×48 이상.
 - 시스템 글자 크기를 키워도 잘리지 않게, 고정 높이 안에 글자를 가두지 않는다.
+
+## 입력·알림·상태 (작업 15)
+
+- 입력칸: 테마 `inputDecorationTheme` — `surface` 채움, `line-strong` 2px 경계(바탕·카드 모두 3:1), 포커스 `primary-deep` 3px, 오류 `danger`, 모서리 `radius-md`, 도움말·글자 수 `caption` `ink-muted`. 커서·선택 손잡이 `primary-deep`(연두 커서는 흰 판 위에서 안 보인다).
+- 스위치: 켜짐 연두 면 + `primary-edge` 경계, 꺼짐 `surface-soft` + `line-strong` 경계(테마 `switchTheme`).
+- 스낵바: `panel` 판 + `on-panel` 본문, 화면 아래 띠(위 모서리만 `radius-md`), 그림자 없음.
+- 진행 표시(불러오는 중): `primary-deep`.
+- 빈 상태: `EmptyState`(앱 그림 + `ink-muted` 문구). 불러오기 실패: `EmptyState.error`(같은 카드에 느낌표 동그라미 `ink-muted`, 필요하면 `다시 시도` 버튼). 사용자가 고칠 문제가 아니라 `danger` 를 쓰지 않는다.
+- 진짜 문제 알림(위치 신호 오류·러닝 저장 실패): `NoticeCard` — 흰 작은 카드에 `danger` 경계선·느낌표·`body-strong` 글자.
 
 ## 작업 11~15 를 위한 메모
 

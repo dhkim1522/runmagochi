@@ -288,6 +288,7 @@ void main() {
   _fontTests();
   _titleSTests();
   _tokensJsonTests();
+  _formTests();
   final themes = {
     'light': (appLightTheme(), _light),
     'dark': (appDarkTheme(), _dark),
@@ -669,4 +670,92 @@ void _tokensJsonTests() {
       'border-focus': '${Borders.focus.round()}px',
     });
   });
+}
+
+/// 작업 15: 입력칸·스위치·진행 표시·스낵바·화면 전환도 토큰으로 테마가 정한다.
+void _formTests() {
+  for (final (name, theme, c) in [
+    ('라이트', appLightTheme(), AppColors.light),
+    ('다크', appDarkTheme(), AppColors.dark),
+  ]) {
+    final tx = theme.extension<AppText>()!;
+    group('작업 15 테마 ($name)', () {
+      OutlineInputBorder outline(InputBorder? b) => b! as OutlineInputBorder;
+
+      test(
+        '입력칸: surface 채움, lineStrong 2 경계, 포커스 primaryDeep 3, 오류 danger',
+        () {
+          final d = theme.inputDecorationTheme;
+          expect(d.filled, isTrue);
+          expect(d.fillColor, c.surface);
+          for (final b in [d.border, d.enabledBorder]) {
+            expect(outline(b).borderSide.color, c.lineStrong);
+            expect(outline(b).borderSide.width, Borders.edge);
+            expect(outline(b).borderRadius, BorderRadius.circular(Radii.md));
+          }
+          expect(outline(d.focusedBorder).borderSide.color, c.primaryDeep);
+          expect(outline(d.focusedBorder).borderSide.width, Borders.focus);
+          expect(outline(d.errorBorder).borderSide.color, c.danger);
+          expect(outline(d.focusedErrorBorder).borderSide.color, c.danger);
+          expect(outline(d.focusedErrorBorder).borderSide.width, Borders.focus);
+          expect(d.helperStyle!.color, c.inkMuted);
+          expect(d.helperStyle!.fontSize, tx.caption.fontSize);
+          expect(d.errorStyle!.color, c.danger);
+          expect(d.counterStyle!.color, c.inkMuted);
+          // 입력 경계는 바탕·카드 모두와 3:1 이상(면 경계).
+          expect(_contrast(c.lineStrong, c.surface), greaterThanOrEqualTo(3));
+          expect(
+            _contrast(c.lineStrong, c.background),
+            greaterThanOrEqualTo(3),
+          );
+        },
+      );
+
+      test('커서·선택 손잡이는 primaryDeep (연두는 흰 판 위에서 안 보인다)', () {
+        final s = theme.textSelectionTheme;
+        expect(s.cursorColor, c.primaryDeep);
+        expect(s.selectionHandleColor, c.primaryDeep);
+        expect(_contrast(c.primaryDeep, c.surface), greaterThanOrEqualTo(3));
+      });
+
+      test('진행 표시는 primaryDeep', () {
+        expect(theme.progressIndicatorTheme.color, c.primaryDeep);
+      });
+
+      test('스위치: 켜짐 연두 + primaryEdge 경계, 꺼짐 surfaceSoft + lineStrong 경계', () {
+        final s = theme.switchTheme;
+        const on = {WidgetState.selected};
+        const off = <WidgetState>{};
+        expect(s.trackColor!.resolve(on), c.primary);
+        expect(s.trackOutlineColor!.resolve(on), c.primaryEdge);
+        expect(s.thumbColor!.resolve(on), c.onPrimary);
+        expect(s.trackColor!.resolve(off), c.surfaceSoft);
+        expect(s.trackOutlineColor!.resolve(off), c.lineStrong);
+        expect(s.thumbColor!.resolve(off), c.inkMuted);
+        expect(s.trackOutlineWidth!.resolve(off), Borders.edge);
+      });
+
+      test('스낵바: 어두운 판(panel) + onPanel 본문, 아래 띠(위 모서리 radius-md), 그림자 없음', () {
+        final s = theme.snackBarTheme;
+        expect(s.backgroundColor, c.panel);
+        expect(s.contentTextStyle!.color, c.onPanel);
+        expect(s.contentTextStyle!.fontSize, tx.body.fontSize);
+        expect(s.actionTextColor, c.onPanel);
+        expect(s.behavior, SnackBarBehavior.fixed);
+        expect(s.elevation, 0);
+        expect(
+          (s.shape! as RoundedRectangleBorder).borderRadius,
+          const BorderRadius.vertical(top: Radius.circular(Radii.md)),
+        );
+        expect(_contrast(c.onPanel, c.panel), greaterThanOrEqualTo(4.5));
+      });
+
+      test('Android 화면 전환은 앱 전환(들어오기 enter, 나가기 exit)', () {
+        final b = theme.pageTransitionsTheme.builders[TargetPlatform.android];
+        expect(b, isA<AppPageTransitionsBuilder>());
+        expect(b!.transitionDuration, Motion.enter);
+        expect(b.reverseTransitionDuration, Motion.exit);
+      });
+    });
+  }
 }

@@ -1,3 +1,5 @@
+import 'dart:ui' show Tristate;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:runmagochi/avatar/ui/sprite_sheet.dart';
@@ -57,6 +59,7 @@ void main() {
   _bubbleHeightTest();
   _dialogTests();
   _task14Tests();
+  _task15Tests();
 
   testWidgets('ScreenTitle 은 헤더로 표시된다', (tester) async {
     final handle = tester.ensureSemantics();
@@ -319,7 +322,8 @@ void _chipTests() {
     await tester.pump();
     expect(_scale(tester, chip), Pressable.pressedScale);
     await g.up();
-    await tester.pump();
+    // 짧게 눌러도 Motion.press 동안은 눌린 모양이 남는다(작업 15).
+    await tester.pump(Motion.press);
     expect(_scale(tester, chip), 1);
   });
 
@@ -951,4 +955,111 @@ void _task14Tests() {
       Stage.groundHeightMini,
     );
   });
+}
+
+void _task15Tests() {
+  testWidgets('CircleIconButton 은 onPressed 가 null 이면 흐리고(50%) 눌리지 않는다', (
+    tester,
+  ) async {
+    final handle = tester.ensureSemantics();
+    await _pump(
+      tester,
+      const CircleIconButton(
+        icon: Icons.chevron_left,
+        label: '뒤로',
+        onPressed: null,
+      ),
+    );
+    final button = find.byType(CircleIconButton);
+    expect(tester.getSize(button), const Size(48, 48));
+    final opacity = tester.widget<Opacity>(
+      find.descendant(of: button, matching: find.byType(Opacity)),
+    );
+    expect(opacity.opacity, 0.5);
+    final data = tester.getSemantics(button).getSemanticsData();
+    expect(data.label, '뒤로');
+    expect(data.flagsCollection.isButton, isTrue);
+    expect(data.flagsCollection.isEnabled, Tristate.isFalse);
+    final g = await tester.startGesture(tester.getCenter(button));
+    await tester.pump();
+    expect(_scale(tester, button), 1);
+    await g.up();
+    handle.dispose();
+  });
+
+  for (final dark in [false, true]) {
+    final name = dark ? '다크' : '라이트';
+    testWidgets('NoticeCard 는 흰 작은 카드에 danger 경계·그림·글자 ($name)', (
+      tester,
+    ) async {
+      final c = _c(dark);
+      await _pump(
+        tester,
+        const NoticeCard(message: '위치 신호를 받지 못하고 있어요'),
+        dark: dark,
+        scale: 1.3,
+      );
+      expect(tester.takeException(), isNull);
+      final card = tester.widget<AppCard>(
+        find.descendant(
+          of: find.byType(NoticeCard),
+          matching: find.byType(AppCard),
+        ),
+      );
+      expect(card.radius, Radii.md);
+      expect(card.borderColor, c.danger);
+      final icon = tester.widget<Icon>(
+        find.descendant(
+          of: find.byType(NoticeCard),
+          matching: find.byType(Icon),
+        ),
+      );
+      expect(icon.color, c.danger);
+      expect(icon.size, 24);
+      final text = tester.widget<Text>(find.text('위치 신호를 받지 못하고 있어요'));
+      expect(text.style!.color, c.danger);
+      expect(text.style!.fontSize, 17);
+      expect(text.style!.fontWeight, FontWeight.w700);
+    });
+
+    testWidgets('EmptyState.error 는 같은 카드에 inkMuted 느낌표 그림과 다시 시도 버튼 ($name)', (
+      tester,
+    ) async {
+      final c = _c(dark);
+      var retried = 0;
+      await _pump(
+        tester,
+        EmptyState.error(
+          message: '불러오지 못했어요',
+          action: AppButton.secondary(
+            label: '다시 시도',
+            small: true,
+            onPressed: () => retried++,
+          ),
+        ),
+        dark: dark,
+        scale: 1.3,
+      );
+      expect(tester.takeException(), isNull);
+      final icon = tester.widget<Icon>(
+        find.descendant(
+          of: find.byType(EmptyState),
+          matching: find.byType(Icon),
+        ),
+      );
+      expect(icon.color, c.inkMuted, reason: '불러오기 실패는 벌주지 않게 danger 를 쓰지 않는다');
+      expect(icon.size, 40);
+      expect(
+        tester.widget<Text>(find.text('불러오지 못했어요')).style!.color,
+        c.inkMuted,
+      );
+      // 버튼은 문구 아래.
+      expect(
+        tester.getRect(find.text('불러오지 못했어요')).bottom,
+        lessThan(tester.getRect(find.byType(AppButton)).top),
+      );
+      await tester.tap(find.text('다시 시도'));
+      expect(retried, 1);
+    });
+  }
 }
