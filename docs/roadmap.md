@@ -141,7 +141,7 @@ flowchart LR
 
 ### 페이즈 7 iOS 확장과 실기기 확인
 
-기능·디자인을 마친 앱에 iOS 를 붙이고, Xcode 로 본인 iPhone 에 설치해 Android 와 함께 실제로 써 본다 (결정 0017·0026). Mac 에서만 진행한다.
+기능·디자인을 마친 앱에 iOS 를 붙이고, Xcode 로 본인 iPhone 에 설치해 Android 와 함께 실제로 써 본다 (결정 0017·0026). Mac 에서만 진행한다. iOS 빌드·대응·iPhone 설치는 페이즈 6 과 나란히 먼저 시작했다(결정 0030).
 
 - **범위**
   - iOS 빌드 (회사 Mac, FVM·Xcode)
