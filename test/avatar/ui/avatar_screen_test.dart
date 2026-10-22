@@ -11,6 +11,9 @@ import 'package:runmagochi/avatar/ui/avatar_view.dart';
 import 'package:runmagochi/core/theme.dart';
 import 'package:runmagochi/core/ui/components.dart';
 
+import 'package:runmagochi/shop/app/providers.dart';
+import 'package:runmagochi/shop/data/shop_repository.dart';
+
 import '../../run/ui/fakes.dart';
 
 GrowthState stateFor(int totalXp, [AvatarKind kind = AvatarKind.chick]) {
@@ -33,6 +36,8 @@ Future<void> pumpIt(
   int totalXp, {
   double textScale = 1.0,
   AvatarKind kind = AvatarKind.chick,
+  bool dark = false,
+  Equipped? equipped,
 }) async {
   await tester.pumpWidget(
     ProviderScope(
@@ -42,9 +47,13 @@ Future<void> pumpIt(
         growthServiceProvider.overrideWithValue(
           FakeGrowthService(stateFor(totalXp, kind)),
         ),
+        if (equipped != null)
+          shopRepositoryProvider.overrideWithValue(
+            FakeShop(const [], 0, equipped, {'cap', 'sunglasses'}),
+          ),
       ],
       child: MaterialApp(
-        theme: appLightTheme(),
+        theme: dark ? appDarkTheme() : appLightTheme(),
         builder: (context, child) => MediaQuery(
           data: MediaQuery.of(
             context,
@@ -62,6 +71,7 @@ Future<void> pumpIt(
 }
 
 void main() {
+  _designTests();
   for (final (kind, name) in [
     (AvatarKind.chick, '알'),
     (AvatarKind.jelly, '새싹'),
@@ -146,5 +156,97 @@ void main() {
           .where((o) => o.opacity == 0.45),
       hasLength(2),
     );
+  });
+}
+
+/// 화면 맨 위 큰 무대(성장 단계 줄의 작은 무대가 아닌 것).
+Finder _mainStage() => find.byKey(const ValueKey('avatar-stage'));
+
+void _designTests() {
+  for (final dark in [false, true]) {
+    final name = dark ? '다크' : '라이트';
+    final c = dark ? AppColors.dark : AppColors.light;
+
+    testWidgets('마스코트는 폭 전체 사각 무대 위 8배, 착용 아이템도 무대 위, 무대 위 글자 없음 ($name)', (
+      tester,
+    ) async {
+      tester.view.physicalSize = const Size(390, 844);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      await pumpIt(
+        tester,
+        600,
+        dark: dark,
+        equipped: const Equipped(
+          hatItemId: 'cap',
+          accessoryItemId: 'sunglasses',
+        ),
+      );
+      final stage = tester.widget<PetStage>(_mainStage());
+      expect(stage.scale, 8);
+      expect(stage.radius, Stage.radius);
+      expect(tester.getRect(_mainStage()).width, 390 - 2 * Gap.s5);
+      final view = tester.widget<AvatarView>(
+        find.descendant(of: _mainStage(), matching: find.byType(AvatarView)),
+      );
+      expect(view.scale, 8);
+      expect(view.hatItemId, 'cap');
+      expect(view.accessoryItemId, 'sunglasses');
+      expect(
+        find.descendant(of: _mainStage(), matching: find.byType(Text)),
+        findsNothing,
+      );
+      final sky = tester.widget<ColoredBox>(
+        find
+            .descendant(of: _mainStage(), matching: find.byType(ColoredBox))
+            .first,
+      );
+      expect(sky.color, c.stageSky);
+      // 이름·레벨은 무대 아래 26.
+      final title = find.text('러니 Lv.5');
+      expect(tester.widget<Text>(title).style!.fontSize, 26);
+      expect(
+        tester.getRect(title).top,
+        greaterThan(tester.getRect(_mainStage()).bottom),
+      );
+    });
+
+    testWidgets('성장 단계 줄은 작은 사각 무대 위 2배 미리보기, 현재는 무대색 알약 ($name)', (
+      tester,
+    ) async {
+      tester.view.physicalSize = const Size(390, 1600);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      await pumpIt(tester, 600, dark: dark);
+      final minis = tester
+          .widgetList<PetStage>(find.byType(PetStage))
+          .where((s) => s.groundHeight == Stage.groundHeightMini)
+          .toList();
+      expect(minis, hasLength(4));
+      for (final m in minis) {
+        expect(m.scale, 2);
+        expect(m.radius, Radii.sm);
+      }
+      final current = tester.widget<Text>(find.text('현재'));
+      expect(current.style!.color, c.stageInk);
+      final pill = tester.widget<DecoratedBox>(
+        find
+            .ancestor(of: find.text('현재'), matching: find.byType(DecoratedBox))
+            .first,
+      );
+      expect((pill.decoration as BoxDecoration).color, c.stageSky);
+      // 섹션 사이 28.
+      final button = tester.getRect(find.widgetWithText(AppButton, '업적'));
+      expect(tester.getRect(find.text('성장 단계')).top - button.bottom, Gap.s7);
+    });
+  }
+
+  testWidgets('360×640 글자 1.3배 다크에서도 넘치지 않는다', (tester) async {
+    tester.view.physicalSize = const Size(360, 640);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    await pumpIt(tester, 348, textScale: 1.3, dark: true);
+    expect(tester.takeException(), isNull);
+    expect(tester.widget<PetStage>(_mainStage()).scale, 8);
   });
 }

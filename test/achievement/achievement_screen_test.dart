@@ -7,6 +7,7 @@ import 'package:runmagochi/achievement/domain/badges.dart';
 import 'package:runmagochi/achievement/ui/achievement_screen.dart';
 import 'package:runmagochi/achievement/ui/badge_image.dart';
 import 'package:runmagochi/core/theme.dart';
+import 'package:runmagochi/core/ui/components.dart';
 import 'package:runmagochi/run/data/run_repository.dart';
 import 'package:runmagochi/run/domain/run_summary.dart';
 
@@ -69,6 +70,7 @@ Future<void> _pump(
 }
 
 void main() {
+  _designTests();
   testWidgets('기록이 없으면 개인 기록은 -, 배지는 0 / 12', (tester) async {
     await _pump(tester);
     expect(find.text('개인 기록'), findsOneWidget);
@@ -112,7 +114,8 @@ void main() {
       final image = tester.widget<BadgeImage>(find.byKey(key));
       expect(image.id, b.id);
       expect(image.earned, earned, reason: b.id);
-      expect(image.size, 48);
+      // 3열 칸에 크게(24px 그림의 3배).
+      expect(image.size, 72);
     }
     // 다음 배지 줄(첫 5km 80%)은 같은 그림을 회색으로.
     final next = find.descendant(
@@ -240,5 +243,87 @@ void main() {
       expect(find.text('1:05:00'), findsOneWidget);
       expect(tester.takeException(), isNull);
     });
+  }
+}
+
+void _designTests() {
+  for (final dark in [false, true]) {
+    final name = dark ? '다크' : '라이트';
+    final c = dark ? AppColors.dark : AppColors.light;
+
+    testWidgets('머리줄 뒤로는 48 흰 동그라미, 섹션은 흰 카드, 섹션 사이 28 ($name)', (
+      tester,
+    ) async {
+      await _pump(
+        tester,
+        runs: [_run(4000)],
+        earned: [_earned('first_run')],
+        dark: dark,
+      );
+      final back = find.byType(CircleIconButton);
+      expect(back, findsOneWidget);
+      expect(tester.widget<CircleIconButton>(back).label, '뒤로');
+      final records = tester.getRect(
+        find.byKey(const ValueKey('records-card')),
+      );
+      final badges = find.text('배지 1 / 12');
+      expect(tester.getRect(badges).top - records.bottom, Gap.s7);
+      final card = tester.widget<AppCard>(
+        find.byKey(const ValueKey('records-card')),
+      );
+      expect(card.radius, Radii.lg);
+      expect(card.padding, const EdgeInsets.all(Gap.s5));
+      expect(
+        find.descendant(
+          of: find.byKey(const ValueKey('badge-card')),
+          matching: find.byType(BadgeImage),
+        ),
+        findsNWidgets(12),
+      );
+    });
+
+    testWidgets('개인 기록은 2×2 칸, 값은 stat 22/800 ($name)', (tester) async {
+      await _pump(tester, runs: [_run(6200, minutes: 40)], dark: dark);
+      final value = tester.widget<Text>(find.text('6.20km'));
+      expect(value.style!.fontSize, 22);
+      expect(value.style!.fontWeight, FontWeight.w800);
+      final a = tester.getRect(find.text('최장 거리'));
+      final b = tester.getRect(find.text('최장 시간'));
+      final d = tester.getRect(find.text('최고 1km'));
+      expect(a.top, b.top); // 같은 줄
+      expect(b.left, greaterThan(a.left));
+      expect(d.top, greaterThan(a.bottom)); // 다음 줄
+      expect(tester.widget<Text>(find.text('최장 거리')).style!.color, c.inkMuted);
+    });
+
+    testWidgets(
+      '받은 배지 이름은 ink, 못 받은 것은 inkMuted, 다음 배지 코인은 코인 색 + 코인 그림 ($name)',
+      (tester) async {
+        await _pump(
+          tester,
+          runs: [_run(4000)],
+          earned: [_earned('first_run')],
+          dark: dark,
+        );
+        expect(tester.widget<Text>(find.text('첫 러닝')).style!.color, c.ink);
+        expect(
+          tester.widget<Text>(find.text('하프 완주')).style!.color,
+          c.inkMuted,
+        );
+        await tester.scrollUntilVisible(
+          find.text('코인 +100'),
+          200,
+          scrollable: find.byType(Scrollable).first,
+        );
+        expect(tester.widget<Text>(find.text('코인 +100')).style!.color, c.coin);
+        expect(
+          find.descendant(
+            of: find.byKey(const ValueKey('next-badge-card')),
+            matching: find.byType(CoinIcon),
+          ),
+          findsOneWidget,
+        );
+      },
+    );
   }
 }

@@ -17,7 +17,6 @@ class AchievementScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final c = AppColors.of(context);
     final t = AppText.of(context);
     final runs = ref.watch(achievementRunsProvider);
     final earned = ref.watch(earnedBadgesProvider);
@@ -33,22 +32,12 @@ class AchievementScreen extends ConsumerWidget {
             children: [
               Row(
                 children: [
-                  Semantics(
-                    container: true,
-                    button: true,
+                  CircleIconButton(
+                    icon: Icons.chevron_left,
                     label: '뒤로',
-                    excludeSemantics: true,
-                    onTap: back,
-                    child: IconButton(
-                      onPressed: back,
-                      constraints: const BoxConstraints.tightFor(
-                        width: 48,
-                        height: 48,
-                      ),
-                      icon: Icon(Icons.chevron_left, size: 32, color: c.ink),
-                    ),
+                    onPressed: back,
                   ),
-                  const SizedBox(width: Gap.s1),
+                  const SizedBox(width: Gap.s3),
                   const Flexible(child: ScreenTitle('업적')),
                 ],
               ),
@@ -83,19 +72,19 @@ class _Body extends StatelessWidget {
     final next = nextBadge(runs, already: earnedIds);
     final count = badgeCatalog.where((b) => earnedIds.contains(b.id)).length;
     return SingleChildScrollView(
-      padding: const EdgeInsets.only(bottom: Gap.s5),
+      padding: const EdgeInsets.only(top: Gap.s4, bottom: Gap.s5),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Text('개인 기록', style: t.heading),
           const SizedBox(height: Gap.s3),
           _RecordsCard(records),
-          const SizedBox(height: Gap.s5),
+          const SizedBox(height: Gap.s7),
           Text('배지 $count / ${badgeCatalog.length}', style: t.heading),
           const SizedBox(height: Gap.s3),
           _BadgeGrid(earnedIds),
           if (next != null) ...[
-            const SizedBox(height: Gap.s5),
+            const SizedBox(height: Gap.s7),
             Text('다음 배지', style: t.heading),
             const SizedBox(height: Gap.s3),
             _NextBadgeCard(next),
@@ -121,27 +110,35 @@ class _RecordsCard extends StatelessWidget {
     ];
     final c = AppColors.of(context);
     final t = AppText.of(context);
+    Widget cell((String, String?) row) => Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(row.$1, style: t.label.copyWith(color: c.inkMuted)),
+        const SizedBox(height: Gap.s1),
+        FittedBox(
+          fit: BoxFit.scaleDown,
+          alignment: Alignment.centerLeft,
+          child: Text(row.$2 ?? '-', style: t.stat),
+        ),
+      ],
+    );
+    // 흰 카드 하나에 2×2 칸(요약 지표 카드와 같은 값 글자).
     return AppCard(
-      radius: Radii.md,
-      padding: const EdgeInsets.symmetric(vertical: Gap.s3, horizontal: Gap.s4),
+      key: const ValueKey('records-card'),
+      padding: const EdgeInsets.all(Gap.s5),
       child: Column(
         children: [
-          for (final (label, value) in rows)
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: Gap.s1),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      label,
-                      style: t.body.copyWith(color: c.inkMuted),
-                    ),
-                  ),
-                  const SizedBox(width: Gap.s2),
-                  Text(value ?? '-', style: t.titleS),
-                ],
-              ),
+          for (var i = 0; i < rows.length; i += 2) ...[
+            if (i > 0) const SizedBox(height: Gap.s5),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(child: cell(rows[i])),
+                const SizedBox(width: Gap.s3),
+                Expanded(child: cell(rows[i + 1])),
+              ],
             ),
+          ],
         ],
       ),
     );
@@ -152,42 +149,58 @@ extension on Duration? {
   String? map(String Function(Duration) f) => this == null ? null : f(this!);
 }
 
+/// 배지 12개, 흰 카드 하나에 3열. 받은 것만 색, 이름도 받은 것은 ink·못 받은 것은 inkMuted.
 class _BadgeGrid extends StatelessWidget {
   const _BadgeGrid(this.earnedIds);
   final Set<String> earnedIds;
 
+  /// 24px 그림의 3배.
+  static const double badgeSize = 72;
+
   @override
   Widget build(BuildContext context) {
+    final c = AppColors.of(context);
     final t = AppText.of(context);
-    return LayoutBuilder(
-      builder: (context, box) {
-        const columns = 3;
-        const gap = Gap.s3;
-        final w = (box.maxWidth - gap * (columns - 1)) / columns;
-        return Wrap(
-          spacing: gap,
-          runSpacing: Gap.s4,
-          children: [
-            for (final b in badgeCatalog)
-              SizedBox(
-                width: w,
-                child: Column(
-                  children: [
-                    BadgeImage(
-                      b.id,
-                      key: ValueKey(
-                        'badge-${earnedIds.contains(b.id) ? 'earned' : 'locked'}-${b.id}',
+    return AppCard(
+      key: const ValueKey('badge-card'),
+      padding: const EdgeInsets.symmetric(vertical: Gap.s5, horizontal: Gap.s3),
+      child: LayoutBuilder(
+        builder: (context, box) {
+          const columns = 3;
+          const gap = Gap.s2;
+          final w = (box.maxWidth - gap * (columns - 1)) / columns;
+          return Wrap(
+            spacing: gap,
+            runSpacing: Gap.s5,
+            children: [
+              for (final b in badgeCatalog)
+                SizedBox(
+                  width: w,
+                  child: Column(
+                    children: [
+                      BadgeImage(
+                        b.id,
+                        key: ValueKey(
+                          'badge-${earnedIds.contains(b.id) ? 'earned' : 'locked'}-${b.id}',
+                        ),
+                        earned: earnedIds.contains(b.id),
+                        size: badgeSize,
                       ),
-                      earned: earnedIds.contains(b.id),
-                    ),
-                    const SizedBox(height: Gap.s1),
-                    Text(b.name, textAlign: TextAlign.center, style: t.caption),
-                  ],
+                      const SizedBox(height: Gap.s1),
+                      Text(
+                        b.name,
+                        textAlign: TextAlign.center,
+                        style: t.caption.copyWith(
+                          color: earnedIds.contains(b.id) ? c.ink : c.inkMuted,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-          ],
-        );
-      },
+            ],
+          );
+        },
+      ),
     );
   }
 }
@@ -213,8 +226,8 @@ class _NextBadgeCard extends StatelessWidget {
     // 새벽 러너는 있다/없다 둘뿐이라 진행 막대가 오해를 부른다.
     final binary = p.badge.id == 'dawn';
     return AppCard(
-      radius: Radii.md,
-      padding: const EdgeInsets.symmetric(vertical: 14, horizontal: Gap.s4),
+      key: const ValueKey('next-badge-card'),
+      padding: const EdgeInsets.all(Gap.s5),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -229,31 +242,31 @@ class _NextBadgeCard extends StatelessWidget {
                     Text(p.badge.name, style: t.heading),
                     Text(
                       p.badge.condition,
-                      style: t.caption.copyWith(color: c.inkMuted),
+                      style: t.label.copyWith(color: c.inkMuted),
                     ),
                   ],
                 ),
               ),
               const SizedBox(width: Gap.s2),
+              const CoinIcon(size: 18),
+              const SizedBox(width: Gap.s1),
               Text(
                 '코인 +${p.badge.coins}',
-                style: t.label.copyWith(color: c.coin),
+                style: t.label.copyWith(
+                  color: c.coin,
+                  fontWeight: FontWeight.w700,
+                  fontVariations: const [FontVariation('wght', 700)],
+                ),
               ),
             ],
           ),
-          const SizedBox(height: Gap.s3),
+          const SizedBox(height: Gap.s4),
           if (binary)
-            Text(
-              '오전 6시 전에 시작해 보세요',
-              style: t.caption.copyWith(color: c.inkMuted),
-            )
+            Text('오전 6시 전에 시작해 보세요', style: t.label.copyWith(color: c.inkMuted))
           else ...[
             ProgressBar(key: const ValueKey('next-badge-bar'), value: p.ratio),
-            const SizedBox(height: 6),
-            Text(
-              _progressText(p),
-              style: t.caption.copyWith(color: c.inkMuted),
-            ),
+            const SizedBox(height: Gap.s2),
+            Text(_progressText(p), style: t.label.copyWith(color: c.inkMuted)),
           ],
         ],
       ),
