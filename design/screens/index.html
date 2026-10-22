@@ -1,0 +1,941 @@
+<title>런마고치 화면설계서</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DotGothic16&display=swap">
+<style>
+/* 레이아웃: 옅은 풀빛 작업대 위에 폰 아트보드를 흐름 순서로 늘어놓은 설계 보드.
+   표지 → 전체 보드 → 흐름도 → 화면별 상세 → 와이어프레임 → 부품 순서로 내려간다.
+   색·글자는 앱 토큰(docs/design/tokens.json)을 그대로 쓴다. 도트 글꼴은 번호에만. */
+@font-face {
+  font-family: "Pretendard";
+  src: url("fonts/PretendardVariable.woff2") format("woff2-variations"), url("fonts/PretendardVariable.woff2") format("woff2");
+  font-weight: 45 920;
+  font-display: swap;
+}
+:root {
+  --bg: #F3F5EE;
+  --canvas: #E7ECDF;
+  --surface: #FFFFFF;
+  --soft: #E8ECE2;
+  --line: #DDE3D4;
+  --line-strong: #737D6A;
+  --ink: #16200F;
+  --muted: #5B6357;
+  --lime: #B8F04A;
+  --on-lime: #14210A;
+  --lime-edge: #4F8A16;
+  --green: #1E7B45;
+  --panel: #16200F;
+  --on-panel: #FFFFFF;
+  --coin: #1E40AF;
+  --on-coin: #FFFFFF;
+  --danger: #B91C1C;
+  --danger-soft: #FBE9E7;
+  --sky: #E3F6C8;
+  --ground: #CDEBA8;
+  --ground-line: #B3DB82;
+  --stage-ink: #0E5E33;
+  --bubble: #FFFFFF;
+  --pace-slow: #3A75D6;
+  --pace-mid: #5C1A5C;
+  --pace-fast: #B35C00;
+  --wf-screen: #F8F9F5;
+  --wf-block: #D3D9CB;
+  --wf-deep: #A8B19F;
+  --wf-line: #C4CBBA;
+  --shot-edge: rgba(22, 32, 15, .14);
+  --night: #10160D;
+  --night-ink: #EEF4E6;
+  --night-muted: #A3AE99;
+  --night-line: #2E3A28;
+
+  --font-sans: "Pretendard", "Pretendard Variable", "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", system-ui, sans-serif;
+  --font-dot: "DotGothic16", ui-monospace, "SFMono-Regular", Menlo, monospace;
+
+  --r-sm: 12px; --r-md: 20px; --r-lg: 24px; --r-xl: 28px;
+  --gap-1: 4px; --gap-2: 8px; --gap-3: 12px; --gap-4: 16px; --gap-5: 20px; --gap-6: 24px; --gap-7: 28px; --gap-8: 32px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #10160D; --canvas: #0B1009; --surface: #1A2316; --soft: #28331F; --line: #2E3A28; --line-strong: #7F8B74;
+    --ink: #EEF4E6; --muted: #A3AE99; --lime: #B8F04A; --on-lime: #14210A; --lime-edge: #8CC63A; --green: #5DD08A;
+    --panel: #E4EDD8; --on-panel: #16200F; --coin: #8FAEFF; --on-coin: #10160D; --danger: #FF8A7A; --danger-soft: #3A1E1A;
+    --sky: #1D2C15; --ground: #2A3F1D; --ground-line: #3E5C2A; --stage-ink: #B6EE84; --bubble: #44573A;
+    --pace-slow: #4F7FE8; --pace-mid: #F2C0FA; --pace-fast: #B8641A;
+    --wf-screen: #1A2117; --wf-block: #34402F; --wf-deep: #55634D; --wf-line: #2C3628;
+    --shot-edge: rgba(238, 244, 230, .16);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #10160D; --canvas: #0B1009; --surface: #1A2316; --soft: #28331F; --line: #2E3A28; --line-strong: #7F8B74;
+  --ink: #EEF4E6; --muted: #A3AE99; --lime: #B8F04A; --on-lime: #14210A; --lime-edge: #8CC63A; --green: #5DD08A;
+  --panel: #E4EDD8; --on-panel: #16200F; --coin: #8FAEFF; --on-coin: #10160D; --danger: #FF8A7A; --danger-soft: #3A1E1A;
+  --sky: #1D2C15; --ground: #2A3F1D; --ground-line: #3E5C2A; --stage-ink: #B6EE84; --bubble: #44573A;
+  --pace-slow: #4F7FE8; --pace-mid: #F2C0FA; --pace-fast: #B8641A;
+  --wf-screen: #1A2117; --wf-block: #34402F; --wf-deep: #55634D; --wf-line: #2C3628;
+  --shot-edge: rgba(238, 244, 230, .16);
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: 16px;
+  line-height: 1.55;
+  font-weight: 500;
+  margin: 0;
+}
+body::before {
+  content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bg);
+}
+img { max-width: 100%; display: block; }
+a { color: var(--green); text-underline-offset: 3px; }
+a:focus-visible, button:focus-visible, [tabindex]:focus-visible { outline: 3px solid var(--green); outline-offset: 3px; border-radius: 8px; }
+h1, h2, h3, h4 { text-wrap: balance; margin: 0; }
+.wrap {
+  max-width: 1240px;
+  margin: 0 auto;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.num { font-variant-numeric: tabular-nums; }
+.dot { font-family: var(--font-dot); letter-spacing: .02em; }
+
+/* ---------- 표지 ---------- */
+.cover { padding-block: 40px 28px; }
+.cover-grid { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); gap: 40px; align-items: center; }
+.eyebrow { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; font-size: 13px; font-weight: 700; color: var(--muted); letter-spacing: .04em; }
+.eyebrow .tag { background: var(--surface); border-radius: 999px; padding: 4px 12px; }
+.cover h1 { font-size: clamp(40px, 6.4vw, 72px); line-height: 1.02; font-weight: 850; letter-spacing: -.035em; margin-top: 18px; }
+.cover h1 .hl { background: linear-gradient(transparent 58%, var(--lime) 58%, var(--lime) 92%, transparent 92%); padding: 0 .06em; }
+.lede { font-size: 19px; line-height: 1.6; color: var(--ink); max-width: 34em; margin: 18px 0 0; }
+.meta { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0; margin-top: 28px; background: var(--surface); border-radius: var(--r-lg); overflow: hidden; }
+.meta div { padding: 16px 18px; border-left: 1px solid var(--line); min-width: 0; }
+.meta div:first-child { border-left: 0; }
+.meta dt { font-size: 13px; font-weight: 600; color: var(--muted); }
+.meta dd { margin: 2px 0 0; font-size: 26px; font-weight: 800; letter-spacing: -.02em; }
+.meta dd small { font-size: 14px; font-weight: 700; color: var(--muted); margin-left: 2px; }
+.links { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 20px; }
+.link-btn { display: inline-flex; align-items: center; gap: 8px; min-height: 48px; padding: 10px 18px; border-radius: 999px; font-weight: 700; font-size: 15px; text-decoration: none; color: var(--ink); background: var(--surface); border: 2px solid var(--line-strong); }
+.link-btn.primary { background: var(--lime); color: var(--on-lime); border-color: var(--lime-edge); }
+.link-btn svg { width: 18px; height: 18px; }
+.trio { position: relative; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; align-items: start; }
+.trio figure { margin: 0; }
+.trio figure:nth-child(2) { margin-top: 48px; }
+.trio figure:nth-child(3) { margin-top: 18px; }
+.trio figcaption { font-size: 13px; font-weight: 700; color: var(--muted); margin-top: 8px; text-align: center; }
+.shot { border-radius: 18px; box-shadow: 0 0 0 1px var(--shot-edge), 0 18px 36px -22px rgba(22, 32, 15, .45); background: var(--surface); width: 100%; height: auto; }
+
+.principles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-top: 36px; }
+.principle { background: var(--surface); border-radius: var(--r-lg); padding: 18px 20px; min-width: 0; }
+.principle h3 { font-size: 17px; font-weight: 800; display: flex; gap: 10px; align-items: baseline; }
+.principle h3 .dot { color: var(--green); font-size: 15px; }
+.principle p { margin: 6px 0 0; color: var(--muted); font-size: 15px; line-height: 1.55; }
+
+/* ---------- 목차 ---------- */
+.toc { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: color-mix(in srgb, var(--bg) 92%, transparent); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border-bottom: 1px solid var(--line); }
+.toc .wrap { display: flex; gap: 8px; overflow-x: auto; padding-block: 10px; scrollbar-width: none; }
+.toc .wrap::-webkit-scrollbar { display: none; }
+.toc a { flex: none; display: inline-flex; align-items: center; gap: 6px; min-height: 40px; padding: 6px 14px; border-radius: 999px; background: var(--soft); color: var(--ink); font-size: 14px; font-weight: 700; text-decoration: none; }
+.toc a .dot { color: var(--green); }
+.toc a:hover { background: var(--surface); }
+
+/* ---------- 섹션 ---------- */
+section.part { padding-block: 56px 8px; scroll-margin-top: 64px; }
+.part-head { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 4px 18px; align-items: end; margin-bottom: 24px; }
+.part-no { font-family: var(--font-dot); font-size: 46px; line-height: .9; color: var(--green); grid-row: span 2; }
+.part-head h2 { font-size: clamp(26px, 3.4vw, 34px); font-weight: 850; letter-spacing: -.025em; line-height: 1.15; }
+.part-head p { margin: 0; color: var(--muted); font-size: 16px; max-width: 46em; }
+
+/* ---------- 전체 보드 ---------- */
+.board { background: var(--canvas); border-radius: var(--r-xl); padding: 28px clamp(14px, 2.6vw, 32px); display: grid; gap: 36px; }
+.group-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 14px; margin-bottom: 14px; }
+.group-head .letter { font-family: var(--font-dot); font-size: 22px; color: var(--green); }
+.group-head h3 { font-size: 21px; font-weight: 800; letter-spacing: -.01em; }
+.group-head .count { font-size: 14px; font-weight: 700; color: var(--muted); }
+.group-head .reqs { display: flex; flex-wrap: wrap; gap: 4px; margin-left: auto; }
+.req { display: inline-flex; align-items: center; height: 24px; padding: 0 9px; border-radius: 999px; background: var(--surface); color: var(--green); font-size: 13px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.artboards { display: grid; grid-template-columns: repeat(auto-fill, minmax(156px, 1fr)); gap: 22px 18px; }
+.art { margin: 0; min-width: 0; }
+.art button { all: unset; display: block; width: 100%; cursor: zoom-in; border-radius: 18px; }
+.art button:focus-visible { outline: 3px solid var(--green); outline-offset: 4px; }
+.art .shot { transition: transform .16s cubic-bezier(.215,.61,.355,1); }
+.art button:hover .shot { transform: translateY(-3px); }
+.art figcaption { margin-top: 10px; display: grid; gap: 4px; }
+.art .cap-top { display: flex; gap: 8px; align-items: baseline; min-width: 0; }
+.art .no { font-family: var(--font-dot); font-size: 14px; color: var(--green); flex: none; }
+.art .name { font-weight: 700; font-size: 15px; line-height: 1.35; }
+.art .state { font-size: 13px; font-weight: 600; color: var(--muted); line-height: 1.4; }
+.art .flag { display: inline-block; margin-top: 2px; font-size: 13px; font-weight: 700; color: var(--stage-ink); background: var(--sky); border-radius: 999px; padding: 1px 9px; width: fit-content; }
+
+.band { border-radius: var(--r-xl); padding: 28px clamp(14px, 2.6vw, 32px); }
+.band.night { background: var(--night); color: var(--night-ink); box-shadow: inset 0 0 0 1px var(--night-line); }
+.band.night .group-head .letter { color: #5DD08A; }
+.band.night .group-head .count, .band.night .art .state { color: var(--night-muted); }
+.band.night .art .no { color: #5DD08A; }
+.band.night .req { background: #1A2316; color: #5DD08A; }
+.band.night .shot { box-shadow: 0 0 0 1px rgba(238,244,230,.16), 0 18px 36px -22px rgba(0,0,0,.7); background: #1A2316; }
+.band.night .art .flag { background: #1D2C15; color: #B6EE84; }
+.band.ios { background: var(--surface); }
+.bands { display: grid; gap: 22px; margin-top: 22px; }
+
+/* ---------- 흐름도 ---------- */
+.flow-box { background: var(--surface); border-radius: var(--r-xl); padding: 18px; overflow-x: auto; }
+.flow-box svg { display: block; min-width: 1120px; width: 100%; height: auto; }
+.flow-box .edge { fill: none; stroke: var(--line-strong); stroke-width: 2; }
+.flow-box .edge.main { stroke: var(--green); stroke-width: 2.5; }
+.flow-box .edge.back { stroke-dasharray: 6 6; }
+.flow-box .lbl { font-family: var(--font-sans); font-size: 13px; font-weight: 700; fill: var(--muted); paint-order: stroke; stroke: var(--surface); stroke-width: 5px; stroke-linejoin: round; }
+.flow-box .lbl.main { fill: var(--green); }
+.flow-box .node-name { font-family: var(--font-sans); font-size: 15px; font-weight: 800; fill: var(--ink); }
+.flow-box .node-no { font-family: var(--font-dot); font-size: 13px; fill: var(--green); }
+.flow-box .node-frame { fill: none; stroke: var(--shot-edge); stroke-width: 1; }
+.flow-box .lane { font-family: var(--font-sans); font-size: 13px; font-weight: 800; fill: var(--muted); letter-spacing: .06em; }
+.flow-box .arrow { fill: var(--line-strong); }
+.flow-box .arrow.main { fill: var(--green); }
+.flow-notes { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-top: 14px; }
+.flow-notes div { background: var(--surface); border-radius: var(--r-lg); padding: 16px 18px; font-size: 15px; color: var(--muted); min-width: 0; }
+.flow-notes b { color: var(--ink); display: block; font-size: 16px; margin-bottom: 4px; }
+
+/* ---------- 화면별 상세 ---------- */
+.details { display: grid; gap: 22px; }
+.detail { background: var(--surface); border-radius: var(--r-xl); padding: clamp(16px, 2.6vw, 30px); display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: clamp(20px, 3.4vw, 44px); scroll-margin-top: 72px; }
+.phone { position: relative; width: 100%; max-width: 300px; }
+.phone.scroll { max-height: 640px; overflow-y: auto; border-radius: 18px; box-shadow: 0 0 0 1px var(--shot-edge); scrollbar-width: thin; }
+.phone.scroll .shot { box-shadow: none; border-radius: 0; }
+.phone .pin-layer { position: absolute; inset: 0; pointer-events: none; }
+.pin { position: absolute; transform: translate(-50%, -50%); width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; background: var(--lime); color: var(--on-lime); border: 2px solid var(--lime-edge); font-family: var(--font-dot); font-size: 14px; line-height: 1; box-shadow: 0 2px 6px rgba(22, 32, 15, .3); }
+.scroll-hint { font-size: 13px; font-weight: 600; color: var(--muted); margin-top: 8px; text-align: center; }
+.detail-body { min-width: 0; display: grid; gap: 18px; align-content: start; }
+.detail-title { display: grid; gap: 6px; }
+.detail-title .route { font-size: 13px; font-weight: 700; color: var(--muted); letter-spacing: .02em; }
+.detail-title h3 { font-size: 26px; font-weight: 850; letter-spacing: -.02em; }
+.detail-title .reqs { display: flex; flex-wrap: wrap; gap: 6px; }
+.detail-title .req { background: var(--sky); color: var(--stage-ink); }
+.detail-title p { margin: 0; color: var(--muted); max-width: 40em; }
+.cols { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 22px; }
+.blk h4 { font-size: 14px; font-weight: 800; color: var(--muted); letter-spacing: .04em; margin-bottom: 10px; }
+.els { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.els li { display: grid; grid-template-columns: 26px minmax(0, 1fr); gap: 10px; align-items: start; }
+.els .n { width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; background: var(--lime); color: var(--on-lime); border: 2px solid var(--lime-edge); font-family: var(--font-dot); font-size: 13px; margin-top: 1px; }
+.els b { font-weight: 800; }
+.els span { color: var(--muted); font-size: 15px; display: block; }
+.els code, .ix code, .notes code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 13px; background: var(--soft); padding: 1px 6px; border-radius: 6px; color: var(--ink); }
+.ix { margin: 0; padding: 0; list-style: none; display: grid; gap: 8px; }
+.ix li { font-size: 15px; padding-left: 16px; position: relative; }
+.ix li::before { content: ""; position: absolute; left: 0; top: .62em; width: 7px; height: 7px; border-radius: 2px; background: var(--green); }
+.variants { display: flex; flex-wrap: wrap; gap: 12px; }
+.variant { margin: 0; width: 92px; }
+.variant button { all: unset; cursor: zoom-in; display: block; border-radius: 10px; }
+.variant .shot { border-radius: 10px; box-shadow: 0 0 0 1px var(--shot-edge); }
+.variant figcaption { font-size: 13px; font-weight: 600; color: var(--muted); margin-top: 6px; line-height: 1.35; }
+
+/* ---------- 와이어프레임 ---------- */
+.wf-board { background: var(--canvas); border-radius: var(--r-xl); padding: 28px clamp(14px, 2.6vw, 32px); display: grid; grid-template-columns: repeat(auto-fill, minmax(168px, 1fr)); gap: 26px 20px; }
+.wf { margin: 0; min-width: 0; }
+.wf-screen { aspect-ratio: 390 / 844; width: 100%; max-width: 100%; background: var(--wf-screen); border-radius: 22px; box-shadow: 0 0 0 1.5px var(--wf-line); padding: 9% 7% 0; display: flex; flex-direction: column; gap: 3.2%; position: relative; overflow: hidden; }
+.wf-screen > * { flex: none; }
+.wf .b { background: var(--wf-block); border-radius: 8px; }
+.wf .d { background: var(--wf-deep); border-radius: 8px; }
+.wf .ln { height: 6px; border-radius: 3px; background: var(--wf-deep); }
+.wf .ln.s { width: 40%; } .wf .ln.m { width: 62%; } .wf .ln.l { width: 86%; }
+.wf .row { display: flex; gap: 6%; align-items: center; }
+.wf .row > * { flex: 1; }
+.wf .pill { height: 22px; border-radius: 999px; background: var(--wf-block); }
+.wf .pill.on { background: var(--wf-deep); }
+.wf .btn { height: 30px; border-radius: 999px; background: var(--wf-deep); }
+.wf .btn.ghost { background: transparent; box-shadow: inset 0 0 0 2px var(--wf-deep); }
+.wf .card { background: var(--surface); border-radius: 12px; padding: 8%; display: flex; flex-direction: column; gap: 7px; box-shadow: 0 0 0 1px var(--wf-line); }
+.wf .stage { border-radius: 14px; background: var(--wf-block); position: relative; overflow: hidden; }
+.wf .stage::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 18%; background: var(--wf-deep); opacity: .55; }
+.wf .stage .sprite { position: absolute; left: 50%; bottom: 12%; transform: translateX(-50%); width: 30%; aspect-ratio: 1; background: var(--wf-deep); border-radius: 6px; z-index: 1; }
+.wf .big { height: 34px; width: 58%; border-radius: 6px; background: var(--wf-deep); }
+.wf .tabs { position: absolute; left: 0; right: 0; bottom: 0; height: 9%; background: var(--surface); box-shadow: 0 -1px 0 var(--wf-line); display: flex; justify-content: space-around; align-items: center; padding: 0 6%; }
+.wf .tabs i { width: 14%; height: 44%; border-radius: 999px; background: var(--wf-block); }
+.wf .tabs i.on { background: var(--wf-deep); }
+.wf .foot { margin-top: auto; padding-bottom: 12%; display: flex; flex-direction: column; gap: 7px; }
+.wf .bars { display: flex; align-items: flex-end; gap: 6%; height: 54px; }
+.wf .bars i { flex: 1; background: var(--wf-deep); border-radius: 4px 4px 0 0; }
+.wf .grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.wf .grid3 i { aspect-ratio: 1; border-radius: 50%; background: var(--wf-block); }
+.wf .grid2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+.wf .grid2 > div { aspect-ratio: .9; border-radius: 10px; background: var(--surface); box-shadow: 0 0 0 1px var(--wf-line); padding: 8%; display: flex; flex-direction: column; gap: 6px; }
+.wf .grid2 > div .b { flex: 1; }
+.wf .circ { width: 22px; height: 22px; border-radius: 50%; background: var(--wf-block); flex: none !important; }
+.wf figcaption { margin-top: 10px; display: flex; gap: 8px; align-items: baseline; }
+.wf figcaption .no { font-family: var(--font-dot); font-size: 14px; color: var(--green); }
+.wf figcaption .name { font-weight: 700; font-size: 15px; }
+.wf-legend { display: flex; flex-wrap: wrap; gap: 8px 18px; margin-top: 14px; font-size: 14px; color: var(--muted); font-weight: 600; }
+.wf-legend span { display: inline-flex; align-items: center; gap: 8px; }
+.wf-legend i { width: 22px; height: 12px; border-radius: 4px; display: inline-block; }
+
+/* ---------- 부품 ---------- */
+.parts { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; }
+.spec { background: var(--surface); border-radius: var(--r-lg); padding: 20px; display: grid; gap: 14px; align-content: start; min-width: 0; }
+.spec h3 { font-size: 17px; font-weight: 800; display: flex; justify-content: space-between; gap: 10px; align-items: baseline; }
+.spec h3 code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12.5px; font-weight: 600; color: var(--muted); }
+.spec .use { font-size: 14px; color: var(--muted); margin: 0; }
+.spec .stack { display: grid; gap: 10px; }
+.spec .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.ab { display: flex; align-items: center; justify-content: center; height: 60px; border-radius: 999px; font-size: 20px; font-weight: 700; width: 100%; }
+.ab.sm { height: 48px; font-size: 17px; }
+.ab.primary { background: var(--lime); color: var(--on-lime); box-shadow: inset 0 0 0 2px var(--lime-edge); }
+.ab.secondary { background: var(--surface); color: var(--ink); box-shadow: inset 0 0 0 2px var(--line-strong); }
+.ab.panel { background: var(--panel); color: var(--on-panel); }
+.ab.disabled { background: color-mix(in srgb, var(--lime) 45%, var(--surface)); color: color-mix(in srgb, var(--on-lime) 45%, var(--surface)); box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--lime-edge) 40%, var(--surface)); }
+.ab.hold { position: relative; overflow: hidden; background: var(--surface); color: var(--ink); box-shadow: inset 0 0 0 2px var(--line-strong); }
+.ab.hold::before { content: ""; position: absolute; inset: 0 38% 0 0; background: var(--soft); }
+.ab.hold span { position: relative; }
+.textbtn { font-size: 15px; font-weight: 700; color: var(--muted); }
+.chips { display: flex; gap: 8px; }
+.chip { flex: 1; height: 48px; border-radius: 999px; display: grid; place-items: center; background: var(--soft); color: var(--ink); font-weight: 700; font-size: 17px; }
+.chip.on { background: var(--lime); color: var(--on-lime); box-shadow: inset 0 0 0 2px var(--lime-edge); }
+.prog { height: 12px; border-radius: 999px; background: var(--soft); overflow: hidden; }
+.prog i { display: block; height: 100%; border-radius: 999px; background: var(--green); }
+.prog-l { display: flex; justify-content: space-between; font-size: 14px; font-weight: 600; color: var(--muted); margin-bottom: 6px; }
+.prog-l.ok { color: var(--green); }
+.stats { background: var(--bg); border-radius: var(--r-md); display: grid; grid-template-columns: repeat(3, 1fr); padding: 14px 6px; text-align: center; }
+.stats dt { font-size: 13px; font-weight: 600; color: var(--muted); }
+.stats dd { margin: 2px 0 0; font-size: 22px; font-weight: 800; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+.coinchip { display: inline-flex; align-items: center; gap: 8px; height: 48px; padding: 0 18px 0 12px; border-radius: 999px; background: var(--bg); font-weight: 800; font-size: 20px; font-variant-numeric: tabular-nums; }
+.coin-ic { width: 26px; height: 26px; border-radius: 50%; background: var(--coin); box-shadow: inset 0 0 0 3px var(--coin), inset 0 0 0 5px var(--lime); display: grid; place-items: center; }
+.coin-ic svg { width: 12px; height: 12px; fill: var(--on-coin); }
+.plus { color: var(--coin); font-weight: 800; }
+.xp { color: var(--green); font-weight: 800; }
+.mini-stage { height: 120px; border-radius: var(--r-md); background: var(--sky); position: relative; overflow: hidden; }
+.mini-stage::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 30px; background: var(--ground); border-top: 4px solid var(--ground-line); }
+.bubble { position: absolute; top: 14px; right: 14px; background: var(--bubble); color: var(--ink); border-radius: var(--r-md); padding: 6px 12px; font-size: 14px; font-weight: 700; z-index: 1; }
+.bubble::after { content: ""; position: absolute; bottom: -7px; left: 50%; border: 7px solid transparent; border-top-color: var(--bubble); border-bottom: 0; transform: translateX(-50%); }
+.mini-stage .pet { position: absolute; left: 50%; bottom: 26px; transform: translateX(-50%); width: 64px; z-index: 1; image-rendering: pixelated; }
+.empty { display: grid; place-items: center; gap: 8px; padding: 22px 12px; background: var(--bg); border-radius: var(--r-md); color: var(--muted); font-weight: 600; font-size: 15px; text-align: center; }
+.empty svg { width: 36px; height: 36px; stroke: var(--muted); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.notice { display: grid; grid-template-columns: 28px minmax(0, 1fr); gap: 10px; align-items: start; padding: 14px 16px; border-radius: var(--r-md); background: var(--danger-soft); color: var(--danger); font-weight: 700; font-size: 15px; }
+.notice svg { width: 22px; height: 22px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; }
+.notice small { display: block; font-weight: 600; color: var(--ink); opacity: .8; font-size: 14px; margin-top: 2px; }
+.snack { background: var(--panel); color: var(--on-panel); border-radius: 14px; padding: 13px 16px; font-weight: 600; font-size: 15px; }
+.dialog { background: var(--surface); border-radius: var(--r-lg); padding: 20px; box-shadow: 0 0 0 1px var(--line), 0 16px 32px -20px rgba(22,32,15,.5); display: grid; gap: 8px; }
+.dialog b { font-size: 18px; font-weight: 800; }
+.dialog p { margin: 0; color: var(--muted); font-size: 15px; }
+.dialog .acts { display: flex; justify-content: flex-end; gap: 16px; align-items: center; margin-top: 6px; }
+.dialog .acts .go { background: var(--lime); color: var(--on-lime); box-shadow: inset 0 0 0 2px var(--lime-edge); border-radius: 999px; padding: 10px 18px; font-weight: 700; }
+.dialog .acts .no { color: var(--green); font-weight: 700; }
+.tabbar { display: grid; grid-template-columns: repeat(4, 1fr); background: var(--bg); border-radius: var(--r-md); padding: 6px; }
+.tabbar span { display: grid; place-items: center; gap: 2px; height: 56px; border-radius: 999px; font-size: 13px; font-weight: 700; color: var(--muted); }
+.tabbar span.on { background: var(--panel); color: var(--on-panel); }
+.tabbar svg { width: 20px; height: 20px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.legend { display: flex; flex-wrap: wrap; gap: 14px; font-size: 14px; font-weight: 600; color: var(--muted); }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.legend i { width: 22px; height: 6px; border-radius: 3px; display: inline-block; }
+.splits { display: flex; align-items: flex-end; gap: 8px; height: 90px; padding-bottom: 2px; border-bottom: 2px solid var(--ink); position: relative; }
+.splits i { flex: 1; background: var(--green); border-radius: 10px 10px 0 0; }
+.splits i.part { opacity: .4; }
+.badge-row { display: flex; align-items: center; gap: 12px; justify-content: space-between; }
+.badge-row .l { display: flex; gap: 10px; align-items: center; font-weight: 700; }
+.badge-ic { width: 36px; height: 36px; border-radius: 50%; background: var(--sky); box-shadow: inset 0 0 0 3px var(--line-strong); display: grid; place-items: center; }
+.badge-ic svg { width: 18px; height: 18px; fill: var(--pace-fast); }
+
+/* ---------- 촬영 메모 ---------- */
+.notes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.notes article { background: var(--surface); border-radius: var(--r-lg); padding: 20px 22px; min-width: 0; }
+.notes h3 { font-size: 18px; font-weight: 800; margin-bottom: 10px; }
+.notes ul { margin: 0; padding-left: 18px; display: grid; gap: 8px; font-size: 15px; }
+.notes li::marker { color: var(--green); }
+.notes .sev { display: inline-block; font-size: 12.5px; font-weight: 800; border-radius: 999px; padding: 0 8px; margin-right: 6px; background: var(--soft); color: var(--ink); }
+footer { padding-block: 40px 56px; color: var(--muted); font-size: 14px; }
+
+/* ---------- 크게 보기 ---------- */
+dialog.zoom { border: 0; padding: 0; background: transparent; max-width: min(96vw, 520px); max-height: 92vh; overflow: visible; }
+dialog.zoom::backdrop { background: rgba(10, 14, 8, .78); }
+dialog.zoom .inner { background: var(--surface); border-radius: 22px; padding: 14px; display: grid; gap: 10px; max-height: 92vh; }
+dialog.zoom .imgbox { overflow-y: auto; max-height: calc(92vh - 90px); border-radius: 14px; }
+dialog.zoom img { width: 390px; max-width: 100%; border-radius: 14px; }
+dialog.zoom .bar { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+dialog.zoom .bar b { font-size: 16px; }
+dialog.zoom button { min-height: 44px; min-width: 44px; border-radius: 999px; border: 2px solid var(--line-strong); background: var(--surface); color: var(--ink); font: 700 15px var(--font-sans); padding: 0 16px; cursor: pointer; }
+
+@media (max-width: 980px) {
+  .cover-grid { grid-template-columns: minmax(0, 1fr); }
+  .trio { max-width: 560px; }
+  .principles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .flow-notes { grid-template-columns: minmax(0, 1fr); }
+  .detail { grid-template-columns: minmax(0, 1fr); }
+  .phone { margin: 0 auto; }
+  .cols { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 640px) {
+  .meta { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .meta div:nth-child(3) { border-left: 0; }
+  .meta div:nth-child(n+3) { border-top: 1px solid var(--line); }
+  .principles { grid-template-columns: minmax(0, 1fr); }
+  .notes { grid-template-columns: minmax(0, 1fr); }
+  .artboards { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px 12px; }
+  .wf-board { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px 12px; }
+  .group-head .reqs { margin-left: 0; }
+  .part-no { font-size: 36px; }
+  .trio figure:nth-child(2) { margin-top: 28px; }
+  .trio figure:nth-child(3) { margin-top: 10px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; scroll-behavior: auto !important; }
+}
+</style>
+
+<header class="cover">
+  <div class="wrap">
+    <div class="cover-grid">
+      <div>
+        <div class="eyebrow"><span class="tag">화면설계서</span><span class="tag">v0.3.0 베타</span><span class="tag">2026-10-22 촬영</span></div>
+        <h1>런마고치<br><span class="hl">화면설계서</span></h1>
+        <p class="lede">달린 거리만큼 도트 친구가 자라는 러닝 앱. 실제 앱을 에뮬레이터에서 돌려 찍은 화면으로 모든 화면과 상태, 화면 사이 이동, 요소별 규칙을 한 장에 정리했어요.</p>
+        <dl class="meta">
+          <div><dt>화면</dt><dd class="num">17<small>개</small></dd></div>
+          <div><dt>상태 스크린샷</dt><dd class="num">39<small>장</small></dd></div>
+          <div><dt>다크 · iPhone</dt><dd class="num">8<small>+</small>5</dd></div>
+          <div><dt>요구사항</dt><dd class="num">F1–F21</dd></div>
+        </dl>
+        <div class="links">
+          <a class="link-btn primary" href="https://claude.ai/artifact/FPihTBfX2CJserHVwUQ514" target="_blank" rel="noopener">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><circle cx="17.5" cy="17.5" r="3.5"/></svg>디자인 시스템</a>
+          <a class="link-btn" href="https://claude.ai/artifact/ECbG2Fh4TXQwcr5fNUWCXA" target="_blank" rel="noopener">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4z"/><path d="M14 17h6M17 14v6"/></svg>캐릭터 에셋 카탈로그</a>
+        </div>
+      </div>
+      <div class="trio" aria-label="대표 화면 세 장">
+        <figure><img class="shot" src="web/06-home.png" alt="홈 화면: 레벨 9 아바타와 오늘 목표 3km, 시작 버튼" width="390" height="866"><figcaption>홈</figcaption></figure>
+        <figure><img class="shot" src="web/11-run.png" alt="러닝 중 화면: 2.03km, 평균 페이스 5분 8초" width="390" height="866"><figcaption>러닝 중</figcaption></figure>
+        <figure><img class="shot" src="web/16-summary-levelup.png" alt="러닝 요약 화면: 레벨 업, Lv.9에서 Lv.10" width="390" height="866"><figcaption>러닝 요약</figcaption></figure>
+      </div>
+    </div>
+
+    <div class="principles">
+      <div class="principle"><h3><span class="dot">01</span>마스코트가 주인공</h3><p>캐릭터는 사각 무대 위에 화면에서 가장 큰 그림으로 선다. 홈·요약 8배, 러닝 중 6배.</p></div>
+      <div class="principle"><h3><span class="dot">02</span>러닝 중엔 숫자 하나</h3><p>거리 128px 하나가 가장 크다. 흔들리는 현재 페이스보다 평균 페이스를 먼저 보인다.</p></div>
+      <div class="principle"><h3><span class="dot">03</span>시작은 한 번의 탭</h3><p>지난번 목표가 골라져 있어 홈의 큰 시작 버튼 하나로 바로 달린다.</p></div>
+      <div class="principle"><h3><span class="dot">04</span>연두는 형광펜</h3><p>연두는 누를 것과 선택된 것에만. 채워지는 막대·강조 글자는 초록. 화면마다 연두 버튼은 하나.</p></div>
+      <div class="principle"><h3><span class="dot">05</span>실수 방지</h3><p>종료는 길게 눌러야 된다. 늦게 눌렀으면 요약에서 끝부분을 잘라낸다.</p></div>
+      <div class="principle"><h3><span class="dot">06</span>벌주지 않는 아바타</h3><p>쉬는 날이 길어도 레벨은 줄지 않고 표정만 졸려진다. 빨강은 진짜 문제에만.</p></div>
+    </div>
+  </div>
+</header>
+
+<nav class="toc" aria-label="목차">
+  <div class="wrap">
+    <a href="#board"><span class="dot">1</span>전체 화면</a>
+    <a href="#flow"><span class="dot">2</span>화면 흐름</a>
+    <a href="#detail"><span class="dot">3</span>화면별 상세</a>
+    <a href="#wireframe"><span class="dot">4</span>와이어프레임</a>
+    <a href="#parts"><span class="dot">5</span>부품·상태</a>
+    <a href="#notes"><span class="dot">6</span>촬영 메모</a>
+  </div>
+</nav>
+
+<main>
+  <section class="part" id="board">
+    <div class="wrap">
+      <div class="part-head">
+        <span class="part-no">1</span>
+        <h2>전체 화면 보드</h2>
+        <p>사용자가 만나는 순서로 묶었어요. Android 16(Pixel 7 에뮬레이터, 라이트)에서 찍었고, 그림을 누르면 크게 봐요.</p>
+      </div>
+      <div class="board" id="board-light"></div>
+      <div class="bands">
+        <div class="band night" id="board-dark"></div>
+        <div class="band ios" id="board-ios"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="part" id="flow">
+    <div class="wrap">
+      <div class="part-head">
+        <span class="part-no">2</span>
+        <h2>화면 흐름도</h2>
+        <p>초록 실선은 러닝 한 번의 주 흐름, 회색 실선은 탭과 버튼 이동, 점선은 되돌아가는 길이에요. 기준은 <code>docs/screens.md</code> "화면 이동 흐름".</p>
+      </div>
+      <div class="flow-box" id="flow-box"></div>
+      <div class="flow-notes">
+        <div><b>첫 실행은 한 번만</b>캐릭터 소개·이름 짓기를 마치기 전에는 홈을 만들지 않아요. 권한 안내는 처음 시작을 누를 때 끼어들어요.</div>
+        <div><b>1km 미만은 홈으로</b>길게 눌러 종료했는데 1km 미만이면 기록하지 않고 홈으로 돌아가 "1km 미만은 기록하지 않아요" 를 띄워요.</div>
+        <div><b>요약과 기록 상세는 같은 몸통</b>러닝 직후 요약과 기록에서 연 상세는 같은 화면이에요. 기록에서 열면 성장 카드 대신 목표 줄만, 아래에 기록 삭제가 붙어요.</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="part" id="detail">
+    <div class="wrap">
+      <div class="part-head">
+        <span class="part-no">3</span>
+        <h2>화면별 상세</h2>
+        <p>번호는 화면 위 핀과 짝이에요. 긴 화면은 폰 안에서 스크롤해요. 요구사항 ID 는 <code>docs/product.md</code> 기능 요구사항 표.</p>
+      </div>
+      <div class="details" id="details"></div>
+    </div>
+  </section>
+
+  <section class="part" id="wireframe">
+    <div class="wrap">
+      <div class="part-head">
+        <span class="part-no">4</span>
+        <h2>와이어프레임 보드</h2>
+        <p>같은 화면을 회색 블록으로 다시 그린 저충실도 보드예요. 배치와 위계만 남기고 색·그림·문구는 뺐어요.</p>
+      </div>
+      <div class="wf-board" id="wf-board"></div>
+      <div class="wf-legend">
+        <span><i style="background:var(--wf-deep)"></i>주요 행동·숫자·선택됨</span>
+        <span><i style="background:var(--wf-block)"></i>트랙·무대·선택 안 됨</span>
+        <span><i style="background:var(--surface);box-shadow:0 0 0 1px var(--wf-line)"></i>카드</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="part" id="parts">
+    <div class="wrap">
+      <div class="part-head">
+        <span class="part-no">5</span>
+        <h2>부품·상태 모음</h2>
+        <p>화면에 되풀이해 쓰는 부품과 상태를 앱 토큰으로 다시 그렸어요. 이 페이지의 라이트·다크를 바꾸면 앱 테마와 같은 값으로 바뀌어요. 코드는 <code>lib/core/ui/components.dart</code>.</p>
+      </div>
+      <div class="parts">
+        <div class="spec">
+          <h3>버튼 <code>AppButton</code></h3>
+          <div class="stack">
+            <div class="ab primary">시작</div>
+            <div class="ab panel">일시정지</div>
+            <div class="ab secondary sm">끝부분 잘라내기</div>
+            <div class="ab hold sm"><span>길게 눌러 종료</span></div>
+            <div class="ab disabled sm">350 코인으로 구매하고 장착</div>
+            <div class="row" style="justify-content:center"><span class="textbtn">나중에</span></div>
+          </div>
+          <p class="use">연두는 화면마다 하나(주요 행동). 어두운 판은 일시정지·재개. 흰 보조는 2px 경계. 길게 누르는 동안 회색이 차오른다. 코인이 모자라면 흐리게.</p>
+        </div>
+        <div class="spec">
+          <h3>칩·분할 선택 <code>AppChip · ChipRow</code></h3>
+          <div class="stack">
+            <div class="chips"><span class="chip on">거리</span><span class="chip">시간</span></div>
+            <div class="chips"><span class="chip on">3km</span><span class="chip">5km</span><span class="chip">10km</span><span class="chip">직접</span></div>
+            <div class="chips"><span class="chip">주</span><span class="chip">월</span><span class="chip on">년</span><span class="chip">전체</span></div>
+          </div>
+          <p class="use">선택은 연두 면 + 경계선 하나로 통일. 높이 48. 검은 알약은 탭바에만.</p>
+        </div>
+        <div class="spec">
+          <h3>진행 막대 <code>ProgressBar</code></h3>
+          <div class="stack">
+            <div><div class="prog-l"><span>목표 3km</span><span class="num">2.03km</span></div><div class="prog"><i style="width:68%"></i></div></div>
+            <div><div class="prog-l ok"><span>목표 달성!</span><span class="num">3.15km</span></div><div class="prog"><i style="width:100%"></i></div></div>
+            <div><div class="prog-l"><span>누적 300km</span><span class="num">169.22 / 300.00km</span></div><div class="prog"><i style="width:56%"></i></div></div>
+          </div>
+          <p class="use">채움은 초록, 트랙은 옅은 회녹. 목표에 닿으면 라벨이 "목표 달성!" 초록 글자로 바뀐다.</p>
+        </div>
+        <div class="spec">
+          <h3>지표 카드 <code>StatsCard</code></h3>
+          <dl class="stats"><div><dt>평균 페이스</dt><dd>5'08"</dd></div><div><dt>현재 페이스</dt><dd>6'34"</dd></div><div><dt>시간</dt><dd>10:26</dd></div></dl>
+          <dl class="stats"><div><dt>평균 페이스</dt><dd>4'45"</dd></div><div><dt>시간</dt><dd>17:04</dd></div><div><dt>칼로리</dt><dd>231</dd></div></dl>
+          <p class="use">카드 하나에 3칸. 러닝 중엔 현재 페이스, 일시정지·요약에선 칼로리를 둔다. 숫자는 고정폭 22/800.</p>
+        </div>
+        <div class="spec">
+          <h3>코인 <code>CoinChip · CoinIcon</code></h3>
+          <div class="row"><span class="coinchip"><span class="coin-ic"><svg viewBox="0 0 12 12"><path d="M6 .8l1.5 3.2 3.5.4-2.6 2.4.7 3.4L6 8.5 2.9 10.2l.7-3.4L1 4.4l3.5-.4z"/></svg></span>315</span></div>
+          <div class="badge-row"><span class="l">달린 거리 3.60km</span><span style="text-align:right"><span class="xp">경험치 +36</span><br><span class="plus" style="font-size:14px">코인 +18</span></span></div>
+          <div class="badge-row"><span class="l"><span class="badge-ic"><svg viewBox="0 0 24 24"><path d="M6 3h12v3a6 6 0 0 1-12 0zM9 14h6l1 4H8zM7 20h10v2H7z"/></svg></span>배지 획득: 목표 달성 30번</span><span class="plus">코인 +200</span></div>
+          <p class="use">코인 그림은 파랑 동그라미 + 연두 고리 + 별. <code>$</code> 기호는 쓰지 않는다. 경험치는 초록, 코인은 파랑.</p>
+        </div>
+        <div class="spec">
+          <h3>무대·말풍선 <code>PetStage · SpeechBubble</code></h3>
+          <div class="mini-stage"><span class="bubble">다음 레벨까지 3.5km</span><img class="pet" src="web/pet-crop.png" alt="" width="64" height="58"></div>
+          <p class="use">하늘 + 땅 띠 두 겹, 땅 윗선 4px. 캐릭터는 정수 배율로 서고 발끝이 8px 묻힌다. 말풍선은 다크에서 하늘보다 밝은 판.</p>
+        </div>
+        <div class="spec">
+          <h3>빈 상태·오류 <code>EmptyState · NoticeCard</code></h3>
+          <div class="empty"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>아직 기록이 없어요</div>
+          <div class="empty"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v10M8.5 9.5h5a2 2 0 0 1 0 4h-3a2 2 0 0 0 0 4h5"/></svg>달리면 코인이 쌓여요</div>
+          <div class="notice"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v6M12 16.5v.5"/></svg><div>위치 신호를 받지 못하고 있어요<small>러닝 중 위치 스트림 오류에만 쓰는 빨강 카드</small></div></div>
+          <p class="use">빈 상태와 불러오기 실패는 회색 문구, 진짜 문제만 빨강.</p>
+        </div>
+        <div class="spec">
+          <h3>다이얼로그·스낵바</h3>
+          <div class="dialog"><b>백업 파일을 가져올까요?</b><p>지금 데이터가 모두 백업 내용으로 바뀌어요. 되돌릴 수 없어요.</p><div class="acts"><span class="no">취소</span><span class="go">가져오기</span></div></div>
+          <div class="snack">백업을 가져왔어요</div>
+          <div class="snack">1km 미만은 기록하지 않아요</div>
+          <p class="use">확인이 필요한 것만 다이얼로그. 결과는 스낵바로 짧게.</p>
+        </div>
+        <div class="spec">
+          <h3>탭바 <code>AppTabBar · TabIcon</code></h3>
+          <div class="tabbar">
+            <span class="on"><svg viewBox="0 0 24 24"><path d="M3 16h18v3H3zM5 16l2-6 5 2 4-2 3 6"/></svg>러닝</span>
+            <span><svg viewBox="0 0 24 24"><path d="M4 20V12M10 20V6M16 20v-9M2 20h20"/></svg>기록</span>
+            <span><svg viewBox="0 0 24 24"><circle cx="12" cy="13" r="7"/><path d="M12 6V3M9.5 12h.01M14.5 12h.01M10 16h4"/></svg>아바타</span>
+            <span><svg viewBox="0 0 24 24"><circle cx="12" cy="14" r="6"/><path d="M9 3h6l-1 4h-4z"/><circle cx="12" cy="14" r="2"/></svg>상점</span>
+          </div>
+          <p class="use">앱 고유 그림 4개. 선택은 어두운 알약. 러닝 중·요약에서는 숨긴다.</p>
+        </div>
+        <div class="spec">
+          <h3>경로 페이스·구간 막대 <code>RoutePaceLegend · SplitPaceChart</code></h3>
+          <div class="legend"><span><i style="background:var(--pace-slow)"></i>느림</span><span><i style="background:var(--pace-mid)"></i>보통</span><span><i style="background:var(--pace-fast)"></i>빠름</span><span><i style="background:var(--muted)"></i>빠른 이동</span></div>
+          <div class="splits" aria-label="구간 막대 예시"><i style="height:44%"></i><i style="height:48%"></i><i style="height:78%"></i><i style="height:78%"></i><i style="height:58%"></i><i style="height:80%"></i><i class="part" style="height:86%"></i></div>
+          <p class="use">경로는 1km 구간마다 느림·보통·빠름 세 색. 색약 흉내에서도 서로 떨어지는 파랑·자주·주황이고 범례를 늘 함께 둔다. 1km 미만 마지막 구간은 흐리게.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="part" id="notes">
+    <div class="wrap">
+      <div class="part-head">
+        <span class="part-no">6</span>
+        <h2>촬영 메모</h2>
+        <p>어떻게 찍었는지와 찍으면서 본 것.</p>
+      </div>
+      <div class="notes">
+        <article>
+          <h3>환경과 예시 데이터</h3>
+          <ul>
+            <li>Android: AVD <code>runmagochi</code>(Pixel 7, Android 16 · API 36), 릴리스 빌드 0.3.0 베타. 상태바는 시스템 데모 모드로 9:41 고정.</li>
+            <li>iPhone: iPhone 16 Pro 시뮬레이터(iOS 18.6), 디버그 빌드에서 디버그 띠를 끄고 찍음.</li>
+            <li>예시 데이터: 2025-11 ~ 2026-10 러닝 33회를 백업 6판 형식으로 만들어 설정 › 가져오기로 넣음. 게임 규칙대로 경험치·코인·배지를 맞춰 Lv.9, 배지 9개, 코인 315 에서 시작.</li>
+            <li>러닝 화면·요약·알림은 실제 러닝 2회를 가상 GPS(여의도 둘레 고리 경로)로 돌려 찍음. 3.60km(목표 3km 달성, Lv.10·새 외형 단계, 배지 목표 달성 30번), 1.56km(목표 10km 미달, 5분 넘게 멈춰 종료 예고 알림).</li>
+            <li>빈 상태(기록·코인 내역)·첫날 홈·첫 실행·권한 안내는 새로 설치한 상태에서 찍음.</li>
+          </ul>
+        </article>
+        <article>
+          <h3>찍으면서 본 것</h3>
+          <ul>
+            <li><span class="sev">확인 필요</span>첫 러닝의 "목표 달성!" 알림이 러닝이 끝난 뒤에도 남아 12분 뒤 다음 러닝 중에도 보였어요(39 종료 예고 알림 화면).</li>
+            <li><span class="sev">확인 필요</span>끝부분 잘라내기 슬라이더의 트랙이 연두로 채워져요. 디자인 시스템은 연두를 막대 채움에 쓰지 않기로 했어요(밝은 바탕 위 1.2:1).</li>
+            <li><span class="sev">관찰</span>알림 작은 아이콘이 빈 동그라미로 보여요. 앱 아이콘 모양 단색 아이콘을 두면 알림창에서 더 잘 알아봐요.</li>
+            <li><span class="sev">관찰</span>카운트다운 동안 탭바가 보여요. 누르면 다른 탭으로 갈 수 있는지 확인이 필요해요.</li>
+            <li><span class="sev">관찰</span>공유 카드는 시스템 공유 창 미리보기에서 잘라냈어요. 오른쪽 아래 연필은 Android 의 편집 버튼이에요.</li>
+            <li><span class="sev">관찰</span>iPhone 요약의 직선 경로는 시뮬레이터가 위치 점을 직선으로 이어서 생긴 것이에요.</li>
+          </ul>
+        </article>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">런마고치 · 페이즈 6 작업 19 · 원본 <code>design/screens/</code> · 연두 무드보드 + 사각 무대(결정 0029)</div>
+</footer>
+
+<dialog class="zoom" id="zoom" aria-labelledby="zoom-title">
+  <div class="inner">
+    <div class="bar"><b id="zoom-title"></b><button type="button" id="zoom-close">닫기</button></div>
+    <div class="imgbox"><img id="zoom-img" alt=""></div>
+  </div>
+</dialog>
+
+<script>
+(function () {
+  // 화면 목록: [번호, 파일, 이름, 상태 설명, 표시]
+  const GROUPS = [
+    { k: 'A', t: '첫 실행·권한', reqs: ['F17'], items: [
+      ['01', '01-onboarding-intro', '첫 실행 1 · 캐릭터 소개', '무작위로 정해진 젤리 새싹'],
+      ['02', '02-onboarding-name', '첫 실행 2 · 이름 짓기', '1~10자, 말풍선 미리보기'],
+      ['03', '03-permission-location', '권한 안내 · 위치', '처음 시작을 누를 때'],
+      ['04', '04-permission-precise', '권한 안내 · 정확한 위치', '대략 위치만 허용했을 때'],
+      ['05', '05-permission-battery', '권한 안내 · 배터리', '`나중에` 글자 버튼'],
+    ]},
+    { k: 'B', t: '홈', reqs: ['F1', 'F6', 'F6-2', 'F7', 'F18'], items: [
+      ['06', '06-home', '홈 · 거리 목표', 'Lv.9 · 코인 315 · 3km'],
+      ['07', '07-home-first-day', '홈 · 첫날', 'Lv.1 · 코인 0', '빈 상태'],
+      ['08', '08-home-time-goal', '홈 · 시간 목표', '20·30·60분 · 직접'],
+      ['09', '09-home-goal-input', '목표 직접 입력', '3~42km 정수'],
+      ['10', '10-countdown', '카운트다운', '3 · 2 · 1'],
+    ]},
+    { k: 'C', t: '러닝 중·일시정지', reqs: ['F1', 'F2', 'F4', 'F6', 'F8', 'F14'], items: [
+      ['11', '11-run', '러닝 중', '2.03km · 목표 3km 진행'],
+      ['12', '12-run-goal', '러닝 중 · 목표 달성', '진동 + "목표 달성!"'],
+      ['13', '13-run-autopause', '자동 일시정지', '재개 · 일시정지 두 버튼'],
+      ['14', '14-paused', '일시정지', '무대는 idle'],
+      ['15', '15-paused-hold', '길게 눌러 종료', '누르는 동안 차오름'],
+    ]},
+    { k: 'D', t: '러닝 요약', reqs: ['F3', 'F6', 'F7', 'F16', 'F19', 'F21'], items: [
+      ['16', '16-summary-levelup', '요약 · 레벨 업', 'Lv.9→10 · 목표 달성 · 새 배지', '긴 화면'],
+      ['17', '17-summary-missed', '요약 · 목표 미달', '10km까지 8.44km 남음'],
+      ['18', '18-summary-trim', '끝부분 잘라내기', '끝 시각 당기기 시트'],
+      ['19', '19-share-card', '공유 카드', '1080×1350 카드 · 공유 창'],
+    ]},
+    { k: 'E', t: '기록', reqs: ['F5', 'F5-2', 'F16'], items: [
+      ['20', '20-history-week', '기록 · 주', '19.86km · 5회'],
+      ['21', '21-history-month', '기록 · 월', '10월 일별 막대'],
+      ['22', '22-history-year', '기록 · 년', '2026 월별 막대'],
+      ['23', '23-history-all', '기록 · 전체', '169.23km · 35회'],
+      ['24', '24-history-empty', '기록 · 빈 상태', '아직 기록이 없어요', '빈 상태'],
+      ['25', '25-run-detail', '기록 상세', '같은 몸통 + 기록 삭제', '긴 화면'],
+    ]},
+    { k: 'F', t: '아바타·업적', reqs: ['F7', 'F18', 'F19'], items: [
+      ['26', '26-avatar', '아바타', '3단계 러너 · Lv.10', '긴 화면'],
+      ['27', '27-achievements', '업적', '개인 기록 · 배지 10/12', '긴 화면'],
+    ]},
+    { k: 'G', t: '상점·코인', reqs: ['F9', 'F10', 'F11'], items: [
+      ['28', '28-shop', '상점 · 모자', '러닝 캡 장착 중'],
+      ['29', '29-shop-preview', '아이템 미리보기', '밀짚모자 · 300'],
+      ['30', '30-shop-buy-confirm', '구매 확인', '300 코인에 살까요?'],
+      ['31', '31-shop-short', '코인 부족', '꽃 머리핀 · 35 부족'],
+      ['32', '32-coins', '코인 내역', '지급·사용 목록'],
+      ['33', '33-coins-empty', '코인 내역 · 빈 상태', '달리면 코인이 쌓여요', '빈 상태'],
+    ]},
+    { k: 'H', t: '설정', reqs: ['F12', 'F14'], items: [
+      ['34', '34-settings', '설정', '체중 · 이름 · 음성 · 백업'],
+      ['35', '35-settings-import', '백업 가져오기 확인', '되돌릴 수 없어요'],
+    ]},
+    { k: 'I', t: '알림', reqs: ['F20', 'F4'], items: [
+      ['36', '36-notif-run', '러닝 알림', '거리 · 목표까지 남은 양 · 일시정지'],
+      ['37', '37-notif-goal', '목표 달성 알림', '3km 목표를 채웠어요'],
+      ['38', '38-notif-autopause', '자동 일시정지 알림', '재개 · 일시정지'],
+      ['39', '39-notif-autoend', '종료 예고 알림', '30초 카운트다운'],
+    ]},
+  ];
+  const DARK = { k: 'N', t: '다크 모드 · 대표 화면', reqs: [], items: [
+    ['40', '40-dark-home', '홈', '5km 목표'],
+    ['41', '41-dark-run', '러닝 중', '0.12km'],
+    ['42', '42-dark-autopause', '자동 일시정지', '밝은 판 재개'],
+    ['43', '43-dark-summary', '요약(기록에서)', '목표 3km 달성'],
+    ['44', '44-dark-history', '기록 · 주', '19.86km'],
+    ['45', '45-dark-avatar', '아바타', '스프라이트 윤곽'],
+    ['46', '46-dark-achievements', '업적', '배지 10/12'],
+    ['47', '47-dark-shop', '상점 · 소품', '선글라스 장착 중'],
+  ]};
+  const IOS = { k: 'P', t: 'iPhone 16 Pro · iOS 18.6', reqs: [], items: [
+    ['50', '50-ios-home', '홈', '시간 목표 30분'],
+    ['51', '51-ios-run', '러닝 중', '0.49km'],
+    ['52', '52-ios-summary', '요약 · 목표 미달', '1.39km · 30분까지 22:41'],
+    ['53', '53-ios-avatar', '아바타', 'Lv.9 · 다음 단계까지 3.5km'],
+    ['54', '54-ios-shop', '상점', '러닝 캡 장착 중'],
+  ]};
+  const SIZE = { ios: [390, 848], def: [390, 866] };
+  const LONG = { '16-summary-levelup': '16-summary-levelup-full', '25-run-detail': '25-run-detail-full', '26-avatar': '26-avatar-full', '27-achievements': '27-achievements-full' };
+  const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const tick = (s) => esc(s).replace(/`([^`]+)`/g, '<code>$1</code>');
+
+  function art(it, isIos) {
+    const [no, file, name, state, flag] = it;
+    const [w, h] = isIos ? SIZE.ios : SIZE.def;
+    const zoom = LONG[file] || file;
+    return `<figure class="art"><button type="button" data-zoom="${zoom}" data-title="${esc(no + ' ' + name)}" aria-label="${esc(name)} 크게 보기">` +
+      `<img class="shot" src="web/${file}.png" alt="${esc(name + ': ' + state)}" width="${w}" height="${h}" loading="lazy" decoding="async"></button>` +
+      `<figcaption><span class="cap-top"><span class="no">${no}</span><span class="name">${esc(name)}</span></span>` +
+      `<span class="state">${tick(state)}</span>${flag ? `<span class="flag">${esc(flag)}</span>` : ''}</figcaption></figure>`;
+  }
+  function group(g, isIos) {
+    const reqs = g.reqs.length ? `<span class="reqs">${g.reqs.map((r) => `<span class="req">${r}</span>`).join('')}</span>` : '';
+    return `<div><div class="group-head"><span class="letter">${g.k}</span><h3>${esc(g.t)}</h3><span class="count">${g.items.length}장</span>${reqs}</div>` +
+      `<div class="artboards">${g.items.map((it) => art(it, isIos)).join('')}</div></div>`;
+  }
+  document.getElementById('board-light').innerHTML = GROUPS.map((g) => group(g)).join('');
+  document.getElementById('board-dark').innerHTML = group(DARK);
+  document.getElementById('board-ios').innerHTML = group(IOS, true);
+
+  // ---------- 흐름도 ----------
+  const NW = 96, NH = 213;
+  const N = {
+    onb: [24, 56, '01', '첫 실행', '01-onboarding-intro'],
+    perm: [184, 56, '03', '권한 안내', '03-permission-location'],
+    home: [374, 56, '06', '홈', '06-home'],
+    run: [574, 56, '11', '러닝 중', '11-run'],
+    pause: [734, 56, '14', '일시정지', '14-paused'],
+    sum: [914, 56, '16', '러닝 요약', '16-summary-levelup'],
+    share: [1074, 56, '19', '공유 카드', '19-share-card'],
+    set: [24, 450, '34', '설정', '34-settings'],
+    hist: [224, 450, '20', '기록', '20-history-week'],
+    det: [384, 450, '25', '기록 상세', '25-run-detail'],
+    ava: [574, 450, '26', '아바타', '26-avatar'],
+    ach: [734, 450, '27', '업적', '27-achievements'],
+    shop: [914, 450, '28', '상점', '28-shop'],
+    coin: [1074, 450, '32', '코인 내역', '32-coins'],
+  };
+  const cx = (k) => N[k][0] + NW / 2;
+  const mid = (k) => N[k][1] + NH / 2;
+  const R = (k) => N[k][0] + NW, L = (k) => N[k][0];
+  let s = `<svg viewBox="0 0 1196 744" role="img" aria-label="화면 흐름도: 첫 실행에서 홈, 러닝 중, 일시정지, 러닝 요약으로 이어지는 주 흐름과 홈에서 설정·기록·아바타·상점으로 가는 탭 흐름">`;
+  s += `<defs><clipPath id="clipn"><rect width="${NW}" height="${NH}" rx="12"/></clipPath>` +
+    `<marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="arrow" d="M0 0L10 5L0 10z"/></marker>` +
+    `<marker id="ahm" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="arrow main" d="M0 0L10 5L0 10z"/></marker></defs>`;
+  s += `<text class="lane" x="24" y="30">러닝 한 번</text><text class="lane" x="24" y="374">탭과 버튼으로 가는 화면</text>`;
+  const edge = (d, cls, lbl, lx, ly, both) => {
+    const m = cls.includes('main') ? 'ahm' : 'ah';
+    s += `<path class="edge ${cls}" d="${d}" marker-end="url(#${m})"${both ? ` marker-start="url(#${m})"` : ''}/>`;
+    if (lbl) s += `<text class="lbl${cls.includes('main') ? ' main' : ''}" x="${lx}" y="${ly}" text-anchor="middle">${lbl}</text>`;
+  };
+  const y1 = mid('onb');
+  edge(`M${R('onb') + 4} ${y1}H${L('perm') - 6}`, 'main', '이름 짓기', (R('onb') + L('perm')) / 2, y1 - 12);
+  edge(`M${R('perm') + 4} ${y1}H${L('home') - 6}`, 'main', '허용', (R('perm') + L('home')) / 2, y1 - 12);
+  edge(`M${R('home') + 4} ${y1}H${L('run') - 6}`, 'main', '시작 · 3초', (R('home') + L('run')) / 2, y1 - 12);
+  edge(`M${R('run') + 6} ${y1 - 18}H${L('pause') - 6}`, 'main', '멈춤', (R('run') + L('pause')) / 2, y1 - 30);
+  edge(`M${L('pause') - 6} ${y1 + 18}H${R('run') + 6}`, 'main', '재개', (R('run') + L('pause')) / 2, y1 + 40);
+  edge(`M${R('pause') + 4} ${y1}H${L('sum') - 6}`, 'main', '길게 눌러 종료', (R('pause') + L('sum')) / 2, y1 - 12);
+  edge(`M${R('sum') + 4} ${y1}H${L('share') - 6}`, '', '공유', (R('sum') + L('share')) / 2, y1 - 12);
+  // 요약 → 홈 (확인), 위로 돌아감
+  edge(`M${cx('sum')} ${N.sum[1] - 4}V40H${cx('home') + 14}V${N.home[1] - 6}`, 'back', '확인', (cx('sum') + cx('home')) / 2, 34);
+  // 일시정지 → 홈 (1km 미만)
+  const yb = N.pause[1] + NH + 44;
+  edge(`M${cx('pause')} ${N.pause[1] + NH + 30}V${yb}H${cx('home') + 18}V${N.home[1] + NH + 30}`, 'back', '1km 미만 종료', (cx('pause') + cx('home')) / 2 + 10, yb + 18);
+  // 홈 → 아래 줄 버스
+  const bus = 392;
+  s += `<path class="edge" d="M${cx('home') - 18} ${N.home[1] + NH + 30}V${bus}"/>`;
+  s += `<path class="edge" d="M${cx('set')} ${bus}H${cx('shop')}"/>`;
+  [['set', '톱니'], ['hist', '탭'], ['ava', '탭'], ['shop', '탭 · 코인 칩']].forEach(([k, l]) => {
+    edge(`M${cx(k)} ${bus}V${N[k][1] - 6}`, '');
+    s += `<text class="lbl" x="${cx(k) + 10}" y="${bus + 34}">${l}</text>`;
+  });
+  const y2 = mid('hist');
+  edge(`M${R('hist') + 4} ${y2}H${L('det') - 6}`, '', '러닝 누름', (R('hist') + L('det')) / 2, y2 - 12);
+  edge(`M${R('ava') + 4} ${y2}H${L('ach') - 6}`, '', '업적', (R('ava') + L('ach')) / 2, y2 - 12);
+  edge(`M${R('shop') + 4} ${y2}H${L('coin') - 6}`, '', '코인 칩', (R('shop') + L('coin')) / 2, y2 - 12);
+  // 노드
+  Object.values(N).forEach(([x, y, no, name, file]) => {
+    s += `<g transform="translate(${x} ${y})"><image href="web/${file}.png" width="${NW}" height="${NH}" clip-path="url(#clipn)" preserveAspectRatio="xMidYMin slice"/>` +
+      `<rect class="node-frame" width="${NW}" height="${NH}" rx="12"/>` +
+      `<text class="node-no" x="0" y="${NH + 22}">${no}</text><text class="node-name" x="24" y="${NH + 22}">${name}</text></g>`;
+  });
+  s += `</svg>`;
+  document.getElementById('flow-box').innerHTML = s;
+
+  // ---------- 화면별 상세 ----------
+  // pins: [x%, y%] (이미지 기준). els: [이름, 설명]
+  const DETAILS = [
+    { id: 'd-onboarding', img: '01-onboarding-intro', route: '앱 첫 실행', title: '첫 실행', reqs: ['결정 0011', '결정 0018'],
+      desc: '캐릭터 종류(병아리·젤리·도토리)는 무작위로 정해지고, 소개와 이름 짓기 두 장을 한 번만 보여요. 마치기 전에는 홈을 만들지 않아요.',
+      pins: [[50, 8.7], [50, 37], [50, 66.5], [50, 81.6], [50, 91.5]],
+      els: [['진행 점', '2단계 중 몇 번째인지. 현재는 길쭉한 초록'], ['무대 + 캐릭터', '8배 사각 무대. 1단계 외형(젤리는 "새싹")'], ['소개 문구', '종류마다 다른 제목, 공통 설명'], ['안내 카드', '걷다 뛰다 OK, 움직인 만큼 자란다'], ['다음', '연두 주요 버튼 하나']],
+      variants: [['02-onboarding-name', '이름 짓기']],
+      ix: ['2장에서 시스템 뒤로 가기는 1장으로', '이름은 1~10자, 입력하는 동안 무대 말풍선이 따라 바뀜', '`시작하기` 를 누르면 홈. 기존 사용자도 한 번 보며, 바꾼 이름은 그대로 둔다'] },
+    { id: 'd-permission', img: '03-permission-location', route: '홈 › 시작 (처음 한 번)', title: '권한 안내', reqs: ['F17'],
+      desc: '시작을 누를 때 필요한 권한만 차례로 물어요. 상태마다 안내 문구 하나와 연두 버튼 하나.',
+      pins: [[14, 10], [50, 30], [50, 92.3]],
+      els: [['제목', '권한 안내'], ['안내 카드', '왜 필요한지 한 문장. 위치는 기기에만 저장'], ['권한 허용', '시스템 권한 창을 띄움. 거부되면 `설정 열기`']],
+      variants: [['04-permission-precise', '정확한 위치'], ['05-permission-battery', '배터리 최적화']],
+      ix: ['대략 위치만 허용하면 "정확한 위치를 허용해야 거리가 기록됩니다" 를 더해 다시 물음', '배터리 최적화는 `설정 열기` 와 `나중에` 글자 버튼', '모두 통과하면 3초 카운트다운 뒤 러닝 시작'] },
+    { id: 'd-home', img: '06-home', route: '탭 › 러닝', title: '홈', reqs: ['F1', 'F6', 'F6-2', 'F7', 'F18'],
+      desc: '오늘 목표는 지난번 값이 골라져 있어 시작 한 번으로 달려요. 마스코트가 화면의 주인공.',
+      pins: [[13.5, 10], [89, 10], [72, 18.3], [50, 33], [50, 53.6], [50, 67.6], [50, 74.2], [50, 84], [50, 93]],
+      els: [['코인 칩', '잔액. 누르면 상점'], ['설정', '동그라미 톱니 버튼'], ['말풍선', '다음 레벨까지 남은 거리(km)'], ['무대 + 아바타', '8배. 장착 아이템을 입고, 경과일에 따라 표정이 졸림·잠듦으로'], ['이름 Lv. + 레벨 막대', '레벨 안 진행을 초록 막대로'], ['목표 종류', '거리·시간 분할 선택'], ['목표 값', '3·5·10km 또는 20·30·60분, `직접`'], ['시작', '화면의 유일한 연두 버튼'], ['탭바', '러닝·기록·아바타·상점']],
+      variants: [['07-home-first-day', '첫날'], ['08-home-time-goal', '시간 목표'], ['09-home-goal-input', '직접 입력'], ['10-countdown', '카운트다운']],
+      ix: ['목표 칩을 누르면 바로 바뀌고 다음 러닝의 기본값이 됨', '`직접` 은 다이얼로그: 거리 3~42km, 시간 15~180분 정수', '시작 → (처음이면 권한 안내) → 3·2·1 → 러닝 중'] },
+    { id: 'd-run', img: '11-run', route: '홈 › 시작', title: '러닝 중', reqs: ['F1', 'F2', 'F4', 'F6', 'F8', 'F14', 'F20'],
+      desc: '거리 하나를 화면 1/3 크기로. 페이스는 GPS 로 흔들리는 현재 페이스보다 평균 페이스를 먼저 둬요.',
+      pins: [[14, 10], [50, 21], [50, 32], [50, 41.7], [50, 66], [50, 90.6]],
+      els: [['제목', '러닝 중 → 자동 일시정지면 "멈춰서 일시정지했어요"'], ['거리', '128/800 고정폭 숫자 + km'], ['목표 줄·막대', '거리 목표는 기록 거리, 시간 목표는 움직인 시간으로 진행'], ['지표 카드', '평균 페이스 · 현재 페이스 · 시간'], ['무대(6배)', '9\'00" 보다 빠르면 달리기, 느리면 걷기 동작'], ['일시정지', '어두운 판 버튼']],
+      variants: [['12-run-goal', '목표 달성'], ['13-run-autopause', '자동 일시정지'], ['36-notif-run', '러닝 알림']],
+      ix: ['목표에 처음 닿으면 진동 + "목표 달성!" 한 번, 기록은 이어짐', '멈추면 자동 일시정지(재개·일시정지 두 버튼), 다시 움직이면 스스로 풀림', '자동 일시정지 5분이면 종료 예고 알림, 30초 뒤 자동 종료', '화면을 꺼도 알림창·음성으로 진행을 알려 줌'] },
+    { id: 'd-paused', img: '14-paused', route: '러닝 중 › 일시정지', title: '일시정지', reqs: ['F1', 'F4', 'F16'],
+      desc: '종료는 길게 눌러야만 돼요. 실수로 끝내지 않게.',
+      pins: [[50, 17.7], [50, 25], [50, 35], [50, 60], [50, 83.2], [50, 90.6]],
+      els: [['거리', '64/800으로 줄어듦'], ['목표 줄', '진행 막대 유지'], ['지표 카드', '평균 페이스 · 시간 · 칼로리'], ['무대(idle)', '서 있는 동작'], ['재개', '어두운 판 버튼'], ['길게 눌러 종료', '누르는 동안 회색이 차오르고 다 차면 종료']],
+      variants: [['15-paused-hold', '누르는 중']],
+      ix: ['종료 거리가 1km 미만이면 기록하지 않고 홈으로', '1시간 넘게 일시정지면 종료 예고 뒤 자동 종료'] },
+    { id: 'd-summary', img: '16-summary-levelup-full', long: true, route: '일시정지 › 길게 눌러 종료', title: '러닝 요약', reqs: ['F3', 'F6', 'F7', 'F16', 'F19', 'F21'],
+      desc: '기록과 성장(경험치·레벨 업·배지·코인)을 한 화면에서 보여 줘요. 이 예시는 Lv.9 → 10, 새 외형 단계, 목표 3km 달성, 배지 "목표 달성 30번".',
+      pins: [[84, 4.8], [50, 18.3], [82, 32.3], [16, 38.2], [22, 45], [50, 51], [50, 60.6], [50, 75], [50, 85], [50, 93.3], [50, 96.6]],
+      els: [['공유', '카드 이미지를 만들어 시스템 공유 창'], ['성장 카드', '레벨 업! · 이전→지금 레벨 · 새 외형 단계 알약 · 8배 무대'], ['경험치·코인 줄', '거리 경험치, 목표 보너스. 줄마다 `코인 +N`'], ['배지 줄', '새로 받은 배지와 코인'], ['날짜·이름·거리', '요일·시간대로 지은 이름, 거리 64'], ['지표 카드', '평균 페이스 · 시간 · 칼로리'], ['경로', '1km 구간마다 느림·보통·빠름 색 + 범례. 시작 연두, 끝 검정 점'], ['구간 막대', '평균선 위아래 막대, 1km 미만 마지막 구간은 흐리게'], ['구간 표', 'km · 페이스'], ['끝부분 잘라내기', '흰 보조 버튼'], ['확인', '홈으로']],
+      variants: [['17-summary-missed', '목표 미달'], ['18-summary-trim', '잘라내기'], ['19-share-card-crop', '공유 카드'], ['19-share-card', '공유 창']],
+      ix: ['잘라내기 시트에서 끝 시각을 당기면 거리·시간·경험치·목표 판정을 다시 매김', '미달이면 "목표 10km까지 8.44km 남았어요" 처럼 남은 양', '빠른 구간이 있으면 "빠른 이동 1.20km는 경험치에서 뺐어요"'] },
+    { id: 'd-history', img: '20-history-week', route: '탭 › 기록', title: '기록', reqs: ['F5', 'F5-2'],
+      desc: '주·월·년·전체 기간을 바꿔 합계와 막대 그래프를 봐요. 아래는 최근 러닝 목록.',
+      pins: [[50, 15.75], [15.5, 24.5], [26.6, 32], [50, 49.4], [50, 72.4]],
+      els: [['기간 칩', '주 · 월 · 년 · 전체'], ['기간 이동', '이전·다음 동그라미, 미래는 흐리게'], ['합계', '거리 64 + 러닝 횟수 · 평균 페이스 · 시간'], ['막대 그래프', '주는 요일, 월은 날짜, 년은 월, 전체는 연도'], ['최근 러닝', '날짜 · 이름 · 거리 · 페이스 · 시간 카드']],
+      variants: [['21-history-month', '월'], ['22-history-year', '년'], ['23-history-all', '전체'], ['24-history-empty', '빈 상태']],
+      ix: ['러닝 카드를 누르면 기록 상세(요약과 같은 몸통)', '기록이 없으면 그래프 아래 "아직 기록이 없어요"'] },
+    { id: 'd-detail', img: '25-run-detail-full', long: true, route: '기록 › 러닝 누름', title: '기록 상세', reqs: ['F5', 'F16'],
+      desc: '러닝 요약과 같은 화면이에요. 성장 카드 대신 목표 결과 한 줄이 오고, 맨 아래에 기록 삭제가 붙어요.',
+      pins: [[50, 11.6], [84, 6.2], [50, 41.6], [50, 76.6], [50, 90.1]],
+      els: [['목표 결과', '목표 30분 달성 · 보너스 +25'], ['공유', '요약과 같음'], ['경로', '구간 페이스 색'], ['구간 표', '7개 구간'], ['기록 삭제', '빨강 글자 버튼. 확인을 받은 뒤 지움']],
+      variants: [['43-dark-summary', '다크']],
+      ix: ['지워도 받은 경험치·코인·배지는 남음', '끝부분 잘라내기는 러닝 직후 요약에서만'] },
+    { id: 'd-avatar', img: '26-avatar-full', long: true, route: '탭 › 아바타', title: '아바타', reqs: ['F7', 'F18', 'F19'],
+      desc: '지금 레벨과 다음 외형 단계까지 남은 양, 네 단계 외형을 보여 줘요.',
+      pins: [[50, 22], [50, 37.3], [50, 42.7], [50, 48.3], [50, 77], [50, 87]],
+      els: [['무대(8배)', '장착 아이템을 입은 지금 외형'], ['이름 Lv. · 누적', '누적 거리 · 러닝 횟수'], ['단계 막대', '다음 성장 단계까지 남은 거리'], ['업적', '흰 보조 버튼'], ['현재 단계 카드', '연두 경계 + `현재` 알약'], ['잠긴 단계', '흐린 미리보기 + 잠김']],
+      variants: [['45-dark-avatar', '다크'], ['53-ios-avatar', 'iPhone']],
+      ix: ['단계: 1~4 새싹, 5~9 어린 러너, 10~19 러너, 20~ 마라토너', '업적 → 개인 기록·배지 화면'] },
+    { id: 'd-achieve', img: '27-achievements-full', long: true, route: '아바타 › 업적', title: '업적', reqs: ['F19'],
+      desc: '개인 기록 네 가지와 배지 12개, 다음에 받을 배지의 진행을 보여 줘요.',
+      pins: [[50, 23], [21, 40.8], [50, 50.7], [50, 89.7]],
+      els: [['개인 기록', '최장 거리 · 최장 시간 · 최고 1km · 최고 5km'], ['받은 배지', '컬러 도트 배지 + 이름'], ['못 받은 배지', '흑백 · 흐리게'], ['다음 배지', '조건 · 코인 · 진행 막대']],
+      variants: [['46-dark-achievements', '다크']],
+      ix: ['배지는 러닝을 마친 뒤 동기화에서 판정, 요약에 줄로 알림', '같은 배지는 두 번 받지 않음'] },
+    { id: 'd-shop', img: '28-shop', route: '탭 › 상점', title: '상점', reqs: ['F9', 'F10', 'F11'],
+      desc: '아이템을 고르면 위 무대에 바로 입혀 보여 줘요. 아래 고정 버튼 하나가 구매·장착·벗기를 맡아요.',
+      pins: [[83.6, 10], [50, 25], [50, 43.3], [26.7, 58.5], [50, 84]],
+      els: [['코인 칩', '잔액. 누르면 코인 내역'], ['미리보기 무대(6배)', '고른 아이템을 입혀 봄'], ['모자 · 소품', '분할 선택'], ['아이템 카드', '작은 무대 + 이름 + 가격·보유·장착 중'], ['아래 버튼', '구매하고 장착 / 장착하기 / 벗기']],
+      variants: [['29-shop-preview', '미리보기'], ['30-shop-buy-confirm', '구매 확인'], ['31-shop-short', '코인 부족'], ['54-ios-shop', 'iPhone']],
+      ix: ['살 수 있으면 "밀짚모자를 300 코인에 살까요?" 확인 뒤 구매·장착', '모자라면 버튼이 흐려지고 위에 "코인이 35 부족해요"'] },
+    { id: 'd-coins', img: '32-coins', route: '상점·홈 › 코인 칩', title: '코인 내역', reqs: ['F9'],
+      desc: '지급과 사용을 최신순으로 보여 줘요.',
+      pins: [[10.7, 10], [40, 18.9], [88, 18.9]],
+      els: [['뒤로', '동그라미 버튼'], ['내역 카드', '날짜 · 사유(러닝 거리, 목표 달성, 배지, 아이템 구매)'], ['증감', '+는 파랑, −는 기본 글자']],
+      variants: [['33-coins-empty', '빈 상태']],
+      ix: ['비면 "달리면 코인이 쌓여요", 실패면 오류 빈 상태'] },
+    { id: 'd-settings', img: '34-settings', route: '홈 › 톱니', title: '설정', reqs: ['F12', 'F14'],
+      desc: '묶음 카드 네 개. 백업 가져오기는 지금 데이터를 모두 바꾸므로 확인을 받아요.',
+      pins: [[50, 23], [50, 40], [50, 66.5], [50, 86.7]],
+      els: [['내 정보', '체중(칼로리 계산에만 씀)'], ['러닝 · 아바타', '아바타 이름, 음성 안내 스위치'], ['백업', '내보내기 · 가져오기, 설명 한 줄'], ['정보', '오픈소스 라이선스 · 버전']],
+      variants: [['35-settings-import', '가져오기 확인']],
+      ix: ['러닝 중에는 내보내기·가져오기를 막음', '가져오면 "백업을 가져왔어요" 스낵바'] },
+    { id: 'd-notif', img: '36-notif-run', route: '알림창 · 잠금화면', title: '러닝 알림', reqs: ['F20', 'F4'],
+      desc: '화면을 켜지 않고 진행을 봐요. 상태에 따라 버튼과 문구가 바뀌어요.',
+      pins: [[50, 33.5], [50, 37.5], [26, 43.8]],
+      els: [['제목', '러닝 중 · 0.55km (상태 · 거리)'], ['본문', '목표 3km까지 2.45km'], ['버튼', '일시정지 (자동 일시정지면 재개 · 일시정지)']],
+      variants: [['37-notif-goal', '목표 달성'], ['38-notif-autopause', '자동 일시정지'], ['39-notif-autoend', '종료 예고']],
+      ix: ['종료 예고: "움직이지 않으면 러닝을 마쳐요" + 30초 카운트다운, 재개 버튼', '움직이거나 재개를 누르면 예고를 지움'] },
+  ];
+  function detail(d) {
+    const pins = d.pins.map(([x, y], i) => `<span class="pin" style="left:${x}%;top:${y}%">${i + 1}</span>`).join('');
+    const h = d.long ? null : 866;
+    const phone = `<div class="phone${d.long ? ' scroll' : ''}" ${d.long ? 'tabindex="0" aria-label="' + esc(d.title) + ' 긴 화면, 스크롤해서 보기"' : ''}><div style="position:relative">` +
+      `<img class="shot" src="web/${d.img}.png" alt="${esc(d.title + ' 화면')}" width="390"${h ? ` height="${h}"` : ''} loading="lazy" decoding="async">` +
+      `<div class="pin-layer">${pins}</div></div></div>`;
+    const variants = d.variants.length ? `<div class="blk"><h4>상태 변형</h4><div class="variants">${d.variants.map(([f, c]) =>
+      `<figure class="variant"><button type="button" data-zoom="${LONG[f] || f}" data-title="${esc(d.title + ' · ' + c)}" aria-label="${esc(c)} 크게 보기"><img class="shot" src="web/${f}.png" alt="${esc(c)}" loading="lazy" decoding="async"></button><figcaption>${esc(c)}</figcaption></figure>`).join('')}</div></div>` : '';
+    return `<article class="detail" id="${d.id}"><div>${phone}${d.long ? '<p class="scroll-hint">폰 안에서 스크롤</p>' : ''}</div>` +
+      `<div class="detail-body"><div class="detail-title"><span class="route">${esc(d.route)}</span><h3>${esc(d.title)}</h3>` +
+      `<div class="reqs">${d.reqs.map((r) => `<span class="req">${r}</span>`).join('')}</div><p>${tick(d.desc)}</p></div>` +
+      `<div class="cols"><div class="blk"><h4>요소</h4><ol class="els">${d.els.map(([n, t], i) => `<li><span class="n">${i + 1}</span><div><b>${esc(n)}</b><span>${tick(t)}</span></div></li>`).join('')}</ol></div>` +
+      `<div style="display:grid;gap:18px;align-content:start">${variants}<div class="blk"><h4>인터랙션</h4><ul class="ix">${d.ix.map((t) => `<li>${tick(t)}</li>`).join('')}</ul></div></div></div></div></article>`;
+  }
+  document.getElementById('details').innerHTML = DETAILS.map(detail).join('');
+
+  // ---------- 와이어프레임 ----------
+  const st = (h) => `<div class="stage" style="height:${h}%"><i class="sprite"></i></div>`;
+  const card = (inner, h) => `<div class="card"${h ? ` style="height:${h}%"` : ''}>${inner}</div>`;
+  const ln = (c) => `<div class="ln ${c}"></div>`;
+  const tabs = (on) => `<div class="tabs">${[0, 1, 2, 3].map((i) => `<i${i === on ? ' class="on"' : ''}></i>`).join('')}</div>`;
+  const title = `<div class="ln m" style="height:12px;width:44%"></div>`;
+  const back = `<div class="row" style="gap:8px"><span class="circ"></span><div class="ln s" style="height:12px;flex:none;width:38%"></div></div>`;
+  const WF = [
+    ['01', '첫 실행', `<div class="row" style="justify-content:center;gap:4px"><div class="ln" style="width:12%;flex:none"></div><div class="b" style="width:6%;height:6px;flex:none"></div></div>${st(46)}<div class="ln m" style="height:12px;align-self:center"></div>${ln('l')}${card(ln('m') + ln('l'))}<div class="foot"><div class="btn"></div></div>`],
+    ['03', '권한 안내', `${title}${card('<div class="circ" style="align-self:center;width:30px;height:30px"></div>' + ln('l') + ln('m'))}<div class="foot"><div class="btn"></div><div class="ln s" style="align-self:center;width:22%"></div></div>`],
+    ['06', '홈', `<div class="row"><div class="pill" style="flex:none;width:32%"></div><span style="flex:1"></span><span class="circ" style="width:26px;height:26px"></span></div>${st(30)}<div class="ln m" style="height:10px;align-self:center;width:40%"></div><div class="pill" style="height:8px"></div>${card(ln('s') + '<div class="row"><div class="pill on"></div><div class="pill"></div></div><div class="row" style="gap:4%"><div class="pill on"></div><div class="pill"></div><div class="pill"></div><div class="pill"></div></div>')}<div class="btn"></div>${tabs(0)}`],
+    ['11', '러닝 중', `${title}<div class="big" style="height:54px;width:76%"></div>${ln('s')}<div class="pill" style="height:8px"></div>${card('<div class="row"><div class="ln"></div><div class="ln"></div><div class="ln"></div></div><div class="row"><div class="ln" style="height:10px"></div><div class="ln" style="height:10px"></div><div class="ln" style="height:10px"></div></div>')}${st(30)}<div class="foot" style="padding-bottom:9%"><div class="btn"></div></div>`],
+    ['14', '일시정지', `${title}<div class="big" style="align-self:center;width:44%"></div>${ln('s')}<div class="pill" style="height:8px"></div>${card('<div class="row"><div class="ln"></div><div class="ln"></div><div class="ln"></div></div><div class="row"><div class="ln" style="height:10px"></div><div class="ln" style="height:10px"></div><div class="ln" style="height:10px"></div></div>')}${st(26)}<div class="foot" style="padding-bottom:9%"><div class="btn"></div><div class="btn ghost"></div></div>`],
+    ['16', '러닝 요약', `<div class="row"><div class="ln m" style="height:12px"></div><div class="pill" style="flex:none;width:24%"></div></div>${card('<div class="ln s" style="align-self:center;height:10px"></div>' + ln('m') + '<div class="stage" style="height:70px"><i class="sprite"></i></div>', 0)}${card('<div class="row"><div class="ln m"></div><div class="ln s" style="flex:none;width:22%"></div></div><div class="row"><div class="ln m"></div><div class="ln s" style="flex:none;width:22%"></div></div>')}<div class="big" style="width:40%;height:24px"></div><div class="foot" style="padding-bottom:9%"><div class="btn ghost"></div><div class="btn"></div></div>`],
+    ['20', '기록', `${title}<div class="row" style="gap:4%"><div class="pill on"></div><div class="pill"></div><div class="pill"></div><div class="pill"></div></div>${card('<div class="row"><span class="circ"></span><div class="ln s" style="flex:none;width:40%"></div><span class="circ"></span></div><div class="big" style="height:22px;width:50%"></div><div class="bars"><i style="height:60%"></i><i style="height:35%"></i><i style="height:80%"></i><i style="height:55%"></i><i style="height:4%"></i><i style="height:4%"></i><i style="height:4%"></i></div>')}${ln('s')}${card(ln('s') + ln('m'))}${card(ln('s') + ln('m'))}${tabs(1)}`],
+    ['25', '기록 상세', `<div class="row"><div class="ln m" style="height:12px"></div><div class="pill" style="flex:none;width:24%"></div></div>${card('<div class="row"><div class="ln m"></div><div class="ln s" style="flex:none;width:22%"></div></div>')}${ln('s')}<div class="big" style="width:44%;height:26px"></div>${card('<div class="row"><div class="ln"></div><div class="ln"></div><div class="ln"></div></div>')}<div class="card" style="flex:1 1 auto;min-height:0"><div class="b" style="flex:1;border-radius:10px"></div></div><div class="foot" style="margin-top:0;padding-bottom:9%"><div class="ln s" style="align-self:center;width:24%"></div><div class="btn"></div></div>`],
+    ['26', '아바타', `${title}${st(32)}<div class="ln m" style="height:10px;align-self:center;width:40%"></div>${ln('m')}<div class="pill" style="height:8px"></div><div class="btn ghost"></div>${ln('s')}${card('<div class="row"><div class="b" style="flex:none;width:26%;aspect-ratio:1"></div><div style="display:grid;gap:6px">' + ln('l') + ln('m') + '</div></div>')}${tabs(2)}`],
+    ['27', '업적', `${back}${ln('s')}${card('<div class="row"><div class="ln"></div><div class="ln"></div></div><div class="row"><div class="ln" style="height:10px"></div><div class="ln" style="height:10px"></div></div>')}${ln('s')}${card('<div class="grid3"><i></i><i></i><i></i><i></i><i style="opacity:.45"></i><i></i><i></i><i style="opacity:.45"></i><i></i></div>')}${card('<div class="row"><span class="circ"></span>' + ln('m') + '</div><div class="pill" style="height:8px"></div>')}`],
+    ['28', '상점', `<div class="row"><div class="ln m" style="height:12px"></div><div class="pill" style="flex:none;width:30%"></div></div>${st(24)}<div class="row"><div class="pill on"></div><div class="pill"></div></div><div class="grid2"><div><div class="b"></div>${ln('m')}</div><div><div class="b"></div>${ln('m')}</div></div><div class="btn" style="margin-top:auto;margin-bottom:22%"></div>${tabs(3)}`],
+    ['32', '코인 내역', `${back}${card('<div class="row"><div style="display:grid;gap:6px">' + ln('m') + ln('l') + '</div><div class="ln s" style="flex:none;width:14%"></div></div>')}${card('<div class="row"><div style="display:grid;gap:6px">' + ln('m') + ln('l') + '</div><div class="ln s" style="flex:none;width:14%"></div></div>')}${card('<div class="row"><div style="display:grid;gap:6px">' + ln('m') + ln('l') + '</div><div class="ln s" style="flex:none;width:14%"></div></div>')}${card('<div class="row"><div style="display:grid;gap:6px">' + ln('m') + ln('l') + '</div><div class="ln s" style="flex:none;width:14%"></div></div>')}`],
+    ['34', '설정', `${back}${ln('s')}${card('<div class="row">' + ln('m') + '<div class="ln s" style="flex:none;width:16%"></div></div>')}${ln('s')}${card('<div class="row">' + ln('m') + '<div class="ln s" style="flex:none;width:16%"></div></div><div class="row">' + ln('m') + '<div class="pill on" style="flex:none;width:18%;height:14px"></div></div>')}${ln('s')}${card(ln('l') + '<div class="row"><div class="btn" style="height:24px"></div><div class="btn ghost" style="height:24px"></div></div>')}`],
+  ];
+  document.getElementById('wf-board').innerHTML = WF.map(([no, name, html]) =>
+    `<figure class="wf"><div class="wf-screen" role="img" aria-label="${esc(name)} 와이어프레임">${html}</div><figcaption><span class="no">${no}</span><span class="name">${esc(name)}</span></figcaption></figure>`).join('');
+
+  // ---------- 크게 보기 ----------
+  const dlg = document.getElementById('zoom');
+  const zimg = document.getElementById('zoom-img');
+  document.addEventListener('click', (e) => {
+    const b = e.target.closest('[data-zoom]');
+    if (!b) return;
+    zimg.src = `web/${b.dataset.zoom}.png`;
+    zimg.alt = b.dataset.title;
+    document.getElementById('zoom-title').textContent = b.dataset.title;
+    if (typeof dlg.showModal === 'function') dlg.showModal();
+  });
+  document.getElementById('zoom-close').addEventListener('click', () => dlg.close());
+  dlg.addEventListener('click', (e) => { if (e.target === dlg) dlg.close(); });
+})();
+</script>
