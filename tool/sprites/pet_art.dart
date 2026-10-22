@@ -157,7 +157,7 @@ class PetKind {
   final Anchor accessoryAnchor;
 
   /// 모자를 쓰면 몸의 볏·잎·꼭지는 모자에 덮이고, 대신 이 그림이 모자 위로 나온다.
-  /// 단계마다 솟은 높이가 달라도 모자 위 모습이 4단계 모두 같다. 후보(candidates/)는 없다.
+  /// 단계마다 솟은 높이가 달라도 모자 위 모습이 4단계 모두 같다.
   final Sprout? hatSprout;
 }
 
@@ -251,7 +251,6 @@ const Map<String, List<Pose>> hopperPoses = {
 };
 
 /// 걷는 단계·튀는 단계의 자세표 한 벌. 기본은 [petPoses].
-/// 캐릭터 후보(tool/sprites/candidates/)는 자기 자세표를 넘긴다.
 class PoseSet {
   const PoseSet({required this.walker, required this.hopper});
 

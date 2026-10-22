@@ -6,7 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:runmagochi/core/theme.dart';
 
-// 연두 무드보드(결정 0029) 값. 라이트는 design/candidates/ui/shared/direction-c.md 그대로,
+// 연두 무드보드(결정 0029) 값. 라이트는 design/mockups/phase-6/direction-c.md 그대로,
 // 다크는 작업 10 에서 새로 정했다. docs/design/tokens.json 과 같아야 한다(아래 테스트).
 const _light = {
   'background': 0xFFF3F5EE,

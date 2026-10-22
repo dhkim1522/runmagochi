@@ -16,7 +16,7 @@
 ## 결정
 
 - **캐릭터 수단**: 코드 도트로 그린다(2026-10-22 사용자 선택). Aseprite·픽셀 생성 AI·이미지 생성 모델·외주는 쓰지 않는다. pixel-plugin 도 끈 채로 둔다.
-  - 그림체는 후보 3개(`design/candidates/character/`, `tool/sprites/candidates/`)를 주변에 보여 투표로 고른다.
+  - 그림체는 후보 3개(`design/candidates/character/`, `tool/sprites/candidates/`, 작업 18 에서 지워 git 기록에만 남음)를 주변에 보여 투표로 고른다.
 - **프레임 수 유지**: 32×32px, 발끝 y=29, idle 2·walk 4·run 4 프레임과 파일 이름·레이어 순서(`docs/specs/sprite-spec.md`)를 그대로 둔다. 기준점이 바뀌면 sprite-spec 과 `PetKind` 기준점을 함께 고친다.
 - **배지 그림**: 배지마다 24×24 도트 그림 하나. 못 받은 배지는 같은 그림을 회색·흐리게 보인다.
 - **앱 아이콘·스플래시**: 새 앱 패키지 없이 도구 스크립트로 PNG·리소스를 만든다.

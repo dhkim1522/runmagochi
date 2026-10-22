@@ -134,7 +134,7 @@ flowchart LR
   - 배경, 앱 아이콘·스플래시
   - 경로 선을 페이스별 색으로 나눠 그리기, 공유 카드 디자인 (결정 0019)
   - 번들 글꼴 용량 줄이기: Pretendard 가변 글꼴(결정 0029)을 KS X 1001 한글 + 영문 + 앱 문구 글자로 서브셋(6.74MB → 1.11MB, iOS 앱 28.1MB → 22.5MB)
-- 고른 안은 `design/character/`·`design/mockups/`·`docs/design/tokens.json` 에 반영하고 `design/candidates/` 는 지운다
+- 고른 안은 `design/character/`·`design/mockups/`·`docs/design/tokens.json` 에 반영하고 `design/candidates/` 는 지운다. 고른 UI 시안·규칙·비교는 `design/mockups/phase-6/` 로 옮겼다(작업 18)
 - **완료 기준**
   - 캐릭터는 투표 결과로, 화면은 사용자가 출시 품질로 승인
   - 바뀐 디자인으로 에뮬레이터 E2E 통과. 실기기 확인은 페이즈 7

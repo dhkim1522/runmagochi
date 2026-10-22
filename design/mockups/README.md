@@ -1,4 +1,43 @@
-# 화면 시안 (페이즈 2.5 승인본)
+# 화면 시안
+
+이 폴더에는 방향이 둘 있다. 지금 앱은 **연두 무드보드**(페이즈 6, 결정 0029)를 따른다. 그 아래 **말랑 클레이**(페이즈 2.5)는 옛 방향이고 기록으로 남긴다.
+
+## 지금 방향: 연두 무드보드 (페이즈 6, 결정 0029)
+
+- 디자인 시스템: `docs/design/design-system.md`, 값은 `docs/design/tokens.json`, 아티팩트 https://claude.ai/artifact/FPihTBfX2CJserHVwUQ514
+- 캐릭터·아이템·배지·앱 아이콘: `design/character/`(에셋 카탈로그 https://claude.ai/artifact/ECbG2Fh4TXQwcr5fNUWCXA)
+- 구현은 `lib/core/theme.dart` 토큰과 `lib/core/ui/components.dart` 컴포넌트만 쓴다. 시안의 HEX 를 화면에 쓰지 않는다.
+
+| 경로 | 내용 |
+| --- | --- |
+| `phase-6/direction-c.md` | 고른 방향 c 의 규칙 원본(색·글자·모양·컴포넌트). 토큰 이름 대응은 디자인 시스템 문서 "색" 절 |
+| `phase-6/canvas/c/` | 고른 시안(Claude Design 캔버스 트랙): 홈·러닝 중·요약. `*.dc.html` 은 캔버스 아트보드 원본, `*.html` 은 브라우저로 여는 사본, `*.png` 는 캡처. 고르기 전에 연두 원을 사각 무대로 바꿨다 |
+| `phase-6/shared/` | 시안이 `../../shared/` 로 읽는 캐릭터·배지 PNG(당시 스프라이트로 만든 1배 그림) |
+| `phase-6/critique.md` | 3방향 × 2트랙 = 6안 비교(Impeccable critique, 작업 8)와 고른 뒤 고칠 점(P1·P2) |
+| `phase-6-screens/` | 구현 화면 스크린샷(라이트, 화면마다 1장). 작업 12~17 확인용 위젯 테스트 스크린샷에서 골랐다. 에뮬레이터 실화면은 화면설계서(작업 19)가 맡는다 |
+
+- 고르지 않은 후보(캐릭터 그림체 a·b·c, UI 6안 중 5안, 비교 페이지 원본, 후보 그림 도구 `tool/sprites/candidates/`·`tool/render_candidates.dart`·`tool/render_ui_candidate_pets.dart`)는 작업 18 에서 `design/candidates/` 와 함께 지웠다. 원본은 git 기록과 이미 게시한 비교 아티팩트 https://claude.ai/artifact/F5MsvhPE9fAXw5YtCwe3Xc 에 남아 있다.
+- 시안 없는 화면(기록·아바타·업적·상점·코인 내역·설정·첫 실행·권한)은 시안 c 의 짜임새(머리줄 → 흰 카드들)로 구현했다. 화면별 구성은 `docs/screens.md`.
+
+### `phase-6-screens/`
+
+| 파일 | 화면 |
+| --- | --- |
+| `home.png` | 홈(코인 칩·설정, 무대 + 말풍선, 이름·레벨 막대, 오늘 목표, 시작, 탭바) |
+| `in-run.png` | 러닝 중(거리 128, 지표 카드, 6배 무대, 일시정지) |
+| `paused.png` · `auto-paused.png` | 일시정지 · 자동 일시정지 |
+| `summary.png` | 러닝 요약(레벨 업 무대, 경험치·목표·배지 줄, 페이스별 경로, 구간 막대, 전체 길이) |
+| `share-card.png` | 공유 카드(1080×1350) |
+| `history.png` · `run-detail.png` | 기록 · 기록에서 연 러닝 상세(전체 길이) |
+| `avatar.png` · `achievements.png` | 아바타 · 업적(전체 길이) |
+| `shop.png` · `coins.png` | 상점 · 코인 내역 |
+| `settings.png` | 설정(전체 길이) |
+| `onboarding1.png` · `onboarding2.png` · `permission-location.png` | 첫 실행 2장 · 위치 권한 안내 |
+| `app-icon.png` · `splash.png` | 앱 아이콘(iOS 1024) · 스플래시(라이트) |
+
+## 옛 방향: 말랑 클레이 (페이즈 2.5 승인본)
+
+> 결정 0029 로 바뀌기 전 방향이다. 아래 `*.dc.html` 시안과 `phase-3.5-screens/`·`phase-4-screens/`·`phase-5-screens/` 스크린샷, 구현 메모는 그때 모습 기록이다. 토큰 이름(`cream`·`accent`·립 등)도 옛 이름이다.
 
 - 원본 캔버스: https://claude.ai/artifact/9XWdBkvcoJe1DmjXsbYAaC (2026-10-18 승인)
 - 디자인 시스템: `docs/design/design-system.md`, 값은 `docs/design/tokens.json`
@@ -8,7 +47,7 @@
 - `오늘 목표` 선택·`목표 진행` 줄·`목표 결과` 줄은 새 시안 없이 구현했다. 디자인 승인을 기다린다. 구현 화면 스크린샷은 `phase-3.5-screens/`(홈, 러닝 중, 목표 달성, 요약 달성·미달, 첫 실행 2장)에 있다.
 - `Main`·`Summary`·`Settings` 시안 원본에 남은 `이번 주 목표` 카드·줄·설정 항목은 쓰지 않는다(결정 0018). 해당 화면은 아래 "달라지는 점" 과 스크린샷을 따른다.
 
-## 공통
+### 공통
 
 - 바탕 `cream`, 화면 좌우 여백 `space-5`(20), 화면 제목 `title`(Jua 28).
 - 카드: `surface` + 3px `line` 테두리 + 아래 6px `line-strong` 립, 지표 카드 `radius-md`(20), 큰 카드 `radius-lg`(24), 아바타 무대 `surface-soft` + `radius-xl`(32).
@@ -16,7 +55,7 @@
 - 탭바: 아이콘(선 아이콘) + 라벨 13, 선택 `primary-deep` 굵게, 나머지 `ink-muted`, 위 2px `line` 구분선.
 - 숫자는 모두 Jua.
 
-## 화면별
+### 화면별
 
 | 파일 | 화면 | 달라지는 점 |
 | --- | --- | --- |
@@ -27,7 +66,7 @@
 | `History.dc.html` | 기록 | `이번 주` 카드: 거리 64 + `러닝 N회`. `최근 러닝` 제목 아래 러닝 카드(날짜·이름 caption, `거리 · 페이스 · 시간` Jua 20). |
 | `Avatar.dc.html` | 아바타 | 상단 무대에 아바타·이름 Lv·`누적 · 러닝 N회`·단계 막대(primary, 14)·`다음 성장 단계까지`/`최고 단계`. `성장 단계` 행 카드: 56px 미리보기 칸 + 단계 이름(Jua 18)·레벨 범위(caption) + 상태. 현재 단계는 테두리 `primary`·립 `primary-deep`, 잠김은 미리보기 흐리게(투명도 0.45). |
 
-## 페이즈 4 구현 메모 (보상)
+### 페이즈 4 구현 메모 (보상)
 
 - 새 시안 없이 와이어프레임 `8 상점`·`6 보상`과 위 클레이 규칙으로 구현했다. 구현 화면 스크린샷은 `phase-4-screens/`(E2E 때 찍는다)에 둔다.
 
@@ -41,7 +80,7 @@
 | 러닝 진행 알림 | `일시정지`/`재개` 버튼. 자동 일시정지 중에는 둘 다 둔다. |
 | 종료 예고 알림 | 별도 알림, 제목 `움직이지 않으면 러닝을 마쳐요`, 30초 카운트다운. |
 
-## 페이즈 5 구현 메모 (확장)
+### 페이즈 5 구현 메모 (확장)
 
 - 새 시안 없이 위 클레이 규칙과 `lib/core/theme.dart` 토큰으로 구현했다. 모양 다듬기는 페이즈 6 에서 한다. 구현 화면 스크린샷은 `phase-5-screens/` 에 있다.
 
@@ -56,11 +95,11 @@
 | 설정 | `러닝 · 아바타` 묶음에 `음성 안내` 스위치(기본 켜짐). |
 | 공유 카드 | 화면 밖에서 1080×1350 PNG 로 그린다. 장착한 아이템을 낀 아바타, 날짜, 거리, 평균 페이스, 시간, 목표 줄, 레벨업 줄, 앱 이름(`runmagochi`)을 담는다. |
 
-## 다크 모드
+### 다크 모드
 
 같은 토큰의 dark 값으로 바꾼다. 시안은 밝은 모드만 그렸다.
 
-## 첫 실행·설정 (페이즈 3 승인본)
+### 첫 실행·설정 (페이즈 3 승인본)
 
 - 원본 캔버스: https://claude.ai/artifact/3JY2L7p5Dng1jU4JhJRotH (2026-10-18 승인)
 - 시안의 캐릭터는 자리표시다. 앱은 무작위로 정해진 종류의 1단계 스프라이트를 쓴다(결정 0011).

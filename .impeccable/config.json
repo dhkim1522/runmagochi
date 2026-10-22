@@ -2,16 +2,6 @@
   "detector": {
     "ignoreRules": [],
     "ignoreFiles": [],
-    "ignoreValues": [
-      {
-        "rule": "cream-palette",
-        "value": "*",
-        "files": [
-          "design/candidates/ui/skill/a/index.html"
-        ],
-        "createdAt": "2026-10-22T03:09:25.160Z",
-        "reason": "direction a = refine the app's approved 말랑 클레이 system; cream token approved in phase 2.5 (docs/design/design-system.md, 2026-10-17)"
-      }
-    ]
+    "ignoreValues": []
   }
 }

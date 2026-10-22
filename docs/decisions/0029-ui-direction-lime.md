@@ -6,13 +6,13 @@
 ## 배경
 
 - 페이즈 2.5 에서 승인한 UI 방향은 말랑 클레이(주황·크림, 두꺼운 테두리·립, Jua + Noto Sans KR)다.
-- 페이즈 6 관문 2 에서 두 트랙(디자인 스킬·Claude Design 캔버스) × 세 방향 = 6안을 비교했다(`design/candidates/ui/critique.md`, 비교 페이지 https://claude.ai/artifact/F5MsvhPE9fAXw5YtCwe3Xc).
+- 페이즈 6 관문 2 에서 두 트랙(디자인 스킬·Claude Design 캔버스) × 세 방향 = 6안을 비교했다(`design/mockups/phase-6/critique.md`, 비교 페이지 https://claude.ai/artifact/F5MsvhPE9fAXw5YtCwe3Xc).
 - 점수 추천은 b · 캔버스(27/30)였으나, 사용자는 마스코트가 화면의 주인공인 c · 캔버스(20/30)를 골랐다.
 - 고르기 전에 c 의 연두 원을 사각 무대(하늘 + 땅 띠)로 바꿨다. 무대 뒤에 배경 아이템을 깔 수 있게 하려는 사용자 요청이다.
 
 ## 결정
 
-- **방향**: 연두 무드보드. 규칙 원본은 `design/candidates/ui/shared/direction-c.md`, 시안은 `design/candidates/ui/canvas/c/`.
+- **방향**: 연두 무드보드. 규칙 원본은 `design/mockups/phase-6/direction-c.md`, 시안은 `design/mockups/phase-6/canvas/c/`.
   - 밝은 풀빛 바탕, 테두리 없는 흰 카드, 연두는 누를 것·채워지는 것에만, 강조 글자는 초록.
   - 마스코트는 사각 무대 위에 크게 선다. 무대는 하늘·땅 두 겹이고, 나중에 배경 아이템이 이 겹을 바꾼다.
 - **글꼴**: Pretendard(SIL OFL) 한 가족으로 바꾼다. Jua·Noto Sans KR 은 뺀다. 서브셋은 작업 17 에서 한다.

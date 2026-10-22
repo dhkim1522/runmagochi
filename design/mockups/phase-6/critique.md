@@ -1,7 +1,8 @@
 # UI 후보 6안 비교 (페이즈 6 작업 8, Impeccable critique)
 
 > 3방향(a 말랑 클레이 다듬기 · b 도트 한 칸 · c 연두 무드보드) × 2트랙(스킬 = 디자인 스킬로 짠 HTML, 캔버스 = Claude Design 캔버스)을 같은 기준으로 본 결과. 2026-10-22.
-> 비교 페이지: `design/candidates/ui/compare/index.html` (컨트롤러가 아티팩트로 올린다).
+> 비교 페이지: https://claude.ai/artifact/F5MsvhPE9fAXw5YtCwe3Xc
+> 작업 18 에서 고른 c · 캔버스 시안(`canvas/c/`)과 규칙(`direction-c.md`)만 이 폴더로 옮기고 나머지 후보(`design/candidates/`)는 지웠다. 아래 a·b·스킬 트랙 파일 이름은 git 기록과 비교 페이지에 남아 있다.
 
 ⚠️ DEGRADED: single-context (Impeccable critique 는 디자인 검토(A)와 검출기(B)를 서로 다른 서브에이전트로 돌리라고 하지만, 이 페이즈의 구현 지침이 서브에이전트를 금지한다. A(화면 18장을 직접 보고 점수)를 먼저 끝낸 뒤 B(검출기·브라우저 측정)를 돌려 순서만 지켰다.)
 

@@ -12,7 +12,7 @@ const int _scale = 8;
 const int _gap = 16;
 const int _groupGap = 48;
 
-/// 미리보기 바탕색(cream). 후보 미리보기(tool/render_candidates.dart)도 같은 색을 쓴다.
+/// 미리보기 바탕색(cream).
 const int previewBg = 0xFFFFF7ED;
 
 /// 저장소 루트 기준 경로 → 시트 이미지. 모든 종류 × 단계 × 동작(몸), 표정 × 동작(얼굴),
