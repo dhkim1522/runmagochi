@@ -66,6 +66,7 @@ AppButton bottomButton(WidgetTester tester) =>
     tester.widget<AppButton>(find.byKey(const ValueKey('shop-action')));
 
 void main() {
+  _designTests();
   testWidgets('제목, 코인 칩, 모자 3개와 가격이 보인다', (tester) async {
     await pumpShop(tester, FakeShop(const [], 1240));
     expect(find.text('상점'), findsOneWidget);
@@ -273,4 +274,85 @@ void main() {
     await settle(tester);
     expect(homePaths()['hat'], contains('/hat/cap_'));
   });
+}
+
+void _designTests() {
+  for (final dark in [false, true]) {
+    final name = dark ? '다크' : '라이트';
+    final c = dark ? AppColors.dark : AppColors.light;
+
+    testWidgets('미리보기는 폭 전체 사각 무대 6배, 무대 위 글자 없음 ($name)', (tester) async {
+      await pumpShop(tester, FakeShop(const [], 500), dark: dark);
+      final stage = find.byKey(const ValueKey('shop-stage'));
+      final w = tester.widget<PetStage>(stage);
+      expect(w.scale, 6);
+      expect(w.radius, Stage.radius);
+      expect(tester.getRect(stage).width, 360 - 2 * Gap.s5);
+      expect(
+        find.descendant(
+          of: stage,
+          matching: find.byKey(const ValueKey('shop-stage-avatar')),
+        ),
+        findsOneWidget,
+      );
+      expect(
+        tester
+            .widget<AvatarView>(find.byKey(const ValueKey('shop-stage-avatar')))
+            .scale,
+        6,
+      );
+      expect(
+        find.descendant(of: stage, matching: find.byType(Text)),
+        findsNothing,
+      );
+    });
+
+    testWidgets('아이템 카드 미리보기도 작은 사각 무대(하늘·땅) 위 3배, 가격은 코인 그림 ($name)', (
+      tester,
+    ) async {
+      await pumpShop(tester, FakeShop(const [], 500), dark: dark);
+      final card = find.byKey(const ValueKey('item-beanie'));
+      final mini = tester.widget<PetStage>(
+        find.descendant(of: card, matching: find.byType(PetStage)),
+      );
+      expect(mini.scale, 3);
+      expect(mini.groundHeight, Stage.groundHeightMini);
+      expect(mini.radius, Radii.sm);
+      final pet = tester.widget<AvatarView>(
+        find.descendant(of: card, matching: find.byType(AvatarView)),
+      );
+      expect(pet.hatItemId, 'beanie');
+      expect(
+        find.descendant(of: card, matching: find.byType(CoinIcon)),
+        findsOneWidget,
+      );
+      final app = tester.widget<AppCard>(
+        find.descendant(of: card, matching: find.byType(AppCard)),
+      );
+      expect(app.radius, Radii.md);
+      // 고른 카드(첫 아이템)만 경계선.
+      final chosen = tester.widget<AppCard>(
+        find.descendant(
+          of: find.byKey(const ValueKey('item-cap')),
+          matching: find.byType(AppCard),
+        ),
+      );
+      expect(chosen.borderColor, c.primaryEdge);
+      expect(app.borderColor, isNull);
+    });
+
+    testWidgets('구매 확인은 테마 다이얼로그: 취소 글자 버튼 + 구매 연두 버튼 ($name)', (tester) async {
+      await pumpShop(tester, FakeShop(const [], 500), dark: dark);
+      await tester.tap(find.byKey(const ValueKey('shop-action')));
+      await settle(tester);
+      expect(
+        find.ancestor(of: find.text('구매'), matching: find.byType(FilledButton)),
+        findsOneWidget,
+      );
+      expect(
+        find.ancestor(of: find.text('취소'), matching: find.byType(TextButton)),
+        findsOneWidget,
+      );
+    });
+  }
 }

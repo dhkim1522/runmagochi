@@ -47,7 +47,6 @@ class CoinHistoryScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final c = AppColors.of(context);
     final t = AppText.of(context);
     final rows = ref.watch(_coinRowsProvider);
     void back() => Navigator.of(context).maybePop();
@@ -60,22 +59,12 @@ class CoinHistoryScreen extends ConsumerWidget {
             children: [
               Row(
                 children: [
-                  Semantics(
-                    container: true,
-                    button: true,
+                  CircleIconButton(
+                    icon: Icons.chevron_left,
                     label: '뒤로',
-                    excludeSemantics: true,
-                    onTap: back,
-                    child: IconButton(
-                      onPressed: back,
-                      constraints: const BoxConstraints.tightFor(
-                        width: 48,
-                        height: 48,
-                      ),
-                      icon: Icon(Icons.chevron_left, size: 32, color: c.ink),
-                    ),
+                    onPressed: back,
                   ),
-                  const SizedBox(width: Gap.s1),
+                  const SizedBox(width: Gap.s3),
                   const Flexible(child: ScreenTitle('코인 내역')),
                 ],
               ),
@@ -87,7 +76,12 @@ class CoinHistoryScreen extends ConsumerWidget {
                   error: (_, _) =>
                       Center(child: Text('내역을 불러오지 못했어요', style: t.body)),
                   data: (list) => list.isEmpty
-                      ? Center(child: Text('달리면 코인이 쌓여요', style: t.body))
+                      ? const SingleChildScrollView(
+                          child: EmptyState(
+                            icon: CoinIcon(size: 40),
+                            message: '달리면 코인이 쌓여요',
+                          ),
+                        )
                       : ListView.builder(
                           itemCount: list.length,
                           itemBuilder: (context, i) => Padding(
@@ -115,9 +109,11 @@ class _CoinTile extends StatelessWidget {
     final t = AppText.of(context);
     final amount = row.entry.amount;
     final sign = amount < 0 ? '−' : '+';
+    // 기록 러닝 카드와 같은 작은 카드: 위 날짜(label inkMuted), 아래 사유(body-strong).
+    // 금액은 코인 그림 + stat 22/800. 받은 코인은 코인 색, 쓴 코인은 ink.
     return AppCard(
       radius: Radii.md,
-      padding: const EdgeInsets.symmetric(vertical: 14, horizontal: Gap.s4),
+      padding: const EdgeInsets.symmetric(vertical: Gap.s4, horizontal: Gap.s5),
       child: Row(
         children: [
           Expanded(
@@ -126,16 +122,19 @@ class _CoinTile extends StatelessWidget {
               children: [
                 Text(
                   formatRunDate(row.entry.at),
-                  style: t.caption.copyWith(color: c.inkMuted),
+                  style: t.label.copyWith(color: c.inkMuted),
                 ),
-                Text(row.label, style: t.body),
+                const SizedBox(height: 2),
+                Text(row.label, style: t.bodyStrong),
               ],
             ),
           ),
           const SizedBox(width: Gap.s2),
+          const CoinIcon(size: 20),
+          const SizedBox(width: Gap.s1),
           Text(
             '$sign${formatThousands(amount.abs())}',
-            style: t.titleS.copyWith(color: amount < 0 ? c.ink : c.success),
+            style: t.stat.copyWith(color: amount < 0 ? c.ink : c.coin),
           ),
         ],
       ),

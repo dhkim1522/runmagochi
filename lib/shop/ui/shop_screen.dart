@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../avatar/app/providers.dart';
 import '../../avatar/domain/growth_rules.dart';
 import '../../avatar/ui/avatar_view.dart';
+import '../../avatar/ui/sprite_sheet.dart' show spriteFramePx;
 import '../../core/format.dart';
 import '../../core/theme.dart';
 import '../../core/ui/components.dart';
@@ -68,7 +69,7 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
             onPressed: () => Navigator.of(context).pop(false),
             child: const Text('취소'),
           ),
-          TextButton(
+          FilledButton(
             onPressed: () => Navigator.of(context).pop(true),
             child: const Text('구매'),
           ),
@@ -152,7 +153,7 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
 
     return SafeArea(
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(Gap.s5, Gap.s6, Gap.s5, Gap.s4),
+        padding: const EdgeInsets.fromLTRB(Gap.s5, Gap.s4, Gap.s5, Gap.s4),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -162,29 +163,36 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
                 CoinChip(onTap: _openHistory),
               ],
             ),
-            const SizedBox(height: Gap.s3),
+            const SizedBox(height: Gap.s4),
             Expanded(
               child: SingleChildScrollView(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    // 무대: 장착 중인 것에 고른 아이템을 얹어 보여 준다.
-                    DecoratedBox(
-                      decoration: BoxDecoration(
-                        color: c.surfaceSoft,
-                        borderRadius: BorderRadius.circular(Radii.xl),
-                        border: Border.all(color: c.line, width: Borders.edge),
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.all(Gap.s4),
-                        child: Center(
-                          child: AvatarView(
+                    // 무대: 장착 중인 것에 고른 아이템을 얹어 보여 준다(폭 전체 사각 무대).
+                    // 아이템 줄이 함께 보이게 러닝 중처럼 6배.
+                    LayoutBuilder(
+                      builder: (context, box) {
+                        final scale =
+                            PetStage.largestScale(
+                              max: 6,
+                              min: 3,
+                              fits: (s) =>
+                                  spriteFramePx * s + 2 * Gap.s4 <=
+                                  box.maxWidth,
+                            ) ??
+                            3;
+                        final stage = PetStage(
+                          key: const ValueKey('shop-stage'),
+                          scale: scale,
+                          groundHeight: Stage.groundHeightCompact,
+                          pet: AvatarView(
                             key: const ValueKey('shop-stage-avatar'),
                             kind: g.kind,
                             stage: g.stage,
                             mood: g.mood,
                             action: AvatarAction.idle,
-                            scale: 4,
+                            scale: scale,
                             hatItemId: _slot == ItemSlot.hat
                                 ? selected.id
                                 : equipped.hatItemId,
@@ -192,8 +200,13 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
                                 ? selected.id
                                 : equipped.accessoryItemId,
                           ),
-                        ),
-                      ),
+                        );
+                        return SizedBox(
+                          height:
+                              spriteFramePx * scale + stage.petBottom + Gap.s3,
+                          child: stage,
+                        );
+                      },
                     ),
                     const SizedBox(height: Gap.s4),
                     ChipRow(
@@ -269,6 +282,18 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
   );
 }
 
+/// 아이템 카드 미리보기 배율. 두 칸 카드는 좁은 폰(320)에서도 안쪽 폭이 96 을 넘는다.
+/// 카드 줄이 IntrinsicHeight 라 LayoutBuilder 로 재지 않고 고정한다.
+const int _previewScale = 3;
+
+/// 미리보기 무대 높이: 펫 상자 + 펫 아래(땅 − 묻힘 − 발끝 아래 빈 줄) + 위 여백 4.
+const double _previewHeight =
+    spriteFramePx * _previewScale +
+    Stage.groundHeightMini -
+    Stage.footSink -
+    spriteFootGapRows * _previewScale +
+    Gap.s1;
+
 class _ItemCard extends StatelessWidget {
   const _ItemCard({
     required this.item,
@@ -310,42 +335,63 @@ class _ItemCard extends StatelessWidget {
         behavior: HitTestBehavior.opaque,
         onTap: onTap,
         child: AppCard(
-          radius: Radii.lg,
+          radius: Radii.md,
           borderColor: chosen ? c.primaryEdge : null,
           padding: const EdgeInsets.all(Gap.s3),
           child: Column(
             mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              AvatarView(
-                kind: kind,
-                stage: stage,
-                mood: mood,
-                action: AvatarAction.idle,
-                scale: 2,
-                hatItemId: item.slot == ItemSlot.hat ? item.id : null,
-                accessoryItemId: item.slot == ItemSlot.accessory
-                    ? item.id
-                    : null,
+              // 작은 사각 무대(하늘·땅) 위 미리보기. 배경 아이템이 생기면 같은 겹을 바꾼다.
+              SizedBox(
+                height: _previewHeight,
+                child: PetStage(
+                  scale: _previewScale,
+                  groundHeight: Stage.groundHeightMini,
+                  radius: Radii.sm,
+                  pet: AvatarView(
+                    kind: kind,
+                    stage: stage,
+                    mood: mood,
+                    action: AvatarAction.idle,
+                    scale: _previewScale,
+                    hatItemId: item.slot == ItemSlot.hat ? item.id : null,
+                    accessoryItemId: item.slot == ItemSlot.accessory
+                        ? item.id
+                        : null,
+                  ),
+                ),
               ),
-              const SizedBox(height: Gap.s2),
+              const SizedBox(height: Gap.s3),
               Text(item.name, textAlign: TextAlign.center, style: t.bodyStrong),
               const SizedBox(height: Gap.s1),
               if (owned || worn)
                 Text(
                   status,
+                  textAlign: TextAlign.center,
                   style: t.label.copyWith(
                     color: worn ? c.primaryDeep : c.inkMuted,
                   ),
                 )
               else
                 Row(
-                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     const CoinIcon(size: 18),
                     const SizedBox(width: Gap.s1),
-                    Text(status, style: t.label),
+                    Flexible(
+                      child: Text(
+                        status,
+                        style: t.label.copyWith(
+                          fontWeight: FontWeight.w700,
+                          fontVariations: const [FontVariation('wght', 700)],
+                          fontFeatures: const [FontFeature.tabularFigures()],
+                        ),
+                      ),
+                    ),
                   ],
                 ),
+              const SizedBox(height: Gap.s1),
             ],
           ),
         ),

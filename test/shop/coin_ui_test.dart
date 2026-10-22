@@ -181,7 +181,8 @@ void main() {
       final c = AppColors.light;
       Color colorOf(String s) =>
           tester.widget<Text>(find.text(s).first).style!.color!;
-      expect(colorOf('+15'), c.success);
+      // 코인 +N 은 코인 색(관문 2 결과, 작업 14).
+      expect(colorOf('+15'), c.coin);
       expect(colorOf('−100'), c.ink);
       final top = tester.getTopLeft(find.text('러닝 캡 구매')).dy;
       expect(top, lessThan(tester.getTopLeft(find.text('러닝 3.13km')).dy));
@@ -232,6 +233,54 @@ void main() {
       await pump(tester, const CoinHistoryScreen(), FakeShop([]));
       expect(find.text('달리면 코인이 쌓여요'), findsOneWidget);
     });
+
+    for (final dark in [false, true]) {
+      final name = dark ? '다크' : '라이트';
+      final c = dark ? AppColors.dark : AppColors.light;
+
+      testWidgets('줄마다 코인 그림 + 금액(stat 22/800), 뒤로는 동그라미 버튼 ($name)', (
+        tester,
+      ) async {
+        await pump(
+          tester,
+          const CoinHistoryScreen(),
+          FakeShop(entries),
+          repo: repo,
+          dark: dark,
+        );
+        expect(
+          tester.widget<CircleIconButton>(find.byType(CircleIconButton)).label,
+          '뒤로',
+        );
+        final plus = tester.widget<Text>(find.text('+15').first);
+        expect(plus.style!.color, c.coin);
+        expect(plus.style!.fontSize, 22);
+        expect(plus.style!.fontWeight, FontWeight.w800);
+        final row = find.ancestor(
+          of: find.text('러닝 3.13km'),
+          matching: find.byType(AppCard),
+        );
+        expect(tester.widget<AppCard>(row).radius, Radii.md);
+        expect(
+          find.descendant(of: row, matching: find.byType(CoinIcon)),
+          findsOneWidget,
+        );
+        expect(
+          tester.widget<Text>(find.text('러닝 3.13km')).style!.fontWeight,
+          FontWeight.w700,
+        );
+      });
+
+      testWidgets('비면 코인 그림 빈 상태 카드 ($name)', (tester) async {
+        await pump(tester, const CoinHistoryScreen(), FakeShop([]), dark: dark);
+        final empty = find.byType(EmptyState);
+        expect(empty, findsOneWidget);
+        expect(
+          find.descendant(of: empty, matching: find.byType(CoinIcon)),
+          findsOneWidget,
+        );
+      });
+    }
 
     for (final dark in [false, true]) {
       testWidgets('360×640 글자 1.3배 ${dark ? '다크' : '라이트'} 넘침 없음', (
