@@ -513,16 +513,19 @@ void _fontTests() {
       'label': tx.label,
       'caption': tx.caption,
     };
-    test('모든 글자 스타일은 Pretendard 한 가족, 13 이상, wght 축 = fontWeight', () {
-      expect(t.textTheme.bodyMedium!.fontFamily, 'Pretendard');
-      for (final MapEntry(:key, :value) in all.entries) {
-        expect(value.fontFamily, 'Pretendard', reason: key);
-        expect(value.fontSize, greaterThanOrEqualTo(13), reason: key);
-        expect(value.fontVariations, [
-          FontVariation('wght', value.fontWeight!.value.toDouble()),
-        ], reason: key);
-      }
-    });
+    test(
+      '모든 글자 스타일은 RunmagochiSans(Pretendard 서브셋) 한 가족, 13 이상, wght 축 = fontWeight',
+      () {
+        expect(t.textTheme.bodyMedium!.fontFamily, 'RunmagochiSans');
+        for (final MapEntry(:key, :value) in all.entries) {
+          expect(value.fontFamily, 'RunmagochiSans', reason: key);
+          expect(value.fontSize, greaterThanOrEqualTo(13), reason: key);
+          expect(value.fontVariations, [
+            FontVariation('wght', value.fontWeight!.value.toDouble()),
+          ], reason: key);
+        }
+      },
+    );
     test('글자 크기·굵기(direction-c)', () {
       const want = {
         'distanceXl': (128.0, 128.0, FontWeight.w800),
@@ -553,13 +556,16 @@ void _fontTests() {
     });
   }
 
-  test('pubspec 은 Pretendard 가변 글꼴만 번들하고 옛 글꼴은 없다', () {
+  test('pubspec 은 RunmagochiSans(Pretendard 서브셋) 하나만 번들하고 옛 글꼴은 없다', () {
     final pubspec = File('pubspec.yaml').readAsStringSync();
-    expect(pubspec, contains('family: Pretendard'));
-    expect(pubspec, contains('asset: assets/fonts/PretendardVariable.ttf'));
+    // OFL 예약 글꼴 이름: 고친(서브셋) 글꼴은 파일·가족 이름에도 Pretendard 를 쓰지 않는다.
+    expect(pubspec, contains('family: RunmagochiSans'));
+    expect(pubspec, contains('asset: assets/fonts/RunmagochiSans.ttf'));
+    expect(pubspec, isNot(contains('family: Pretendard')));
+    expect(pubspec, isNot(contains('assets/fonts/PretendardVariable.ttf')));
     expect(pubspec, isNot(contains('Jua')));
     expect(pubspec, isNot(contains('NotoSansKR')));
-    final ttf = File('assets/fonts/PretendardVariable.ttf');
+    final ttf = File('assets/fonts/RunmagochiSans.ttf');
     expect(ttf.existsSync(), isTrue);
     // TrueType 시그니처 00 01 00 00.
     expect(ttf.openSync().readSync(4), [0, 1, 0, 0]);
@@ -568,20 +574,25 @@ void _fontTests() {
     final left = Directory('assets/fonts')
         .listSync()
         .map((f) => f.uri.pathSegments.last)
-        .where((n) => n.contains('Jua') || n.contains('NotoSans'));
+        .where(
+          (n) =>
+              n.contains('Jua') ||
+              n.contains('NotoSans') ||
+              (n.endsWith('.ttf') && n.contains('Pretendard')),
+        );
     expect(left, isEmpty);
   });
 }
 
 void _titleSTests() {
   group('글자 크기 22 토큰', () {
-    test('titleS 는 Pretendard 22 / 줄 높이 28', () {
+    test('titleS 는 RunmagochiSans 22 / 줄 높이 28', () {
       for (final tx in [
         AppText.withColor(AppColors.light.ink),
         AppText.withColor(AppColors.dark.ink),
       ]) {
         expect(tx.titleS.fontSize, 22);
-        expect(tx.titleS.fontFamily, 'Pretendard');
+        expect(tx.titleS.fontFamily, 'RunmagochiSans');
         expect(tx.titleS.height, closeTo(28 / 22, 1e-9));
       }
       final a = AppText.withColor(AppColors.light.ink);

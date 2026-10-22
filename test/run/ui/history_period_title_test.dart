@@ -12,7 +12,7 @@ import 'package:runmagochi/run/ui/history_screen.dart';
 import 'fakes.dart';
 
 // 작업 15(작업 14 리뷰): 기록의 기간 문구는 13 아래로 줄지 않고 줄바꿈·말줄임 없이 한 줄로
-// 읽힌다. 글자 폭이 실제와 같아야 해서 이 파일은 앱 글꼴(Pretendard)을 불러 잰다.
+// 읽힌다. 글자 폭이 실제와 같아야 해서 이 파일은 앱 글꼴(RunmagochiSans)을 불러 잰다.
 
 Future<void> _pump(WidgetTester tester, Size size, double scale) async {
   tester.view.physicalSize = size;
@@ -46,9 +46,9 @@ double _shownSize(WidgetTester tester, Finder text, double base) =>
 
 void main() {
   setUpAll(() async {
-    final bytes = File('assets/fonts/PretendardVariable.ttf').readAsBytesSync();
+    final bytes = File('assets/fonts/RunmagochiSans.ttf').readAsBytesSync();
     await (FontLoader(
-      'Pretendard',
+      'RunmagochiSans',
     )..addFont(Future.value(ByteData.sublistView(bytes)))).load();
   });
 

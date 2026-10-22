@@ -18,9 +18,9 @@ r"""앱 글꼴(Pretendard 가변)을 앱에 필요한 글자만 남긴 서브셋
      KS X 1001 한글 2,350자 + 한글 호환 자모 + 영문·숫자(ASCII)·Latin-1 + 자주 쓰는 기호
      + lib/**.dart 에 나오는 모든 글자(문자열 리터럴·알림·음성 문구를 포함하도록 파일 전체를 본다).
   2. 원본 전체 글꼴 tool/fonts/PretendardVariable.ttf 를 이 목록으로 서브셋해
-     assets/fonts/PretendardVariable.ttf 에 쓴다. 굵기 축(wght)·글리프 변형·조판 기능(tnum 등)은 유지한다.
+     assets/fonts/RunmagochiSans.ttf 에 쓴다. 굵기 축(wght)·글리프 변형·조판 기능(tnum 등)은 유지한다.
   3. OFL 3조(Reserved Font Name "Pretendard")에 따라 서브셋 글꼴 내부 이름을 Runmagochi Sans 로 바꾼다.
-     저작권·라이선스·제작자 정보는 그대로 둔다. 앱은 pubspec 의 family 이름으로 부르므로 코드는 그대로다.
+     저작권·라이선스·제작자 정보는 그대로 둔다. 파일 이름과 앱의 family 이름(pubspec)도 RunmagochiSans 다.
 
 lib 문구에 새 글자를 쓰면 test/tool/font_chars_test.dart 가 실패한다. 그때 이 스크립트를 다시 실행한다.
 """
@@ -34,7 +34,7 @@ from fontTools.ttLib import TTFont
 
 ROOT = Path(__file__).resolve().parent.parent
 SOURCE = ROOT / "tool/fonts/PretendardVariable.ttf"
-TARGET = ROOT / "assets/fonts/PretendardVariable.ttf"
+TARGET = ROOT / "assets/fonts/RunmagochiSans.ttf"
 CHARS = ROOT / "tool/font_chars.txt"
 
 NEW_FAMILY = "Runmagochi Sans"

@@ -451,9 +451,10 @@ class AppColors extends ThemeExtension<AppColors> {
   }
 }
 
-const _font = 'Pretendard';
+/// 앱 글꼴 가족: Pretendard 서브셋(OFL 예약 글꼴 이름 때문에 이름을 바꿨다, pubspec 참고).
+const _font = 'RunmagochiSans';
 
-/// [size]·[line](줄 높이 px)·[w] 로 Pretendard 스타일을 만든다.
+/// [size]·[line](줄 높이 px)·[w] 로 앱 글꼴 스타일을 만든다.
 /// [tracking] 은 em 단위 자간, [numbers] 면 고정폭 숫자(tnum).
 TextStyle _s(
   double size,

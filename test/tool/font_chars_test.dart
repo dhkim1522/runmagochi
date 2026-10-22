@@ -4,7 +4,7 @@ import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
 
-// 앱 글꼴(assets/fonts/PretendardVariable.ttf)은 tool/font_chars.txt 의 글자만 남긴 서브셋이다.
+// 앱 글꼴(assets/fonts/RunmagochiSans.ttf, Pretendard 서브셋)은 tool/font_chars.txt 의 글자만 남긴 서브셋이다.
 // lib 문구에 새 글자를 쓰고 글자 목록·글꼴을 다시 만들지 않으면 실패한다.
 void main() {
   const hint = '`tool/subset_fonts.py` 로 글자 목록과 글꼴을 다시 만드세요(실행 방법은 스크립트 맨 위)';
@@ -14,7 +14,7 @@ void main() {
       .where((r) => r >= 0x20) // 줄바꿈(Windows 의 CR 포함)은 뺀다.
       .toSet();
   final fontBytes = File(
-    'assets/fonts/PretendardVariable.ttf',
+    'assets/fonts/RunmagochiSans.ttf',
   ).readAsBytesSync();
   final font = _Ttf(fontBytes);
 

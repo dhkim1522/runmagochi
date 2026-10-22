@@ -92,12 +92,12 @@ flutter:
     - assets/badges/
 
   fonts:
-    # Pretendard v1.3.9 가변 글꼴, SIL OFL (assets/fonts/OFL-Pretendard.txt). 네트워크 없이 동작하도록 번들한다.
-    # 앱에 쓰는 글자만 남긴 서브셋이다(굵기 축 유지, 내부 이름 Runmagochi Sans). 원본은 tool/fonts/,
-    # 다시 만들기는 tool/subset_fonts.py.
-    - family: Pretendard
+    # Pretendard v1.3.9 가변 글꼴의 서브셋, SIL OFL (assets/fonts/OFL-Pretendard.txt). 네트워크 없이 동작하도록 번들한다.
+    # 앱에 쓰는 글자만 남겼다(굵기 축 유지). OFL 예약 글꼴 이름 조항에 따라 파일·가족·내부 이름을
+    # RunmagochiSans(Runmagochi Sans)로 바꿨다. 원본은 tool/fonts/, 다시 만들기는 tool/subset_fonts.py.
+    - family: RunmagochiSans
       fonts:
-        - asset: assets/fonts/PretendardVariable.ttf
+        - asset: assets/fonts/RunmagochiSans.ttf
 
   # To add assets to your application, add an assets section, like this:
   # assets:

@@ -503,15 +503,15 @@ GrowthGain _gain({bool levelUp = true}) => GrowthGain(
   newBadges: const ['goals_30'],
 );
 
-/// 시안 c 배치(작업 13). 글자 높이를 재므로 Pretendard 를 읽는다.
+/// 시안 c 배치(작업 13). 글자 높이를 재므로 앱 글꼴(RunmagochiSans)을 읽는다.
 void layoutTests() {
   group('시안 배치(작업 13)', () {
     setUpAll(() async {
       final font = File(
-        'assets/fonts/PretendardVariable.ttf',
+        'assets/fonts/RunmagochiSans.ttf',
       ).readAsBytesSync();
       await (FontLoader(
-        'Pretendard',
+        'RunmagochiSans',
       )..addFont(Future.value(ByteData.sublistView(font)))).load();
     });
 

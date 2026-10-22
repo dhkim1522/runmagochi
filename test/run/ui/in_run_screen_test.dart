@@ -525,10 +525,10 @@ void main() {
     // 실제 글자 폭으로 배치를 잰다(테스트 기본 글꼴은 모든 글자가 정사각형이다).
     setUpAll(() async {
       final font = File(
-        'assets/fonts/PretendardVariable.ttf',
+        'assets/fonts/RunmagochiSans.ttf',
       ).readAsBytesSync();
       await (FontLoader(
-        'Pretendard',
+        'RunmagochiSans',
       )..addFont(Future.value(ByteData.sublistView(font)))).load();
     });
 

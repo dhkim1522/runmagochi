@@ -48,9 +48,9 @@ direction-c 이름과 토큰: `lime` = `primary`, `green` = `primary-deep`·`suc
 
 ## 글자
 
-- **Pretendard**(SIL OFL, v1.3.9 가변 글꼴) 한 가족. `assets/fonts/PretendardVariable.ttf`, 라이선스 `assets/fonts/OFL-Pretendard.txt`.
+- **Pretendard**(SIL OFL, v1.3.9 가변 글꼴) 한 가족. 앱에는 서브셋 `assets/fonts/RunmagochiSans.ttf` 를 번들하고, 라이선스는 `assets/fonts/OFL-Pretendard.txt`.
   - 번들 파일은 KS X 1001 한글 2,350자 + 영문·숫자·Latin-1·기호 + `lib` 에 쓰인 모든 글자만 남긴 서브셋이다(굵기 축 유지, 약 1.1MB). 목록은 `tool/font_chars.txt`, 원본 전체 글꼴은 `tool/fonts/`, 다시 만들기는 `tool/subset_fonts.py`(실행 방법은 맨 위 주석).
-  - OFL 예약 글꼴 이름(Pretendard) 조항에 따라 서브셋의 내부 글꼴 이름은 `Runmagochi Sans` 다. 앱 코드의 family 이름(`Pretendard`)은 그대로다.
+  - OFL 예약 글꼴 이름(Pretendard) 조항에 따라 고친(서브셋) 글꼴은 이름에 Pretendard 를 쓰지 않는다: 파일 `RunmagochiSans.ttf`, Flutter family `RunmagochiSans`, 내부 글꼴 이름 `Runmagochi Sans`(작업 18). 수정하지 않은 원본 `tool/fonts/PretendardVariable.ttf` 는 이름 그대로다. 디자인 시스템 아티팩트·시안(웹)은 원본 Pretendard 를 쓴다.
   - 문구에 새 글자를 쓰면 `test/tool/font_chars_test.dart` 가 실패한다. 스크립트를 다시 실행한다. 목록 밖 글자(예: 사용자가 입력한 드문 한글)는 기기 시스템 글꼴로 보인다.
 - 앱에서는 `fontWeight` 와 같은 `wght` FontVariation 을 함께 지정한다(가변 글꼴).
 - 숫자(`distance-xl`·`number-l`·`stat`): 800, 고정폭 숫자, 자간 -0.04em·-0.03em·-0.02em.
