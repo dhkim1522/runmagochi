@@ -156,6 +156,7 @@
 
 - [ ] 18. 정리
   - 고른 안을 `design/character/`·`design/mockups/`(`phase-6-screens/` 스크린샷, README 갱신)·`docs/design/tokens.json` 에 반영하고 `design/candidates/` 와 후보 도구 코드(`tool/sprites/candidates/`, `tool/render_candidates.dart`, 해당 테스트)를 지운다.
+  - 캐릭터 에셋 카탈로그 아티팩트(https://claude.ai/artifact/ECbG2Fh4TXQwcr5fNUWCXA, 원본 `design/character/asset-catalog.html`)를 최종 그림으로 다시 올린다
   - 문서: `docs/design/design-system.md`, `docs/specs/sprite-spec.md`(만드는 방법·배지), `docs/screens.md`, `docs/tooling.md`(pixel-plugin 6-1 사용 시점을 "쓰지 않음(결정 0028)" 으로, Impeccable·Taste Skill 사용 기록), `CLAUDE.md` 문서 지도
   - 확인: `fvm dart analyze`, `fvm flutter test`
 
