@@ -97,7 +97,7 @@
   - 두 트랙은 파일이 겹치지 않아 동시에 진행한다.
   - 확인: 두 트랙 × 세 방향 모두 화면 3장, 폭 390 에서 가로 스크롤 없음
 
-- [ ] 8. 후보 비교
+- [x] 8. 후보 비교
   - Impeccable `critique` 로 6안을 같은 기준(한눈에 읽힘, 위계, 일관성, 접근성, AI 티)으로 비교한다. 결과 `design/candidates/ui/critique.md`.
   - 방향별로 두 트랙 안을 나란히 놓은 비교 페이지를 아티팩트로 만들어 링크를 준다.
   - 스킬: impeccable:impeccable, artifact-design
@@ -198,6 +198,7 @@
 - [ ] 실기기(Android·iPhone)에서 아이콘·스플래시·글꼴·화면 확인 (페이즈 7)
 
 ## 관문 기록
+- 관문 2 비교 페이지: https://claude.ai/artifact/F5MsvhPE9fAXw5YtCwe3Xc (critique `design/candidates/ui/critique.md`). 추천 b · 캔버스(27/30), 차선 a · 스킬(23). 결과: 대기
 - UI 후보 캔버스(트랙 2): https://claude.ai/artifact/FxKS7MR2twYmmE3k6SzNhe
 - 관문 1 투표 페이지(2026-10-22): https://claude.ai/artifact/SBshrAFUGtLfBbaLHQxMnb . 저장 기능 없음(db 아티팩트는 조직 내부 전용이라 외부 사람이 못 엶). 고르면 `런마고치 캐릭터: A/B/C` 문구가 나오고 사용자가 표를 모은다. 결과: **A 말랑 클레이 확정**(2026-10-22 사용자). 기준점은 지금 값(모자 y=18, 소품 y=20) 유지
 
