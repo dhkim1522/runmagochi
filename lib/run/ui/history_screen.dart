@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -179,6 +181,94 @@ class _PeriodTabs extends StatelessWidget {
   }
 }
 
+/// 기간 이동 줄: 양 끝 48 동그라미 화살표, 가운데 기간 문구(label, ink). 문구는 줄바꿈·
+/// 말줄임 없이 한 줄이고 13 아래로 줄지 않는다: 화살표 사이에서 13 아래로 줄어야 하면
+/// (좁은 화면·큰 글자) 문구를 화살표 줄 위 한 줄로 올린다.
+class _PeriodNav extends StatelessWidget {
+  const _PeriodNav({
+    required this.title,
+    required this.arrows,
+    required this.canGoNext,
+    required this.onPrev,
+    required this.onNext,
+  });
+
+  final String title;
+
+  /// 전체 기간은 화살표가 없다.
+  final bool arrows;
+  final bool canGoNext;
+  final VoidCallback onPrev;
+  final VoidCallback onNext;
+
+  /// 가장 작은 글자 크기(caption).
+  static const double _minFont = 13;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = AppColors.of(context);
+    final style = AppText.of(context).label.copyWith(color: c.ink);
+    final scaler = MediaQuery.textScalerOf(context);
+    Widget text() => FittedBox(
+      fit: BoxFit.scaleDown,
+      child: Text(title, maxLines: 1, style: style),
+    );
+    final prev = _ArrowButton(
+      key: const Key('stats-prev'),
+      icon: Icons.chevron_left,
+      label: '이전 기간',
+      onTap: onPrev,
+    );
+    final next = _ArrowButton(
+      key: const Key('stats-next'),
+      icon: Icons.chevron_right,
+      label: '다음 기간',
+      onTap: canGoNext ? onNext : null,
+    );
+    return LayoutBuilder(
+      builder: (context, box) {
+        final painter = TextPainter(
+          text: TextSpan(text: title, style: style),
+          textScaler: scaler,
+          textDirection: TextDirection.ltr,
+          maxLines: 1,
+        )..layout();
+        final natural = painter.width;
+        final font = scaler.scale(style.fontSize!);
+        painter.dispose();
+        // 화살표 사이에 들어가면 그려질 글자 크기.
+        final between = arrows
+            ? box.maxWidth - 2 * _ArrowButton.size - 2 * Gap.s2
+            : box.maxWidth - 2 * Gap.s2;
+        final shown = font * math.min(1, between / natural);
+        if (!arrows || shown >= _minFont) {
+          return Row(
+            children: [
+              if (arrows) prev,
+              Expanded(
+                child: Container(
+                  constraints: const BoxConstraints(minHeight: 48),
+                  padding: const EdgeInsets.symmetric(horizontal: Gap.s2),
+                  child: Center(child: text()),
+                ),
+              ),
+              if (arrows) next,
+            ],
+          );
+        }
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Center(child: text()),
+            const SizedBox(height: Gap.s2),
+            Row(children: [prev, const Spacer(), next]),
+          ],
+        );
+      },
+    );
+  }
+}
+
 class _StatsCard extends StatelessWidget {
   const _StatsCard({
     required this.stats,
@@ -218,36 +308,12 @@ class _StatsCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // 기간 이동 줄: 양 끝 48 동그라미 화살표, 가운데 기간.
-          Row(
-            children: [
-              if (period != StatsPeriod.all)
-                _ArrowButton(
-                  key: const Key('stats-prev'),
-                  icon: Icons.chevron_left,
-                  label: '이전 기간',
-                  onTap: onPrev,
-                ),
-              Expanded(
-                child: Container(
-                  constraints: const BoxConstraints(minHeight: 48),
-                  padding: const EdgeInsets.symmetric(horizontal: Gap.s2),
-                  child: Center(
-                    child: FittedBox(
-                      fit: BoxFit.scaleDown,
-                      child: Text(title, style: t.label.copyWith(color: c.ink)),
-                    ),
-                  ),
-                ),
-              ),
-              if (period != StatsPeriod.all)
-                _ArrowButton(
-                  key: const Key('stats-next'),
-                  icon: Icons.chevron_right,
-                  label: '다음 기간',
-                  onTap: canGoNext ? onNext : null,
-                ),
-            ],
+          _PeriodNav(
+            title: title,
+            arrows: period != StatsPeriod.all,
+            canGoNext: canGoNext,
+            onPrev: onPrev,
+            onNext: onNext,
           ),
           const SizedBox(height: Gap.s3),
           Row(
@@ -291,6 +357,8 @@ class _ArrowButton extends StatelessWidget {
     required this.onTap,
   });
 
+  static const double size = 48;
+
   final IconData icon;
   final String label;
   final VoidCallback? onTap;
@@ -315,7 +383,7 @@ class _ArrowButton extends StatelessWidget {
               shape: BoxShape.circle,
             ),
             child: SizedBox.square(
-              dimension: 48,
+              dimension: size,
               child: Icon(icon, color: c.ink),
             ),
           ),

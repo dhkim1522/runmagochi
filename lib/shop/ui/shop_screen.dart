@@ -165,90 +165,105 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
             ),
             const SizedBox(height: Gap.s4),
             Expanded(
-              child: SingleChildScrollView(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    // 무대: 장착 중인 것에 고른 아이템을 얹어 보여 준다(폭 전체 사각 무대).
-                    // 아이템 줄이 함께 보이게 러닝 중처럼 6배.
-                    LayoutBuilder(
-                      builder: (context, box) {
-                        final scale =
-                            PetStage.largestScale(
-                              max: 6,
-                              min: 3,
-                              fits: (s) =>
-                                  spriteFramePx * s + 2 * Gap.s4 <=
-                                  box.maxWidth,
-                            ) ??
-                            3;
-                        final stage = PetStage(
-                          key: const ValueKey('shop-stage'),
-                          scale: scale,
-                          groundHeight: Stage.groundHeightCompact,
-                          pet: AvatarView(
-                            key: const ValueKey('shop-stage-avatar'),
-                            kind: g.kind,
-                            stage: g.stage,
-                            mood: g.mood,
-                            action: AvatarAction.idle,
+              // 스크롤 칸 높이로 무대 배율을 고른다(무대는 칸의 절반까지).
+              child: LayoutBuilder(
+                builder: (context, viewport) => SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      // 무대: 장착 중인 것에 고른 아이템을 얹어 보여 준다(폭 전체 사각 무대).
+                      // 아이템 줄이 함께 보이게 러닝 중처럼 6배까지. 작은 화면·큰 글자에서는
+                      // 스크롤 칸의 절반을 넘지 않는 가장 큰 배율로 줄여 아이템 카드가 첫
+                      // 화면에 보이게 한다(작업 15).
+                      LayoutBuilder(
+                        builder: (context, box) {
+                          double height(int s) =>
+                              spriteFramePx * s +
+                              Stage.groundHeightCompact -
+                              Stage.footSink -
+                              spriteFootGapRows * s +
+                              Gap.s3;
+                          final scale =
+                              PetStage.largestScale(
+                                max: 6,
+                                min: 3,
+                                fits: (s) =>
+                                    spriteFramePx * s + 2 * Gap.s4 <=
+                                        box.maxWidth &&
+                                    height(s) <= viewport.maxHeight / 2,
+                              ) ??
+                              3;
+                          final stage = PetStage(
+                            key: const ValueKey('shop-stage'),
                             scale: scale,
-                            hatItemId: _slot == ItemSlot.hat
-                                ? selected.id
-                                : equipped.hatItemId,
-                            accessoryItemId: _slot == ItemSlot.accessory
-                                ? selected.id
-                                : equipped.accessoryItemId,
-                          ),
-                        );
-                        return SizedBox(
-                          height:
-                              spriteFramePx * scale + stage.petBottom + Gap.s3,
-                          child: stage,
-                        );
-                      },
-                    ),
-                    const SizedBox(height: Gap.s4),
-                    ChipRow(
-                      children: [
-                        _slotTab('모자', ItemSlot.hat),
-                        _slotTab('소품', ItemSlot.accessory),
-                      ],
-                    ),
-                    const SizedBox(height: Gap.s4),
-                    for (var i = 0; i < _items.length; i += 2)
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: Gap.s3),
-                        child: IntrinsicHeight(
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              for (var j = i; j < i + 2; j++) ...[
-                                if (j > i) const SizedBox(width: Gap.s3),
-                                Expanded(
-                                  child: j < _items.length
-                                      ? _ItemCard(
-                                          item: _items[j],
-                                          kind: g.kind,
-                                          stage: g.stage,
-                                          mood: g.mood,
-                                          chosen: _items[j].id == selected.id,
-                                          owned: owned.contains(_items[j].id),
-                                          worn:
-                                              _equippedId(equipped, _slot) ==
-                                              _items[j].id,
-                                          onTap: () => setState(
-                                            () => _picked[_slot] = _items[j].id,
-                                          ),
-                                        )
-                                      : const SizedBox.shrink(),
-                                ),
+                            groundHeight: Stage.groundHeightCompact,
+                            pet: AvatarView(
+                              key: const ValueKey('shop-stage-avatar'),
+                              kind: g.kind,
+                              stage: g.stage,
+                              mood: g.mood,
+                              action: AvatarAction.idle,
+                              scale: scale,
+                              hatItemId: _slot == ItemSlot.hat
+                                  ? selected.id
+                                  : equipped.hatItemId,
+                              accessoryItemId: _slot == ItemSlot.accessory
+                                  ? selected.id
+                                  : equipped.accessoryItemId,
+                            ),
+                          );
+                          return SizedBox(
+                            height:
+                                spriteFramePx * scale +
+                                stage.petBottom +
+                                Gap.s3,
+                            child: stage,
+                          );
+                        },
+                      ),
+                      const SizedBox(height: Gap.s4),
+                      ChipRow(
+                        children: [
+                          _slotTab('모자', ItemSlot.hat),
+                          _slotTab('소품', ItemSlot.accessory),
+                        ],
+                      ),
+                      const SizedBox(height: Gap.s4),
+                      for (var i = 0; i < _items.length; i += 2)
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: Gap.s3),
+                          child: IntrinsicHeight(
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                for (var j = i; j < i + 2; j++) ...[
+                                  if (j > i) const SizedBox(width: Gap.s3),
+                                  Expanded(
+                                    child: j < _items.length
+                                        ? _ItemCard(
+                                            item: _items[j],
+                                            kind: g.kind,
+                                            stage: g.stage,
+                                            mood: g.mood,
+                                            chosen: _items[j].id == selected.id,
+                                            owned: owned.contains(_items[j].id),
+                                            worn:
+                                                _equippedId(equipped, _slot) ==
+                                                _items[j].id,
+                                            onTap: () => setState(
+                                              () =>
+                                                  _picked[_slot] = _items[j].id,
+                                            ),
+                                          )
+                                        : const SizedBox.shrink(),
+                                  ),
+                                ],
                               ],
-                            ],
+                            ),
                           ),
                         ),
-                      ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ),

@@ -65,7 +65,65 @@ Map<String, String> stagePaths(WidgetTester tester) => tester
 AppButton bottomButton(WidgetTester tester) =>
     tester.widget<AppButton>(find.byKey(const ValueKey('shop-action')));
 
+/// 작업 15(작업 14 리뷰): 작은 화면·큰 글자에서도 아이템 카드가 첫 화면에 보인다.
+void smallScreenTests() {
+  for (final dark in [false, true]) {
+    testWidgets(
+      '360×640 글자 1.3배 + 탭바: 무대는 스크롤 칸 절반 이하, 첫 아이템 카드가 보인다 (${dark ? '다크' : '라이트'})',
+      (tester) async {
+        tester.view.physicalSize = const Size(360, 640);
+        tester.view.devicePixelRatio = 1;
+        addTearDown(tester.view.reset);
+        await tester.pumpWidget(
+          ProviderScope(
+            overrides: [
+              shopRepositoryProvider.overrideWithValue(FakeShop(const [], 80)),
+              runRepositoryProvider.overrideWithValue(FakeRepo((0, 0))),
+              growthServiceProvider.overrideWithValue(
+                FakeGrowthService(growthState()),
+              ),
+            ],
+            child: MaterialApp(
+              theme: dark ? appDarkTheme() : appLightTheme(),
+              builder: (context, child) => MediaQuery(
+                data: MediaQuery.of(
+                  context,
+                ).copyWith(textScaler: const TextScaler.linear(1.3)),
+                child: child!,
+              ),
+              home: Scaffold(
+                body: const ShopScreen(),
+                bottomNavigationBar: AppTabBar(
+                  tabs: const [
+                    AppTab(TabGlyph.run, '러닝'),
+                    AppTab(TabGlyph.shop, '상점'),
+                  ],
+                  index: 1,
+                  onSelected: (_) {},
+                ),
+              ),
+            ),
+          ),
+        );
+        await settle(tester);
+        expect(tester.takeException(), isNull);
+        final viewport = tester.getRect(find.byType(SingleChildScrollView));
+        final stage = tester.getRect(find.byKey(const ValueKey('shop-stage')));
+        expect(stage.height, lessThanOrEqualTo(viewport.height / 2));
+        final scale = tester
+            .widget<AvatarView>(find.byKey(const ValueKey('shop-stage-avatar')))
+            .scale;
+        expect(scale, greaterThanOrEqualTo(3));
+        final card = tester.getRect(find.byKey(const ValueKey('item-cap')));
+        // 카드 윗부분(작은 무대 대부분)이 스크롤 없이 보인다.
+        expect(viewport.bottom - card.top, greaterThanOrEqualTo(72));
+      },
+    );
+  }
+}
+
 void main() {
+  smallScreenTests();
   _designTests();
   testWidgets('제목, 코인 칩, 모자 3개와 가격이 보인다', (tester) async {
     await pumpShop(tester, FakeShop(const [], 1240));
