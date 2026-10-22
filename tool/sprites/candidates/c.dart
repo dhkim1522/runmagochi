@@ -7,13 +7,13 @@ import '../sprite_data.dart';
 import 'candidate.dart';
 
 const Palette _palette = {
-  'o': 0xFFE0952A, // 몸 테두리 (몸색보다 어둡게)
+  'o': 0xFFC97C12, // 몸 테두리 (몸색보다 어둡게)
   'm': 0xFFFFD75E, // 병아리
   'k': 0xFF5B3A1E, // 눈·팔다리 선
   'p': 0xFFFFAFA3, // 볼
   'b': 0xFFFF8A3D, // 부리
   'y': 0xFFFFEFD5, // 알·껍데기
-  'Y': 0xFFD9A35F, // 알 테두리
+  'Y': 0xFFB98242, // 알 테두리
   'r': 0xFFF97316, // 러닝화 (primary)
   'R': 0xFFC2410C, // 러닝화 밑창
   'a': 0xFF2563EB, // 헤어밴드·손목 밴드 (accent)
@@ -33,8 +33,9 @@ const _face = FaceArt(
   },
 );
 
-// 막대 팔: 몸 옆에서 비스듬히 내려온다. 밴드는 손끝.
-List<String> _arm({bool band = false}) => ['..k', '.k.', band ? 'a..' : 'k..'];
+// 막대 팔: 몸 옆에서 비스듬히 내려온다. 밴드는 손목에 2px, 그 아래 손끝.
+List<String> _arm({bool band = false}) =>
+    band ? ['..k', '.k.', 'aa.', 'k..'] : ['..k', '.k.', 'k..'];
 
 // 막대 다리 + 납작한 러닝화(발끝이 바깥쪽).
 const List<String> _foot = ['..k.', '..k.', '..k.', 'rrrr', 'RRRR'];
@@ -181,7 +182,6 @@ final candidateC = Candidate(
           '..DddddddddddddddD..',
           '...oommmmEEmmmmoo...',
           '.....oooEweEooo.....',
-          '........EeeE........',
           '.........EE.........',
         ]),
         squashRow: 21,

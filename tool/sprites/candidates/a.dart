@@ -23,6 +23,7 @@ const Palette _palette = {
   'a': 0xFF2563EB, // 헤어밴드·손목 밴드 (accent)
   'A': 0xFF60A5FA, // 밴드 하이라이트
   'd': 0xFFDC2626, // 메달 끈
+  'D': 0xFF991B1B, // 메달 끈 그림자
   'e': 0xFFFDE047, // 메달
   'E': 0xFFA16207, // 메달 테두리
 };
@@ -182,9 +183,10 @@ final candidateA = Candidate(
           'ommmmmmmmmmmmmmmmmMo',
           'ommmmmmmbbbbmmmmmmMo',
           'ommmmmmmmBBmmmmmmMMo',
-          'oMmmmmmmdEEdmmmmmMMo',
-          '.oMMmmmmEweEmmmmMMo.',
-          '..ooooooEeeEoooooo..',
+          'oMmmmmmmmmmmmmmmmMMo',
+          '.oddddddddddddddDDo.',
+          '..ooooooEweEoooooo..',
+          '........EeeE........',
           '.........EE.........',
         ]),
         squashRow: 24,

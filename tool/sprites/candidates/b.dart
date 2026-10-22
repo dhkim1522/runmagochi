@@ -45,7 +45,7 @@ List<String> _arm({bool band = false}) => [
   '.oo',
 ];
 
-const List<String> _shoe = ['.oooo.', 'orrrwo', 'oooooo'];
+const List<String> _shoe = ['rrrrrr', 'rrrrwr', 'oooooo'];
 
 // 다마고치처럼 통통 튄다: 뜰 때 머리 2px, 팔을 번갈아 흔들고 발을 번갈아 든다.
 // 숨쉬기·달리기 모두 k ≤ 0 (눌림은 squashRow 의 메달 끈을 지운다).
