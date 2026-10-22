@@ -124,7 +124,7 @@
   - 테스트: 기존 화면 테스트 통과, 360×640·글자 1.3배 넘침 없음, 다크 테마
   - 확인: `fvm flutter test test/run`
 
-- [ ] 13. 요약·경로 페이스 색·공유 카드
+- [x] 13. 요약·경로 페이스 색·공유 카드
   - 요약 화면 개편(`summary_screen.dart`, `split_pace_chart.dart`).
   - 경로 색: 경로 점을 누적 거리로 1km 구간에 나누고, 구간 페이스를 이 러닝의 가장 느린·빠른 구간 사이에서 3단 색으로 칠한다. 구간이 1개 이하이거나 모든 구간이 같으면 한 색(`primary-deep`, 결정 0029 뒤 이름). 빠른 이동 구간은 `ink-muted`.
     - `List<RouteSegment> routePaceSegments(List<(double, double)> points, List<Split> splits)` — `lib/run/domain/route_pace.dart`(새 파일), `RouteSegment { List<(double, double)> points; RoutePace pace; }`, `enum RoutePace { slow, mid, fast, fastMove, single }`
