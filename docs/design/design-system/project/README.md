@@ -28,7 +28,9 @@
 | 초록 | `primary-deep` | 강조 글자, 경험치 +, 레벨 업!, 진행·구간 막대 채움, 글자 버튼 |
 | 코인 | `coin`, 그림 안 별 `on-coin` | 코인 +N, 코인 그림 |
 | 무대 | `stage-sky` · `stage-ground` · `stage-ground-line`, 무대 위 글자 `stage-ink` | 사각 무대 두 겹 |
-| 경로 페이스 | `pace-slow` 파랑 · `pace-mid` 초록 · `pace-fast` 주황 | 느림·보통·빠름. 빠른 이동 구간은 `ink-muted` |
+| 말풍선 | `bubble` + `ink` | 무대 위 말풍선 판·꼬리. 라이트는 흰색, 다크는 하늘보다 밝은 판(다크 `surface` 는 하늘에 묻힌다) |
+| 경로 페이스 | `pace-slow` 파랑 · `pace-mid` 자주 · `pace-fast` 주황 | 느림·보통·빠름. 빠른 이동 구간은 `ink-muted` |
+| 문제 알림 | `danger` | 위치 신호 오류·저장 실패(`NoticeCard`)에만 |
 
 ## 선택 표시는 하나
 
@@ -40,7 +42,7 @@
 
 ## 글자
 
-- **Pretendard**(SIL OFL, v1.3.9 가변 글꼴) 한 가족. 앱은 `assets/fonts/PretendardVariable.ttf` 를 번들한다(앱에 쓰는 글자만 남긴 서브셋, `tool/subset_fonts.py`).
+- **Pretendard**(SIL OFL, v1.3.9 가변 글꼴) 한 가족. 이 시스템의 견본은 원본 Pretendard 를 쓴다. 앱은 앱에 쓰는 글자만 남긴 서브셋을 번들하고, OFL 예약 글꼴 이름 조항에 따라 그 서브셋은 `RunmagochiSans`(파일 `assets/fonts/RunmagochiSans.ttf`, 내부 이름 Runmagochi Sans)라고 부른다. 모양은 같다.
 - 숫자: 800, 자간 -0.02em(거리 128 은 -0.04em, 64 는 -0.03em), 고정폭 숫자(tnum).
 - 크기: `distance-xl` 128 (러닝 중 거리) · `number-l` 64 (요약 거리·카운트다운) · `title` 26 (화면 제목·이름·레벨) · `stat`·`button`·`title-s` 22 (지표 값·버튼·단위) · `heading`·`body` 17 · `label` 14 · `caption` 13. **13 아래 없음.**
 
@@ -50,13 +52,15 @@
 - 칩·분할 선택: 높이 48 알약.
 - 진행 막대: 높이 12 알약, 채움 `primary-deep`, 트랙 `surface-soft`.
 - 카드: `radius-lg` 24(작은 카드 `radius-md` 20, 마스코트 판 `radius-xl` 28), 안쪽 여백 `space-5`.
-- 말풍선: 흰 카드 + 아래 작은 꼬리, `radius-md`. 문구는 기존 문구만(`다음 레벨까지 6.0km`).
+- 말풍선: `bubble` 판 + 아래 작은 꼬리, `radius-md`, 글자 `label` 14/700 한 줄. 문구는 기존 문구만(`다음 레벨까지 6.0km`).
+- 동그라미 버튼: 48 흰 동그라미 + `ink` 아이콘 24(뒤로·설정).
+- 빈 상태: 흰 카드 가운데 앱 그림(40) + `ink-muted` 문구. 불러오기 실패도 같은 카드에 느낌표 동그라미(`danger` 아님).
 - 간격: 좌우 `space-5` 20, 카드 사이 `space-3` 12, 섹션 사이 `space-7` 28.
 
 ## 사각 무대
 
 - 폭 전체, 모서리 `radius-lg`(카드 안 `radius-md`). 하늘 `stage-sky` 위에 땅 띠 `stage-ground`, 땅 윗선 `stage-ground-line` 4px.
-- 땅 띠 높이(윗선 포함) `stage-ground-height` 56(8배 캐릭터), 러닝 중 `stage-ground-height-compact` 40(6배).
+- 땅 띠 높이(윗선 포함) `stage-ground-height` 56(8배 캐릭터), 러닝 중 `stage-ground-height-compact` 40(6배), 카드 안 작은 무대 `stage-ground-height-mini` 24(2~3배, 모서리 `radius-sm`, 상점 아이템 카드·성장 단계 줄).
 - 캐릭터 발끝은 땅 윗선 아래로 `stage-foot-sink` 8px 묻힌다. 정수 배율, 보간 없음.
 - 배경 아이템은 하늘·땅 겹 단위로 바꾼다(겹마다 토큰이 따로 있는 까닭).
 - 다크: 스프라이트 둘레를 `sprite-rim` 1픽셀로 둘러 어두운 캐릭터(도토리 등)가 무대에 묻히지 않게 한다. 라이트는 그리지 않는다.
@@ -68,10 +72,11 @@
 
 ## 경로 페이스 색
 
-- 이 러닝의 가장 느린·빠른 1km 구간 사이를 3단으로 나눠 칠한다: `pace-slow` 파랑, `pace-mid` 초록, `pace-fast` 주황.
-- 초록 안에서 밝기만 바꾸지 않았다. 세 색은 적색맹·녹색맹·청색맹 흉내(Machado 2009)에서도 서로 ΔE76 19 이상 떨어지고, 흰 카드 위 3:1 이상이다.
+- 이 러닝의 가장 느린·빠른 1km 구간 사이를 3단으로 나눠 칠한다: `pace-slow` 파랑, `pace-mid` 자주, `pace-fast` 주황.
+- 처음 고른 초록·주황은 적색맹 흉내에서 헷갈려 바꿨다. 파랑·주황은 적·녹 색각 이상에서도 남는 파랑–노랑 축으로 떨어지고, 자주는 밝기를 크게 달리했다(라이트 가장 어둡게, 다크 가장 밝게). 세 색과 빠른 이동 `ink-muted` 넷이 정상·적·녹·청 색각 이상(Machado 2009) 모두에서 서로 CIEDE2000 15 이상, `surface`·`background` 위 3:1 이상이다.
 - 구간이 1개 이하이거나 모두 같으면 한 색 `primary-deep`. 빠른 이동 구간은 `ink-muted`.
-- 색만으로 뜻을 전하지 않는다: 경로 카드 아래 범례(느림·보통·빠름)를 둔다.
+- 시작 점은 연두 + `primary-edge` 경계, 끝 점은 `ink` + `surface` 고리.
+- 색만으로 뜻을 전하지 않는다: 경로 카드 아래 범례(`느림`·`보통`·`빠름`·`빠른 이동`, 있는 색만)를 둔다.
 
 ## 움직임
 
@@ -85,7 +90,7 @@
 | `curve-standard` | easeInOutCubic | 제자리 상태 변화 |
 | `curve-pop` | easeOutBack | 보상 튀어 오름 |
 
-시스템 "애니메이션 줄이기" 가 켜져 있으면 움직임을 빼고 바로 최종 상태를 보인다.
+시스템 "애니메이션 줄이기" 가 켜져 있으면 움직임을 빼고 바로 최종 상태를 보인다. 누름도 `duration-press` 만큼 붙잡지 않고 누른 동안만 눌린 모양이다.
 
 ## 다크 모드
 
@@ -100,3 +105,20 @@
 ## 앱 코드
 
 `lib/core/theme.dart` 가 이 토큰만 읽는다: `AppColors`(색), `AppText`(글자), `Gap`·`Radii`·`Borders`·`Stage`·`Motion`. 토큰 원본은 저장소 `docs/design/tokens.json`.
+
+공통 컴포넌트는 `lib/core/ui/components.dart` 에 있다. 이 시스템의 견본과 이름이 이렇게 맞는다.
+
+| 견본 | 앱 컴포넌트 |
+| --- | --- |
+| Button | `AppButton`(기본·`.secondary`·`.panel`), 누름 `Pressable` |
+| CircleIconButton | `CircleIconButton` |
+| Chip | `AppChip`·`ChipRow` |
+| Card · StatsCard | `AppCard`, `StatsCard` + `StatCard.cell` |
+| ProgressBar | `ProgressBar` |
+| Coin | `CoinIcon`, 코인 칩 `CoinChip` |
+| Stage · SpeechBubble | `PetStage`·`StageGround`, `SpeechBubble` |
+| EmptyState · NoticeCard | `EmptyState`(`.error`), `NoticeCard` |
+| RoutePace | `RoutePainter`·`RoutePaceLegend` |
+| TabBar | `AppTabBar`·`TabIcon` |
+
+화면별 구성은 저장소 `docs/screens.md` "화면 디자인", 구현 스크린샷은 `design/mockups/phase-6-screens/`.

@@ -1,0 +1,25 @@
+<!-- @dsCard group="Actions" height=150 subtitle="48 흰 동그라미, 뒤로·설정·기간 이동" -->
+<style>
+body{margin:0;background:var(--background);color:var(--ink);font-family:var(--font-sans,"Pretendard",system-ui,sans-serif)}
+.row{display:flex;flex-wrap:wrap;gap:20px;align-items:center;padding:20px}
+.col{display:flex;flex-direction:column;align-items:center;gap:8px}
+.cap{font-size:13px;line-height:18px;font-weight:600;color:var(--ink-muted)}
+.cb{width:48px;height:48px;border-radius:50%;border:0;background:var(--surface);color:var(--ink);display:grid;place-items:center;cursor:pointer;padding:0;transition:transform 80ms cubic-bezier(.645,.045,.355,1)}
+.cb:active{transform:scale(.97)}
+.cb.soft{background:var(--surface-soft)}
+.cb:disabled{opacity:.5;cursor:default}
+.cb:focus-visible{outline:3px solid var(--primary-deep);outline-offset:2px}
+.card{background:var(--surface);border-radius:24px;padding:16px 20px;display:flex;gap:16px;align-items:center}
+svg{fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.t{font-size:17px;line-height:24px;font-weight:700;font-variant-numeric:tabular-nums}
+@media (prefers-reduced-motion:reduce){.cb{transition:none}}
+</style>
+<div class="row">
+  <div class="col"><button class="cb" aria-label="뒤로"><svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5"/><path d="M11 6l-6 6 6 6"/></svg></button><span class="cap">뒤로</span></div>
+  <div class="col"><button class="cb" aria-label="설정"><svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1"/></svg></button><span class="cap">설정</span></div>
+  <div class="card">
+    <button class="cb soft" aria-label="이전 기간"><svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg></button>
+    <span class="t">10월 19일 ~ 10월 25일</span>
+    <button class="cb soft" aria-label="다음 기간" disabled><svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></button>
+  </div>
+</div>

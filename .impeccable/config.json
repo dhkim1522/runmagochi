@@ -2,6 +2,25 @@
   "detector": {
     "ignoreRules": [],
     "ignoreFiles": [],
-    "ignoreValues": []
+    "ignoreValues": [
+      {
+        "rule": "low-contrast",
+        "value": "*",
+        "files": [
+          "design/character/asset-catalog.html"
+        ],
+        "createdAt": "2026-10-22T07:48:28.968Z",
+        "reason": "정적 검사가 라이트·다크 토큰 값을 섞어 짝지음(예: 다크 surface 위 기본 검정). 실제 짝은 tokens.json 값이고 대비는 theme_test 가 라이트·다크 모두 확인"
+      },
+      {
+        "rule": "cramped-padding",
+        "value": "*",
+        "files": [
+          "design/character/asset-catalog.html"
+        ],
+        "createdAt": "2026-10-22T07:48:28.974Z",
+        "reason": "table-wrap 은 스크롤 상자이고 안쪽 th·td 가 11px 16px 여백을 가진다"
+      }
+    ]
   }
 }

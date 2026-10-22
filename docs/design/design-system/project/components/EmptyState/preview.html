@@ -1,0 +1,17 @@
+<!-- @dsCard group="Feedback" height=280 subtitle="앱 그림 + ink-muted 문구, 실패도 벌주지 않게" -->
+<style>
+body{margin:0;background:var(--background);color:var(--ink);font-family:var(--font-sans,"Pretendard",system-ui,sans-serif)}
+.row{display:flex;flex-wrap:wrap;gap:12px;padding:20px;align-items:flex-start}
+.card{background:var(--surface);border-radius:24px;padding:32px 20px;width:260px;box-sizing:border-box;display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center}
+.msg{margin:0;font-size:17px;line-height:24px;font-weight:500;color:var(--ink-muted)}
+.muted{color:var(--ink-muted)}
+.line{fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.c-face{fill:var(--coin)}.c-ring{fill:none;stroke:var(--primary);stroke-width:2}.c-star{fill:var(--on-coin)}
+.btn{margin-top:8px;height:60px;padding:0 28px;border-radius:999px;background:var(--primary);color:var(--on-primary);border:2px solid var(--primary-edge);font:700 22px/28px var(--font-sans,"Pretendard",sans-serif);cursor:pointer}
+.btn:focus-visible{outline:3px solid var(--primary-deep);outline-offset:3px}
+</style>
+<div class="row">
+  <div class="card"><svg class="muted" width="40" height="40" viewBox="0 0 24 24" aria-hidden="true"><path class="line" d="M5 20v-6M12 20V6M19 20v-9M3 20h18"/></svg><p class="msg">아직 기록이 없어요</p></div>
+  <div class="card"><svg width="40" height="40" viewBox="0 0 26 26" aria-hidden="true"><circle class="c-face" cx="13" cy="13" r="12"/><circle class="c-ring" cx="13" cy="13" r="8"/><path class="c-star" d="M13 8.6l1.4 2.9 3.2.4-2.3 2.2.6 3.1-2.9-1.6-2.9 1.6.6-3.1-2.3-2.2 3.2-.4z"/></svg><p class="msg">달리면 코인이 쌓여요</p></div>
+  <div class="card"><svg class="muted" width="40" height="40" viewBox="0 0 24 24" aria-hidden="true"><circle class="line" cx="12" cy="12" r="9"/><path class="line" d="M12 7.5v5.5M12 16.5h.01"/></svg><p class="msg">내역을 불러오지 못했어요</p><button class="btn">다시 시도</button></div>
+</div>

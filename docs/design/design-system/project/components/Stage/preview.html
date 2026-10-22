@@ -1,4 +1,4 @@
-<!-- @dsCard group="Mascot" height=380 subtitle="하늘·땅 두 겹, 발 8px 묻힘" -->
+<!-- @dsCard group="Mascot" height=380 subtitle="하늘·땅 두 겹, 발 8px 묻힘, 카드 안 작은 무대" -->
 <style>
 body{margin:0;background:var(--background);color:var(--ink);font-family:var(--font-sans,"Pretendard",system-ui,sans-serif)}
 .row{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-start;padding:20px}
@@ -7,11 +7,16 @@ body{margin:0;background:var(--background);color:var(--ink);font-family:var(--fo
 .ground{position:absolute;left:0;right:0;bottom:0;height:56px;box-sizing:border-box;background:var(--stage-ground);border-top:4px solid var(--stage-ground-line)}
 .pet{position:relative;width:256px;height:256px;margin-bottom:32px;image-rendering:pixelated}
 .bubble{position:absolute;top:16px;right:16px;display:flex;flex-direction:column;align-items:flex-start}
-.bubble p{margin:0;background:var(--surface);border-radius:20px;padding:10px 16px;font-size:14px;line-height:20px;font-weight:700}
-.bubble i{width:14px;height:14px;margin:-8px 0 0 28px;background:var(--surface);transform:rotate(45deg);border-radius:0 0 4px 0}
+.bubble p{margin:0;background:var(--bubble);border-radius:20px;padding:10px 16px;font-size:14px;line-height:20px;font-weight:700}
+.bubble i{width:14px;height:14px;margin:-8px 0 0 28px;background:var(--bubble);transform:rotate(45deg);border-radius:0 0 4px 0}
 .layers{display:flex;flex-direction:column;gap:6px}
 .sw{display:flex;gap:8px;align-items:center;font-size:13px;font-weight:600;color:var(--ink-muted)}
 .sw b{width:28px;height:20px;border-radius:6px;display:block}
+.minis{display:flex;gap:8px;margin-top:10px;background:var(--surface);border-radius:20px;padding:12px}
+.mini{position:relative;width:140px;height:110px;border-radius:12px;overflow:hidden;background:var(--stage-sky);display:flex;align-items:flex-end;justify-content:center}
+.mini .ground{height:24px}
+.mini .pet{width:96px;height:96px;margin-bottom:10px}
+.mini.locked .pet{opacity:.45}
 </style>
 <div class="row">
   <div class="stage">
@@ -23,5 +28,10 @@ body{margin:0;background:var(--background);color:var(--ink);font-family:var(--fo
     <div class="sw"><b style="background:var(--stage-sky)"></b>stage-sky · 하늘 겹</div>
     <div class="sw"><b style="background:var(--stage-ground)"></b>stage-ground · 땅 겹</div>
     <div class="sw"><b style="background:var(--stage-ground-line)"></b>stage-ground-line · 윗선 4px</div>
+    <div class="minis">
+      <div class="mini"><div class="ground" aria-hidden="true"></div><img class="pet" alt="3단계 작은 무대" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAABoUlEQVR4nGNhGGDAMuqAUQeMOmDUAUPeAc4i7P9B9N43Pxnp7gCQ5bvvNDO4qtSSbQbJDoD5GJ84KaFBtANgFoB8jAz+3Olm2L6DD8739PgEVkusI4hyACyokS3FBUCOuX/uI0NWFXGOIOgAZMvxWYwMFI34Gaa1EecIoqOAWMtJBXgdAPM9OZYTGwqDvyCiVdAT7QB0wGr8isFFlAMl6+ETJ9sBuAockCWkiMPMwpUOsDoAW+JjvjELTG/fkQamGY+po+jZvuMmirq/GmlQcT4GFpVSUHGN1RE4QwBkOahAAaVmZANh4L/VTYYPPd/BbIESTrg4TB1IL4xWZMCdjnA6QHv6NQZrJ36GynM8cEegA2SLcYF27i8MR6d/ZJBjkCHeAaCgct4o8//xRgaGLAZGcH5mgOZtQgDmcxDIqgKFOC+DHJ4KCmcIIGsAFSYQ1ieCDmBgQNhDlboABrbF8zOw9bxk+FUizuC18COG4aCEi66GGEBSOQAy+OS5bzjlQXLmJeKkGEm8A4jxUePl3wwMl4nzOUkOICYuB6RNSA0AADUZwDQoA7m3AAAAAElFTkSuQmCC"></div>
+      <div class="mini locked"><div class="ground" aria-hidden="true"></div><img class="pet" alt="잠긴 단계, 흐리게" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAABoUlEQVR4nGNhGGDAMuqAUQeMOmDUAUPeAc4i7P9B9N43Pxnp7gCQ5bvvNDO4qtSSbQbJDoD5GJ84KaFBtANgFoB8jAz+3Olm2L6DD8739PgEVkusI4hyACyokS3FBUCOuX/uI0NWFXGOIOgAZMvxWYwMFI34Gaa1EecIoqOAWMtJBXgdAPM9OZYTGwqDvyCiVdAT7QB0wGr8isFFlAMl6+ETJ9sBuAockCWkiMPMwpUOsDoAW+JjvjELTG/fkQamGY+po+jZvuMmirq/GmlQcT4GFpVSUHGN1RE4QwBkOahAAaVmZANh4L/VTYYPPd/BbIESTrg4TB1IL4xWZMCdjnA6QHv6NQZrJ36GynM8cEegA2SLcYF27i8MR6d/ZJBjkCHeAaCgct4o8//xRgaGLAZGcH5mgOZtQgDmcxDIqgKFOC+DHJ4KCmcIIGsAFSYQ1ieCDmBgQNhDlboABrbF8zOw9bxk+FUizuC18COG4aCEi66GGEBSOQAy+OS5bzjlQXLmJeKkGEm8A4jxUePl3wwMl4nzOUkOICYuB6RNSA0AADUZwDQoA7m3AAAAAElFTkSuQmCC"></div>
+    </div>
+    <div class="sw">카드 안 3배 · 땅 24 · 모서리 12 · 잠김 0.45</div>
   </div>
 </div>

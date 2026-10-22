@@ -1,0 +1,16 @@
+<!-- @dsCard group="Data" height=170 subtitle="카드 하나에 지표 3칸, 선 없이 간격으로" -->
+<style>
+body{margin:0;background:var(--background);color:var(--ink);font-family:var(--font-sans,"Pretendard",system-ui,sans-serif)}
+.wrap{padding:20px;max-width:390px;box-sizing:border-box}
+.card{background:var(--surface);border-radius:24px;padding:20px 12px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px}
+.cell{display:flex;flex-direction:column;align-items:center;gap:4px;min-width:0}
+.k{font-size:14px;line-height:20px;font-weight:600;color:var(--ink-muted);white-space:nowrap}
+.v{font-size:22px;line-height:28px;font-weight:800;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+</style>
+<div class="wrap">
+  <div class="card" role="group" aria-label="러닝 중 지표">
+    <div class="cell"><div class="k">평균 페이스</div><div class="v">6'02"</div></div>
+    <div class="cell"><div class="k">현재 페이스</div><div class="v">5'55"</div></div>
+    <div class="cell"><div class="k">시간</div><div class="v">17:32</div></div>
+  </div>
+</div>
