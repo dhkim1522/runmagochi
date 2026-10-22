@@ -15,7 +15,7 @@
 ## 다음 할 일
 
 1. **`/phase 6` 이어서**: 계획 파일에서 체크되지 않은 첫 작업부터. 진행 기록은 `.superpowers/sdd/phase-6/progress.md`(이 PC 에만 있음, 없으면 `git log` 로 판단)
-2. 관문 1 이 오면 투표 페이지 링크로 주변에 보여 주고 결과를 알려 준다
+2. **관문 1 캐릭터 투표 중**: https://claude.ai/artifact/SBshrAFUGtLfBbaLHQxMnb 를 공유(페이지 Share 메뉴)해 주변에 보여 주고, A·B·C 표 수를 알려 주면 작업 3 부터 이어간다
 
 ## 환경 메모
 
