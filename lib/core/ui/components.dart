@@ -20,7 +20,7 @@ import '../theme.dart';
 /// - 다이얼로그: `AlertDialog` 를 그대로 쓴다. 판·버튼 모양은 테마(theme.dart)가 정한다.
 
 /// [style] 의 굵기를 [w] 로 바꾼다. 가변 글꼴이라 wght 축도 함께 바꾼다.
-TextStyle _weight(TextStyle style, FontWeight w) => style.copyWith(
+TextStyle withWeight(TextStyle style, FontWeight w) => style.copyWith(
   fontWeight: w,
   fontVariations: [FontVariation('wght', w.value.toDouble())],
 );
@@ -712,7 +712,7 @@ class _TabItemState extends State<_TabItem> {
     final c = AppColors.of(context);
     final selected = widget.selected;
     final color = selected ? c.onPanel : c.inkMuted;
-    final style = _weight(
+    final style = withWeight(
       AppText.of(context).caption.copyWith(color: color),
       selected ? FontWeight.w700 : FontWeight.w600,
     );
@@ -944,7 +944,10 @@ class SpeechBubble extends StatelessWidget {
               child: Text(
                 text,
                 maxLines: 1,
-                style: _weight(t.label.copyWith(color: c.ink), FontWeight.w700),
+                style: withWeight(
+                  t.label.copyWith(color: c.ink),
+                  FontWeight.w700,
+                ),
               ),
             ),
           ),

@@ -819,10 +819,10 @@ class RunController extends Notifier<RunViewState> {
     }
   }
 
-  /// 러닝이 끝나면 그 러닝의 목표 달성·종료 예고 알림이 알림창에 남지 않게 지운다.
-  /// 자동 종료 알림은 끝난 뒤에 알리는 것이라 지우지 않는다.
+  /// 러닝이 끝나면 그 러닝의 목표 달성 알림이 알림창에 남지 않게 지운다.
+  /// 종료 예고는 상태 발행(`_syncEndWarning`)이 이미 지웠다. 자동 종료 알림은
+  /// 끝난 뒤에 알리는 것이라 지우지 않는다.
   void _cancelRunScopedAlerts() {
-    final warningShown = _endWarningDeadline != null;
     _endWarningDeadline = null;
     try {
       unawaited(
@@ -833,17 +833,6 @@ class RunController extends Notifier<RunViewState> {
       );
     } catch (e) {
       debugPrint('알림: 목표 달성 알림 취소 실패 $e');
-    }
-    if (!warningShown) return;
-    try {
-      unawaited(
-        ref
-            .read(runProgressNotifierProvider)
-            .cancelEndWarning()
-            .catchError((Object e) => debugPrint('알림: 종료 예고 취소 실패 $e')),
-      );
-    } catch (e) {
-      debugPrint('알림: 종료 예고 취소 실패 $e');
     }
   }
 

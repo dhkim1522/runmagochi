@@ -196,7 +196,6 @@ class _FakeAppLifecycle implements AppLifecycle {
 /// 현재 _run 이 쓰는 앱 생명주기. 기본은 화면에 있는 상태.
 late _FakeAppLifecycle _lifecycle;
 
-/// fake_async 시간과 같이 가는 시계로 컨테이너를 만들어 [body] 를 돌린다.
 class _NoopInstant implements InstantNotifier {
   @override
   Future<void> showNow({required String title, required String body}) async {}
@@ -209,6 +208,7 @@ class _NoopInstant implements InstantNotifier {
   Future<void> cancelGoalReached() async {}
 }
 
+/// fake_async 시간과 같이 가는 시계로 컨테이너를 만들어 [body] 를 돌린다.
 void _run(
   void Function(
     FakeAsync async,

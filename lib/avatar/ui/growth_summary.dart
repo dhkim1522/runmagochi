@@ -190,7 +190,7 @@ class _GrowthSummaryState extends State<GrowthSummary>
                 Text(
                   'Lv.${g.levelBefore} 에서 Lv.${g.levelAfter} 로',
                   textAlign: TextAlign.center,
-                  style: _weight(t.body, FontWeight.w600),
+                  style: withWeight(t.body, FontWeight.w600),
                 ),
               ],
               if (g.stageUp) ...[
@@ -209,7 +209,7 @@ class _GrowthSummaryState extends State<GrowthSummary>
                       child: Text(
                         '새 외형 단계!',
                         textAlign: TextAlign.center,
-                        style: _weight(
+                        style: withWeight(
                           t.label.copyWith(color: c.stageInk),
                           FontWeight.w700,
                         ),
@@ -326,12 +326,6 @@ class _BadgePop extends StatelessWidget {
   );
 }
 
-/// [style] 의 굵기를 [w] 로 바꾼다. 가변 글꼴이라 wght 축도 함께 바꾼다.
-TextStyle _weight(TextStyle style, FontWeight w) => style.copyWith(
-  fontWeight: w,
-  fontVariations: [FontVariation('wght', w.value.toDouble())],
-);
-
 /// 오늘 목표 결과 한 줄. 달성이면 보너스, 미달이면 남은 거리나 빠른 이동 안내.
 class GoalResult extends StatelessWidget {
   const GoalResult({
@@ -412,7 +406,9 @@ class _XpRow extends StatelessWidget {
           leading,
           const SizedBox(width: Gap.s3),
         ],
-        Expanded(child: Text(label, style: _weight(t.body, FontWeight.w600))),
+        Expanded(
+          child: Text(label, style: withWeight(t.body, FontWeight.w600)),
+        ),
         const SizedBox(width: Gap.s3),
         Column(
           crossAxisAlignment: CrossAxisAlignment.end,

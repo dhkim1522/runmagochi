@@ -380,9 +380,9 @@ class _SettingsRow extends StatelessWidget {
                   const SizedBox(width: Gap.s2),
                   Text(
                     detail!,
-                    style: t.label.copyWith(
-                      color: c.inkMuted,
-                      fontWeight: FontWeight.w500,
+                    style: withWeight(
+                      t.label.copyWith(color: c.inkMuted),
+                      FontWeight.w500,
                     ),
                   ),
                 ],
