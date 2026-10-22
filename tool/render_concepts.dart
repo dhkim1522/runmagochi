@@ -1,6 +1,7 @@
 // 캐릭터 콘셉트 미리보기를 그린다.
 // 사용: fvm dart run tool/render_concepts.dart
-// 결과: design/character/concepts.png (안마다 한 줄: 1단계, 4단계, 8배 확대)
+// 결과: design/character/concepts.png (안마다 한 줄: 1단계, 4단계, 8배 확대).
+// 그림은 실제 펫 데이터(tool/sprites/<kind>.dart)에서 가져온다(tool/sprites/concepts.dart).
 import 'dart:io';
 
 import 'package:image/image.dart' as img;
@@ -16,7 +17,9 @@ void main() {
   final problems = <String>[];
   concepts.forEach((name, frames) {
     for (var i = 0; i < frames.length; i++) {
-      problems.addAll(validateFrame('$name-${i + 1}', frames[i], conceptPalette));
+      problems.addAll(
+        validateFrame('$name-${i + 1}', frames[i], conceptPalette),
+      );
     }
   });
   if (problems.isNotEmpty) {

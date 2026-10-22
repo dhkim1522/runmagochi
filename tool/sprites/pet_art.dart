@@ -23,8 +23,9 @@ const Palette petPalette = {
   'o': 0xFF431407, // 외곽선 (ink)
   'k': 0xFF431407, // 눈·입
   'w': 0xFFFFFFFF, // 눈 반짝임, 신발 끈
-  'h': 0xFFFFEDD5, // 하이라이트 (surface-soft)
+  'h': 0xFFFFEDD5, // 젤리 반짝임 (surface-soft)
   'p': 0xFFFDA4AF, // 볼
+  'i': 0xFFFDBA74, // 젤리 하이라이트
   'b': 0xFFFB923C, // 젤리 몸, 병아리 부리
   'B': 0xFFEA580C, // 젤리 그림자
   'g': 0xFF15803D, // 잎
@@ -35,10 +36,12 @@ const Palette petPalette = {
   'l': 0xFFFEF08A, // 병아리 하이라이트
   'm': 0xFFFACC15, // 병아리 몸
   'M': 0xFFD99A06, // 병아리 그림자
-  'c': 0xFF92400E, // 도토리 모자
-  'C': 0xFFB45309, // 도토리 모자 밝은 쪽
+  'x': 0xFFD97706, // 도토리 모자 하이라이트
+  'C': 0xFFB45309, // 도토리 모자
+  'c': 0xFF92400E, // 도토리 모자 그림자·무늬
+  't': 0xFFFAC491, // 도토리 몸 하이라이트
   'n': 0xFFF4A261, // 도토리 몸
-  'N': 0xFFC2410C, // 도토리 몸 그림자
+  'N': 0xFFD4783C, // 도토리 몸 그림자
   'r': 0xFFF97316, // 러닝화 (primary)
   'j': 0xFFC2410C, // 러닝화 그림자
   'a': 0xFF2563EB, // 헤어밴드·손목 밴드 (accent)
@@ -405,19 +408,8 @@ SpriteFrame _itemFrame(List<String> rows, int x0, int y0) {
   return _toFrame(g);
 }
 
-/// 팔(날개) 그림. [band] 면 손목 밴드(accent)를 두른다.
-List<String> armRows(String fill, {bool band = false}) => [
-  '.o',
-  'o$fill',
-  band ? 'oa' : 'o$fill',
-  '.o',
-];
-
-/// 1단계 발: 몸 아래 작은 발 두 개.
+/// 1단계 발(젤리·도토리): 몸 아래 작은 발 두 개.
 const List<String> nubFoot = ['oo'];
-
-/// 러닝화(primary) 앞모습: 흰 끈 한 점, 진한 밑창.
-const List<String> shoeFoot = ['orwro', 'ooooo'];
 
 // 말랑 클레이 그림체(페이즈 6 후보 a). 빛은 왼쪽 위, 3단 명암(하이라이트·기본·그림자).
 

@@ -60,65 +60,156 @@ void main() {
     }
   });
 
-  group('병아리 그림체(페이즈 6 후보 a 말랑 클레이)', () {
-    final chick = pets.first;
+  group('말랑 클레이 그림체(페이즈 6 후보 a, 3종 공통)', () {
+    // 종류 → 단계별 3단 명암(하이라이트·기본·그림자). 도토리는 모자도 3단이다.
+    const tones = <String, List<List<String>>>{
+      'chick': [
+        ['q', 'y', 'Y'],
+        ['l', 'm', 'M'],
+        ['l', 'm', 'M'],
+        ['l', 'm', 'M'],
+      ],
+      'jelly': [
+        ['i', 'b', 'B'],
+        ['i', 'b', 'B'],
+        ['i', 'b', 'B'],
+        ['i', 'b', 'B'],
+      ],
+      'acorn': [
+        ['t', 'n', 'N', 'x', 'C', 'c'],
+        ['t', 'n', 'N', 'x', 'C', 'c'],
+        ['t', 'n', 'N', 'x', 'C', 'c'],
+        ['t', 'n', 'N', 'x', 'C', 'c'],
+      ],
+    };
 
-    test('2~4단계 몸은 3단 명암(하이라이트 l·기본 m·그림자 M)이다', () {
-      for (var s = 1; s < 4; s++) {
-        expect(
-          chick.stages[s].body.rows.join().split('').toSet(),
-          containsAll(['l', 'm', 'M']),
-          reason: 's${s + 1}',
-        );
-      }
-    });
-
-    test('4단계 메달 끈은 목 아래 가로줄 y=25 에만 있고 메달은 그 아래다', () {
-      // 부리 바로 아래 세로 끈은 입처럼 보여서 쓰지 않는다.
-      for (final a in petActions) {
-        final frames = bodyFrames(chick.stages[3], a);
-        final poses = posesFor(chick.stages[3], a);
-        for (var i = 0; i < frames.length; i++) {
-          final strapY = 25 - poses[i].lift;
-          final reason = '$a #$i';
-          var strap = 0;
-          for (var y = 0; y < spriteSize; y++) {
-            for (var x = 0; x < spriteSize; x++) {
-              final ch = charAt(frames[i], x, y);
-              if (ch == 'd' || ch == 'D') {
-                expect(y, strapY, reason: '$reason ($x,$y)');
-                strap++;
-              }
-              if (ch == 'e') expect(y, greaterThan(strapY), reason: reason);
-            }
-          }
-          expect(strap, greaterThanOrEqualTo(12), reason: reason);
+    test('몸은 단계마다 3단 명암(하이라이트·기본·그림자)이다', () {
+      expect(tones.keys, [for (final p in pets) p.name]);
+      for (final pet in pets) {
+        for (var s = 0; s < 4; s++) {
+          expect(
+            pet.stages[s].body.rows.join().split('').toSet(),
+            containsAll(tones[pet.name]![s]),
+            reason: '${pet.name} s${s + 1}',
+          );
         }
       }
     });
 
-    test('표정 세 가지의 눈은 normal 눈 자리(y=20·21) 둘레, 볼은 같은 자리다', () {
-      List<(int, int)> pixels(String mood, bool Function(String) want) {
-        final f = faceFrames(chick, mood, 'idle').first;
-        return [
-          for (var y = 0; y < spriteSize; y++)
-            for (var x = 0; x < spriteSize; x++)
-              if (want(charAt(f, x, y))) (x, y),
-        ];
+    test('기본 그림은 줄 너비가 모두 같고 짝수다', () {
+      for (final pet in pets) {
+        for (var s = 0; s < 4; s++) {
+          final rows = pet.stages[s].body.rows;
+          final w = rows.first.length;
+          expect(w.isEven, isTrue, reason: '${pet.name} s${s + 1}');
+          for (var y = 0; y < rows.length; y++) {
+            expect(rows[y].length, w, reason: '${pet.name} s${s + 1} 줄 $y');
+          }
+        }
       }
+    });
 
-      final cheeks = pixels('normal', (c) => c == 'p');
-      for (final m in petMoods) {
-        expect(pixels(m, (c) => c == 'p'), cheeks, reason: m);
-        final eyes = pixels(m, (c) => c == 'k' || c == 'w');
-        expect(eyes, isNotEmpty, reason: m);
-        for (final (x, y) in eyes) {
-          expect(y, inInclusiveRange(20, 21), reason: '$m ($x,$y)');
+    for (final pet in pets) {
+      test('${pet.name} 4단계 메달 끈은 목 아래 가로줄 y=25 에만 있고 메달은 그 아래다', () {
+        // 입 바로 아래 세로 끈은 입처럼 보여서 쓰지 않는다.
+        for (final a in petActions) {
+          final frames = bodyFrames(pet.stages[3], a);
+          final poses = posesFor(pet.stages[3], a);
+          for (var i = 0; i < frames.length; i++) {
+            final strapY = 25 - poses[i].lift;
+            final reason = '${pet.name} $a #$i';
+            var strap = 0;
+            for (var y = 0; y < spriteSize; y++) {
+              for (var x = 0; x < spriteSize; x++) {
+                final ch = charAt(frames[i], x, y);
+                if (ch == 'd' || ch == 'D') {
+                  expect(y, strapY, reason: '$reason ($x,$y)');
+                  strap++;
+                }
+                if (ch == 'e') expect(y, greaterThan(strapY), reason: reason);
+              }
+            }
+            expect(strap, greaterThanOrEqualTo(12), reason: reason);
+          }
+        }
+      });
+    }
+
+    List<(int, int)> facePixels(
+      PetKind pet,
+      String mood,
+      bool Function(String, int, int) want,
+    ) {
+      final f = faceFrames(pet, mood, 'idle').first;
+      return [
+        for (var y = 0; y < spriteSize; y++)
+          for (var x = 0; x < spriteSize; x++)
+            if (want(charAt(f, x, y), x, y)) (x, y),
+      ];
+    }
+
+    bool eyeRow(int y) => y == 20 || y == 21;
+
+    for (final pet in pets) {
+      test('${pet.name} 표정 세 가지의 눈은 normal 눈 자리(y=20·21) 둘레, 볼·입은 같은 자리다', () {
+        final cheeks = facePixels(pet, 'normal', (c, _, _) => c == 'p');
+        expect(cheeks, isNotEmpty);
+        // 입(젤리·도토리)은 눈 줄 밖의 k. 병아리는 부리가 body 에 있어 없다.
+        final mouth = facePixels(
+          pet,
+          'normal',
+          (c, _, y) => c == 'k' && !eyeRow(y),
+        );
+        for (final m in petMoods) {
+          expect(facePixels(pet, m, (c, _, _) => c == 'p'), cheeks, reason: m);
           expect(
-            (x >= 11 && x <= 14) || (x >= 17 && x <= 20),
-            isTrue,
-            reason: '$m ($x,$y)',
+            facePixels(pet, m, (c, _, y) => c == 'k' && !eyeRow(y)),
+            mouth,
+            reason: m,
           );
+          final eyes = facePixels(
+            pet,
+            m,
+            (c, _, y) => (c == 'k' || c == 'w') && eyeRow(y),
+          );
+          expect(eyes, isNotEmpty, reason: m);
+          for (final (x, y) in eyes) {
+            expect(
+              (x >= 11 && x <= 14) || (x >= 17 && x <= 20),
+              isTrue,
+              reason: '${pet.name} $m ($x,$y)',
+            );
+          }
+          expect(
+            facePixels(pet, m, (c, _, y) => c == 'w' && !eyeRow(y)),
+            isEmpty,
+            reason: m,
+          );
+        }
+      });
+    }
+
+    test('3종의 눈(y=20·21)은 표정마다 병아리와 같다', () {
+      final chick = pets.first;
+      for (final m in petMoods) {
+        bool eye(String c, int _, int y) => (c == 'k' || c == 'w') && eyeRow(y);
+        final want = facePixels(chick, m, eye);
+        for (final pet in pets.skip(1)) {
+          expect(facePixels(pet, m, eye), want, reason: '${pet.name} $m');
+        }
+      }
+    });
+
+    test('졸린 눈꺼풀은 바깥으로 처진다(안쪽 x=14·17 이 비어 화난 눈이 아니다)', () {
+      for (final pet in pets) {
+        final lids = facePixels(
+          pet,
+          'sleepy',
+          (c, x, y) => c == 'k' && y == 20,
+        );
+        expect(lids, isNotEmpty, reason: pet.name);
+        for (final (x, _) in lids) {
+          expect(x, isNot(anyOf(14, 17)), reason: '${pet.name} x=$x');
         }
       }
     });
