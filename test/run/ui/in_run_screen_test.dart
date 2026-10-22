@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
@@ -293,10 +294,16 @@ void main() {
   });
 
   group('글자 크기 1.3배', () {
-    for (final state in [RunState.recording, RunState.paused]) {
+    for (final (state, dark) in [
+      (RunState.recording, false),
+      (RunState.paused, false),
+      (RunState.autoPaused, false),
+      (RunState.recording, true),
+      (RunState.paused, true),
+    ]) {
       for (final size in [const Size(390, 844), const Size(360, 640)]) {
         testWidgets(
-          '$state ${size.width.toInt()}x${size.height.toInt()} 에서 overflow 없이 그려진다',
+          '$state ${size.width.toInt()}x${size.height.toInt()} ${dark ? '다크' : '라이트'} 에서 overflow 없이 그려진다',
           (tester) async {
             tester.view.physicalSize = size;
             tester.view.devicePixelRatio = 1;
@@ -320,7 +327,7 @@ void main() {
                   ),
                 ],
                 child: MaterialApp(
-                  theme: appLightTheme(),
+                  theme: dark ? appDarkTheme() : appLightTheme(),
                   builder: (context, child) => MediaQuery(
                     data: MediaQuery.of(
                       context,
@@ -333,6 +340,15 @@ void main() {
             );
             await settle(tester);
             expect(tester.takeException(), isNull);
+            // 거리와 버튼은 화면 안에 다 보인다(러닝 중에는 스크롤하지 않는다).
+            final screen = Offset.zero & size;
+            final dist = tester.getRect(find.text('5.34'));
+            expect(screen.contains(dist.topLeft), isTrue);
+            expect(dist.right, lessThanOrEqualTo(size.width - Gap.s5 + 0.01));
+            for (final b in find.byType(AppButton).evaluate()) {
+              final r = tester.getRect(find.byWidget(b.widget));
+              expect(r.bottom, lessThanOrEqualTo(size.height), reason: '$b');
+            }
           },
         );
       }
@@ -502,6 +518,160 @@ void main() {
       final dist = size('2.91');
       expect(dist, greaterThan(size("6'25\"")));
       expect(dist, greaterThan(size("6'10\"")));
+    });
+  });
+
+  group('시안 배치(작업 12)', () {
+    // 실제 글자 폭으로 배치를 잰다(테스트 기본 글꼴은 모든 글자가 정사각형이다).
+    setUpAll(() async {
+      final font = File(
+        'assets/fonts/PretendardVariable.ttf',
+      ).readAsBytesSync();
+      await (FontLoader(
+        'Pretendard',
+      )..addFont(Future.value(ByteData.sublistView(font)))).load();
+    });
+
+    /// 390×844 화면에 [state] 러닝 화면을 연다(목표 5km).
+    Future<void> openAt(
+      WidgetTester tester,
+      RunState state, {
+      Size size = const Size(390, 844),
+    }) async {
+      tester.view.physicalSize = size;
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      await open(
+        tester,
+        initial: snap(
+          state,
+          distanceM: 3420,
+          movingTime: const Duration(minutes: 21, seconds: 2),
+          avg: 369,
+          current: 362,
+        ),
+        goalM: 5000,
+      );
+    }
+
+    Color? boxColor(WidgetTester tester, Finder of) {
+      final box = tester.widget<DecoratedBox>(
+        find.descendant(of: of, matching: find.byType(DecoratedBox)).first,
+      );
+      return (box.decoration as BoxDecoration).color;
+    }
+
+    testWidgets(
+      '러닝 중: 제목 → 거리 128·km → 목표 줄·막대 → 지표 카드 하나 → 무대 6배 → 일시정지 어두운 판',
+      (tester) async {
+        await openAt(tester, RunState.recording);
+        final c = AppColors.light;
+        final title = tester.getRect(find.text('러닝 중'));
+        final dist = tester.getRect(find.text('3.42'));
+        final km = tester.getRect(find.text('km'));
+        final goal = tester.getRect(find.text('목표 5km'));
+        final bar = tester.getRect(find.byType(ProgressBar));
+        final stats = tester.getRect(find.byType(StatsCard));
+        final stage = tester.getRect(find.byType(PetStage));
+        final pause = tester.getRect(find.byType(AppButton));
+        expect(dist.top, greaterThan(title.bottom));
+        // 거리는 줄이지 않은 128 이고 가운데, km 는 오른쪽에 같은 기준선으로.
+        expect(dist.height, 128);
+        expect((dist.left + km.right) / 2, closeTo(195, 1));
+        expect(km.left, greaterThan(dist.right));
+        expect(km.bottom, lessThanOrEqualTo(dist.bottom));
+        final kmStyle = tester
+            .renderObject<RenderParagraph>(find.text('km'))
+            .text
+            .style!;
+        expect(kmStyle.color, c.inkMuted);
+        // 목표 줄은 왼쪽 정렬, 막대는 전체 폭.
+        expect(goal.top, greaterThan(dist.bottom));
+        expect(goal.left, Gap.s5);
+        expect(bar.top, greaterThan(goal.bottom));
+        expect(bar.left, Gap.s5);
+        expect(bar.right, 390 - Gap.s5);
+        // 지표 3칸은 흰 카드 하나 안에.
+        expect(stats.top, greaterThan(bar.bottom));
+        expect(find.byType(AppCard), findsOneWidget);
+        expect(
+          find.descendant(
+            of: find.byType(StatsCard),
+            matching: find.byType(StatCard),
+          ),
+          findsNWidgets(3),
+        );
+        // 무대 위 6배 달리는 펫.
+        expect(stage.top, greaterThan(stats.bottom));
+        expect(stage.left, Gap.s5);
+        expect(stage.right, 390 - Gap.s5);
+        expect(tester.widget<PetStage>(find.byType(PetStage)).scale, 6);
+        expect(tester.getSize(find.byType(AvatarView)), const Size(192, 192));
+        expect(avatar(tester).action, AvatarAction.run);
+        // 일시정지는 맨 아래 어두운 판 알약.
+        expect(pause.top, greaterThan(stage.bottom));
+        expect(boxColor(tester, find.byType(AppButton)), c.panel);
+        expect(844 - pause.bottom, Gap.s8);
+      },
+    );
+
+    testWidgets('거리 숫자가 다른 어떤 글자보다 크게 그려진다(화면에 그려진 높이)', (tester) async {
+      await openAt(tester, RunState.recording);
+      final distText = find.text('3.42');
+      final dist = tester.getRect(distText).height;
+      final others = find.byWidgetPredicate(
+        (w) => w is RichText && w.text.toPlainText() != '3.42',
+      );
+      expect(others, findsWidgets);
+      for (final e in others.evaluate()) {
+        final box = e.renderObject! as RenderBox;
+        expect(box.size.height, lessThan(dist), reason: '${e.widget}');
+      }
+    });
+
+    testWidgets('일시정지도 같은 체계: 거리 64 → 목표 → 지표 카드 → 무대 → 재개 → 길게 눌러 종료', (
+      tester,
+    ) async {
+      await openAt(tester, RunState.paused);
+      final dist = tester.getRect(find.text('3.42'));
+      final goal = tester.getRect(find.text('목표 5km'));
+      final stats = tester.getRect(find.byType(StatsCard));
+      final stage = tester.getRect(find.byType(PetStage));
+      final resume = tester.getRect(find.widgetWithText(AppButton, '재개'));
+      final stop = tester.getRect(find.text('길게 눌러 종료'));
+      // 일시정지는 number-l 64 로 줄여도 여전히 가장 큰 글자다.
+      expect(
+        tester
+            .renderObject<RenderParagraph>(find.text('3.42'))
+            .text
+            .style!
+            .fontSize,
+        64,
+      );
+      expect(goal.top, greaterThan(dist.bottom));
+      expect(stats.top, greaterThan(goal.bottom));
+      expect(
+        find.descendant(of: find.byType(StatsCard), matching: find.text('칼로리')),
+        findsOneWidget,
+      );
+      expect(stage.top, greaterThan(stats.bottom));
+      expect(resume.top, greaterThan(stage.bottom));
+      expect(stop.top, greaterThan(resume.bottom));
+      expect(tester.widget<PetStage>(find.byType(PetStage)).scale, 6);
+      expect(avatar(tester).action, AvatarAction.idle);
+      expect(
+        boxColor(tester, find.widgetWithText(AppButton, '재개')),
+        AppColors.light.panel,
+      );
+    });
+
+    testWidgets('작은 화면(360×640)에서는 펫 배율을 줄여 무대에 맞춘다', (tester) async {
+      await openAt(tester, RunState.recording, size: const Size(360, 640));
+      expect(tester.takeException(), isNull);
+      final stage = tester.getRect(find.byType(PetStage));
+      final pet = tester.getRect(find.byType(AvatarView));
+      expect(tester.widget<PetStage>(find.byType(PetStage)).scale, lessThan(6));
+      expect(stage.top, lessThanOrEqualTo(pet.top));
     });
   });
 

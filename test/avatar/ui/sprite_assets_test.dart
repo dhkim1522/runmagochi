@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:image/image.dart' as img;
 import 'package:runmagochi/avatar/domain/growth_rules.dart';
 import 'package:runmagochi/avatar/ui/sprite_sheet.dart';
+import 'package:runmagochi/core/ui/components.dart' show spriteTopGapRows;
 import 'package:runmagochi/shop/domain/catalog.dart';
 
 void main() {
@@ -14,6 +15,22 @@ void main() {
     expect(image.width, frameCount(a) * spriteFramePx, reason: path);
     expect(image.height, spriteFramePx, reason: path);
   }
+
+  test('몸·모자·소품 그림은 프레임 위 spriteTopGapRows 줄을 비운다(말풍선 자리)', () {
+    final files = Directory('assets/sprites')
+        .listSync(recursive: true)
+        .whereType<File>()
+        .where((f) => f.path.endsWith('.png') && !f.path.contains('/face/'));
+    expect(files, isNotEmpty);
+    for (final f in files) {
+      final image = img.decodePng(f.readAsBytesSync())!;
+      for (var y = 0; y < spriteTopGapRows; y++) {
+        for (var x = 0; x < image.width; x++) {
+          expect(image.getPixel(x, y).a, 0, reason: '${f.path} ($x, $y)');
+        }
+      }
+    }
+  });
 
   test('동작별 프레임 수와 fps', () {
     expect(frameCount(AvatarAction.idle), 2);

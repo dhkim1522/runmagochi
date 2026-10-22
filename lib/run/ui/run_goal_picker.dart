@@ -23,7 +23,8 @@ const int maxGoalMinutes = 180;
 const RunGoal _defaultDistanceGoal = DistanceGoal(3000);
 const RunGoal _defaultTimeGoal = TimeGoal(Duration(minutes: 30));
 
-/// 홈의 "오늘 목표" 선택. 위쪽 칩 줄에서 거리·시간을 고르고, 아래 칩 줄에서 값을 고른다.
+/// 홈의 "오늘 목표" 흰 카드. 위쪽 칩 줄(분할 선택)에서 거리·시간을 고르고,
+/// 아래 칩 줄에서 값을 고른다. 카드 안 여백 20, 줄 사이 12(시안 c 홈).
 ///
 /// [goal] 은 지금 고른 목표. 바로 고르는 값이 아니면 "직접" 칩이 그 값을 보인다.
 class RunGoalPicker extends StatelessWidget {
@@ -78,14 +79,13 @@ class RunGoalPicker extends StatelessWidget {
     final custom = _customValue;
     final unit = _isTime ? '분' : 'km';
     return AppCard(
-      radius: Radii.lg,
-      padding: const EdgeInsets.fromLTRB(Gap.s3, Gap.s3, Gap.s3, Gap.s3),
+      padding: const EdgeInsets.all(Gap.s5),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Text('오늘 목표', style: t.label.copyWith(color: c.inkMuted)),
-          const SizedBox(height: Gap.s2),
+          const SizedBox(height: Gap.s3),
           ChipRow(
             children: [
               AppChip(
@@ -106,7 +106,7 @@ class RunGoalPicker extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: Gap.s2),
+          const SizedBox(height: Gap.s3),
           ChipRow(
             children: [
               if (_isTime)

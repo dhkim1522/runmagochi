@@ -54,6 +54,7 @@ void main() {
   _barCardTests();
   _coinTabTests();
   _stageTests();
+  _bubbleHeightTest();
   _dialogTests();
 
   testWidgets('ScreenTitle 은 헤더로 표시된다', (tester) async {
@@ -425,6 +426,38 @@ void _barCardTests() {
       expect(find.text('시간'), findsOneWidget);
       expect(find.text('1:32:09'), findsOneWidget);
     });
+
+    testWidgets(
+      'StatsCard: 흰 카드 하나에 지표 칸이 같은 폭으로 들어간다 (${dark ? '다크' : '라이트'})',
+      (tester) async {
+        final c = _c(dark);
+        await _pump(
+          tester,
+          const StatsCard(
+            cells: [
+              StatCard.cell(label: '평균 페이스', value: "6'08\""),
+              StatCard.cell(label: '현재 페이스', value: "6'02\""),
+              StatCard.cell(label: '시간', value: '1:32:09'),
+            ],
+          ),
+          dark: dark,
+          scale: 2,
+        );
+        expect(tester.takeException(), isNull);
+        // 카드는 하나다(칸은 판을 따로 그리지 않는다).
+        expect(find.byType(AppCard), findsOneWidget);
+        final d = _decoration(tester, find.byType(StatsCard));
+        expect(d.color, c.surface);
+        expect(d.borderRadius, BorderRadius.circular(Radii.lg));
+        expect(d.border, isNull);
+        final widths = [
+          for (final e in find.byType(StatCard).evaluate())
+            tester.getSize(find.byWidget(e.widget)).width,
+        ];
+        expect(widths, hasLength(3));
+        expect(widths.toSet(), hasLength(1));
+      },
+    );
   }
 }
 
@@ -682,7 +715,7 @@ void _stageTests() {
 
   for (final dark in [false, true]) {
     testWidgets(
-      '말풍선은 흰 카드 + 꼬리, 글자 2배에서도 무대 안에서 넘치지 않는다 (${dark ? '다크' : '라이트'})',
+      '말풍선은 bubble 판 + 꼬리, 글자 2배에서도 무대 안에서 넘치지 않는다 (${dark ? '다크' : '라이트'})',
       (tester) async {
         final c = _c(dark);
         await _pump(
@@ -698,7 +731,8 @@ void _stageTests() {
         );
         expect(tester.takeException(), isNull);
         final d = _decoration(tester, find.byType(SpeechBubble));
-        expect(d.color, c.surface);
+        // 라이트는 흰 카드, 다크는 무대 하늘보다 밝은 판(작업 12).
+        expect(d.color, c.bubble);
         expect(d.borderRadius, BorderRadius.circular(Radii.md));
         expect(
           tester.widget<Text>(find.text('다음 레벨까지 6.0km')).style!.color,
@@ -706,11 +740,30 @@ void _stageTests() {
         );
         final stage = tester.getRect(find.byType(PetStage));
         final bubble = tester.getRect(find.byType(SpeechBubble));
+        // 한 줄이라 무대가 말풍선 자리로 잡는 높이를 넘지 않는다.
+        expect(
+          bubble.height,
+          lessThanOrEqualTo(SpeechBubble.heightFor(const TextScaler.linear(2))),
+        );
         expect(stage.contains(bubble.topLeft), isTrue);
         expect(bubble.right, lessThanOrEqualTo(stage.right - Gap.s4));
       },
     );
   }
+}
+
+void _bubbleHeightTest() {
+  testWidgets('SpeechBubble.heightFor 는 한 줄 말풍선 높이와 같다(1배·1.3배)', (
+    tester,
+  ) async {
+    for (final scale in [1.0, 1.3]) {
+      await _pump(tester, const SpeechBubble('Lv'), scale: scale);
+      expect(
+        tester.getSize(find.byType(SpeechBubble)).height,
+        closeTo(SpeechBubble.heightFor(TextScaler.linear(scale)), 0.01),
+      );
+    }
+  });
 }
 
 void _dialogTests() {

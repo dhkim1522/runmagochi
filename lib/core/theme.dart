@@ -137,6 +137,7 @@ class AppColors extends ThemeExtension<AppColors> {
     required this.paceMid,
     required this.paceFast,
     required this.spriteRim,
+    required this.bubble,
   });
 
   /// 화면 바탕(옅은 풀빛). 무늬·그라데이션 없음.
@@ -201,6 +202,10 @@ class AppColors extends ThemeExtension<AppColors> {
   /// 스프라이트 둘레 1픽셀 윤곽. 투명이면 그리지 않는다 (라이트).
   final Color spriteRim;
 
+  /// 무대 위 말풍선 판. 라이트는 surface 와 같은 흰색, 다크는 무대 하늘보다 밝은 판
+  /// (다크 surface 는 하늘과 톤이 같아 말풍선 모양·꼬리가 묻힌다). 위 글자는 ink.
+  final Color bubble;
+
   static AppColors of(BuildContext context) =>
       Theme.of(context).extension<AppColors>()!;
 
@@ -230,6 +235,7 @@ class AppColors extends ThemeExtension<AppColors> {
     paceMid: Color(0xFF1E7B45),
     paceFast: Color(0xFFC8650A),
     spriteRim: Color(0x00000000),
+    bubble: Color(0xFFFFFFFF),
   );
 
   static const dark = AppColors(
@@ -258,6 +264,7 @@ class AppColors extends ThemeExtension<AppColors> {
     paceMid: Color(0xFF5DD08A),
     paceFast: Color(0xFFF08A3C),
     spriteRim: Color(0xFFEEF4E6),
+    bubble: Color(0xFF44573A),
   );
 
   @override
@@ -287,6 +294,7 @@ class AppColors extends ThemeExtension<AppColors> {
     Color? paceMid,
     Color? paceFast,
     Color? spriteRim,
+    Color? bubble,
   }) {
     return AppColors(
       background: background ?? this.background,
@@ -314,6 +322,7 @@ class AppColors extends ThemeExtension<AppColors> {
       paceMid: paceMid ?? this.paceMid,
       paceFast: paceFast ?? this.paceFast,
       spriteRim: spriteRim ?? this.spriteRim,
+      bubble: bubble ?? this.bubble,
     );
   }
 
@@ -347,6 +356,7 @@ class AppColors extends ThemeExtension<AppColors> {
       paceMid: l(paceMid, other.paceMid),
       paceFast: l(paceFast, other.paceFast),
       spriteRim: l(spriteRim, other.spriteRim),
+      bubble: l(bubble, other.bubble),
     );
   }
 }

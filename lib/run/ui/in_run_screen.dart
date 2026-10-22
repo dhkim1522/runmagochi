@@ -6,6 +6,7 @@ import '../../shop/app/providers.dart';
 import '../../avatar/app/providers.dart';
 import '../../avatar/domain/growth_rules.dart';
 import '../../avatar/ui/avatar_view.dart';
+import '../../avatar/ui/sprite_sheet.dart' show spriteFramePx;
 import '../../core/format.dart';
 import '../../core/theme.dart';
 import '../../core/ui/components.dart';
@@ -75,9 +76,10 @@ class _InRunScreenState extends ConsumerState<InRunScreen> {
     final growth = ref.watch(growthStateProvider).value;
     final equipped = ref.watch(equippedProvider).value;
 
-    final avatarStage = _AvatarStage(
-      child: growth == null
-          ? const AvatarSlot(scale: 3)
+    // 무대 높이에 맞춰 펫 배율을 고른다. 종류를 읽기 전(또는 실패)에는 같은 크기의 빈자리만 둔다.
+    final stage = _RunStage(
+      pet: (scale) => growth == null
+          ? AvatarSlot(scale: scale)
           : AvatarView(
               kind: growth.kind,
               stage: growth.stage,
@@ -86,12 +88,13 @@ class _InRunScreenState extends ConsumerState<InRunScreen> {
                 paused: paused,
                 currentPaceSecPerKm: snap.currentPaceSecPerKm,
               ),
-              scale: 3,
+              scale: scale,
               hatItemId: equipped?.hatItemId,
               accessoryItemId: equipped?.accessoryItemId,
             ),
     );
 
+    // 러닝 중·일시정지 모두 같은 체계: 제목 → 거리 → 목표 줄·막대 → 지표 카드 → 무대 → 버튼.
     return PopScope(
       canPop: false,
       child: Scaffold(
@@ -124,93 +127,56 @@ class _InRunScreenState extends ConsumerState<InRunScreen> {
                       style: t.body.copyWith(color: c.danger),
                     ),
                   ),
-                const SizedBox(height: Gap.s4),
-                if (!paused) ...[
-                  _StatRow([
-                    StatCard(
-                      label: '평균 페이스',
-                      value: formatPace(snap.avgPaceSecPerKm),
-                    ),
-                    StatCard(
-                      label: '현재 페이스',
-                      value: formatPace(snap.currentPaceSecPerKm),
-                    ),
-                    StatCard(
-                      label: '시간',
-                      value: formatDuration(snap.movingTime),
-                    ),
-                  ]),
-                  Expanded(
-                    child: Center(
-                      child: FittedBox(
-                        fit: BoxFit.scaleDown,
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(formatKm(snap.distanceM), style: t.distanceXl),
-                            Text(
-                              'km',
-                              style: t.title.copyWith(color: c.primaryDeep),
-                            ),
-                            if (view.goal case final goal?) ...[
-                              const SizedBox(height: Gap.s3),
-                              _GoalRow(
-                                goal: goal,
-                                distanceM: snap.distanceM,
-                                movingTime: snap.movingTime,
-                                reached: view.goalReached,
-                              ),
-                            ],
-                            const SizedBox(height: Gap.s6),
-                            avatarStage,
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                  AppButton.panel(label: '일시정지', onPressed: controller.pause),
-                ] else ...[
-                  Center(
-                    child: FittedBox(
-                      fit: BoxFit.scaleDown,
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(formatKm(snap.distanceM), style: t.numberL),
-                          Text(
-                            'km',
-                            style: t.titleS.copyWith(color: c.primaryDeep),
-                          ),
-                          if (view.goal case final goal?) ...[
-                            const SizedBox(height: Gap.s2),
-                            _GoalRow(
-                              goal: goal,
-                              distanceM: snap.distanceM,
-                              movingTime: snap.movingTime,
-                              reached: view.goalReached,
-                            ),
-                          ],
-                        ],
-                      ),
-                    ),
-                  ),
+                const SizedBox(height: Gap.s5),
+                _Distance(distanceM: snap.distanceM, large: !paused),
+                if (view.goal case final goal?) ...[
                   const SizedBox(height: Gap.s5),
-                  _StatRow([
-                    StatCard(
-                      label: '평균 페이스',
-                      value: formatPace(snap.avgPaceSecPerKm),
-                    ),
-                    StatCard(
-                      label: '시간',
-                      value: formatDuration(snap.movingTime),
-                    ),
-                    StatCard(
-                      label: '칼로리',
-                      value:
-                          '${estimateCalories(snap.distanceM, weightKg: view.weightKg).round()}',
-                    ),
-                  ]),
-                  Expanded(child: Center(child: avatarStage)),
+                  _GoalRow(
+                    goal: goal,
+                    distanceM: snap.distanceM,
+                    movingTime: snap.movingTime,
+                    reached: view.goalReached,
+                  ),
+                ],
+                const SizedBox(height: Gap.s5),
+                StatsCard(
+                  cells: paused
+                      ? [
+                          StatCard.cell(
+                            label: '평균 페이스',
+                            value: formatPace(snap.avgPaceSecPerKm),
+                          ),
+                          StatCard.cell(
+                            label: '시간',
+                            value: formatDuration(snap.movingTime),
+                          ),
+                          StatCard.cell(
+                            label: '칼로리',
+                            value:
+                                '${estimateCalories(snap.distanceM, weightKg: view.weightKg).round()}',
+                          ),
+                        ]
+                      : [
+                          StatCard.cell(
+                            label: '평균 페이스',
+                            value: formatPace(snap.avgPaceSecPerKm),
+                          ),
+                          StatCard.cell(
+                            label: '현재 페이스',
+                            value: formatPace(snap.currentPaceSecPerKm),
+                          ),
+                          StatCard.cell(
+                            label: '시간',
+                            value: formatDuration(snap.movingTime),
+                          ),
+                        ],
+                ),
+                const SizedBox(height: Gap.s5),
+                Expanded(child: stage),
+                const SizedBox(height: Gap.s5),
+                if (!paused)
+                  AppButton.panel(label: '일시정지', onPressed: controller.pause)
+                else ...[
                   if (autoPaused) ...[
                     // 오래 쉴 때는 사용자 일시정지로 바꿔 5분 자동 종료를 피한다.
                     Row(
@@ -253,7 +219,44 @@ class _InRunScreenState extends ConsumerState<InRunScreen> {
   }
 }
 
-/// 거리 아래의 오늘 목표 진행. 달성하면 "목표 달성!" 을 success 색으로 보인다.
+/// 거리 숫자(화면에서 가장 큰 글자) + 오른쪽 `km`(title, inkMuted) 를 같은 기준선에
+/// 가운데로 놓는다. 러닝 중은 distance-xl 128, 일시정지는 number-l 64 로 줄여
+/// 무대·재개·종료 버튼 자리를 남긴다. 화면 폭이 모자라면(긴 거리·큰 글자) 함께 줄인다.
+class _Distance extends StatelessWidget {
+  const _Distance({required this.distanceM, required this.large});
+
+  final double distanceM;
+  final bool large;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = AppColors.of(context);
+    final t = AppText.of(context);
+    return FittedBox(
+      fit: BoxFit.scaleDown,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.baseline,
+        textBaseline: TextBaseline.alphabetic,
+        children: [
+          Text(formatKm(distanceM), style: large ? t.distanceXl : t.numberL),
+          const SizedBox(width: Gap.s2),
+          Text(
+            'km',
+            style: t.title.copyWith(
+              color: c.inkMuted,
+              fontWeight: FontWeight.w700,
+              fontVariations: const [FontVariation('wght', 700)],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// 거리 아래의 오늘 목표 줄(왼쪽 정렬) + 전체 폭 진행 막대.
+/// 달성하면 "목표 달성!" 을 success 색으로 보인다.
 class _GoalRow extends StatelessWidget {
   const _GoalRow({
     required this.goal,
@@ -277,60 +280,58 @@ class _GoalRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = AppColors.of(context);
     final t = AppText.of(context);
-    return SizedBox(
-      width: 200,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            reached ? '목표 달성!' : '목표 ${goal.label}',
-            style: t.caption.copyWith(color: reached ? c.success : c.inkMuted),
-          ),
-          const SizedBox(height: Gap.s1),
-          ProgressBar(value: reached ? 1 : _progress),
-        ],
-      ),
-    );
-  }
-}
-
-/// 160×120 아바타 무대(surface-soft, radius-xl).
-class _AvatarStage extends StatelessWidget {
-  const _AvatarStage({required this.child});
-
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 160,
-      height: 120,
-      alignment: Alignment.center,
-      decoration: BoxDecoration(
-        color: AppColors.of(context).surfaceSoft,
-        borderRadius: BorderRadius.circular(Radii.xl),
-      ),
-      child: child,
-    );
-  }
-}
-
-/// 지표 카드 3개를 같은 폭으로 늘어놓는다.
-class _StatRow extends StatelessWidget {
-  const _StatRow(this.cards);
-
-  final List<Widget> cards;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        for (var i = 0; i < cards.length; i++) ...[
-          if (i > 0) const SizedBox(width: Gap.s3),
-          Expanded(child: cards[i]),
-        ],
+        Text(
+          reached ? '목표 달성!' : '목표 ${goal.label}',
+          style: t.label.copyWith(color: reached ? c.success : c.inkMuted),
+        ),
+        const SizedBox(height: Gap.s2),
+        ProgressBar(value: reached ? 1 : _progress),
       ],
+    );
+  }
+}
+
+/// 러닝 중 사각 무대(폭 전체, 땅 띠 [Stage.groundHeightCompact]). 펫은 시안대로 6배이고,
+/// 무대가 낮으면(작은 화면·큰 글자) 들어가는 가장 큰 정수 배율로 줄인다.
+/// 1배도 안 들어가면(아주 작은 화면 + 큰 글자) 빈 무대 띠 대신 무대를 비워 둔다.
+class _RunStage extends StatelessWidget {
+  const _RunStage({required this.pet});
+
+  /// 배율을 받아 펫(32 × 배율 정사각형)을 만든다.
+  final Widget Function(int scale) pet;
+
+  static const int _maxScale = 6;
+  static const int _minScale = 1;
+
+  /// [scale] 배 펫이 땅 위에 서는 데 필요한 무대 높이.
+  static double _needed(int scale) =>
+      spriteFramePx * scale +
+      Stage.groundHeightCompact -
+      Stage.footSink -
+      spriteFootGapRows * scale;
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, box) {
+        int? scale;
+        for (var s = _maxScale; s >= _minScale; s--) {
+          if (_needed(s) <= box.maxHeight) {
+            scale = s;
+            break;
+          }
+        }
+        if (scale == null) return const SizedBox.shrink();
+        return PetStage(
+          height: box.maxHeight,
+          scale: scale,
+          groundHeight: Stage.groundHeightCompact,
+          pet: pet(scale),
+        );
+      },
     );
   }
 }

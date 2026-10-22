@@ -34,6 +34,7 @@ const _light = {
   'paceMid': 0xFF1E7B45,
   'paceFast': 0xFFC8650A,
   'spriteRim': 0x00000000,
+  'bubble': 0xFFFFFFFF,
 };
 const _dark = {
   'background': 0xFF10160D,
@@ -61,6 +62,7 @@ const _dark = {
   'paceMid': 0xFF5DD08A,
   'paceFast': 0xFFF08A3C,
   'spriteRim': 0xFFEEF4E6,
+  'bubble': 0xFF44573A,
 };
 
 double _lin(double v) =>
@@ -147,6 +149,7 @@ Map<String, Color> _colors(AppColors c) => {
   'paceMid': c.paceMid,
   'paceFast': c.paceFast,
   'spriteRim': c.spriteRim,
+  'bubble': c.bubble,
 };
 
 /// 글자 쌍(보통 글자): 4.5:1 이상. (글자 토큰, 바탕 토큰)
@@ -163,6 +166,7 @@ const _textPairs = [
   ('primaryDeep', 'background'),
   ('primaryDeep', 'surface'),
   ('stageInk', 'stageSky'),
+  ('ink', 'bubble'),
   ('coin', 'background'),
   ('coin', 'surface'),
   ('success', 'background'),
@@ -173,7 +177,7 @@ const _textPairs = [
 
 /// 큰 글자(24px 이상) 쌍: 3:1 이상. 레벨 업 같은 초록 큰 글자가 무대 위에 놓일 때.
 /// primaryDeep 은 stageSky 위에 큰 글자로만 쓴다(공통 컴포넌트는 무대 위에 작은 글자를
-/// 만들지 않는다. 말풍선은 surface 위 ink, 무대 위 작은 글자는 stageInk).
+/// 만들지 않는다. 말풍선은 bubble 위 ink, 무대 위 작은 글자는 stageInk).
 const _largeTextPairs = [('primaryDeep', 'stageSky'), ('ink', 'stageGround')];
 
 // 채움 전용 쌍(글자로 쓰지 않아 글자 대비를 검사하지 않는다, 작업 11 확인):
@@ -324,6 +328,13 @@ void main() {
       expect(_lum(d.surface), greaterThan(_lum(d.background)));
       expect(_lum(d.surfaceSoft), greaterThan(_lum(d.surface)));
       expect(_lum(l.surface), greaterThan(_lum(l.background)));
+    });
+    test('말풍선 바탕은 두 테마 모두 무대 하늘과 ΔE76 15 이상 떨어진다(작업 12)', () {
+      // 다크 surface 는 하늘과 ΔE 8 이라 말풍선 모양·꼬리가 묻혔다. 그래서 bubble 토큰을 따로 둔다.
+      for (final c in [l, d]) {
+        expect(_deltaE(c.bubble, c.stageSky), greaterThanOrEqualTo(15));
+      }
+      expect(l.bubble, l.surface);
     });
     test('다크 스프라이트 윤곽은 보이고 라이트는 투명', () {
       expect(l.spriteRim.a, 0);

@@ -431,7 +431,166 @@ void main() {
     expect(find.text('시작'), findsOneWidget);
   });
 
-  testWidgets('무대 안에 레벨 막대가 하나 있다', (tester) async {
+  group('시안 배치(작업 12)', () {
+    /// 앱처럼 아래에 탭바를 둔 홈을 [size] 화면에 그린다.
+    Future<void> pumpShell(
+      WidgetTester tester, {
+      Size size = const Size(390, 844),
+      double textScale = 1,
+      bool dark = false,
+    }) async {
+      tester.view.physicalSize = size;
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            runControllerProvider.overrideWith(() => FakeController()),
+            permissionGateProvider.overrideWithValue(
+              FakeGate(GateResult.ready),
+            ),
+            runRepositoryProvider.overrideWithValue(FakeRepo((0, 0))),
+            growthServiceProvider.overrideWithValue(
+              FakeGrowthService(growthState()),
+            ),
+            clockProvider.overrideWithValue(() => DateTime(2026, 10, 17)),
+            shopRepositoryProvider.overrideWithValue(FakeShop(const [], 1860)),
+          ],
+          child: MaterialApp(
+            theme: dark ? appDarkTheme() : appLightTheme(),
+            builder: (context, child) => MediaQuery(
+              data: MediaQuery.of(
+                context,
+              ).copyWith(textScaler: TextScaler.linear(textScale)),
+              child: child!,
+            ),
+            home: Scaffold(
+              body: const HomeScreen(),
+              bottomNavigationBar: AppTabBar(
+                tabs: const [
+                  AppTab(TabGlyph.run, '러닝'),
+                  AppTab(TabGlyph.history, '기록'),
+                  AppTab(TabGlyph.avatar, '아바타'),
+                  AppTab(TabGlyph.shop, '상점'),
+                ],
+                index: 0,
+                onSelected: (_) {},
+              ),
+            ),
+          ),
+        ),
+      );
+      await settle(tester);
+    }
+
+    testWidgets('위에서부터 코인 칩·톱니 → 무대 → 이름 Lv·막대 → 오늘 목표 → 시작', (tester) async {
+      await pumpShell(tester);
+      final coin = tester.getRect(find.byType(CoinChip));
+      final gear = tester.getRect(find.byKey(const ValueKey('home-settings')));
+      final stage = tester.getRect(find.byKey(const ValueKey('home-stage')));
+      final name = tester.getRect(find.text('러니 Lv.3'));
+      final bar = tester.getRect(find.byType(ProgressBar));
+      final picker = tester.getRect(find.byType(RunGoalPicker));
+      final start = tester.getRect(find.byType(AppButton));
+      // 코인 칩은 왼쪽, 톱니는 오른쪽 같은 줄. 둘 다 48 이상.
+      expect(coin.left, Gap.s5);
+      expect(gear.right, 390 - Gap.s5);
+      expect(gear.center.dy, closeTo(coin.center.dy, 0.5));
+      expect(gear.size, const Size(48, 48));
+      expect(coin.height, greaterThanOrEqualTo(48));
+      // 순서와 간격.
+      expect(stage.top - coin.bottom, Gap.s4);
+      expect(name.top, greaterThan(stage.bottom));
+      expect(bar.top, greaterThan(name.bottom));
+      expect(picker.top - bar.bottom, Gap.s4);
+      expect(start.top - picker.bottom, Gap.s4);
+      // 무대와 막대·카드·버튼은 좌우 여백 20 의 전체 폭.
+      for (final r in [stage, bar, picker, start]) {
+        expect(r.left, Gap.s5);
+        expect(r.right, 390 - Gap.s5);
+      }
+      expect(name.center.dx, closeTo(195, 0.5));
+    });
+
+    testWidgets('무대: 사각 무대 위 8배 병아리와 다음 레벨 말풍선', (tester) async {
+      await pumpShell(tester);
+      final stage = find.byKey(const ValueKey('home-stage'));
+      expect(tester.widget<PetStage>(stage).scale, 8);
+      final pet = tester.getRect(find.byType(AvatarView));
+      expect(pet.size, const Size(256, 256));
+      expect(tester.getRect(stage).contains(pet.topLeft), isTrue);
+      expect(
+        find.descendant(
+          of: find.byType(SpeechBubble),
+          matching: find.text('다음 레벨까지 9.2km'),
+        ),
+        findsOneWidget,
+      );
+      expect(
+        find.descendant(of: stage, matching: find.byType(SpeechBubble)),
+        findsOneWidget,
+      );
+    });
+
+    for (final (size, scale) in [
+      (const Size(390, 844), 1.0),
+      (const Size(360, 640), 1.0),
+      (const Size(360, 640), 1.3),
+    ]) {
+      testWidgets(
+        '${size.width.toInt()}×${size.height.toInt()} 글자 $scale배: 말풍선은 펫 그림을 가리지 않는다',
+        (tester) async {
+          await pumpShell(tester, size: size, textScale: scale);
+          final petScale = tester
+              .widget<PetStage>(find.byKey(const ValueKey('home-stage')))
+              .scale;
+          expect(petScale, greaterThanOrEqualTo(3));
+          final pet = tester.getRect(find.byType(AvatarView));
+          final bubble = tester.getRect(find.byType(SpeechBubble));
+          expect(
+            bubble.bottom,
+            lessThanOrEqualTo(pet.top + spriteTopGapRows * petScale),
+          );
+        },
+      );
+    }
+
+    testWidgets('390×844 에서는 탭바와 함께 한 화면에 들어간다(스크롤 없음)', (tester) async {
+      await pumpShell(tester);
+      final scroll = tester.state<ScrollableState>(find.byType(Scrollable));
+      expect(scroll.position.maxScrollExtent, 0);
+      expect(
+        tester.getRect(find.byType(AppButton)).bottom,
+        lessThanOrEqualTo(tester.getRect(find.byType(AppTabBar)).top),
+      );
+    });
+
+    for (final dark in [false, true]) {
+      testWidgets(
+        '360×640 글자 1.3배 ${dark ? '다크' : '라이트'}: 탭바와 함께 넘침 없이 스크롤해 시작까지 닿는다',
+        (tester) async {
+          await pumpShell(
+            tester,
+            size: const Size(360, 640),
+            textScale: 1.3,
+            dark: dark,
+          );
+          expect(tester.takeException(), isNull);
+          final scroll = tester.state<ScrollableState>(find.byType(Scrollable));
+          expect(scroll.position.maxScrollExtent, greaterThan(0));
+          await tester.scrollUntilVisible(find.text('시작'), 100);
+          await settle(tester);
+          expect(
+            tester.getRect(find.byType(AppButton)).bottom,
+            lessThanOrEqualTo(tester.getRect(find.byType(AppTabBar)).top),
+          );
+          expect(tester.takeException(), isNull);
+        },
+      );
+    }
+  });
+
+  testWidgets('레벨 막대가 하나 있다', (tester) async {
     await pumpHome(tester, FakeController());
     await settle(tester);
     expect(find.byType(ProgressBar), findsOneWidget);

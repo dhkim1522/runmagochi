@@ -1,4 +1,7 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../achievement/app/providers.dart';
@@ -6,6 +9,7 @@ import '../../avatar/app/providers.dart';
 import '../../avatar/domain/growth_rules.dart';
 import '../../avatar/domain/growth_state.dart';
 import '../../avatar/ui/avatar_view.dart';
+import '../../avatar/ui/sprite_sheet.dart' show spriteFramePx;
 import '../../core/home_tab.dart';
 import '../../core/theme.dart';
 import '../../core/ui/components.dart';
@@ -248,94 +252,73 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     return SafeArea(
       child: Stack(
         children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(Gap.s5, Gap.s6, Gap.s5, 0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                RunGoalPicker(
-                  goal: goal,
-                  onChanged: (v) => setState(() => _goal = v),
-                ),
-                const SizedBox(height: Gap.s2),
-                Expanded(
-                  child: Stack(
-                    fit: StackFit.expand,
+          // 높이가 넉넉하면 한 화면에 채우고(무대가 남는 높이를 받는다),
+          // 모자라면(작은 화면·큰 글자) 무대는 가장 작은 높이만 두고 스크롤한다.
+          CustomScrollView(
+            slivers: [
+              SliverFillRemaining(
+                hasScrollBody: false,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: Gap.s5,
+                    vertical: Gap.s4,
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      AppCard(
-                        key: const ValueKey('home-stage'),
-                        radius: Radii.xl,
-                        color: c.surfaceSoft,
-                        child: Center(
-                          child: FittedBox(
-                            fit: BoxFit.scaleDown,
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                // 종류를 읽기 전에는 같은 크기의 빈자리만 둔다.
-                                if (g == null)
-                                  const AvatarSlot(scale: 4)
-                                else
-                                  AvatarView(
-                                    kind: g.kind,
-                                    stage: g.stage,
-                                    mood: g.mood,
-                                    action: AvatarAction.idle,
-                                    scale: 4,
-                                    hatItemId: equipped?.hatItemId,
-                                    accessoryItemId: equipped?.accessoryItemId,
-                                  ),
-                                const SizedBox(height: Gap.s3),
-                                Text(
-                                  g == null
-                                      ? '-'
-                                      : '${g.name} Lv.${g.level.level}',
-                                  style: t.title,
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          CoinChip(onTap: _openShop),
+                          _SettingsButton(onPressed: _openSettings),
+                        ],
+                      ),
+                      const SizedBox(height: Gap.s4),
+                      Expanded(
+                        child: _HomeStage(
+                          pet: (scale) => g == null
+                              ? AvatarSlot(scale: scale)
+                              : AvatarView(
+                                  kind: g.kind,
+                                  stage: g.stage,
+                                  mood: g.mood,
+                                  action: AvatarAction.idle,
+                                  scale: scale,
+                                  hatItemId: equipped?.hatItemId,
+                                  accessoryItemId: equipped?.accessoryItemId,
                                 ),
-                                const SizedBox(height: Gap.s3),
-                                SizedBox(
-                                  width: 220,
-                                  child: ProgressBar(
-                                    value: g == null
-                                        ? 0
-                                        : g.level.xpIntoLevel /
-                                              g.level.xpForNext,
-                                  ),
-                                ),
-                                const SizedBox(height: Gap.s3),
-                                Text(
-                                  nextLevelKm == null
-                                      ? '-'
-                                      : '다음 레벨까지 ${nextLevelKm.toStringAsFixed(1)}km',
-                                  style: t.label.copyWith(
-                                    color: c.inkMuted,
-                                    fontWeight: FontWeight.w400,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
+                          bubble: nextLevelKm == null
+                              ? null
+                              : '다음 레벨까지 ${nextLevelKm.toStringAsFixed(1)}km',
                         ),
                       ),
-                      Positioned(
-                        top: Gap.s2,
-                        left: Gap.s2,
-                        child: CoinChip(onTap: _openShop),
+                      const SizedBox(height: Gap.s4),
+                      Text(
+                        g == null ? '-' : '${g.name} Lv.${g.level.level}',
+                        style: t.title,
+                        textAlign: TextAlign.center,
                       ),
-                      // 설정은 무대 오른쪽 위 톱니로 연다. 겹쳐 두어 홈 배치는 그대로다.
-                      Positioned(
-                        top: Gap.s2,
-                        right: Gap.s2,
-                        child: _SettingsButton(onPressed: _openSettings),
+                      const SizedBox(height: Gap.s2),
+                      ProgressBar(
+                        value: g == null
+                            ? 0
+                            : g.level.xpIntoLevel / g.level.xpForNext,
+                      ),
+                      const SizedBox(height: Gap.s4),
+                      RunGoalPicker(
+                        goal: goal,
+                        onChanged: (v) => setState(() => _goal = v),
+                      ),
+                      const SizedBox(height: Gap.s4),
+                      AppButton(
+                        label: '시작',
+                        onPressed: _starting ? null : _onStart,
                       ),
                     ],
                   ),
                 ),
-                const SizedBox(height: Gap.s4),
-                AppButton(label: '시작', onPressed: _starting ? null : _onStart),
-                const SizedBox(height: Gap.s2),
-              ],
-            ),
+              ),
+            ],
           ),
           if (_countdown != null)
             Positioned.fill(
@@ -350,7 +333,105 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 }
 
-/// 홈 오른쪽 위 설정 버튼(48×48). 스크린 리더에는 "설정" 버튼으로 읽힌다.
+/// 홈 사각 무대. 펫은 시안대로 8배이고, 무대가 낮으면 들어가는 가장 큰 정수 배율로
+/// 줄인다(3배 아래로는 줄이지 않고 홈이 스크롤한다). 말풍선은 오른쪽 위에 두고, 펫 그림을
+/// 가리지 않게(프레임 위 빈 줄 [spriteTopGapRows] 까지만 겹치게) 무대 높이를 잡는다.
+class _HomeStage extends StatelessWidget {
+  const _HomeStage({required this.pet, required this.bubble});
+
+  /// 배율을 받아 펫(32 × 배율 정사각형)을 만든다.
+  final Widget Function(int scale) pet;
+
+  /// 말풍선 문구. null 이면(성장을 읽기 전) 말풍선을 두지 않는다.
+  final String? bubble;
+
+  static const int _maxScale = 8;
+  static const int _minScale = 3;
+
+  /// [scale] 배 펫과 말풍선이 겹치지 않고 들어가는 무대 높이.
+  static double _needed(int scale, double bubbleHeight) {
+    final pet =
+        spriteFramePx * scale +
+        Stage.groundHeight -
+        Stage.footSink -
+        spriteFootGapRows * scale;
+    // 말풍선 아래 끝(위 여백 + 높이)이 펫 상자 위 빈 줄 아래로 내려오면 그만큼 더 높인다.
+    final overlap = Gap.s4 + bubbleHeight - spriteTopGapRows * scale;
+    return pet + math.max(0, overlap);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final bubbleHeight = SpeechBubble.heightFor(
+      MediaQuery.textScalerOf(context),
+    );
+    // 홈 스크롤(SliverFillRemaining)은 이 가장 작은 높이로 쓸 높이를 잰다.
+    return _MinIntrinsicHeight(
+      height: _needed(_minScale, bubbleHeight),
+      child: LayoutBuilder(
+        builder: (context, box) {
+          var scale = _minScale;
+          for (var s = _maxScale; s > _minScale; s--) {
+            if (_needed(s, bubbleHeight) <= box.maxHeight) {
+              scale = s;
+              break;
+            }
+          }
+          return PetStage(
+            key: const ValueKey('home-stage'),
+            height: box.maxHeight,
+            scale: scale,
+            pet: pet(scale),
+            bubble: bubble == null ? null : SpeechBubble(bubble!),
+          );
+        },
+      ),
+    );
+  }
+}
+
+/// 자식 대신 [height] 를 고유 높이로 알린다. 자식([LayoutBuilder])은 고유 크기를 잴 수 없어서
+/// 스크롤이 쓸 높이를 잴 때 무대의 가장 작은 높이를 대신 답한다. 실제 배치는 자식에 맡긴다.
+class _MinIntrinsicHeight extends SingleChildRenderObjectWidget {
+  const _MinIntrinsicHeight({required this.height, super.child});
+
+  final double height;
+
+  @override
+  RenderObject createRenderObject(BuildContext context) =>
+      _RenderMinIntrinsicHeight(height);
+
+  @override
+  void updateRenderObject(
+    BuildContext context,
+    _RenderMinIntrinsicHeight renderObject,
+  ) => renderObject.height = height;
+}
+
+class _RenderMinIntrinsicHeight extends RenderProxyBox {
+  _RenderMinIntrinsicHeight(this._height);
+
+  double _height;
+  set height(double v) {
+    if (v == _height) return;
+    _height = v;
+    markNeedsLayout();
+  }
+
+  @override
+  double computeMinIntrinsicHeight(double width) => _height;
+
+  @override
+  double computeMaxIntrinsicHeight(double width) => _height;
+
+  @override
+  double computeMinIntrinsicWidth(double height) => 0;
+
+  @override
+  double computeMaxIntrinsicWidth(double height) => 0;
+}
+
+/// 홈 오른쪽 위 설정 버튼(흰 동그라미 48×48). 스크린 리더에는 "설정" 버튼으로 읽힌다.
 class _SettingsButton extends StatelessWidget {
   const _SettingsButton({required this.onPressed});
 
@@ -358,16 +439,21 @@ class _SettingsButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = AppColors.of(context);
     return Semantics(
       button: true,
       label: '설정',
       excludeSemantics: true,
       onTap: onPressed,
-      child: IconButton(
-        key: const ValueKey('home-settings'),
-        onPressed: onPressed,
-        constraints: const BoxConstraints.tightFor(width: 48, height: 48),
-        icon: Icon(Icons.settings_outlined, color: AppColors.of(context).ink),
+      child: Pressable(
+        onTap: onPressed,
+        child: Container(
+          key: const ValueKey('home-settings'),
+          width: 48,
+          height: 48,
+          decoration: BoxDecoration(color: c.surface, shape: BoxShape.circle),
+          child: Icon(Icons.settings_outlined, color: c.ink),
+        ),
       ),
     );
   }

@@ -5,7 +5,7 @@ import '../theme.dart';
 /// 공통 컴포넌트(연두 무드보드, 결정 0029). 규칙은 docs/design/design-system.md,
 /// 값은 [AppColors]·[AppText]·`Gap`·`Radii`·`Borders`·`Stage`·`Motion` 토큰만 쓴다.
 ///
-/// - 판: [AppCard], [StatCard]
+/// - 판: [AppCard], [StatCard], [StatsCard]
 /// - 누를 것: [AppButton](주요·보조·어두운 판), [AppChip]·[ChipRow](선택 표시 하나)
 /// - 진행: [ProgressBar]
 /// - 코인: [CoinIcon]
@@ -54,34 +54,65 @@ class AppCard extends StatelessWidget {
 }
 
 /// 지표 카드: 작은 라벨(label, inkMuted) 위, 값(stat) 아래. 작은 카드 모서리.
+/// [StatCard.cell] 은 판 없이 내용만 그린다([StatsCard] 한 카드 안의 칸).
 class StatCard extends StatelessWidget {
-  const StatCard({super.key, required this.label, required this.value});
+  const StatCard({super.key, required this.label, required this.value})
+    : _framed = true;
+
+  const StatCard.cell({super.key, required this.label, required this.value})
+    : _framed = false;
 
   final String label;
   final String value;
+  final bool _framed;
 
   @override
   Widget build(BuildContext context) {
     final c = AppColors.of(context);
     final t = AppText.of(context);
+    final content = Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        SizedBox(
+          width: double.infinity,
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(label, style: t.label.copyWith(color: c.inkMuted)),
+          ),
+        ),
+        const SizedBox(height: Gap.s1),
+        FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Text(value, style: t.stat),
+        ),
+      ],
+    );
+    if (!_framed) return content;
     return AppCard(
       radius: Radii.md,
       padding: const EdgeInsets.symmetric(vertical: Gap.s3, horizontal: Gap.s1),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
+      child: content,
+    );
+  }
+}
+
+/// 흰 카드 하나에 지표 칸([StatCard.cell])을 같은 폭으로 늘어놓는다(시안 러닝 중 지표 3열).
+class StatsCard extends StatelessWidget {
+  const StatsCard({super.key, required this.cells});
+
+  final List<Widget> cells;
+
+  @override
+  Widget build(BuildContext context) {
+    return AppCard(
+      padding: const EdgeInsets.symmetric(vertical: Gap.s5, horizontal: Gap.s3),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SizedBox(
-            width: double.infinity,
-            child: FittedBox(
-              fit: BoxFit.scaleDown,
-              child: Text(label, style: t.label.copyWith(color: c.inkMuted)),
-            ),
-          ),
-          const SizedBox(height: Gap.s1),
-          FittedBox(
-            fit: BoxFit.scaleDown,
-            child: Text(value, style: t.stat),
-          ),
+          for (final (i, cell) in cells.indexed) ...[
+            if (i > 0) const SizedBox(width: Gap.s1),
+            Expanded(child: cell),
+          ],
         ],
       ),
     );
@@ -692,6 +723,10 @@ class _TabItemState extends State<_TabItem> {
 /// (docs/specs/sprite-spec.md 기준점). 기준점이 바뀌면 함께 고친다.
 const int spriteFootGapRows = 2;
 
+/// 스프라이트 프레임 위쪽에서 늘 비는 줄 수. 가장 높은 그림(도토리 비니)도 y=5 부터라
+/// 무대의 말풍선이 이만큼은 펫 상자와 겹쳐도 그림을 가리지 않는다(sprite_assets_test 확인).
+const int spriteTopGapRows = 5;
+
 /// 마스코트 뒤 사각 무대: 하늘 겹 위에 땅 겹(띠). 폭 전체, 모서리를 잘라 땅이 모서리를 따른다.
 ///
 /// [pet] 은 `32 × [scale]` 정사각형 스프라이트. 발끝이 땅 윗선 아래 [Stage.footSink] 에
@@ -783,8 +818,9 @@ class StageGround extends StatelessWidget {
   }
 }
 
-/// 말풍선: 흰 카드(모서리 md) + 아래 왼쪽 꼬리. 무대 위 캐릭터가 말하는 한 줄.
-/// 글자는 surface 위 ink 라 무대 색과 상관없이 읽힌다.
+/// 말풍선: bubble 판(모서리 md) + 아래 왼쪽 꼬리. 무대 위 캐릭터가 말하는 한 줄.
+/// 글자는 bubble 위 ink 라 무대 색과 상관없이 읽힌다. 라이트는 흰 카드, 다크는 무대
+/// 하늘보다 밝은 판이라 모양·꼬리가 하늘에 묻히지 않는다.
 class SpeechBubble extends StatelessWidget {
   const SpeechBubble(this.text, {super.key});
 
@@ -793,6 +829,14 @@ class SpeechBubble extends StatelessWidget {
   /// 꼬리 크기와 말풍선 왼쪽에서 꼬리까지.
   static const Size _tail = Size(16, 8);
   static const double _tailInset = 28;
+
+  /// 판 위아래 여백.
+  static const double _padV = 10;
+
+  /// 글자 배율 [scaler] 에서 말풍선(판 + 꼬리)의 가장 큰 높이. 무대가 말풍선 자리를
+  /// 잡을 때 쓴다. 글자는 label(14, 줄 높이 20) 한 줄이다.
+  static double heightFor(TextScaler scaler) =>
+      2 * _padV + scaler.scale(14) * 20 / 14 + _tail.height;
 
   @override
   Widget build(BuildContext context) {
@@ -804,23 +848,28 @@ class SpeechBubble extends StatelessWidget {
       children: [
         DecoratedBox(
           decoration: BoxDecoration(
-            color: c.surface,
+            color: c.bubble,
             borderRadius: BorderRadius.circular(Radii.md),
           ),
           child: Padding(
             padding: const EdgeInsets.symmetric(
               horizontal: Gap.s4,
-              vertical: 10,
+              vertical: _padV,
             ),
-            child: Text(
-              text,
-              style: _weight(t.label.copyWith(color: c.ink), FontWeight.w700),
+            // 한 줄로 두고, 무대 폭이 모자라면 줄을 바꾸지 않고 작아진다([heightFor] 를 넘지 않게).
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(
+                text,
+                maxLines: 1,
+                style: _weight(t.label.copyWith(color: c.ink), FontWeight.w700),
+              ),
             ),
           ),
         ),
         Padding(
           padding: const EdgeInsets.only(left: _tailInset),
-          child: CustomPaint(size: _tail, painter: _TailPainter(c.surface)),
+          child: CustomPaint(size: _tail, painter: _TailPainter(c.bubble)),
         ),
       ],
     );
