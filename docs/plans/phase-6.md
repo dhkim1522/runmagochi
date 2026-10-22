@@ -63,13 +63,14 @@
   - 테스트: 기존 `test/tool/sprite_data_test.dart` 전부 통과(face 가 4단계 몸 위, 발끝, 단계별 장비)
   - 확인: `fvm dart run tool/render_sprites.dart`, `fvm flutter test test/tool test/avatar`
 
-- [ ] 4. 젤리·도토리 다시 그리기
+- [x] 4. 젤리·도토리 다시 그리기
   - 작업 3 과 같은 그림체로 `tool/sprites/jelly.dart`·`acorn.dart` 교체. 종류별 특징(젤리 말랑한 몸, 도토리 모자)은 유지.
   - 파일: `tool/sprites/{jelly,acorn}.dart`, `assets/sprites/{jelly,acorn}/**`, `design/character/{jelly,acorn}.png`, `design/character/concepts.png`
   - 테스트·확인: 작업 3 과 같음
 
 - [ ] 5. 아이템 6개 다시 그리기
   - `cap`·`beanie`·`straw_hat`·`sunglasses`·`headphones`·`flower_pin` 을 새 그림체로. 3종 × 4단계 기준점에 맞춘다.
+  - 작업 3·4 리뷰에서 넘어온 것: 모자가 4단계 머리·젤리 잎보다 좁아 옆으로 비어져 나옴(모자 폭을 넓힘), 도토리 4단계 헤어밴드가 한 줄이라 모자 테두리처럼 보임(병아리·젤리처럼 두 줄로), 젤리 4단계 잎 좌우 비대칭
   - 파일: `tool/sprites/items.dart`, `assets/sprites/*/{hat,accessory}/**`, `design/character/items.png`
   - 테스트: 아이템 세로 이동 = face 세로 이동, 모자가 눈을 가리지 않음(기존 테스트)
   - 확인: `fvm flutter test test/tool test/shop`
