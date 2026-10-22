@@ -6,7 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:runmagochi/avatar/app/providers.dart';
 import 'package:runmagochi/core/theme.dart';
-import 'package:runmagochi/core/ui/clay.dart';
+import 'package:runmagochi/core/ui/components.dart';
 import 'package:runmagochi/run/app/providers.dart';
 import 'package:runmagochi/run/data/run_repository.dart';
 import 'package:runmagochi/run/ui/history_screen.dart';
@@ -134,11 +134,11 @@ void main() {
     final data = node.getSemanticsData();
     expect(data.flagsCollection.isButton, isTrue);
     expect(data.hasAction(ui.SemanticsAction.tap), isTrue);
-    final cards = find.byType(ClayCard);
+    final cards = find.byType(AppCard);
     // 첫 카드는 이번 주 합계, 이후가 러닝 카드.
     final a = tester.getRect(cards.at(1));
     final b = tester.getRect(cards.at(2));
-    expect(b.top - a.bottom, Gap.s3 - Borders.lip);
+    expect(b.top - a.bottom, Gap.s3);
     handle.dispose();
   });
 
@@ -274,7 +274,7 @@ void _loadingLayoutTests() {
       ),
     );
     await tester.pump();
-    final card = find.byType(ClayCard).first;
+    final card = find.byType(AppCard).first;
     final before = tester.getSize(card).height;
     expect(find.text('러닝 -회'), findsOneWidget);
     hold.complete([

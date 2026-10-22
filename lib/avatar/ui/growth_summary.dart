@@ -7,7 +7,7 @@ import '../../achievement/domain/badges.dart';
 import '../../achievement/ui/badge_image.dart';
 import '../../core/format.dart';
 import '../../core/theme.dart';
-import '../../core/ui/clay.dart';
+import '../../core/ui/components.dart';
 import '../../run/domain/run_goal.dart';
 import '../../shop/app/providers.dart';
 import '../domain/growth_rules.dart';
@@ -145,7 +145,7 @@ class _GrowthSummaryState extends State<GrowthSummary>
       decoration: BoxDecoration(
         color: c.surfaceSoft,
         borderRadius: BorderRadius.circular(Radii.xl),
-        border: Border.all(color: c.line, width: Borders.thick),
+        border: Border.all(color: c.line, width: Borders.edge),
       ),
       child: Padding(
         padding: const EdgeInsets.all(Gap.s5),
@@ -290,7 +290,7 @@ class _XpRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = AppColors.of(context);
     final t = AppText.of(context);
-    return ClayCard(
+    return AppCard(
       radius: Radii.md,
       padding: const EdgeInsets.symmetric(vertical: 14, horizontal: Gap.s4),
       child: Row(
@@ -310,10 +310,7 @@ class _XpRow extends StatelessWidget {
                 style: t.titleS.copyWith(color: valueColor ?? c.success),
               ),
               if (coins > 0)
-                Text(
-                  '코인 +$coins',
-                  style: t.caption.copyWith(color: c.coin),
-                ),
+                Text('코인 +$coins', style: t.caption.copyWith(color: c.coin)),
             ],
           ),
         ],

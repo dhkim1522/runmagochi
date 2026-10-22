@@ -12,7 +12,7 @@ import '../../shop/app/providers.dart';
 import '../../shop/data/shop_repository.dart' show Equipped;
 import '../../core/format.dart';
 import '../../core/theme.dart';
-import '../../core/ui/clay.dart';
+import '../../core/ui/components.dart';
 import '../app/providers.dart';
 import '../app/run_editor.dart';
 import '../app/share_service.dart';
@@ -294,16 +294,13 @@ class _SummaryScreenState extends ConsumerState<SummaryScreen> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               if (s != null) ...[
-                ClayButton(
+                AppButton.secondary(
                   label: '끝부분 잘라내기',
-                  background: AppColors.of(context).surface,
-                  foreground: AppColors.of(context).ink,
-                  lip: AppColors.of(context).line,
                   onPressed: _busy ? null : _openTrim,
                 ),
                 const SizedBox(height: Gap.s3),
               ],
-              ClayButton(
+              AppButton(
                 label: '확인',
                 onPressed: () => Navigator.of(context).pop(),
               ),
@@ -529,7 +526,7 @@ class _SummaryBody extends StatelessWidget {
           ],
         ),
         const SizedBox(height: Gap.s5),
-        ClayCard(
+        AppCard(
           child: SizedBox(
             height: 220,
             child: route.isEmpty
@@ -570,7 +567,7 @@ class _SummaryBody extends StatelessWidget {
             ),
           ),
           const SizedBox(height: Gap.s2),
-          ClayCard(
+          AppCard(
             radius: Radii.md,
             child: Column(
               children: [

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../core/format.dart';
 import '../../core/theme.dart';
-import '../../core/ui/clay.dart';
+import '../../core/ui/components.dart';
 import '../domain/run_summary.dart';
 import '../domain/run_trim.dart';
 
@@ -96,17 +96,14 @@ class _TrimSheetState extends State<TrimSheet> {
           Row(
             children: [
               Expanded(
-                child: ClayButton(
+                child: AppButton.secondary(
                   label: '취소',
-                  background: c.surface,
-                  foreground: c.ink,
-                  lip: c.line,
                   onPressed: () => Navigator.of(context).pop(),
                 ),
               ),
               const SizedBox(width: Gap.s3),
               Expanded(
-                child: ClayButton(
+                child: AppButton(
                   label: '잘라내기',
                   onPressed: _atOriginal
                       ? null

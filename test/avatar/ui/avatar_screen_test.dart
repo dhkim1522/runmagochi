@@ -9,7 +9,7 @@ import 'package:runmagochi/avatar/domain/growth_state.dart';
 import 'package:runmagochi/avatar/ui/avatar_screen.dart';
 import 'package:runmagochi/avatar/ui/avatar_view.dart';
 import 'package:runmagochi/core/theme.dart';
-import 'package:runmagochi/core/ui/clay.dart';
+import 'package:runmagochi/core/ui/components.dart';
 
 import '../../run/ui/fakes.dart';
 
@@ -84,7 +84,7 @@ void main() {
 
   testWidgets('업적 버튼이 업적 화면을 연다', (tester) async {
     await pumpIt(tester, 600);
-    final button = find.widgetWithText(ClayButton, '업적');
+    final button = find.widgetWithText(AppButton, '업적');
     await tester.ensureVisible(button);
     await tester.tap(button);
     await tester.pumpAndSettle();
@@ -132,14 +132,13 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('현재 단계 카드는 primary 테두리, 잠긴 미리보기는 흐리다', (tester) async {
+  testWidgets('현재 단계 카드는 primaryEdge 테두리, 잠긴 미리보기는 흐리다', (tester) async {
     await pumpIt(tester, 600);
-    final cards = tester.widgetList<ClayCard>(find.byType(ClayCard)).toList();
-    // 단계 카드 4 (무대 카드는 립이 없는 별도 상자)
+    final cards = tester.widgetList<AppCard>(find.byType(AppCard)).toList();
+    // 단계 카드 4 (무대 카드는 별도 상자)
     expect(cards, hasLength(4));
     const c = AppColors.light;
-    expect(cards[1].borderColor, c.primary);
-    expect(cards[1].lipColor, c.primaryDeep);
+    expect(cards[1].borderColor, c.primaryEdge);
     expect(cards[0].borderColor, isNull);
     expect(
       tester

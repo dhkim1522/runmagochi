@@ -9,7 +9,7 @@ import 'package:runmagochi/avatar/domain/growth_state.dart';
 import 'package:runmagochi/avatar/ui/avatar_view.dart';
 import 'package:runmagochi/core/home_tab.dart';
 import 'package:runmagochi/core/theme.dart';
-import 'package:runmagochi/core/ui/clay.dart';
+import 'package:runmagochi/core/ui/components.dart';
 import 'package:runmagochi/run/app/permission_gate.dart';
 import 'package:runmagochi/run/app/providers.dart';
 import 'package:runmagochi/run/data/run_repository.dart';
@@ -295,8 +295,8 @@ void main() {
     expect(find.text('3'), findsNothing);
     expect(find.text('1'), findsNothing);
     expect(find.byType(InRunScreen), findsNothing);
-    final button = tester.widget<ClayButton>(
-      find.widgetWithText(ClayButton, '시작'),
+    final button = tester.widget<AppButton>(
+      find.widgetWithText(AppButton, '시작'),
     );
     expect(button.onPressed, isNotNull);
     await settle(tester);
@@ -434,8 +434,8 @@ void main() {
   testWidgets('무대 안에 레벨 막대가 하나 있다', (tester) async {
     await pumpHome(tester, FakeController());
     await settle(tester);
-    expect(find.byType(ClayBar), findsOneWidget);
-    expect(find.widgetWithText(ClayButton, '시작'), findsOneWidget);
+    expect(find.byType(ProgressBar), findsOneWidget);
+    expect(find.widgetWithText(AppButton, '시작'), findsOneWidget);
   });
 
   testWidgets('종류를 읽기 전에는 병아리 대신 같은 크기의 빈 아바타 자리를 둔다', (tester) async {
@@ -462,12 +462,12 @@ void main() {
     final g = FakeGrowthService(growthState())..holdLoad = Completer<void>();
     await pumpHome(tester, FakeController(), growth: g);
     await settle(tester);
-    final button = tester.getRect(find.byType(ClayButton));
+    final button = tester.getRect(find.byType(AppButton));
     final stage = tester.getRect(find.byKey(const ValueKey('home-stage')));
 
     g.holdLoad!.complete();
     await settle(tester);
-    expect(tester.getRect(find.byType(ClayButton)), button);
+    expect(tester.getRect(find.byType(AppButton)), button);
     expect(tester.getRect(find.byKey(const ValueKey('home-stage'))), stage);
   });
 
@@ -483,12 +483,15 @@ void main() {
   group('오늘 목표 선택', () {
     /// 선택된 칩은 primary 바탕이다.
     Color? chipColor(WidgetTester tester, String label) {
-      final material = tester.widget<Material>(
+      final chip = tester.widget<AnimatedContainer>(
         find
-            .ancestor(of: find.text(label), matching: find.byType(Material))
+            .ancestor(
+              of: find.text(label),
+              matching: find.byType(AnimatedContainer),
+            )
             .first,
       );
-      return material.color;
+      return (chip.decoration! as BoxDecoration).color;
     }
 
     Future<void> startAndWait(WidgetTester tester) async {
@@ -774,11 +777,11 @@ void main() {
       await pumpHome(tester, FakeController(), repo: repo);
       await settle(tester);
       final picker = tester.getRect(find.byType(RunGoalPicker));
-      final button = tester.getRect(find.byType(ClayButton));
+      final button = tester.getRect(find.byType(AppButton));
       repo.holdLastGoal!.complete();
       await settle(tester);
       expect(tester.getRect(find.byType(RunGoalPicker)), picker);
-      expect(tester.getRect(find.byType(ClayButton)), button);
+      expect(tester.getRect(find.byType(AppButton)), button);
     });
 
     for (final dark in [false, true]) {

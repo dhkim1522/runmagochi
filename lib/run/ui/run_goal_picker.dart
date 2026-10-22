@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../core/theme.dart';
-import '../../core/ui/clay.dart';
+import '../../core/ui/components.dart';
 import '../domain/run_goal.dart';
 
 /// 바로 고르는 목표 거리(km).
@@ -23,7 +23,7 @@ const int maxGoalMinutes = 180;
 const RunGoal _defaultDistanceGoal = DistanceGoal(3000);
 const RunGoal _defaultTimeGoal = TimeGoal(Duration(minutes: 30));
 
-/// 홈의 "오늘 목표" 선택. 위쪽에서 거리·시간을 고르고, 아래 알약 칩에서 값을 고른다.
+/// 홈의 "오늘 목표" 선택. 위쪽 칩 줄에서 거리·시간을 고르고, 아래 칩 줄에서 값을 고른다.
 ///
 /// [goal] 은 지금 고른 목표. 바로 고르는 값이 아니면 "직접" 칩이 그 값을 보인다.
 class RunGoalPicker extends StatelessWidget {
@@ -77,7 +77,7 @@ class RunGoalPicker extends StatelessWidget {
     final t = AppText.of(context);
     final custom = _customValue;
     final unit = _isTime ? '분' : 'km';
-    return ClayCard(
+    return AppCard(
       radius: Radii.lg,
       padding: const EdgeInsets.fromLTRB(Gap.s3, Gap.s3, Gap.s3, Gap.s3),
       child: Column(
@@ -86,130 +86,56 @@ class RunGoalPicker extends StatelessWidget {
         children: [
           Text('오늘 목표', style: t.label.copyWith(color: c.inkMuted)),
           const SizedBox(height: Gap.s2),
-          Row(
+          ChipRow(
             children: [
-              Expanded(
-                child: _GoalChip(
-                  label: '거리',
-                  semanticLabel: '목표 종류 거리',
-                  selected: !_isTime,
-                  onTap: () {
-                    if (_isTime) onChanged(_defaultDistanceGoal);
-                  },
-                ),
+              AppChip(
+                label: '거리',
+                semanticLabel: '목표 종류 거리',
+                selected: !_isTime,
+                onTap: () {
+                  if (_isTime) onChanged(_defaultDistanceGoal);
+                },
               ),
-              const SizedBox(width: Gap.s2),
-              Expanded(
-                child: _GoalChip(
-                  label: '시간',
-                  semanticLabel: '목표 종류 시간',
-                  selected: _isTime,
-                  onTap: () {
-                    if (!_isTime) onChanged(_defaultTimeGoal);
-                  },
-                ),
+              AppChip(
+                label: '시간',
+                semanticLabel: '목표 종류 시간',
+                selected: _isTime,
+                onTap: () {
+                  if (!_isTime) onChanged(_defaultTimeGoal);
+                },
               ),
             ],
           ),
           const SizedBox(height: Gap.s2),
-          Row(
+          ChipRow(
             children: [
               if (_isTime)
-                for (final m in _presetMinutes) ...[
-                  Expanded(
-                    child: _GoalChip(
-                      label: '$m분',
-                      semanticLabel: '목표 $m분',
-                      selected: goal == TimeGoal(Duration(minutes: m)),
-                      onTap: () => onChanged(TimeGoal(Duration(minutes: m))),
-                    ),
-                  ),
-                  const SizedBox(width: Gap.s2),
-                ]
+                for (final m in _presetMinutes)
+                  AppChip(
+                    label: '$m분',
+                    semanticLabel: '목표 $m분',
+                    selected: goal == TimeGoal(Duration(minutes: m)),
+                    onTap: () => onChanged(TimeGoal(Duration(minutes: m))),
+                  )
               else
-                for (final km in _presetKm) ...[
-                  Expanded(
-                    child: _GoalChip(
-                      label: '${km}km',
-                      semanticLabel: '목표 ${km}km',
-                      selected: goal == DistanceGoal(km * 1000.0),
-                      onTap: () => onChanged(DistanceGoal(km * 1000.0)),
-                    ),
+                for (final km in _presetKm)
+                  AppChip(
+                    label: '${km}km',
+                    semanticLabel: '목표 ${km}km',
+                    selected: goal == DistanceGoal(km * 1000.0),
+                    onTap: () => onChanged(DistanceGoal(km * 1000.0)),
                   ),
-                  const SizedBox(width: Gap.s2),
-                ],
-              Expanded(
-                child: _GoalChip(
-                  label: custom == null ? '직접' : '$custom$unit',
-                  semanticLabel: custom == null
-                      ? '목표 직접 입력'
-                      : '목표 $custom$unit 직접 입력',
-                  selected: custom != null,
-                  onTap: () => _pickCustom(context),
-                ),
+              AppChip(
+                label: custom == null ? '직접' : '$custom$unit',
+                semanticLabel: custom == null
+                    ? '목표 직접 입력'
+                    : '목표 $custom$unit 직접 입력',
+                selected: custom != null,
+                onTap: () => _pickCustom(context),
               ),
             ],
           ),
         ],
-      ),
-    );
-  }
-}
-
-/// 높이 48 의 알약 칩. 선택하면 primary 바탕.
-class _GoalChip extends StatelessWidget {
-  const _GoalChip({
-    required this.label,
-    required this.semanticLabel,
-    required this.selected,
-    required this.onTap,
-  });
-
-  final String label;
-  final String semanticLabel;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final c = AppColors.of(context);
-    final t = AppText.of(context);
-    return Semantics(
-      button: true,
-      selected: selected,
-      label: semanticLabel,
-      excludeSemantics: true,
-      onTap: onTap,
-      child: Material(
-        color: selected ? c.primary : c.surface,
-        shape: StadiumBorder(
-          side: BorderSide(
-            color: selected ? c.primaryDeep : c.line,
-            width: Borders.thick,
-          ),
-        ),
-        child: InkWell(
-          customBorder: const StadiumBorder(),
-          onTap: onTap,
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(minHeight: 48),
-            child: Center(
-              child: FittedBox(
-                fit: BoxFit.scaleDown,
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: Gap.s2),
-                  child: Text(
-                    label,
-                    style: t.stat.copyWith(
-                      fontSize: 18,
-                      color: selected ? c.onPrimary : c.ink,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ),
       ),
     );
   }

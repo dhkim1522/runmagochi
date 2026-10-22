@@ -10,7 +10,7 @@ import 'package:runmagochi/avatar/app/providers.dart';
 import 'package:runmagochi/avatar/domain/growth_rules.dart';
 import 'package:runmagochi/avatar/ui/avatar_view.dart';
 import 'package:runmagochi/core/theme.dart';
-import 'package:runmagochi/core/ui/clay.dart';
+import 'package:runmagochi/core/ui/components.dart';
 import 'package:runmagochi/run/app/providers.dart';
 import 'package:runmagochi/run/domain/run_engine.dart';
 import 'package:runmagochi/run/domain/run_goal.dart';
@@ -110,7 +110,7 @@ void main() {
     final c = await open(tester, initial: snap(RunState.autoPaused));
     expect(find.text('멈춰서 일시정지했어요'), findsOneWidget);
     expect(find.text('움직이면 이어져요'), findsOneWidget);
-    expect(find.widgetWithText(ClayButton, '일시정지'), findsOneWidget);
+    expect(find.widgetWithText(AppButton, '일시정지'), findsOneWidget);
     expect(find.text('길게 눌러 종료'), findsOneWidget);
     await tester.tap(find.text('재개'));
     await tester.pump();
@@ -119,11 +119,11 @@ void main() {
 
   testWidgets('자동 일시정지에서 일시정지를 누르면 pause 가 불리고 사용자 일시정지가 된다', (tester) async {
     final c = await open(tester, initial: snap(RunState.autoPaused));
-    await tester.tap(find.widgetWithText(ClayButton, '일시정지'));
+    await tester.tap(find.widgetWithText(AppButton, '일시정지'));
     await tester.pump();
     expect(c.calls, ['pause']);
     expect(find.text('멈춰서 일시정지했어요'), findsNothing);
-    expect(find.widgetWithText(ClayButton, '일시정지'), findsNothing);
+    expect(find.widgetWithText(AppButton, '일시정지'), findsNothing);
     expect(find.text('재개'), findsOneWidget);
   });
 
@@ -209,7 +209,7 @@ void main() {
     );
     expect(find.text('2.91'), findsOneWidget);
     expect(find.text('재개'), findsNothing);
-    expect(find.widgetWithText(ClayButton, '일시정지'), findsNothing);
+    expect(find.widgetWithText(AppButton, '일시정지'), findsNothing);
 
     final g = await tester.startGesture(
       tester.getCenter(find.text('길게 눌러 종료')),
@@ -340,8 +340,8 @@ void main() {
   });
 
   group('목표 진행', () {
-    ClayBar bar(WidgetTester tester) =>
-        tester.widget<ClayBar>(find.byType(ClayBar));
+    ProgressBar bar(WidgetTester tester) =>
+        tester.widget<ProgressBar>(find.byType(ProgressBar));
 
     testWidgets('거리 아래에 목표와 진행 막대가 보인다', (tester) async {
       await open(
@@ -351,8 +351,6 @@ void main() {
       );
       expect(find.text('목표 5km'), findsOneWidget);
       expect(bar(tester).value, closeTo(0.5, 1e-9));
-      expect(bar(tester).fill, AppColors.light.primary);
-      expect(bar(tester).track, AppColors.light.surfaceSoft);
     });
 
     testWidgets('시간 목표면 목표 30분과 시간 진행 막대가 보인다', (tester) async {
@@ -397,7 +395,7 @@ void main() {
 
     testWidgets('목표가 없으면 목표 행이 없다', (tester) async {
       await open(tester, initial: snap(RunState.recording, distanceM: 2500));
-      expect(find.byType(ClayBar), findsNothing);
+      expect(find.byType(ProgressBar), findsNothing);
       expect(find.textContaining('목표'), findsNothing);
     });
 

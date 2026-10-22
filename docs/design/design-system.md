@@ -67,8 +67,8 @@ direction-c 이름과 토큰: `lime` = `primary`, `green` = `primary-deep`·`suc
 
 ## 아이콘
 
-- 2px 둥근 선, 24px. 탭 아이콘은 일반 세트 대신 앱 고유 그림(critique P2).
-- **코인 그림은 앱 코인 모양**: `coin` 동그라미 + `primary` 안쪽 고리 + `on-coin` 별. `$`·`Icons.monetization_on` 금지(작업 11 에서 바꾼다).
+- 2px 둥근 선, 24px. 탭 아이콘은 일반 세트 대신 앱 고유 그림(critique P2): 러닝화, 기록 막대, 병아리 얼굴, 코인 주머니(`TabIcon`, 코드로 그린다).
+- **코인 그림은 앱 코인 모양**: `coin` 동그라미 + `primary` 안쪽 고리 + `on-coin` 별(`CoinIcon`). `$`·`Icons.monetization_on` 금지.
 - 요약 배지 줄 `코인 +200` 은 다른 코인 줄과 같은 크기·굵기(critique P2).
 
 ## 움직임
@@ -97,10 +97,13 @@ direction-c 이름과 토큰: `lime` = `primary`, `green` = `primary-deep`·`suc
 ## 접근성
 
 - 글자 대비 4.5:1 이상(24px 이상 3:1), 면 경계·그림 3:1 이상. 쌍마다 라이트·다크 측정값은 테스트가 확인한다.
+- 채움 전용 쌍(글자로 쓰지 않는다): `stage-sky` 위 `ink-muted`, `surface-soft` 위 `primary-deep`(막대 채움은 그림 3:1 로 검사). `stage-sky` 위 `primary-deep` 은 24px 이상 큰 글자로만 쓴다. 무대 위 작은 글자는 `stage-ink`, 말풍선은 `surface` 위 `ink`.
 - 누를 수 있는 것은 48×48 이상.
 - 시스템 글자 크기를 키워도 잘리지 않게, 고정 높이 안에 글자를 가두지 않는다.
 
 ## 작업 11~15 를 위한 메모
 
 - 토큰 이름 변경: `cream` → `background`, `accent`/`on-accent` → `panel`/`on-panel`, `accent-deep` → `coin`(코인) 또는 없앰(립). `primary-deep` 은 이름은 같고 뜻이 "주황 립" 에서 "초록 강조" 로 바뀌었다.
-- `Borders.thick`·`lip`·`lipPressed` 는 옛 클레이 부품(`lib/core/ui/clay.dart`) 전용으로 남겨 두었다. 작업 11 에서 컴포넌트를 바꾸며 지운다.
+- 공통 컴포넌트는 `lib/core/ui/components.dart`(작업 11, 옛 `clay.dart`): `AppCard`·`StatCard`, `AppButton`(기본 연두·`.secondary` 흰·`.panel` 어두운 판), `AppChip`·`ChipRow`(칩·분할 선택 공통), `ProgressBar`, `CoinIcon`(코인 칩은 `lib/shop/ui/coin_chip.dart`), `AppTabBar`·`TabIcon`, `PetStage`·`StageGround`·`SpeechBubble`, `Pressable`(누름 0.97), `ScreenTitle`. 다이얼로그는 `AlertDialog` 를 그대로 쓰고 모양은 테마(`filledButtonTheme`·`textButtonTheme`·`dialogTheme`)가 정한다.
+- `PetStage` 는 펫(`32 × scale`)을 발끝이 땅 윗선 아래 `Stage.footSink` 에 묻히게 놓는다(8배 땅 56 → 펫 상자 아래 32, 6배 땅 40 → 20). 하늘·땅 겹은 `sky`·`ground` 로 바꾼다. 화면 적용은 작업 12~14.
+- 옛 `Borders.thick`·`lip`·`lipPressed` 는 지웠다. 포커스 윤곽은 `Borders.focus` 3.

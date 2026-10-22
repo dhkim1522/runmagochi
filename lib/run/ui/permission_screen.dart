@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/theme.dart';
-import '../../core/ui/clay.dart';
+import '../../core/ui/components.dart';
 import '../app/permission_gate.dart';
 
 class PermissionScreen extends ConsumerStatefulWidget {
@@ -73,7 +73,7 @@ class _PermissionScreenState extends ConsumerState<PermissionScreen>
       GateResult.needsLocation || GateResult.needsPreciseLocation => (
         _locationMessage,
         [
-          ClayButton(
+          AppButton(
             onPressed: () => _apply(gate.requestLocation),
             label: '권한 허용',
           ),
@@ -81,12 +81,12 @@ class _PermissionScreenState extends ConsumerState<PermissionScreen>
       ),
       GateResult.locationDeniedForever => (
         '설정에서 위치 권한을 허용해 주세요',
-        [ClayButton(onPressed: gate.openAppSettings, label: '설정 열기')],
+        [AppButton(onPressed: gate.openAppSettings, label: '설정 열기')],
       ),
       GateResult.needsBatteryGuide => (
         '배터리 최적화가 켜져 있으면 화면이 꺼졌을 때 기록이 끊길 수 있습니다. 설정에서 배터리 사용을 제한 없음으로 바꿔 주세요.',
         [
-          ClayButton(onPressed: gate.openBatterySettings, label: '설정 열기'),
+          AppButton(onPressed: gate.openBatterySettings, label: '설정 열기'),
           TextButton(
             style: TextButton.styleFrom(
               minimumSize: const Size.fromHeight(48),
@@ -103,7 +103,7 @@ class _PermissionScreenState extends ConsumerState<PermissionScreen>
       ),
       _ when _failed => (
         _locationMessage,
-        [ClayButton(onPressed: () => _apply(gate.check), label: '다시 시도')],
+        [AppButton(onPressed: () => _apply(gate.check), label: '다시 시도')],
       ),
       _ => ('', <Widget>[]),
     };
@@ -125,7 +125,7 @@ class _PermissionScreenState extends ConsumerState<PermissionScreen>
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         if (message.isNotEmpty)
-                          ClayCard(
+                          AppCard(
                             padding: const EdgeInsets.all(Gap.s5),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.stretch,

@@ -7,7 +7,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:runmagochi/core/theme.dart';
-import 'package:runmagochi/core/ui/clay.dart';
+import 'package:runmagochi/core/ui/components.dart';
 import 'package:runmagochi/run/app/permission_gate.dart';
 import 'package:runmagochi/run/ui/permission_screen.dart';
 

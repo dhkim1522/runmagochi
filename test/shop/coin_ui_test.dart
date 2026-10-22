@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:runmagochi/core/theme.dart';
+import 'package:runmagochi/core/ui/components.dart';
 import 'package:runmagochi/run/app/providers.dart';
 import 'package:runmagochi/run/data/run_repository.dart';
 import 'package:runmagochi/run/domain/run_goal.dart';
@@ -77,6 +78,68 @@ void main() {
     );
     await tester.tap(find.byType(CoinChip));
     expect(taps, 1);
+  });
+
+  for (final dark in [false, true]) {
+    final name = dark ? '다크' : '라이트';
+    testWidgets('칩은 흰 알약에 앱 코인 그림($name), 글자 2배에서도 넘치지 않는다', (tester) async {
+      final c = dark ? AppColors.dark : AppColors.light;
+      await pump(
+        tester,
+        Align(
+          alignment: Alignment.topLeft,
+          child: CoinChip(onTap: () {}),
+        ),
+        FakeShop([], 1240),
+        dark: dark,
+        scale: 2,
+      );
+      expect(tester.takeException(), isNull);
+      expect(find.byIcon(Icons.monetization_on), findsNothing);
+      expect(find.byType(CoinIcon), findsOneWidget);
+      final box = tester.widget<DecoratedBox>(
+        find
+            .descendant(
+              of: find.byType(CoinChip),
+              matching: find.byType(DecoratedBox),
+            )
+            .first,
+      );
+      final d = box.decoration as BoxDecoration;
+      expect(d.color, c.surface);
+      expect(d.borderRadius, BorderRadius.circular(Radii.pill));
+      final size = tester.getSize(find.byType(CoinChip));
+      expect(size.height, greaterThanOrEqualTo(48));
+      expect(size.width, greaterThanOrEqualTo(48));
+      expect(tester.widget<Text>(find.text('1,240')).style!.color, c.ink);
+    });
+  }
+
+  testWidgets('칩을 누르면 작아졌다가 돌아온다', (tester) async {
+    await pump(
+      tester,
+      Align(
+        alignment: Alignment.topLeft,
+        child: CoinChip(onTap: () {}),
+      ),
+      FakeShop([], 1240),
+    );
+    double scale() => tester
+        .widget<AnimatedScale>(
+          find.descendant(
+            of: find.byType(CoinChip),
+            matching: find.byType(AnimatedScale),
+          ),
+        )
+        .scale;
+    final g = await tester.startGesture(
+      tester.getCenter(find.byType(CoinChip)),
+    );
+    await tester.pump();
+    expect(scale(), Pressable.pressedScale);
+    await g.up();
+    await tester.pump();
+    expect(scale(), 1);
   });
 
   group('내역', () {

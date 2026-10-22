@@ -8,7 +8,7 @@ import '../../avatar/domain/growth_state.dart';
 import '../../avatar/ui/avatar_view.dart';
 import '../../core/home_tab.dart';
 import '../../core/theme.dart';
-import '../../core/ui/clay.dart';
+import '../../core/ui/components.dart';
 import '../../settings/ui/settings_screen.dart';
 import '../../shop/app/providers.dart';
 import '../../shop/ui/coin_chip.dart';
@@ -262,11 +262,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   child: Stack(
                     fit: StackFit.expand,
                     children: [
-                      ClayCard(
+                      AppCard(
                         key: const ValueKey('home-stage'),
                         radius: Radii.xl,
                         color: c.surfaceSoft,
-                        lipColor: c.line,
                         child: Center(
                           child: FittedBox(
                             fit: BoxFit.scaleDown,
@@ -296,14 +295,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                 const SizedBox(height: Gap.s3),
                                 SizedBox(
                                   width: 220,
-                                  child: ClayBar(
+                                  child: ProgressBar(
                                     value: g == null
                                         ? 0
                                         : g.level.xpIntoLevel /
                                               g.level.xpForNext,
-                                    height: 10,
-                                    fill: c.primaryDeep,
-                                    track: c.surface,
                                   ),
                                 ),
                                 const SizedBox(height: Gap.s3),
@@ -336,7 +332,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   ),
                 ),
                 const SizedBox(height: Gap.s4),
-                ClayButton(label: '시작', onPressed: _starting ? null : _onStart),
+                AppButton(label: '시작', onPressed: _starting ? null : _onStart),
                 const SizedBox(height: Gap.s2),
               ],
             ),

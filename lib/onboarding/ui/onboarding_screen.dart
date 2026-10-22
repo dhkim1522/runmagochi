@@ -11,7 +11,7 @@ import '../../avatar/domain/growth_rules.dart';
 import '../../avatar/ui/avatar_view.dart';
 import '../../core/korean.dart';
 import '../../core/theme.dart';
-import '../../core/ui/clay.dart';
+import '../../core/ui/components.dart';
 import '../../profile/app/providers.dart';
 
 /// 저장소의 기본 이름. 이 이름이면 아직 이름을 짓지 않은 것으로 보고 종류별 추천 이름을 채운다.
@@ -168,8 +168,8 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
 
   Widget _buttons(BuildContext context) {
     final nextButton = switch (_page) {
-      0 => ClayButton(label: '다음', onPressed: () => _go(1)),
-      _ => ClayButton(
+      0 => AppButton(label: '다음', onPressed: () => _go(1)),
+      _ => AppButton(
         label: '시작하기',
         onPressed: _saving || _nameError != null ? null : _finish,
       ),
@@ -179,8 +179,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
       children: [
         SizedBox(
           width: 112,
-          child: ClayButton.secondary(
-            context,
+          child: AppButton.secondary(
             label: '이전',
             onPressed: _saving ? null : () => _go(_page - 1),
           ),
@@ -243,7 +242,7 @@ class _PageScroll extends StatelessWidget {
   }
 }
 
-/// 무대: surface-soft 바탕, line 테두리, 안쪽 아래 립 느낌의 line 띠.
+/// 무대: surface-soft 바탕, line 테두리.
 class _Stage extends StatelessWidget {
   const _Stage({required this.child, this.padding = Gap.s6});
 
@@ -257,15 +256,7 @@ class _Stage extends StatelessWidget {
       decoration: BoxDecoration(
         color: c.surfaceSoft,
         borderRadius: BorderRadius.circular(Radii.xl),
-        border: Border(
-          top: BorderSide(color: c.line, width: Borders.thick),
-          left: BorderSide(color: c.line, width: Borders.thick),
-          right: BorderSide(color: c.line, width: Borders.thick),
-          bottom: BorderSide(
-            color: c.line,
-            width: Borders.thick + Borders.lip + 2,
-          ),
-        ),
+        border: Border.all(color: c.line, width: Borders.edge),
       ),
       child: Padding(padding: EdgeInsets.all(padding), child: child),
     );
@@ -328,7 +319,7 @@ class _IntroPage extends StatelessWidget {
             ),
           ),
           const SizedBox(height: Gap.s5),
-          ClayCard(
+          AppCard(
             radius: Radii.md,
             padding: const EdgeInsets.symmetric(
               vertical: 14,
@@ -388,7 +379,7 @@ class _NamePage extends StatelessWidget {
     final name = controller.text.trim();
     OutlineInputBorder border(Color color) => OutlineInputBorder(
       borderRadius: BorderRadius.circular(Radii.sm),
-      borderSide: BorderSide(color: color, width: Borders.thick),
+      borderSide: BorderSide(color: color, width: Borders.edge),
     );
     return _PageScroll(
       child: Column(
@@ -492,7 +483,7 @@ class _LoadError extends StatelessWidget {
             style: AppText.of(context).body,
           ),
           const SizedBox(height: Gap.s4),
-          ClayButton(label: '다시 시도', onPressed: onRetry),
+          AppButton(label: '다시 시도', onPressed: onRetry),
         ],
       ),
     );

@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/format.dart';
 import '../../core/theme.dart';
-import '../../core/ui/clay.dart';
+import '../../core/ui/components.dart';
 import '../../run/data/run_repository.dart';
 import '../app/providers.dart';
 import '../domain/badges.dart';
@@ -121,7 +121,7 @@ class _RecordsCard extends StatelessWidget {
     ];
     final c = AppColors.of(context);
     final t = AppText.of(context);
-    return ClayCard(
+    return AppCard(
       radius: Radii.md,
       padding: const EdgeInsets.symmetric(vertical: Gap.s3, horizontal: Gap.s4),
       child: Column(
@@ -212,7 +212,7 @@ class _NextBadgeCard extends StatelessWidget {
     final t = AppText.of(context);
     // 새벽 러너는 있다/없다 둘뿐이라 진행 막대가 오해를 부른다.
     final binary = p.badge.id == 'dawn';
-    return ClayCard(
+    return AppCard(
       radius: Radii.md,
       padding: const EdgeInsets.symmetric(vertical: 14, horizontal: Gap.s4),
       child: Column(
@@ -248,13 +248,7 @@ class _NextBadgeCard extends StatelessWidget {
               style: t.caption.copyWith(color: c.inkMuted),
             )
           else ...[
-            ClayBar(
-              key: const ValueKey('next-badge-bar'),
-              value: p.ratio,
-              height: 14,
-              fill: c.primary,
-              track: c.surfaceSoft,
-            ),
+            ProgressBar(key: const ValueKey('next-badge-bar'), value: p.ratio),
             const SizedBox(height: 6),
             Text(
               _progressText(p),

@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../achievement/domain/badges.dart';
 import '../../core/format.dart';
 import '../../core/theme.dart';
-import '../../core/ui/clay.dart';
+import '../../core/ui/components.dart';
 import '../../run/app/providers.dart';
 import '../../run/domain/run_goal.dart';
 import '../app/providers.dart';
@@ -91,9 +91,7 @@ class CoinHistoryScreen extends ConsumerWidget {
                       : ListView.builder(
                           itemCount: list.length,
                           itemBuilder: (context, i) => Padding(
-                            padding: const EdgeInsets.only(
-                              bottom: Gap.s3 - Borders.lip,
-                            ),
+                            padding: const EdgeInsets.only(bottom: Gap.s3),
                             child: _CoinTile(list[i]),
                           ),
                         ),
@@ -117,7 +115,7 @@ class _CoinTile extends StatelessWidget {
     final t = AppText.of(context);
     final amount = row.entry.amount;
     final sign = amount < 0 ? '−' : '+';
-    return ClayCard(
+    return AppCard(
       radius: Radii.md,
       padding: const EdgeInsets.symmetric(vertical: 14, horizontal: Gap.s4),
       child: Row(

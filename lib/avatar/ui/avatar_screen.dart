@@ -5,7 +5,7 @@ import '../../achievement/ui/achievement_screen.dart';
 import '../../shop/app/providers.dart';
 import '../../core/format.dart';
 import '../../core/theme.dart';
-import '../../core/ui/clay.dart';
+import '../../core/ui/components.dart';
 import '../app/providers.dart';
 import '../domain/growth_rules.dart';
 import '../domain/growth_state.dart';
@@ -55,7 +55,7 @@ class AvatarScreen extends ConsumerWidget {
               decoration: BoxDecoration(
                 color: c.surfaceSoft,
                 borderRadius: BorderRadius.circular(Radii.xl),
-                border: Border.all(color: c.line, width: Borders.thick),
+                border: Border.all(color: c.line, width: Borders.edge),
               ),
               child: Padding(
                 padding: const EdgeInsets.all(Gap.s5),
@@ -95,8 +95,7 @@ class AvatarScreen extends ConsumerWidget {
               ),
             ),
             const SizedBox(height: Gap.s4),
-            ClayButton.secondary(
-              context,
+            AppButton.secondary(
               label: '업적',
               onPressed: () => Navigator.of(context).push(
                 MaterialPageRoute<void>(
@@ -109,7 +108,7 @@ class AvatarScreen extends ConsumerWidget {
             const SizedBox(height: Gap.s3),
             for (var s = 1; s <= stageStartLevels.length; s++)
               Padding(
-                padding: const EdgeInsets.only(bottom: Gap.s3 - Borders.lip),
+                padding: const EdgeInsets.only(bottom: Gap.s3),
                 child: _StageRow(kind: g.kind, stage: s, currentStage: g.stage),
               ),
           ],
@@ -137,7 +136,7 @@ class _StageProgress extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        ClayBar(value: value, height: 14, fill: c.primary, track: c.surface),
+        ProgressBar(value: value),
         const SizedBox(height: 6),
         Text(
           remaining == null
@@ -190,10 +189,9 @@ class _StageRow extends StatelessWidget {
         ),
       ),
     );
-    return ClayCard(
+    return AppCard(
       radius: Radii.md,
-      borderColor: current ? c.primary : null,
-      lipColor: current ? c.primaryDeep : null,
+      borderColor: current ? c.primaryEdge : null,
       padding: const EdgeInsets.symmetric(vertical: Gap.s3, horizontal: Gap.s4),
       child: Row(
         children: [

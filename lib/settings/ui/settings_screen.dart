@@ -10,7 +10,7 @@ import '../../backup/app/providers.dart';
 import '../../backup/ui/refresh_after_import.dart';
 import '../../core/app_info.dart';
 import '../../core/theme.dart';
-import '../../core/ui/clay.dart';
+import '../../core/ui/components.dart';
 import '../../profile/app/providers.dart';
 
 /// 체중(kg). 입력하지 않았으면 null. 저장하거나 가져온 뒤 invalidate 한다.
@@ -230,7 +230,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 ],
               ),
               const _SectionLabel('백업'),
-              ClayCard(
+              AppCard(
                 padding: const EdgeInsets.all(Gap.s4),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -243,20 +243,16 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     Row(
                       children: [
                         Expanded(
-                          child: ClayButton.accent(
-                            context,
+                          child: AppButton.panel(
                             label: '내보내기',
                             onPressed: _backupBusy ? null : _export,
                           ),
                         ),
                         const SizedBox(width: Gap.s3),
                         Expanded(
-                          child: ClayButton(
+                          child: AppButton.secondary(
                             label: '가져오기',
                             onPressed: _backupBusy ? null : _import,
-                            background: c.surfaceSoft,
-                            foreground: c.ink,
-                            lip: c.lineStrong,
                           ),
                         ),
                       ],
@@ -297,7 +293,7 @@ class _SectionLabel extends StatelessWidget {
   }
 }
 
-/// 행을 담는 클레이 카드. 행 사이에 2px line 구분선을 긋는다.
+/// 행을 담는 흰 카드. 행 사이에 2px line 구분선을 긋는다.
 class _RowsCard extends StatelessWidget {
   const _RowsCard({required this.children});
   final List<Widget> children;
@@ -305,10 +301,10 @@ class _RowsCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = AppColors.of(context);
-    return ClayCard(
+    return AppCard(
       child: ClipRRect(
         // 눌림 물결이 둥근 모서리 밖으로 나가지 않게 테두리 안쪽에 맞춰 자른다.
-        borderRadius: BorderRadius.circular(Radii.lg - Borders.thick),
+        borderRadius: BorderRadius.circular(Radii.lg),
         child: Material(
           type: MaterialType.transparency,
           child: Column(

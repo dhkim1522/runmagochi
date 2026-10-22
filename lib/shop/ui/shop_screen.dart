@@ -6,7 +6,7 @@ import '../../avatar/domain/growth_rules.dart';
 import '../../avatar/ui/avatar_view.dart';
 import '../../core/format.dart';
 import '../../core/theme.dart';
-import '../../core/ui/clay.dart';
+import '../../core/ui/components.dart';
 import '../app/providers.dart';
 import '../data/shop_repository.dart';
 import '../domain/catalog.dart';
@@ -173,7 +173,7 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
                       decoration: BoxDecoration(
                         color: c.surfaceSoft,
                         borderRadius: BorderRadius.circular(Radii.xl),
-                        border: Border.all(color: c.line, width: Borders.thick),
+                        border: Border.all(color: c.line, width: Borders.edge),
                       ),
                       child: Padding(
                         padding: const EdgeInsets.all(Gap.s4),
@@ -196,19 +196,16 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
                       ),
                     ),
                     const SizedBox(height: Gap.s4),
-                    Row(
+                    ChipRow(
                       children: [
-                        Expanded(child: _slotTab('모자', ItemSlot.hat)),
-                        const SizedBox(width: Gap.s3),
-                        Expanded(child: _slotTab('소품', ItemSlot.accessory)),
+                        _slotTab('모자', ItemSlot.hat),
+                        _slotTab('소품', ItemSlot.accessory),
                       ],
                     ),
                     const SizedBox(height: Gap.s4),
                     for (var i = 0; i < _items.length; i += 2)
                       Padding(
-                        padding: const EdgeInsets.only(
-                          bottom: Gap.s3 - Borders.lip,
-                        ),
+                        padding: const EdgeInsets.only(bottom: Gap.s3),
                         child: IntrinsicHeight(
                           child: Row(
                             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -252,15 +249,12 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
                   style: t.label.copyWith(color: c.danger),
                 ),
               ),
-            Padding(
-              padding: const EdgeInsets.only(bottom: Borders.lip),
-              child: ClayButton(
-                key: const ValueKey('shop-action'),
-                label: label,
-                onPressed: _busy || !canBuy
-                    ? null
-                    : () => _act(selected, owned: isOwned, worn: isWorn),
-              ),
+            AppButton(
+              key: const ValueKey('shop-action'),
+              label: label,
+              onPressed: _busy || !canBuy
+                  ? null
+                  : () => _act(selected, owned: isOwned, worn: isWorn),
             ),
           ],
         ),
@@ -268,38 +262,11 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
     );
   }
 
-  Widget _slotTab(String text, ItemSlot slot) {
-    final c = AppColors.of(context);
-    final t = AppText.of(context);
-    final on = _slot == slot;
-    return Semantics(
-      button: true,
-      selected: on,
-      label: text,
-      excludeSemantics: true,
-      onTap: () => setState(() => _slot = slot),
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onTap: () => setState(() => _slot = slot),
-        child: Container(
-          constraints: const BoxConstraints(minHeight: 48),
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            color: on ? c.primary : c.surface,
-            borderRadius: BorderRadius.circular(Radii.pill),
-            border: Border.all(
-              color: on ? c.primaryDeep : c.line,
-              width: Borders.thick,
-            ),
-          ),
-          child: Text(
-            text,
-            style: t.heading.copyWith(color: on ? c.onPrimary : c.ink),
-          ),
-        ),
-      ),
-    );
-  }
+  Widget _slotTab(String text, ItemSlot slot) => AppChip(
+    label: text,
+    selected: _slot == slot,
+    onTap: () => setState(() => _slot = slot),
+  );
 }
 
 class _ItemCard extends StatelessWidget {
@@ -342,9 +309,9 @@ class _ItemCard extends StatelessWidget {
         key: ValueKey('item-${item.id}'),
         behavior: HitTestBehavior.opaque,
         onTap: onTap,
-        child: ClayCard(
+        child: AppCard(
           radius: Radii.lg,
-          borderColor: chosen ? c.primaryDeep : null,
+          borderColor: chosen ? c.primaryEdge : null,
           padding: const EdgeInsets.all(Gap.s3),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -374,7 +341,7 @@ class _ItemCard extends StatelessWidget {
                 Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.monetization_on, size: 18, color: c.coin),
+                    const CoinIcon(size: 18),
                     const SizedBox(width: Gap.s1),
                     Text(status, style: t.label),
                   ],

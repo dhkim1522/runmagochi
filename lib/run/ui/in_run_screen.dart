@@ -8,7 +8,7 @@ import '../../avatar/domain/growth_rules.dart';
 import '../../avatar/ui/avatar_view.dart';
 import '../../core/format.dart';
 import '../../core/theme.dart';
-import '../../core/ui/clay.dart';
+import '../../core/ui/components.dart';
 import '../app/providers.dart';
 import '../domain/run_engine.dart';
 import '../domain/run_goal.dart';
@@ -168,11 +168,7 @@ class _InRunScreenState extends ConsumerState<InRunScreen> {
                       ),
                     ),
                   ),
-                  ClayButton.accent(
-                    context,
-                    label: '일시정지',
-                    onPressed: controller.pause,
-                  ),
+                  AppButton.panel(label: '일시정지', onPressed: controller.pause),
                 ] else ...[
                   Center(
                     child: FittedBox(
@@ -220,16 +216,14 @@ class _InRunScreenState extends ConsumerState<InRunScreen> {
                     Row(
                       children: [
                         Expanded(
-                          child: ClayButton.accent(
-                            context,
+                          child: AppButton.panel(
                             label: '재개',
                             onPressed: _ending ? null : controller.resume,
                           ),
                         ),
                         const SizedBox(width: Gap.s3),
                         Expanded(
-                          child: ClayButton.secondary(
-                            context,
+                          child: AppButton.secondary(
                             label: '일시정지',
                             onPressed: _ending ? null : controller.pause,
                           ),
@@ -238,8 +232,7 @@ class _InRunScreenState extends ConsumerState<InRunScreen> {
                     ),
                     const SizedBox(height: Gap.s2),
                   ] else if (!ended) ...[
-                    ClayButton.accent(
-                      context,
+                    AppButton.panel(
                       label: '재개',
                       onPressed: _ending ? null : controller.resume,
                     ),
@@ -294,12 +287,7 @@ class _GoalRow extends StatelessWidget {
             style: t.caption.copyWith(color: reached ? c.success : c.inkMuted),
           ),
           const SizedBox(height: Gap.s1),
-          ClayBar(
-            value: reached ? 1 : _progress,
-            height: 10,
-            fill: c.primary,
-            track: c.surfaceSoft,
-          ),
+          ProgressBar(value: reached ? 1 : _progress),
         ],
       ),
     );
@@ -348,7 +336,8 @@ class _StatRow extends StatelessWidget {
 }
 
 /// 1.5초 동안 누르고 있어야 [onComplete] 가 불리는 종료 버튼.
-/// 흰 카드형 알약이고, 누르는 동안 왼쪽부터 surface-soft 로 차오른다.
+/// 흰 보조 버튼 모양(surface + line-strong 경계선) 알약이고,
+/// 누르는 동안 경계선 안쪽이 왼쪽부터 surface-soft 로 차오른다.
 class _HoldToStopButton extends StatefulWidget {
   const _HoldToStopButton({
     super.key,
@@ -399,10 +388,13 @@ class _HoldToStopButtonState extends State<_HoldToStopButton>
         },
         onPointerUp: (_) => _release(),
         onPointerCancel: (_) => _release(),
-        child: ClayCard(
+        child: AppCard(
           radius: Radii.pill,
+          borderColor: c.lineStrong,
+          // 차오르는 면이 경계선을 덮지 않게 선 두께만큼 안쪽에 그린다.
+          padding: const EdgeInsets.all(Borders.edge),
           child: SizedBox(
-            height: ClayButton.height - 2 * Borders.thick,
+            height: AppButton.height - 2 * Borders.edge,
             child: ClipRRect(
               borderRadius: BorderRadius.circular(Radii.pill),
               child: Stack(

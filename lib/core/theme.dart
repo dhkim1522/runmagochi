@@ -50,17 +50,8 @@ class Borders {
   /// 사각 무대 땅 윗선(stageGroundLine).
   static const double groundLine = 4;
 
-  // 아래 셋은 옛 말랑 클레이 부품(lib/core/ui/clay.dart) 전용이다.
-  // 새 시스템에는 테두리·립이 없다. 작업 11 에서 컴포넌트를 바꾸며 지운다.
-
-  /// 옛 클레이 카드 테두리.
-  static const double thick = 3;
-
-  /// 옛 클레이 립 두께.
-  static const double lip = 6;
-
-  /// 옛 클레이 눌린 립 두께.
-  static const double lipPressed = 2;
+  /// 키보드 포커스 윤곽(primaryDeep).
+  static const double focus = 3;
 }
 
 /// 사각 무대(마스코트 뒤 하늘 + 땅 띠) 치수. 색은 [AppColors.stageSky] 등.
@@ -568,7 +559,30 @@ ThemeData _build(AppColors c, Brightness brightness) {
       style: TextButton.styleFrom(
         foregroundColor: c.primaryDeep,
         textStyle: text.label,
+        minimumSize: const Size(48, 48),
       ),
+    ),
+    // 다이얼로그 확인 버튼: 연두 면 + primary-edge 경계선(연두 면 규칙), 48 이상 알약.
+    // 비활성은 Material 기본 흐린 면에 line 경계선.
+    filledButtonTheme: FilledButtonThemeData(
+      style:
+          FilledButton.styleFrom(
+            backgroundColor: c.primary,
+            foregroundColor: c.onPrimary,
+            textStyle: text.bodyStrong,
+            minimumSize: const Size(48, 48),
+            padding: const EdgeInsets.symmetric(horizontal: Gap.s5),
+            shape: const StadiumBorder(),
+          ).copyWith(
+            side: WidgetStateProperty.resolveWith(
+              (states) => BorderSide(
+                color: states.contains(WidgetState.disabled)
+                    ? c.line
+                    : c.primaryEdge,
+                width: Borders.edge,
+              ),
+            ),
+          ),
     ),
     extensions: [c, text],
   );

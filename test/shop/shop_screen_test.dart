@@ -7,7 +7,7 @@ import 'package:runmagochi/app.dart';
 import 'package:runmagochi/avatar/app/providers.dart';
 import 'package:runmagochi/avatar/ui/avatar_view.dart';
 import 'package:runmagochi/core/theme.dart';
-import 'package:runmagochi/core/ui/clay.dart';
+import 'package:runmagochi/core/ui/components.dart';
 import 'package:runmagochi/profile/app/providers.dart';
 import 'package:runmagochi/run/app/providers.dart';
 import 'package:runmagochi/run/ui/home_screen.dart';
@@ -62,8 +62,8 @@ Map<String, String> stagePaths(WidgetTester tester) => tester
     .state<AvatarViewState>(find.byKey(const ValueKey('shop-stage-avatar')))
     .layerPaths;
 
-ClayButton bottomButton(WidgetTester tester) =>
-    tester.widget<ClayButton>(find.byKey(const ValueKey('shop-action')));
+AppButton bottomButton(WidgetTester tester) =>
+    tester.widget<AppButton>(find.byKey(const ValueKey('shop-action')));
 
 void main() {
   testWidgets('제목, 코인 칩, 모자 3개와 가격이 보인다', (tester) async {

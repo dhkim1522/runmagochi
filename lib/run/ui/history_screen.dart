@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/format.dart';
 import '../../core/theme.dart';
-import '../../core/ui/clay.dart';
+import '../../core/ui/components.dart';
 import '../app/providers.dart';
 import '../data/run_repository.dart';
 import '../domain/run_stats.dart';
@@ -125,9 +125,7 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                       SliverList.builder(
                         itemCount: list.length,
                         itemBuilder: (context, i) => Padding(
-                          padding: const EdgeInsets.only(
-                            bottom: Gap.s3 - Borders.lip,
-                          ),
+                          padding: const EdgeInsets.only(bottom: Gap.s3),
                           child: _RunTile(list[i]),
                         ),
                       ),
@@ -154,44 +152,14 @@ class _PeriodTabs extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final c = AppColors.of(context);
-    final t = AppText.of(context);
-    return Row(
+    return ChipRow(
       children: [
-        for (final p in StatsPeriod.values) ...[
-          if (p != StatsPeriod.week) const SizedBox(width: Gap.s2),
-          Expanded(
-            child: Semantics(
-              button: true,
-              selected: p == selected,
-              label: _tabLabels[p],
-              excludeSemantics: true,
-              onTap: () => onSelect(p),
-              child: GestureDetector(
-                behavior: HitTestBehavior.opaque,
-                onTap: () => onSelect(p),
-                child: Container(
-                  constraints: const BoxConstraints(minHeight: 44),
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    color: p == selected ? c.primary : c.surface,
-                    borderRadius: BorderRadius.circular(Radii.pill),
-                    border: Border.all(
-                      color: p == selected ? c.primary : c.line,
-                      width: Borders.thick,
-                    ),
-                  ),
-                  child: Text(
-                    _tabLabels[p]!,
-                    style: t.label.copyWith(
-                      color: p == selected ? c.onPrimary : c.ink,
-                    ),
-                  ),
-                ),
-              ),
-            ),
+        for (final p in StatsPeriod.values)
+          AppChip(
+            label: _tabLabels[p]!,
+            selected: p == selected,
+            onTap: () => onSelect(p),
           ),
-        ],
       ],
     );
   }
@@ -234,7 +202,7 @@ class _StatsCard extends StatelessWidget {
       fontWeight: FontWeight.w400,
       color: c.inkMuted,
     );
-    return ClayCard(
+    return AppCard(
       padding: const EdgeInsets.symmetric(vertical: Gap.s3, horizontal: Gap.s4),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -361,7 +329,7 @@ class _RunTile extends StatelessWidget {
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
         onTap: open,
-        child: ClayCard(
+        child: AppCard(
           radius: Radii.md,
           padding: const EdgeInsets.symmetric(vertical: 14, horizontal: Gap.s4),
           child: Column(

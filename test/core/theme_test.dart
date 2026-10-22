@@ -172,7 +172,13 @@ const _textPairs = [
 ];
 
 /// 큰 글자(24px 이상) 쌍: 3:1 이상. 레벨 업 같은 초록 큰 글자가 무대 위에 놓일 때.
+/// primaryDeep 은 stageSky 위에 큰 글자로만 쓴다(공통 컴포넌트는 무대 위에 작은 글자를
+/// 만들지 않는다. 말풍선은 surface 위 ink, 무대 위 작은 글자는 stageInk).
 const _largeTextPairs = [('primaryDeep', 'stageSky'), ('ink', 'stageGround')];
+
+// 채움 전용 쌍(글자로 쓰지 않아 글자 대비를 검사하지 않는다, 작업 11 확인):
+// - stageSky 위 inkMuted: 무대 위 보조 글자는 없다. 무대 위 글자는 stageInk·ink.
+// - surfaceSoft 위 primaryDeep: 진행 막대 채움(아래 그림 쌍 3:1). 트랙 위 글자는 ink 만.
 
 /// 면 경계·그림 쌍(글자 아님): 3:1 이상.
 const _graphicPairs = [
@@ -349,6 +355,7 @@ void main() {
     );
     expect(Borders.edge, 2);
     expect(Borders.groundLine, 4);
+    expect(Borders.focus, 3);
   });
 
   test('사각 무대 치수: 모서리 24(카드 안 20), 땅 띠 56·40, 발 8 묻힘', () {
@@ -544,5 +551,16 @@ void _tokensJsonTests() {
       motion['duration-celebrate'],
       '${Motion.celebrate.inMilliseconds}ms',
     );
+  });
+  test('tokens.json 선 두께가 theme.dart 와 같고 옛 클레이 립·테두리는 없다', () {
+    final border = {
+      for (final t in ((json['border'] as Map)['tokens'] as List).cast<Map>())
+        t['name']: t['value'],
+    };
+    expect(border, {
+      'border-edge': '${Borders.edge.round()}px',
+      'border-ground-line': '${Borders.groundLine.round()}px',
+      'border-focus': '${Borders.focus.round()}px',
+    });
   });
 }
