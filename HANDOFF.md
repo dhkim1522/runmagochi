@@ -7,7 +7,7 @@
 - **페이즈 6 디자인 완성 실행 중** (`docs/plans/phase-6.md`, 2026-10-22 계획 승인)
   - 캐릭터는 코드 도트로 그린다(Aseprite·생성 AI 안 씀). Impeccable·Taste Skill 을 이 PC 에 켰다(`--scope local`)
   - 관문 3개: 1 캐릭터 투표(작업 2), 2 UI 방향 선택(작업 9), 3 출시 품질 승인. 관문에서 멈추고 사용자에게 묻는다
-  - 진행: 작업 1 완료(후보 a 클레이 다듬기·b 큰 머리 다마고치·c 플랫 마스코트, `design/candidates/character/compare.png`, 결정 0028). 관문 1 결과 A 말랑 클레이. 작업 3 병아리 완료(8514d9b). 작업 4 젤리·도토리 완료(2ed3718). 작업 5 아이템 완료(fe870bc). 작업 6 배지 완료(4a1f9dd). 6-1 캐릭터 에셋 끝(산출물 https://claude.ai/artifact/ECbG2Fh4TXQwcr5fNUWCXA). 작업 7 UI 후보 6안 완료(트랙 1 `design/candidates/ui/skill/`, 트랙 2 캔버스 https://claude.ai/artifact/FxKS7MR2twYmmE3k6SzNhe). 작업 8 비교 완료. **관문 2 UI 방향 선택 대기**: https://claude.ai/artifact/F5MsvhPE9fAXw5YtCwe3Xc (c · 캔버스 배경을 원 → 사각 무대로 바꿔 확인 중)
+  - 진행: 작업 1 완료(후보 a 클레이 다듬기·b 큰 머리 다마고치·c 플랫 마스코트, `design/candidates/character/compare.png`, 결정 0028). 관문 1 결과 A 말랑 클레이. 작업 3 병아리 완료(8514d9b). 작업 4 젤리·도토리 완료(2ed3718). 작업 5 아이템 완료(fe870bc). 작업 6 배지 완료(4a1f9dd). 6-1 캐릭터 에셋 끝(산출물 https://claude.ai/artifact/ECbG2Fh4TXQwcr5fNUWCXA). 작업 7 UI 후보 6안 완료(트랙 1 `design/candidates/ui/skill/`, 트랙 2 캔버스 https://claude.ai/artifact/FxKS7MR2twYmmE3k6SzNhe). 작업 8 비교 완료. 관문 2 결과 **c · 캔버스(연두, 사각 무대)** 확정(결정 0029). 다음: 작업 10 디자인 시스템 갱신
 - **페이즈 5 확장 완료** (`docs/plans/phase-5.md`). 아이폰 음성 안내 확인만 페이즈 7
 - **페이즈 1~4 완료**. 실기기 확인은 페이즈 7 에서 Android·iPhone 함께(결정 0017·0026)
 - 로드맵: 6 디자인 완성 → 7 iOS 확장·본인 iPhone 실기기 확인 → 8 산출물 정리 → 9 출시(써 본 뒤 결정) (결정 0026)
