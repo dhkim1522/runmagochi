@@ -7,7 +7,7 @@
 - **페이즈 6 디자인 완성 실행 중** (`docs/plans/phase-6.md`, 2026-10-22 계획 승인)
   - 캐릭터는 코드 도트로 그린다(Aseprite·생성 AI 안 씀). Impeccable·Taste Skill 을 이 PC 에 켰다(`--scope local`)
   - 관문 3개: 1 캐릭터 투표(작업 2), 2 UI 방향 선택(작업 9), 3 출시 품질 승인. 관문에서 멈추고 사용자에게 묻는다
-  - 진행: 작업 1 완료(후보 a 클레이 다듬기·b 큰 머리 다마고치·c 플랫 마스코트, `design/candidates/character/compare.png`, 결정 0028). 작업 2 투표 대기
+  - 진행: 작업 1 완료(후보 a 클레이 다듬기·b 큰 머리 다마고치·c 플랫 마스코트, `design/candidates/character/compare.png`, 결정 0028). 관문 1 결과 A 말랑 클레이. 작업 3 병아리 다시 그리기 진행
 - **페이즈 5 확장 완료** (`docs/plans/phase-5.md`). 아이폰 음성 안내 확인만 페이즈 7
 - **페이즈 1~4 완료**. 실기기 확인은 페이즈 7 에서 Android·iPhone 함께(결정 0017·0026)
 - 로드맵: 6 디자인 완성 → 7 iOS 확장·본인 iPhone 실기기 확인 → 8 산출물 정리 → 9 출시(써 본 뒤 결정) (결정 0026)
@@ -15,7 +15,6 @@
 ## 다음 할 일
 
 1. **`/phase 6` 이어서**: 계획 파일에서 체크되지 않은 첫 작업부터. 진행 기록은 `.superpowers/sdd/phase-6/progress.md`(이 PC 에만 있음, 없으면 `git log` 로 판단)
-2. **관문 1 캐릭터 투표 중**: https://claude.ai/artifact/SBshrAFUGtLfBbaLHQxMnb 를 공유(페이지 Share 메뉴)해 주변에 보여 주고, A·B·C 표 수를 알려 주면 작업 3 부터 이어간다
 
 ## 환경 메모
 
