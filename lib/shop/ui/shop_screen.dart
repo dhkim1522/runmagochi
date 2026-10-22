@@ -374,7 +374,7 @@ class _ItemCard extends StatelessWidget {
                 Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.monetization_on, size: 18, color: c.accentDeep),
+                    Icon(Icons.monetization_on, size: 18, color: c.coin),
                     const SizedBox(width: Gap.s1),
                     Text(status, style: t.label),
                   ],

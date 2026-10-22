@@ -544,7 +544,7 @@ class _SummaryBody extends StatelessWidget {
                     painter: RoutePainter(
                       route,
                       color: c.primary,
-                      startColor: c.accent,
+                      startColor: c.primary,
                       endColor: c.ink,
                     ),
                   ),

@@ -124,7 +124,7 @@ class _TabBar extends StatelessWidget {
     final c = AppColors.of(context);
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: c.cream,
+        color: c.background,
         border: Border(top: BorderSide(color: c.line, width: 2)),
       ),
       child: SafeArea(

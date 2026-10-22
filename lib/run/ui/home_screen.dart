@@ -302,7 +302,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                         : g.level.xpIntoLevel /
                                               g.level.xpForNext,
                                     height: 10,
-                                    fill: c.accent,
+                                    fill: c.primaryDeep,
                                     track: c.surface,
                                   ),
                                 ),
@@ -344,7 +344,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           if (_countdown != null)
             Positioned.fill(
               child: ColoredBox(
-                color: c.cream,
+                color: c.background,
                 child: Center(child: Text('$_countdown', style: t.numberL)),
               ),
             ),

@@ -32,7 +32,7 @@ class CoinChip extends ConsumerWidget {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.monetization_on, size: 24, color: c.accentDeep),
+                Icon(Icons.monetization_on, size: 24, color: c.coin),
                 const SizedBox(width: Gap.s1),
                 Text(text, style: t.titleS),
               ],

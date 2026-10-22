@@ -237,7 +237,7 @@ class _NextBadgeCard extends StatelessWidget {
               const SizedBox(width: Gap.s2),
               Text(
                 '코인 +${p.badge.coins}',
-                style: t.label.copyWith(color: c.accentDeep),
+                style: t.label.copyWith(color: c.coin),
               ),
             ],
           ),

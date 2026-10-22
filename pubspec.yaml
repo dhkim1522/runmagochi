@@ -88,13 +88,11 @@ flutter:
     - assets/badges/
 
   fonts:
-    # 둘 다 SIL OFL (assets/fonts/OFL-*.txt). 네트워크 없이 동작하도록 번들한다.
-    - family: Jua
+    # Pretendard v1.3.9 가변 글꼴, SIL OFL (assets/fonts/OFL-Pretendard.txt). 네트워크 없이 동작하도록 번들한다.
+    # 서브셋은 작업 17 에서 한다.
+    - family: Pretendard
       fonts:
-        - asset: assets/fonts/Jua-Regular.ttf
-    - family: NotoSansKR
-      fonts:
-        - asset: assets/fonts/NotoSansKR-VariableFont_wght.ttf
+        - asset: assets/fonts/PretendardVariable.ttf
 
   # To add assets to your application, add an assets section, like this:
   # assets:

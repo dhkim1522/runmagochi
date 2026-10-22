@@ -176,7 +176,7 @@ class ClayButton extends StatefulWidget {
   /// 버튼 높이(립 제외).
   static const double height = 64;
 
-  /// 보조(일시정지·재개) 버튼: accent.
+  /// 보조(일시정지·재개) 버튼: 어두운 판(panel). 립도 같은 색이다(작업 11 에서 립을 뺀다).
   factory ClayButton.accent(
     BuildContext context, {
     Key? key,
@@ -188,9 +188,9 @@ class ClayButton extends StatefulWidget {
       key: key,
       label: label,
       onPressed: onPressed,
-      background: c.accent,
-      foreground: c.onAccent,
-      lip: c.accentDeep,
+      background: c.panel,
+      foreground: c.onPanel,
+      lip: c.panel,
     );
   }
 

@@ -1,4 +1,7 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -312,8 +315,8 @@ class _IntroPage extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: Gap.s4),
-                  ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 280),
+                  _MaxWidth(
+                    280,
                     child: _KeepAllText(
                       '달린 거리만큼 자라서 러닝화를 신고, 언젠가 마라토너가 돼요.',
                       textAlign: TextAlign.center,
@@ -511,4 +514,38 @@ class _KeepAllText extends StatelessWidget {
     style: style,
     textAlign: textAlign,
   );
+}
+
+/// 폭 상한. [ConstrainedBox] 는 고유 높이를 잴 때 maxWidth 를 무시해, 넓은 화면에서
+/// [SliverFillRemaining] 이 글자 줄 수를 실제보다 적게 잡고 무대가 넘친다.
+/// 고유 높이도 상한 폭으로 잰다.
+class _MaxWidth extends SingleChildRenderObjectWidget {
+  const _MaxWidth(this.maxWidth, {required Widget super.child});
+
+  final double maxWidth;
+
+  @override
+  RenderObject createRenderObject(BuildContext context) =>
+      _RenderMaxWidth(maxWidth);
+
+  @override
+  void updateRenderObject(BuildContext context, _RenderMaxWidth renderObject) {
+    renderObject.additionalConstraints = BoxConstraints(maxWidth: maxWidth);
+  }
+}
+
+class _RenderMaxWidth extends RenderConstrainedBox {
+  _RenderMaxWidth(double maxWidth)
+    : super(additionalConstraints: BoxConstraints(maxWidth: maxWidth));
+
+  double _clamp(double width) =>
+      math.min(width, additionalConstraints.maxWidth);
+
+  @override
+  double computeMinIntrinsicHeight(double width) =>
+      super.computeMinIntrinsicHeight(_clamp(width));
+
+  @override
+  double computeMaxIntrinsicHeight(double width) =>
+      super.computeMaxIntrinsicHeight(_clamp(width));
 }

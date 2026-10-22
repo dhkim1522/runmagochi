@@ -130,7 +130,7 @@ class _GrowthSummaryState extends State<GrowthSummary>
             _XpRow(
               '배지 획득: ${badge.name}',
               '코인 +${badge.coins}',
-              valueColor: c.accentDeep,
+              valueColor: c.coin,
               leading: BadgeImage(
                 badge.id,
                 key: ValueKey('new-badge-${badge.id}'),
@@ -267,7 +267,7 @@ class GoalResult extends StatelessWidget {
   }
 }
 
-/// 경험치 한 줄: 흰 카드, 값은 success 색 Jua 22. 코인이 있으면 값 아래에 한 줄 더한다.
+/// 경험치 한 줄: 흰 카드, 값은 success 색 titleS 22. 코인이 있으면 값 아래에 한 줄 더한다.
 class _XpRow extends StatelessWidget {
   const _XpRow(
     this.label,
@@ -312,7 +312,7 @@ class _XpRow extends StatelessWidget {
               if (coins > 0)
                 Text(
                   '코인 +$coins',
-                  style: t.caption.copyWith(color: c.accentDeep),
+                  style: t.caption.copyWith(color: c.coin),
                 ),
             ],
           ),

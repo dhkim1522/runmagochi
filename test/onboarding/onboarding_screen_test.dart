@@ -346,7 +346,7 @@ void main() {
     final scaffold = tester.widget<Scaffold>(find.byType(Scaffold).first);
     expect(
       scaffold.backgroundColor ?? appDarkTheme().scaffoldBackgroundColor,
-      AppColors.dark.cream,
+      AppColors.dark.background,
     );
   });
 }

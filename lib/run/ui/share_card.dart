@@ -91,7 +91,7 @@ class ShareCard extends StatelessWidget {
               child: Material(
                 type: MaterialType.transparency,
                 child: ColoredBox(
-                  color: c.cream,
+                  color: c.background,
                   child: Padding(
                     padding: const EdgeInsets.all(Gap.s6),
                     child: Column(
@@ -170,7 +170,7 @@ class ShareCard extends StatelessWidget {
                           Text(
                             levelUpLine!,
                             textAlign: TextAlign.center,
-                            style: t.heading.copyWith(color: c.accentDeep),
+                            style: t.heading.copyWith(color: c.primaryDeep),
                           ),
                         ],
                       ],
