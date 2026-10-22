@@ -4,24 +4,32 @@
 
 ## 현재 상태
 
-- **페이즈 6 디자인 완성 실행 중** (`docs/plans/phase-6.md`, 2026-10-22 계획 승인)
-  - 캐릭터는 코드 도트로 그린다(Aseprite·생성 AI 안 씀). Impeccable·Taste Skill 을 이 PC 에 켰다(`--scope local`)
-  - 관문 3개: 1 캐릭터 투표(작업 2), 2 UI 방향 선택(작업 9), 3 출시 품질 승인. 관문에서 멈추고 사용자에게 묻는다
-  - 진행: 작업 1 완료(후보 a 클레이 다듬기·b 큰 머리 다마고치·c 플랫 마스코트, 결정 0028). 관문 1 결과 A 말랑 클레이. 작업 3 병아리 완료(8514d9b). 작업 4 젤리·도토리 완료(2ed3718). 작업 5 아이템 완료(fe870bc). 작업 6 배지 완료(4a1f9dd). 6-1 캐릭터 에셋 끝(산출물 https://claude.ai/artifact/ECbG2Fh4TXQwcr5fNUWCXA). 작업 7 UI 후보 6안 완료(트랙 1 디자인 스킬, 트랙 2 캔버스 https://claude.ai/artifact/FxKS7MR2twYmmE3k6SzNhe). 작업 8 비교 완료. 관문 2 결과 **c · 캔버스(연두, 사각 무대)** 확정(결정 0029). 작업 10 디자인 시스템 완료(dc98ace·9e3c77e, 토큰 연두·다크 새 설계·Pretendard(작업 18 에서 서브셋 이름 RunmagochiSans), 아티팩트 https://claude.ai/artifact/FPihTBfX2CJserHVwUQ514 갱신). 작업 11 공통 컴포넌트 완료(f76d530, `lib/core/ui/components.dart`, 코인·탭 아이콘 직접 그림, PetStage 사각 무대). 작업 12 홈·러닝 중·일시정지 완료(e5e94a3). 작업 13 요약·경로 3색(파랑·보라·주황, 색각 이상 안전)·공유 카드 완료(6e9dc57·4b39a34). 작업 14 기록·아바타·업적·상점·코인 내역 완료(136bf60·120f141·0c7a397). 작업 15 첫 실행·설정·권한·빈/오류 상태·움직임 완료(9b72601·0f3d9b7·885886c·7f092ac). 작업 16 앱 아이콘·스플래시 완료(bb4ee7c, Android 이름 런마고치). 작업 17 글꼴 서브셋 완료(691b853, 6.74MB → 1.11MB). 2026-10-22 최신 빌드(691b853)를 iPhone 에 재설치, 사용자 실기기 테스트 중. 작업 18 정리 완료(a872faf~18fe5ac: 고른 안 `design/mockups/phase-6/`, 후보 삭제, 글꼴 RunmagochiSans, 에셋 카탈로그·디자인 시스템 아티팩트 갱신). 다음: 작업 19 화면설계서, 자동 검증·E2E. 사용자는 iPhone 실기기 테스트 중. 확장 백로그에 로그인·서버(F22, 결정 0032) 추가. iOS 갈래(결정 0030·0031) main 에 합침(857a334): iOS 빌드·권한 문구·백그라운드 위치·조용한 진행 알림·iOS 배터리 채널, 설치 안내 `docs/ios.md`. 2026-10-22 회사 Mac(Xcode 16.4)으로 iPhone 16 Pro(iOS 27.0.1)에 릴리스 설치 성공, 무료 서명이라 10-29 무렵 재설치 필요. 서명 팀은 저장소에 커밋하지 않는다(Xcode 에서 Personal Team 선택).
-- **페이즈 5 확장 완료** (`docs/plans/phase-5.md`). 아이폰 음성 안내 확인만 페이즈 7
+- **페이즈 6 디자인 완성 구현 완료, 사람 확인 대기** (`docs/plans/phase-6.md` 상태 `실측 대기`)
+  - 관문 1 A 말랑 클레이, 관문 2 c · 캔버스(연두, 사각 무대, 결정 0029). 작업 1~19 완료, 자동 확인·E2E 6개 통과, 최종 리뷰 Ready with minors(수정 b9ce74e~4e4a7b2, 테스트 1231 통과)
+  - 산출물 아티팩트: 화면설계서 https://claude.ai/artifact/456dWcNyLn1vbUsjV9FLVc (원본 `design/screens/`), 디자인 시스템 https://claude.ai/artifact/FPihTBfX2CJserHVwUQ514 , 에셋 카탈로그 https://claude.ai/artifact/ECbG2Fh4TXQwcr5fNUWCXA , UI 비교 https://claude.ai/artifact/F5MsvhPE9fAXw5YtCwe3Xc
+  - 화면설계서 찍다가 찾은 앱 결함 3개 고침: 목표 달성 알림이 러닝 뒤에도 남음, 잘라내기 슬라이더 연두 채움, Android 위치 두 번 거부 뒤 설정 열기로 못 감
+  - iOS: 회사 Mac(Xcode 16.4)으로 iPhone 16 Pro(iOS 27.0.1)에 릴리스 설치. 무료 서명이라 10-29 무렵 재설치(`docs/ios.md`). 서명 팀은 저장소에 커밋하지 않는다. 임시 작업 폴더 `~/personal/runmagochi-merge-check`(서명 팀 넣은 pbxproj, 재설치용)
+  - 확장 백로그에 로그인·서버(F22, 결정 0032)
+- **페이즈 5 확장 완료**. 아이폰 음성 안내 확인만 페이즈 7
 - **페이즈 1~4 완료**. 실기기 확인은 페이즈 7 에서 Android·iPhone 함께(결정 0017·0026)
 - 로드맵: 6 디자인 완성 → 7 iOS 확장·본인 iPhone 실기기 확인 → 8 산출물 정리 → 9 출시(써 본 뒤 결정) (결정 0026)
 
 ## 다음 할 일
 
-1. **`/phase 6` 이어서**: 계획 파일에서 체크되지 않은 첫 작업부터. 진행 기록은 `.superpowers/sdd/phase-6/progress.md`(이 PC 에만 있음, 없으면 `git log` 로 판단)
+1. **관문 3 출시 품질 승인**: 화면설계서로 판단. 함께 볼 점
+   - 1단계 알 모자가 버섯처럼 보임, 경로 범례 문구(느림·보통·빠름·빠른 이동), "보통" 보라색, 라이트 스플래시 타일 대비, 첫 실행 1쪽 빈 하늘
+   - 알림 작은 아이콘이 동그라미로 보임, 카운트다운 중 하단 탭이 보임
+   - 시트·대화상자·스프라이트 반복이 움직임 줄이기 설정을 따르지 않음, 빈 슬라이더 트랙 대비 낮음
+   - 승인하면 `/phase 6` 이 완료 판정, 고칠 점이 있으면 새 작업으로 넣는다
+2. 실기기(Android·iPhone) 아이콘·스플래시·글꼴·화면 확인은 페이즈 7. Android 실기기 기준은 결정 필요(결정 0030, 사용자는 Android 기기 없음)
+3. 정리할 것: 임시 worktree `~/personal/runmagochi-merge-check`(재설치에 쓰는 동안 유지), 잠긴 `.claude/worktrees/agent-aeb6a8b960c270fef`
 
 ## 환경 메모
 
 - **Flutter 버전은 `.fvmrc`(3.47.7)로 고정한다** (결정 0008). 명령은 `fvm flutter ...`, `fvm dart ...` 로 실행한다.
   - 회사 Mac: `brew install fvm`(4.3.2) → `fvm install` 완료, `fvm flutter test` 통과.
-  - 회사 Mac 에 Xcode 가 없다. 페이즈 7 전에 App Store 에서 설치한다(Apple ID 로그인 필요).
-  - 회사 Mac Android SDK 에는 Android 37 이미지와 `runmagochi` AVD 가 없다. `/e2e` 가 설치를 묻는다(약 2GB). 에뮬레이터는 시속 30km 이상 가상 점을 위치 서비스가 걸러 빠른 이동 확인이 안 된다.
+  - 회사 Mac: Xcode 16.4·CocoaPods 1.17.0 설치함(2026-10-22). iOS 시뮬레이터 iPhone 16 Pro(iOS 18.6).
+  - 회사 Mac: Android 37 이미지는 없고 android-36 이미지로 `runmagochi` AVD 를 만들었다. API 36 은 `am start -n com.dhkim1522.runmagochi/.MainActivity` 로 실행한다. JAVA_HOME 은 Android Studio 의 jbr. 에뮬레이터는 시속 30km 이상 가상 점을 위치 서비스가 걸러 빠른 이동 확인이 안 된다.
 - 회사 Mac: `~/personal/` 아래에서 git·gh 가 개인 계정(dhkim1522)으로 자동 전환된다.
 - 집 Windows
   - Claude Code 개인 계정 로그인, 개인 SSH 키를 GitHub에 등록한 뒤 이 저장소를 clone한다. 저장소 안에서 `git config user.email dhkim1522@naver.com` 을 설정한다.
