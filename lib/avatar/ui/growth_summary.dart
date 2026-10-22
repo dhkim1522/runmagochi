@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../achievement/domain/badges.dart';
+import '../../achievement/ui/badge_image.dart';
 import '../../core/format.dart';
 import '../../core/theme.dart';
 import '../../core/ui/clay.dart';
@@ -130,6 +131,11 @@ class _GrowthSummaryState extends State<GrowthSummary>
               '배지 획득: ${badge.name}',
               '코인 +${badge.coins}',
               valueColor: c.accentDeep,
+              leading: BadgeImage(
+                badge.id,
+                key: ValueKey('new-badge-${badge.id}'),
+                earned: true,
+              ),
             ),
           ],
       ],
@@ -263,13 +269,22 @@ class GoalResult extends StatelessWidget {
 
 /// 경험치 한 줄: 흰 카드, 값은 success 색 Jua 22. 코인이 있으면 값 아래에 한 줄 더한다.
 class _XpRow extends StatelessWidget {
-  const _XpRow(this.label, this.xp, {this.coins = 0, this.valueColor});
+  const _XpRow(
+    this.label,
+    this.xp, {
+    this.coins = 0,
+    this.valueColor,
+    this.leading,
+  });
   final String label;
   final String xp;
   final int coins;
 
   /// 값 글자색. 없으면 success.
   final Color? valueColor;
+
+  /// 이름 앞 그림(새 배지).
+  final Widget? leading;
 
   @override
   Widget build(BuildContext context) {
@@ -280,6 +295,10 @@ class _XpRow extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 14, horizontal: Gap.s4),
       child: Row(
         children: [
+          if (leading case final leading?) ...[
+            leading,
+            const SizedBox(width: Gap.s3),
+          ],
           Expanded(child: Text(label, style: t.body)),
           const SizedBox(width: Gap.s2),
           Column(

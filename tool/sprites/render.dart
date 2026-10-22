@@ -2,6 +2,7 @@
 // tool/render_sprites.dart(파일 저장)와 test/tool/sprite_render_sync_test.dart(PNG 동기 검사)가 함께 쓴다.
 import 'package:image/image.dart' as img;
 
+import 'badges.dart';
 import 'items.dart';
 import 'pet_art.dart';
 import 'pets.dart';
@@ -166,6 +167,74 @@ img.Image itemsPreview() {
       if (item != null) {
         drawFrame(im, itemFrames(pet, item, 'idle').first, colX[c], oy, _scale);
       }
+    }
+  }
+  return im;
+}
+
+/// 배지 PNG(24×24). 저장소 루트 기준 경로 → 이미지.
+Map<String, img.Image> badgeImages() => {
+  for (final b in badges) 'assets/badges/${b.id}.png': badgeImage(b),
+};
+
+img.Image badgeImage(BadgeArt b) {
+  final im = img.Image(width: badgeSize, height: badgeSize, numChannels: 4);
+  _drawBadge(im, b, 0, 0, 1);
+  return im;
+}
+
+/// 못 받은 배지 모습: 앱의 BadgeImage 와 같은 흑백 행렬(Rec. 709 밝기)에 투명도 0.45.
+int _locked(int argb) {
+  final r = (argb >> 16) & 0xFF, g = (argb >> 8) & 0xFF, b = argb & 0xFF;
+  final l = (0.2126 * r + 0.7152 * g + 0.0722 * b).round().clamp(0, 255);
+  final a = (((argb >> 24) & 0xFF) * 0.45).round();
+  return (a << 24) | (l << 16) | (l << 8) | l;
+}
+
+void _drawBadge(
+  img.Image im,
+  BadgeArt b,
+  int ox,
+  int oy,
+  int scale, {
+  bool locked = false,
+}) {
+  final palette = badgePalette(b.tier);
+  final rows = badgeRows(b);
+  for (var y = 0; y < badgeSize; y++) {
+    for (var x = 0; x < badgeSize; x++) {
+      final ch = rows[y][x];
+      if (ch == '.') continue;
+      final argb = palette[ch]!;
+      final c = locked ? _locked(argb) : argb;
+      img.fillRect(
+        im,
+        x1: ox + x * scale,
+        y1: oy + y * scale,
+        x2: ox + (x + 1) * scale - 1,
+        y2: oy + (y + 1) * scale - 1,
+        color: _color(c),
+      );
+    }
+  }
+}
+
+/// 배지 미리보기(8배). 위 두 줄 = 받은 배지 12개(목록 순서, 한 줄 6개),
+/// 아래 두 줄 = 같은 배지의 못 받은 모습(회색·투명도 0.45).
+img.Image badgesPreview() {
+  const cols = 6;
+  final tile = badgeSize * _scale;
+  final rowsPerSet = (badges.length + cols - 1) ~/ cols;
+  final width = cols * (tile + _gap) + _gap;
+  final height = rowsPerSet * 2 * (tile + _gap) + _gap + (_groupGap - _gap);
+  final im = img.Image(width: width, height: height);
+  img.fill(im, color: _color(previewBg));
+  for (final locked in [false, true]) {
+    for (var i = 0; i < badges.length; i++) {
+      final r = i ~/ cols + (locked ? rowsPerSet : 0);
+      final ox = _gap + (i % cols) * (tile + _gap);
+      final oy = _gap + r * (tile + _gap) + (locked ? _groupGap - _gap : 0);
+      _drawBadge(im, badges[i], ox, oy, _scale, locked: locked);
     }
   }
   return im;

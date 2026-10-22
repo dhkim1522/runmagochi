@@ -3,7 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:runmagochi/achievement/app/providers.dart';
 import 'package:runmagochi/achievement/data/badge_repository.dart';
+import 'package:runmagochi/achievement/domain/badges.dart';
 import 'package:runmagochi/achievement/ui/achievement_screen.dart';
+import 'package:runmagochi/achievement/ui/badge_image.dart';
 import 'package:runmagochi/core/theme.dart';
 import 'package:runmagochi/run/data/run_repository.dart';
 import 'package:runmagochi/run/domain/run_summary.dart';
@@ -97,6 +99,34 @@ void main() {
     expect(find.byKey(const ValueKey('badge-locked-first_run')), findsNothing);
   });
 
+  testWidgets('배지 12개를 도트 그림으로: 받은 것은 컬러, 못 받은 것은 회색', (tester) async {
+    await _pump(
+      tester,
+      runs: [_run(4000)],
+      earned: [_earned('first_run'), _earned('dawn')],
+    );
+    expect(find.byIcon(Icons.directions_run), findsNothing);
+    for (final b in badgeCatalog) {
+      final earned = b.id == 'first_run' || b.id == 'dawn';
+      final key = ValueKey('badge-${earned ? 'earned' : 'locked'}-${b.id}');
+      final image = tester.widget<BadgeImage>(find.byKey(key));
+      expect(image.id, b.id);
+      expect(image.earned, earned, reason: b.id);
+      expect(image.size, 48);
+    }
+    // 다음 배지 줄(첫 5km 80%)은 같은 그림을 회색으로.
+    final next = find.descendant(
+      of: find.ancestor(
+        of: find.byKey(const ValueKey('next-badge-bar')),
+        matching: find.byType(Column),
+      ),
+      matching: find.byType(BadgeImage),
+    );
+    final nextImage = tester.widget<BadgeImage>(next.first);
+    expect(nextImage.id, 'dist_5k');
+    expect(nextImage.earned, isFalse);
+  });
+
   testWidgets('다음 배지는 진행률이 가장 높은 것을 이름·코인·막대로', (tester) async {
     // 4km 한 번: 첫 러닝은 받을 차례, 5km 배지가 80%.
     await _pump(tester, runs: [_run(4000)], earned: [_earned('first_run')]);
@@ -169,12 +199,10 @@ void main() {
       );
       expect(bar.color, colors.surfaceSoft);
       expect(bar.color, isNot(colors.surface));
-      final locked = tester.widget<Container>(
+      final locked = tester.widget<BadgeImage>(
         find.byKey(const ValueKey('badge-locked-dist_10k')),
       );
-      final deco = locked.decoration! as BoxDecoration;
-      expect(deco.color, colors.surfaceSoft);
-      expect((deco.border! as Border).top.color, colors.line);
+      expect(locked.earned, isFalse);
     });
 
     testWidgets('360×640 글자 1.3배에서 넘치지 않는다 (다크 $dark)', (tester) async {

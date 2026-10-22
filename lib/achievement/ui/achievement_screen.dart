@@ -8,9 +8,10 @@ import '../../run/data/run_repository.dart';
 import '../app/providers.dart';
 import '../domain/badges.dart';
 import '../domain/personal_records.dart';
+import 'badge_image.dart';
 
 /// 업적 화면: 개인 기록, 받은 배지, 다음 배지.
-/// 배지 그림은 임시 아이콘이다(페이즈 6-1 에서 도트로 다시 그린다).
+/// 배지 그림은 [BadgeImage](24×24 도트, 2배)다. 못 받은 배지는 회색·흐리게.
 class AchievementScreen extends ConsumerWidget {
   const AchievementScreen({super.key});
 
@@ -151,55 +152,6 @@ extension on Duration? {
   String? map(String Function(Duration) f) => this == null ? null : f(this!);
 }
 
-/// 배지 임시 아이콘.
-IconData _iconFor(String id) => switch (id) {
-  'first_run' => Icons.directions_run,
-  'first_goal' => Icons.flag,
-  'dist_5k' || 'dist_10k' || 'dist_half' => Icons.route,
-  'total_50' || 'total_100' || 'total_300' => Icons.terrain,
-  'goals_10' || 'goals_30' => Icons.emoji_events,
-  'streak_3' => Icons.local_fire_department,
-  'dawn' => Icons.wb_twilight,
-  _ => Icons.star,
-};
-
-class _BadgeIcon extends StatelessWidget {
-  const _BadgeIcon(this.id, {required this.earned, this.keyed = true});
-  final String id;
-  final bool earned;
-
-  /// 목록 칸이 아닌 곳(다음 배지)에서는 목록 칸과 키가 겹치지 않게 false.
-  final bool keyed;
-
-  @override
-  Widget build(BuildContext context) {
-    final c = AppColors.of(context);
-    return Opacity(
-      // 못 받은 배지는 아바타 탭의 잠긴 단계처럼 흐리게.
-      opacity: earned ? 1 : 0.45,
-      child: Container(
-        key: keyed
-            ? ValueKey('badge-${earned ? 'earned' : 'locked'}-$id')
-            : null,
-        width: 56,
-        height: 56,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: earned ? c.primary : c.surfaceSoft,
-          border: earned
-              ? null
-              : Border.all(color: c.line, width: Borders.thick),
-        ),
-        child: Icon(
-          _iconFor(id),
-          size: 28,
-          color: earned ? c.onPrimary : c.inkMuted,
-        ),
-      ),
-    );
-  }
-}
-
 class _BadgeGrid extends StatelessWidget {
   const _BadgeGrid(this.earnedIds);
   final Set<String> earnedIds;
@@ -221,7 +173,13 @@ class _BadgeGrid extends StatelessWidget {
                 width: w,
                 child: Column(
                   children: [
-                    _BadgeIcon(b.id, earned: earnedIds.contains(b.id)),
+                    BadgeImage(
+                      b.id,
+                      key: ValueKey(
+                        'badge-${earnedIds.contains(b.id) ? 'earned' : 'locked'}-${b.id}',
+                      ),
+                      earned: earnedIds.contains(b.id),
+                    ),
                     const SizedBox(height: Gap.s1),
                     Text(b.name, textAlign: TextAlign.center, style: t.caption),
                   ],
@@ -262,7 +220,7 @@ class _NextBadgeCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              _BadgeIcon(p.badge.id, earned: false, keyed: false),
+              BadgeImage(p.badge.id, earned: false),
               const SizedBox(width: Gap.s3),
               Expanded(
                 child: Column(

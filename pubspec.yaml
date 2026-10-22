@@ -85,6 +85,7 @@ flutter:
     - assets/sprites/acorn/face/
     - assets/sprites/acorn/hat/
     - assets/sprites/acorn/accessory/
+    - assets/badges/
 
   fonts:
     # 둘 다 SIL OFL (assets/fonts/OFL-*.txt). 네트워크 없이 동작하도록 번들한다.

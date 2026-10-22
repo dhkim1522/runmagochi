@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:runmagochi/achievement/ui/badge_image.dart';
 import 'package:runmagochi/avatar/domain/growth_rules.dart';
 import 'package:runmagochi/avatar/domain/growth_state.dart';
 import 'package:runmagochi/avatar/ui/avatar_view.dart';
@@ -86,6 +87,14 @@ void main() {
     expect(find.text('코인 +100'), findsOneWidget);
     expect(find.text('배지 획득: 첫 러닝'), findsOneWidget);
     expect(find.text('코인 +50'), findsOneWidget);
+    // 배지 줄마다 받은 배지 그림(컬러)을 이름 앞에 둔다.
+    for (final id in ['dist_5k', 'first_run']) {
+      final image = tester.widget<BadgeImage>(
+        find.byKey(ValueKey('new-badge-$id')),
+      );
+      expect(image.id, id);
+      expect(image.earned, isTrue);
+    }
   });
 
   testWidgets('새 배지 줄이 360×640 글자 1.3배에서 넘치지 않는다', (tester) async {

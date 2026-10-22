@@ -55,6 +55,29 @@ face 레이어는 4개 외형 단계가 모두 공유한다. 그래서 어느 �
 
 정수 배율로 키우고 `FilterQuality.none` 으로 그린다.
 
+## 배지
+
+업적 배지 12개(`lib/achievement/domain/badges.dart` 의 `badgeCatalog`)는 배지마다 그림 한 장이다(페이즈 6 작업 6).
+
+- 24×24px 투명 배경 PNG 한 장. 동작·레이어가 없다. 파일은 `assets/badges/<배지 id>.png`, 경로는 `lib/achievement/ui/badge_image.dart` 의 `badgeAsset` 이 만든다.
+- 그림체는 펫과 같다: 진한 외곽선 `o`, 빛은 왼쪽 위, 3단 명암.
+- 12개가 같은 둥근 메달 테두리(`badgeMedal`)를 쓴다. 바깥 2줄은 볼록(왼쪽 위 밝음), 안쪽 1줄은 오목(왼쪽 위 어두움)이고, 그 안의 크림색 바탕(`f`)에만 문양을 그린다.
+- 테두리 색 = 등급. 보상 코인을 따른다: 50 파랑, 100 동, 150·200 은, 300 금. 같은 갈래는 단계가 오를수록 높은 등급이다.
+
+| 배지 | 문양 | 등급 |
+|---|---|---|
+| first_run | 러닝화 | 파랑 |
+| first_goal | 깃발 | 파랑 |
+| dist_5k·dist_10k·dist_half | 숫자 5·10·21 + 지평선까지 뻗은 길 | 동·은·금 |
+| total_50·total_100·total_300 | 눈 덮인 산(같은 그림) | 동·은·금 |
+| goals_10·goals_30 | 트로피(같은 그림) | 동·은 |
+| streak_3 | 불꽃 | 파랑 |
+| dawn | 바다 위로 떠오르는 해 | 파랑 |
+
+- 화면: `BadgeImage` 가 2배(48 논리 px)로 `FilterQuality.none` 으로 그린다. 업적 화면 격자·다음 배지 줄, 러닝 요약의 새 배지 줄에서 쓴다.
+- 못 받은 배지는 같은 그림을 흑백 행렬(Rec. 709 밝기, `badgeGreyscale`)로 바꾸고 투명도 0.45 로 그린다. 따로 그림을 두지 않는다.
+- 그림이 없으면 빈자리로 넘기지 않는다: 오류를 알리고(`FlutterError.reportError`) 빨간 테두리 자리표시를 둔다.
+
 ## 만드는 방법
 
 그림은 코드 안의 데이터다(작업 9, 페이즈 6 실제 아트 전까지).
@@ -75,7 +98,11 @@ face 레이어는 4개 외형 단계가 모두 공유한다. 그래서 어느 �
   - `assets/sprites/**` 시트
   - `design/character/<kind>.png` 8배 미리보기: 줄 = 단계, 칸 = idle·walk·run 프레임, 마지막 줄 = 표정
   - `design/character/items.png` 8배 아이템 미리보기: 줄 = 아이템 없음 + 아이템 6개, 칸 = 종류 3 × 단계 1~4
+  - `assets/badges/<배지 id>.png` 배지 12장(그림 데이터는 `tool/sprites/badges.dart`)
+  - `design/character/badges.png` 8배 배지 미리보기: 위 두 줄 = 받은 모습, 아래 두 줄 = 못 받은 모습(앱과 같은 흑백·0.45)
 - 콘셉트 한 장: `fvm dart run tool/render_concepts.dart` — `design/character/concepts.png`(3종 × 1·4단계 idle). 그림은 위 펫 데이터에서 가져온다.
+- 동기 검사: `test/tool/sprite_render_sync_test.dart` — 커밋된 시트·배지 PNG 가 데이터에서 그린 결과와 픽셀까지 같아야 한다. 데이터를 고치면 PNG 를 다시 만든다.
+- 배지 검사: `test/tool/badge_data_test.dart` — `badgeCatalog` 의 모든 id 에 그림(24×24, 투명 귀퉁이)과 PNG 가 있음, 테두리가 12개 같고 문양은 바탕 안, 갈래별 등급이 오름
 - 검사: `test/tool/sprite_data_test.dart`
   - 프레임 형식, face 가 4단계 몸 위에 있음, 프레임끼리 다름, 발끝 y=29·공중 y=28, 단계별 장비
   - 자세표는 머리를 늘이기만 함, 3종 3단 명암·기본 그림 줄 너비·메달 끈 y=25·표정 눈 자리(3종 같은 눈, 졸린 눈꺼풀은 바깥으로)
