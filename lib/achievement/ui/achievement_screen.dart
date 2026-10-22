@@ -17,7 +17,6 @@ class AchievementScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final t = AppText.of(context);
     final runs = ref.watch(achievementRunsProvider);
     final earned = ref.watch(earnedBadgesProvider);
     void back() => Navigator.of(context).maybePop();
@@ -45,7 +44,9 @@ class AchievementScreen extends ConsumerWidget {
               Expanded(
                 child: runList == null || earnedList == null
                     ? (runs.hasError || earned.hasError
-                          ? Center(child: Text('업적을 불러오지 못했어요', style: t.body))
+                          ? const SingleChildScrollView(
+                              child: EmptyState.error(message: '업적을 불러오지 못했어요'),
+                            )
                           : const Center(child: CircularProgressIndicator()))
                     : _Body(
                         runs: runList,

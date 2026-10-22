@@ -119,13 +119,10 @@ class _InRunScreenState extends ConsumerState<InRunScreen> {
                       style: t.caption.copyWith(color: c.inkMuted),
                     ),
                   ),
-                if (view.lastError != null)
+                if (view.lastError case final error?)
                   Padding(
-                    padding: const EdgeInsets.only(top: Gap.s2),
-                    child: Text(
-                      view.lastError!,
-                      style: t.body.copyWith(color: c.danger),
-                    ),
+                    padding: const EdgeInsets.only(top: Gap.s3),
+                    child: NoticeCard(message: error),
                   ),
                 const SizedBox(height: Gap.s5),
                 _Distance(distanceM: snap.distanceM, large: !paused),

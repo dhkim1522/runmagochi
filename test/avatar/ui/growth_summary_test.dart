@@ -63,7 +63,80 @@ Future<void> settle(WidgetTester tester) async {
   }
 }
 
+Future<void> pumpReduced(WidgetTester tester, GrowthGain g) async {
+  await tester.pumpWidget(
+    _scope(
+      MaterialApp(
+        theme: appLightTheme(),
+        builder: (context, child) => MediaQuery(
+          data: MediaQuery.of(context).copyWith(disableAnimations: true),
+          child: child!,
+        ),
+        home: Scaffold(
+          body: GrowthSummary(
+            kind: AvatarKind.chick,
+            gain: g,
+            distanceM: 5020,
+            goal: null,
+            movingTime: Duration.zero,
+            achieved: false,
+          ),
+        ),
+      ),
+    ),
+  );
+}
+
+/// 작업 15: 보상 연출은 토큰 시간(celebrate·pop), 애니메이션 줄이기면 바로 최종 상태.
+void motionTests() {
+  double scaleOf(WidgetTester tester, Key key) =>
+      tester.widget<Transform>(find.byKey(key)).transform.storage[0];
+
+  testWidgets('새 배지 그림은 작게 시작해 Motion.celebrate 동안 튀어 올라 제 크기가 된다', (
+    tester,
+  ) async {
+    await pumpIt(tester, gain(newBadges: ['first_run']));
+    const key = ValueKey('new-badge-pop-first_run');
+    expect(scaleOf(tester, key), lessThan(0.5));
+    await tester.pump();
+    await tester.pump(Motion.celebrate * 0.6);
+    final mid = scaleOf(tester, key);
+    expect(mid, greaterThan(0.5));
+    await tester.pump(Motion.celebrate);
+    expect(scaleOf(tester, key), closeTo(1, 0.001));
+  });
+
+  testWidgets('애니메이션 줄이기면 레벨 업·새 단계·배지가 첫 프레임부터 최종 상태', (tester) async {
+    await pumpReduced(
+      tester,
+      gain(
+        levelBefore: 4,
+        levelAfter: 5,
+        stageBefore: 1,
+        stageAfter: 2,
+        newBadges: ['first_run'],
+      ),
+    );
+    expect(tester.widget<AvatarView>(find.byType(AvatarView)).stage, 2);
+    expect(
+      scaleOf(tester, const ValueKey('level-up-scale')),
+      closeTo(1, 0.001),
+    );
+    expect(
+      scaleOf(tester, const ValueKey('new-badge-pop-first_run')),
+      closeTo(1, 0.001),
+    );
+    await tester.pump(const Duration(milliseconds: 100));
+    expect(
+      scaleOf(tester, const ValueKey('level-up-scale')),
+      closeTo(1, 0.001),
+      reason: '줄이기면 커지지도 않는다',
+    );
+  });
+}
+
 void main() {
+  motionTests();
   coinTests();
   layoutTests();
   testWidgets('레벨업이면 경험치 행과 레벨 업 문구가 보인다', (tester) async {

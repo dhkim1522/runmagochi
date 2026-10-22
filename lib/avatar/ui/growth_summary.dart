@@ -52,21 +52,40 @@ class GrowthSummary extends StatefulWidget {
 }
 
 class _GrowthSummaryState extends State<GrowthSummary>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _controller;
+    with TickerProviderStateMixin {
+  /// 레벨 업 커짐·단계 바뀜.
+  late final AnimationController _controller = AnimationController(
+    vsync: this,
+    duration: Motion.celebrate,
+  );
+
+  /// 새 배지 튀어 오름.
+  late final AnimationController _badge = AnimationController(
+    vsync: this,
+    duration: Motion.celebrate,
+  );
+  bool _started = false;
 
   bool get _animates => widget.gain.leveledUp || widget.gain.stageUp;
 
   @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(vsync: this, duration: Motion.celebrate);
-    if (_animates) _controller.forward();
-  }
-
-  @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+    // 처음 한 번 연출을 시작한다. 애니메이션 줄이기면 바로 끝 값(새 단계·제 크기)에 둔다.
+    if (!_started) {
+      _started = true;
+      final reduced = Motion.reduced(context);
+      for (final (c, on) in [
+        (_controller, _animates),
+        (_badge, widget.gain.newBadges.isNotEmpty),
+      ]) {
+        if (reduced) {
+          c.value = 1;
+        } else if (on) {
+          c.forward();
+        }
+      }
+    }
     // 외형이 바뀌는 순간 새 단계 시트가 비어 보이지 않게 미리 읽어 둔다.
     final g = widget.gain;
     final kind = widget.kind;
@@ -85,6 +104,7 @@ class _GrowthSummaryState extends State<GrowthSummary>
   @override
   void dispose() {
     _controller.dispose();
+    _badge.dispose();
     super.dispose();
   }
 
@@ -133,10 +153,14 @@ class _GrowthSummaryState extends State<GrowthSummary>
                 '배지 획득: ${badge.name}',
                 '코인 +${badge.coins}',
                 valueColor: c.coin,
-                leading: BadgeImage(
-                  badge.id,
-                  key: ValueKey('new-badge-${badge.id}'),
-                  earned: true,
+                leading: _BadgePop(
+                  scaleKey: ValueKey('new-badge-pop-${badge.id}'),
+                  animation: _badge,
+                  child: BadgeImage(
+                    badge.id,
+                    key: ValueKey('new-badge-${badge.id}'),
+                    earned: true,
+                  ),
                 ),
               ),
             ],
@@ -271,6 +295,35 @@ class _GrowthSummaryState extends State<GrowthSummary>
       },
     );
   }
+}
+
+/// 새 배지 그림 튀어 오름: [animation] 0 → 1 동안 [_from] 크기에서 [Motion.pop] 으로
+/// 살짝 넘쳤다가 제 크기. 자리(레이아웃)는 그대로이고 그림만 커진다.
+class _BadgePop extends StatelessWidget {
+  const _BadgePop({
+    required this.scaleKey,
+    required this.animation,
+    required this.child,
+  });
+
+  static const double _from = 0.4;
+
+  /// 크기를 바꾸는 [Transform] 의 키(테스트가 읽는다).
+  final Key scaleKey;
+
+  final Animation<double> animation;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) => AnimatedBuilder(
+    animation: animation,
+    child: child,
+    builder: (context, child) => Transform.scale(
+      key: scaleKey,
+      scale: _from + (1 - _from) * Motion.pop.transform(animation.value),
+      child: child,
+    ),
+  );
 }
 
 /// [style] 의 굵기를 [w] 로 바꾼다. 가변 글꼴이라 wght 축도 함께 바꾼다.

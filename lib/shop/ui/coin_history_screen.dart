@@ -47,7 +47,6 @@ class CoinHistoryScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final t = AppText.of(context);
     final rows = ref.watch(_coinRowsProvider);
     void back() => Navigator.of(context).maybePop();
     return Scaffold(
@@ -73,8 +72,9 @@ class CoinHistoryScreen extends ConsumerWidget {
                 child: rows.when(
                   loading: () =>
                       const Center(child: CircularProgressIndicator()),
-                  error: (_, _) =>
-                      Center(child: Text('내역을 불러오지 못했어요', style: t.body)),
+                  error: (_, _) => const SingleChildScrollView(
+                    child: EmptyState.error(message: '내역을 불러오지 못했어요'),
+                  ),
                   data: (list) => list.isEmpty
                       ? const SingleChildScrollView(
                           child: EmptyState(

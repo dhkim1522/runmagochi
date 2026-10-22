@@ -111,9 +111,11 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                 ),
               ],
               error: (_, _) => [
-                SliverFillRemaining(
-                  hasScrollBody: false,
-                  child: Center(child: Text('기록을 불러오지 못했어요', style: t.body)),
+                const SliverToBoxAdapter(
+                  child: Padding(
+                    padding: EdgeInsets.only(bottom: Gap.s5),
+                    child: EmptyState.error(message: '기록을 불러오지 못했어요'),
+                  ),
                 ),
               ],
               data: (list) => list.isEmpty
