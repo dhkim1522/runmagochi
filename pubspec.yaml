@@ -66,6 +66,10 @@ dev_dependencies:
 
 # The following section is specific to Flutter packages.
 flutter:
+  # iOS 는 Swift Package Manager 대신 CocoaPods 로 빌드한다. permission_handler 권한 스위치를
+  # Podfile 에서 고정해 Xcode 에서 실행해도 위치 권한이 빠지지 않게 한다 (결정 0031).
+  config:
+    enable-swift-package-manager: false
 
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in
