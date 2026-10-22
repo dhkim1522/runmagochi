@@ -4,6 +4,25 @@ import 'dart:ui' show IsolateNameServer;
 
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
+/// 앱이 쓰는 알림 번호 모음. 번호가 겹치면 알림이 서로를 덮어쓰거나 지우므로
+/// 새 알림은 여기에 추가한다.
+abstract final class NotificationIds {
+  /// 자동 종료 알림.
+  static const autoEnd = 1000;
+
+  /// 종료 예고 알림. 러닝 알림과 따로 띄워 진동한다.
+  static const endWarning = 1001;
+
+  /// 목표 달성 알림. 자동 종료 알림과 나눠, 러닝이 끝날 때 목표 달성 알림만
+  /// 지우고 방금 띄운 자동 종료 알림은 남긴다.
+  static const goalReached = 1002;
+
+  /// 러닝 진행 알림. `GeolocatorLocationService.ONGOING_NOTIFICATION_ID`.
+  static const runProgress = 75415;
+
+  static const all = [autoEnd, endWarning, goalReached, runProgress];
+}
+
 /// 플러그인마다 한 번만 초기화한다.
 final Expando<Future<void>> _inits = Expando<Future<void>>();
 

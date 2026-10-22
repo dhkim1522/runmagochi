@@ -43,14 +43,6 @@ class LocalNotificationScheduler
   /// 예전 버전이 만든 주간 목표 알림 채널 id.
   static const _obsoleteChannelId = 'weekly_goal';
 
-  /// 자동 종료 알림 번호.
-  static const _instantId = 1000;
-
-  /// 목표 달성 알림 번호. 자동 종료 알림(1000)과 나눠, 러닝이 끝날 때
-  /// 목표 달성 알림만 지우고 방금 띄운 자동 종료 알림은 남긴다.
-  /// 1001 은 종료 예고(run_progress_notifier.dart)가 쓴다.
-  static const goalReachedId = 1002;
-
   final FlutterLocalNotificationsPlugin _plugin;
   Future<void> _ensureInit() => ensureLocalNotificationsInitialized(_plugin);
 
@@ -79,13 +71,13 @@ class LocalNotificationScheduler
 
   @override
   Future<void> showGoalReached({required String title, required String body}) =>
-      _show(_goalChannel, title, body, id: goalReachedId);
+      _show(_goalChannel, title, body, id: NotificationIds.goalReached);
 
   @override
   Future<void> cancelGoalReached() async {
     try {
       await _ensureInit();
-      await _plugin.cancel(id: goalReachedId);
+      await _plugin.cancel(id: NotificationIds.goalReached);
     } catch (e, st) {
       debugPrint('알림: 목표 달성 알림 취소 실패 $e\n$st');
       rethrow;
@@ -96,7 +88,7 @@ class LocalNotificationScheduler
     AndroidNotificationDetails channel,
     String title,
     String body, {
-    int id = _instantId,
+    int id = NotificationIds.autoEnd,
   }) async {
     try {
       await _ensureInit();

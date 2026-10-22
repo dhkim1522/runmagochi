@@ -126,15 +126,13 @@ class LocalRunProgressNotifier implements RunProgressNotifier {
   LocalRunProgressNotifier([FlutterLocalNotificationsPlugin? plugin])
     : _plugin = plugin ?? FlutterLocalNotificationsPlugin();
 
-  /// `GeolocatorLocationService.ONGOING_NOTIFICATION_ID`.
-  static const notificationId = 75415;
+  static const notificationId = NotificationIds.runProgress;
 
   static const channelId = 'run_progress';
   static const pauseActionId = runPauseActionId;
   static const resumeActionId = runResumeActionId;
 
-  /// 종료 예고 알림. 러닝 알림과 따로 띄워 진동한다.
-  static const endWarningId = 1001;
+  static const endWarningId = NotificationIds.endWarning;
   static const endWarningChannelId = 'run_end_warning';
 
   static const _pauseAction = AndroidNotificationAction(
