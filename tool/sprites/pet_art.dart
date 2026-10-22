@@ -219,12 +219,23 @@ const Map<String, List<Pose>> hopperPoses = {
   ],
 };
 
-List<Pose> posesFor(StageArt s, String action) =>
-    (s.hops ? hopperPoses : walkerPoses)[action]!;
+/// 걷는 단계·튀는 단계의 자세표 한 벌. 기본은 [petPoses].
+/// 캐릭터 후보(tool/sprites/candidates/)는 자기 자세표를 넘긴다.
+class PoseSet {
+  const PoseSet({required this.walker, required this.hopper});
+
+  final Map<String, List<Pose>> walker;
+  final Map<String, List<Pose>> hopper;
+}
+
+const PoseSet petPoses = PoseSet(walker: walkerPoses, hopper: hopperPoses);
+
+List<Pose> posesFor(StageArt s, String action, [PoseSet set = petPoses]) =>
+    (s.hops ? set.hopper : set.walker)[action]!;
 
 /// face 가 쓰는 동작별 머리 오프셋(걷는 단계 기준). 알도 같은 값을 내야 한다.
-List<int> headOffsets(String action) => [
-  for (final p in walkerPoses[action]!) p.headDy,
+List<int> headOffsets(String action, [PoseSet set = petPoses]) => [
+  for (final p in set.walker[action]!) p.headDy,
 ];
 
 const int _h = footY + 1; // 캔버스 높이 30 (y=0..29)
@@ -255,9 +266,11 @@ List<String> _mirror(List<String> rows) => [
 SpriteFrame _toFrame(_Grid g) => SpriteFrame([for (final r in g) r.join()]);
 
 /// 단계 하나, 동작 하나의 body 프레임들.
-List<SpriteFrame> bodyFrames(StageArt s, String action) => [
-  for (final p in posesFor(s, action)) _bodyFrame(s, p),
-];
+List<SpriteFrame> bodyFrames(
+  StageArt s,
+  String action, [
+  PoseSet set = petPoses,
+]) => [for (final p in posesFor(s, action, set)) _bodyFrame(s, p)];
 
 SpriteFrame _bodyFrame(StageArt s, Pose p) {
   // 1) 기본 몸.
@@ -345,8 +358,13 @@ _Grid _lift(_Grid g, int lift) {
 }
 
 /// 표정 하나, 동작 하나의 face 프레임들.
-List<SpriteFrame> faceFrames(PetKind kind, String mood, String action) {
-  final offsets = headOffsets(action);
+List<SpriteFrame> faceFrames(
+  PetKind kind,
+  String mood,
+  String action, [
+  PoseSet set = petPoses,
+]) {
+  final offsets = headOffsets(action, set);
   return [
     for (var i = 0; i < offsets.length; i++)
       _faceFrame(kind.face, mood, offsets[i], i),

@@ -10,7 +10,9 @@ import 'sprite_data.dart';
 const int _scale = 8;
 const int _gap = 16;
 const int _groupGap = 48;
-const int _bg = 0xFFFFF7ED; // cream
+
+/// 미리보기 바탕색(cream). 후보 미리보기(tool/render_candidates.dart)도 같은 색을 쓴다.
+const int previewBg = 0xFFFFF7ED;
 
 /// 저장소 루트 기준 경로 → 시트 이미지. 모든 종류 × 단계 × 동작(몸), 표정 × 동작(얼굴),
 /// 아이템 × 동작(모자·소품).
@@ -53,10 +55,17 @@ img.Image sheet(List<SpriteFrame> frames) {
   return im;
 }
 
-void drawFrame(img.Image im, SpriteFrame f, int ox, int oy, int scale) {
+void drawFrame(
+  img.Image im,
+  SpriteFrame f,
+  int ox,
+  int oy,
+  int scale, {
+  Palette palette = petPalette,
+}) {
   for (var y = 0; y < spriteSize; y++) {
     for (var x = 0; x < spriteSize; x++) {
-      final argb = pixelAt(f, petPalette, x, y);
+      final argb = pixelAt(f, palette, x, y);
       if (argb == null) continue;
       img.fillRect(
         im,
@@ -86,7 +95,7 @@ img.Image preview(PetKind pet) {
   final rows = pet.stages.length + 1;
   final height = rows * (tile + _gap) + _gap;
   final im = img.Image(width: width, height: height);
-  img.fill(im, color: _color(_bg));
+  img.fill(im, color: _color(previewBg));
 
   for (var s = 0; s < pet.stages.length; s++) {
     var c = 0;
@@ -134,7 +143,7 @@ img.Image itemsPreview() {
   final rows = <ItemArt?>[null, ...items];
   final height = rows.length * (tile + _gap) + _gap;
   final im = img.Image(width: width, height: height);
-  img.fill(im, color: _color(_bg));
+  img.fill(im, color: _color(previewBg));
   for (var r = 0; r < rows.length; r++) {
     final oy = _gap + r * (tile + _gap);
     for (var c = 0; c < cols.length; c++) {
