@@ -68,7 +68,7 @@
   - 파일: `tool/sprites/{jelly,acorn}.dart`, `assets/sprites/{jelly,acorn}/**`, `design/character/{jelly,acorn}.png`, `design/character/concepts.png`
   - 테스트·확인: 작업 3 과 같음
 
-- [ ] 5. 아이템 6개 다시 그리기
+- [x] 5. 아이템 6개 다시 그리기
   - `cap`·`beanie`·`straw_hat`·`sunglasses`·`headphones`·`flower_pin` 을 새 그림체로. 3종 × 4단계 기준점에 맞춘다.
   - 작업 3·4 리뷰에서 넘어온 것: 모자가 4단계 머리·젤리 잎보다 좁아 옆으로 비어져 나옴(모자 폭을 넓힘), 도토리 4단계 헤어밴드가 한 줄이라 모자 테두리처럼 보임(병아리·젤리처럼 두 줄로), 젤리 4단계 잎 좌우 비대칭
   - 파일: `tool/sprites/items.dart`, `assets/sprites/*/{hat,accessory}/**`, `design/character/items.png`
@@ -185,4 +185,4 @@
 - 관문 1 투표 페이지(2026-10-22): https://claude.ai/artifact/SBshrAFUGtLfBbaLHQxMnb . 저장 기능 없음(db 아티팩트는 조직 내부 전용이라 외부 사람이 못 엶). 고르면 `런마고치 캐릭터: A/B/C` 문구가 나오고 사용자가 표를 모은다. 결과: **A 말랑 클레이 확정**(2026-10-22 사용자). 기준점은 지금 값(모자 y=18, 소품 y=20) 유지
 
 ## 자동 결정
-없음
+- 작업 5: 1단계 알에 모자가 커 보이는 점(버섯처럼 보임)은 그대로 둔다. 아이템 파일 경로에 단계가 없어 단계별 그림을 쓰려면 앱 코드를 바꿔야 한다. 관문 3 에서 사용자가 보고 고칠지 정한다(고치면 `itemSheet` 에 단계를 넣고 1단계 작은 모자를 그린다).
