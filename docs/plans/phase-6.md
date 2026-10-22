@@ -57,7 +57,7 @@
   - 사용자가 주변에 보여 주고 결과를 알려 줄 때까지 **멈춘다**. 고른 안과 표 수를 이 계획 "관문 기록" 에 적는다.
   - 스킬: artifact-design, artifact-capabilities
 
-- [ ] 3. 병아리 다시 그리기
+- [x] 3. 병아리 다시 그리기
   - 고른 안으로 `tool/sprites/chick.dart`(필요하면 `pet_art.dart` 팔레트·자세표)를 교체한다. 1~4단계 idle·walk·run, 표정 normal·sleepy·asleep, 1단계 알은 통통 튀기 유지.
   - 파일: `tool/sprites/chick.dart`, `tool/sprites/pet_art.dart`, `assets/sprites/chick/**`, `design/character/chick.png`, 기준점이 바뀌면 `docs/specs/sprite-spec.md`·`PetKind`
   - 테스트: 기존 `test/tool/sprite_data_test.dart` 전부 통과(face 가 4단계 몸 위, 발끝, 단계별 장비)
