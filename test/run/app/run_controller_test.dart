@@ -4,6 +4,7 @@ import 'dart:math' as math;
 import 'package:fake_async/fake_async.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:runmagochi/avatar/data/notification_scheduler.dart';
 import 'package:runmagochi/run/domain/run_goal.dart';
 import 'package:flutter/widgets.dart' show AppLifecycleState;
 import 'package:runmagochi/profile/app/providers.dart';
@@ -196,6 +197,18 @@ class _FakeAppLifecycle implements AppLifecycle {
 late _FakeAppLifecycle _lifecycle;
 
 /// fake_async 시간과 같이 가는 시계로 컨테이너를 만들어 [body] 를 돌린다.
+class _NoopInstant implements InstantNotifier {
+  @override
+  Future<void> showNow({required String title, required String body}) async {}
+  @override
+  Future<void> showGoalReached({
+    required String title,
+    required String body,
+  }) async {}
+  @override
+  Future<void> cancelGoalReached() async {}
+}
+
 void _run(
   void Function(
     FakeAsync async,
@@ -225,6 +238,7 @@ void _run(
         appLifecycleProvider.overrideWithValue(lifecycle),
         clockProvider.overrideWithValue(() => _t0.add(async.elapsed)),
         speakerProvider.overrideWithValue(FakeSpeaker()),
+        instantNotifierProvider.overrideWithValue(_NoopInstant()),
       ],
     );
     body(

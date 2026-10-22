@@ -16,6 +16,9 @@ abstract interface class InstantNotifier {
 
   /// 오늘 목표 달성 알림. 자동 종료와 알림 채널을 나눠 따로 끌 수 있게 한다.
   Future<void> showGoalReached({required String title, required String body});
+
+  /// 목표 달성 알림을 지운다. 러닝이 끝나면 그 러닝의 알림이 남지 않게 부른다.
+  Future<void> cancelGoalReached();
 }
 
 /// flutter_local_notifications 구현.
@@ -40,8 +43,13 @@ class LocalNotificationScheduler
   /// 예전 버전이 만든 주간 목표 알림 채널 id.
   static const _obsoleteChannelId = 'weekly_goal';
 
-  /// 즉시 알림 번호.
+  /// 자동 종료 알림 번호.
   static const _instantId = 1000;
+
+  /// 목표 달성 알림 번호. 자동 종료 알림(1000)과 나눠, 러닝이 끝날 때
+  /// 목표 달성 알림만 지우고 방금 띄운 자동 종료 알림은 남긴다.
+  /// 1001 은 종료 예고(run_progress_notifier.dart)가 쓴다.
+  static const goalReachedId = 1002;
 
   final FlutterLocalNotificationsPlugin _plugin;
   Future<void> _ensureInit() => ensureLocalNotificationsInitialized(_plugin);
@@ -71,17 +79,29 @@ class LocalNotificationScheduler
 
   @override
   Future<void> showGoalReached({required String title, required String body}) =>
-      _show(_goalChannel, title, body);
+      _show(_goalChannel, title, body, id: goalReachedId);
+
+  @override
+  Future<void> cancelGoalReached() async {
+    try {
+      await _ensureInit();
+      await _plugin.cancel(id: goalReachedId);
+    } catch (e, st) {
+      debugPrint('알림: 목표 달성 알림 취소 실패 $e\n$st');
+      rethrow;
+    }
+  }
 
   Future<void> _show(
     AndroidNotificationDetails channel,
     String title,
-    String body,
-  ) async {
+    String body, {
+    int id = _instantId,
+  }) async {
     try {
       await _ensureInit();
       await _plugin.show(
-        id: _instantId,
+        id: id,
         title: title,
         body: body,
         notificationDetails: NotificationDetails(

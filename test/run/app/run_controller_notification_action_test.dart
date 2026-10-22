@@ -68,6 +68,10 @@ class _Lifecycle implements AppLifecycle {
 }
 
 class _Instant implements InstantNotifier {
+  var goalCancelled = 0;
+  @override
+  Future<void> cancelGoalReached() async => goalCancelled++;
+
   @override
   Future<void> showNow({required String title, required String body}) async {}
   @override

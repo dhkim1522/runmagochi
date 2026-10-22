@@ -15,6 +15,8 @@ class _FakePlugin extends Fake implements FlutterLocalNotificationsPlugin {
   final android = _FakeAndroid();
   final shown = <(String, String?)>[]; // (제목, 채널 id)
   var cancelled = 0;
+  final cancelledIds = <int>[];
+  final shownIds = <int>[];
 
   @override
   Future<bool?> initialize({
@@ -34,7 +36,14 @@ class _FakePlugin extends Fake implements FlutterLocalNotificationsPlugin {
     String? body,
     NotificationDetails? notificationDetails,
     String? payload,
-  }) async => shown.add((title!, notificationDetails?.android?.channelId));
+  }) async {
+    shownIds.add(id);
+    shown.add((title!, notificationDetails?.android?.channelId));
+  }
+
+  @override
+  Future<void> cancel({required int id, String? tag}) async =>
+      cancelledIds.add(id);
 
   @override
   T? resolvePlatformSpecificImplementation<
@@ -56,6 +65,15 @@ void main() {
     await scheduler.showGoalReached(title: '달성', body: 'b');
 
     expect(plugin.shown, [('종료', 'run_auto_end'), ('달성', 'run_goal')]);
+  });
+
+  test('목표 달성 알림은 자동 종료와 다른 번호라 따로 지울 수 있다', () async {
+    await scheduler.showNow(title: '종료', body: 'b');
+    await scheduler.showGoalReached(title: '달성', body: 'b');
+    await scheduler.cancelGoalReached();
+
+    expect(plugin.shownIds, [1000, 1002]);
+    expect(plugin.cancelledIds, [1002]);
   });
 
   test('예약 취소 때 예전 주간 목표 채널을 지운다', () async {

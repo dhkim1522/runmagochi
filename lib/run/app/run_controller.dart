@@ -336,6 +336,7 @@ class RunController extends Notifier<RunViewState> {
       _goalReached = false;
       _stopVoice();
       _cancelProgress();
+      _cancelRunScopedAlerts();
       _pendingSummary = null;
       _pendingAutoEnd = null;
       _flushClosed = false;
@@ -815,6 +816,34 @@ class RunController extends Notifier<RunViewState> {
       );
     } catch (e) {
       debugPrint('알림: 러닝 진행 알림 실패 $e');
+    }
+  }
+
+  /// 러닝이 끝나면 그 러닝의 목표 달성·종료 예고 알림이 알림창에 남지 않게 지운다.
+  /// 자동 종료 알림은 끝난 뒤에 알리는 것이라 지우지 않는다.
+  void _cancelRunScopedAlerts() {
+    final warningShown = _endWarningDeadline != null;
+    _endWarningDeadline = null;
+    try {
+      unawaited(
+        ref
+            .read(instantNotifierProvider)
+            .cancelGoalReached()
+            .catchError((Object e) => debugPrint('알림: 목표 달성 알림 취소 실패 $e')),
+      );
+    } catch (e) {
+      debugPrint('알림: 목표 달성 알림 취소 실패 $e');
+    }
+    if (!warningShown) return;
+    try {
+      unawaited(
+        ref
+            .read(runProgressNotifierProvider)
+            .cancelEndWarning()
+            .catchError((Object e) => debugPrint('알림: 종료 예고 취소 실패 $e')),
+      );
+    } catch (e) {
+      debugPrint('알림: 종료 예고 취소 실패 $e');
     }
   }
 

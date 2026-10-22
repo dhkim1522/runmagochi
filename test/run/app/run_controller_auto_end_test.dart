@@ -125,6 +125,10 @@ class _Lifecycle implements AppLifecycle {
 }
 
 class _Notifier implements InstantNotifier {
+  var goalCancelled = 0;
+  @override
+  Future<void> cancelGoalReached() async => goalCancelled++;
+
   final shown = <(String, String)>[];
   bool fails = false;
 

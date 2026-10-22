@@ -88,6 +88,10 @@ class _Lifecycle implements AppLifecycle {
 }
 
 class _Notifier implements InstantNotifier {
+  var goalCancelled = 0;
+  @override
+  Future<void> cancelGoalReached() async => goalCancelled++;
+
   final shown = <(String, String)>[];
   bool fails = false;
 
@@ -194,6 +198,21 @@ void main() {
       async.elapse(const Duration(seconds: 5));
       expect(container.read(runControllerProvider).goalReached, isTrue);
       expect(notifier.shown, hasLength(1));
+    });
+  });
+
+  test('러닝이 끝나면 목표 달성 알림을 지운다', () {
+    _run((async, container, notifier, sampleAt) {
+      final controller = container.read(runControllerProvider.notifier);
+      controller.start(goal: DistanceGoal(3000));
+      async.flushMicrotasks();
+      sampleAt(const Duration(seconds: 1), 0);
+      sampleAt(const Duration(seconds: 501), 3005);
+      expect(notifier.shown, hasLength(1));
+      expect(notifier.goalCancelled, 0);
+      controller.end();
+      async.flushMicrotasks();
+      expect(notifier.goalCancelled, 1);
     });
   });
 
