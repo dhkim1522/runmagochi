@@ -93,7 +93,8 @@ flutter:
 
   fonts:
     # Pretendard v1.3.9 가변 글꼴, SIL OFL (assets/fonts/OFL-Pretendard.txt). 네트워크 없이 동작하도록 번들한다.
-    # 서브셋은 작업 17 에서 한다.
+    # 앱에 쓰는 글자만 남긴 서브셋이다(굵기 축 유지, 내부 이름 Runmagochi Sans). 원본은 tool/fonts/,
+    # 다시 만들기는 tool/subset_fonts.py.
     - family: Pretendard
       fonts:
         - asset: assets/fonts/PretendardVariable.ttf

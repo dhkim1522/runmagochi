@@ -45,3 +45,6 @@ devtools_options.yaml
 
 # Claude Code 서브에이전트 작업 공간
 .claude/worktrees/
+
+# 글꼴 서브셋 도구(fonttools) 가상환경. tool/subset_fonts.py 참고
+.venv/

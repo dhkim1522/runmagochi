@@ -41,6 +41,7 @@
 
 - **Flutter 버전**: 프로젝트 Flutter 는 `.fvmrc` 로 고정한다(결정 0008). [FVM](https://fvm.app) 을 설치하고(`dart pub global activate fvm` 또는 macOS `brew install fvm`) 저장소에서 `fvm install` 을 실행한다. Windows 는 개발자 모드를 켜야 한다.
 - **dart-flutter**: Dart MCP 서버가 전역 `dart` 명령을 쓴다. Flutter SDK를 설치하고 `dart` 가 PATH에 있어야 한다. 전역 버전도 `.fvmrc` 와 맞춰 두면 분석 결과가 같다.
+- **글꼴 서브셋**(`tool/subset_fonts.py`): Python 3 와 fonttools. 저장소 루트에서 `python3 -m venv .venv` 후 `.venv/bin/pip install fonttools==4.67.0`(Windows `py -m venv .venv`, `.venv\Scripts\pip ...`). `.venv/` 는 git 에 올리지 않는다. 앱 문구에 새 글자를 쓸 때만 필요하다.
 - **pixel-plugin**: [Aseprite](https://www.aseprite.org/) 1.3 이상이 설치돼 있어야 한다.
 - **Taste Skill**: Node 22 이상과 Chrome·Edge·Chromium 중 하나가 필요하다.
 - **디자인 스킬**: ui-ux-pro-max·Impeccable·Taste Skill 은 지침이 겹친다. 단계마다 필요한 것만 켠다.

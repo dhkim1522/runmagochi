@@ -40,7 +40,7 @@
 
 ## 글자
 
-- **Pretendard**(SIL OFL, v1.3.9 가변 글꼴) 한 가족. 앱은 `assets/fonts/PretendardVariable.ttf` 를 번들한다(서브셋은 작업 17).
+- **Pretendard**(SIL OFL, v1.3.9 가변 글꼴) 한 가족. 앱은 `assets/fonts/PretendardVariable.ttf` 를 번들한다(앱에 쓰는 글자만 남긴 서브셋, `tool/subset_fonts.py`).
 - 숫자: 800, 자간 -0.02em(거리 128 은 -0.04em, 64 는 -0.03em), 고정폭 숫자(tnum).
 - 크기: `distance-xl` 128 (러닝 중 거리) · `number-l` 64 (요약 거리·카운트다운) · `title` 26 (화면 제목·이름·레벨) · `stat`·`button`·`title-s` 22 (지표 값·버튼·단위) · `heading`·`body` 17 · `label` 14 · `caption` 13. **13 아래 없음.**
 
