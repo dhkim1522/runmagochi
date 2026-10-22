@@ -31,14 +31,24 @@ class PermissionHandlerGate implements PermissionGate {
   PermissionHandlerGate({
     Future<ph.PermissionStatus> Function()? locationStatus,
     Future<LocationAccuracyStatus> Function()? locationAccuracy,
+    Future<ph.PermissionStatus> Function()? requestLocationPermission,
+    Future<ph.PermissionStatus> Function()? requestNotificationPermission,
   }) : _locationStatus =
            locationStatus ?? (() => ph.Permission.locationWhenInUse.status),
+       _requestLocation =
+           requestLocationPermission ??
+           (() => ph.Permission.locationWhenInUse.request()),
+       _requestNotification =
+           requestNotificationPermission ??
+           (() => ph.Permission.notification.request()),
        _locationAccuracy = locationAccuracy ?? Geolocator.getLocationAccuracy;
 
   static const _battery = MethodChannel('runmagochi/battery');
 
   final Future<ph.PermissionStatus> Function() _locationStatus;
   final Future<LocationAccuracyStatus> Function() _locationAccuracy;
+  final Future<ph.PermissionStatus> Function() _requestLocation;
+  final Future<ph.PermissionStatus> Function() _requestNotification;
   bool _batteryGuideDismissed = false;
 
   @override
@@ -67,8 +77,10 @@ class PermissionHandlerGate implements PermissionGate {
 
   @override
   Future<GateResult> requestLocation() async {
-    await ph.Permission.locationWhenInUse.request();
-    await ph.Permission.notification.request();
+    final location = await _requestLocation();
+    await _requestNotification();
+    // Android 는 status 가 영구 거부를 알려주지 않아, 요청 결과로만 알 수 있다.
+    if (location.isPermanentlyDenied) return GateResult.locationDeniedForever;
     return check();
   }
 

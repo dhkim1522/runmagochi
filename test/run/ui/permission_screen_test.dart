@@ -369,6 +369,57 @@ void main() {
     expect(find.byType(CircularProgressIndicator), findsOneWidget);
   });
 
+  group('PermissionHandlerGate 권한 요청', () {
+    const channel = MethodChannel('runmagochi/battery');
+    final messenger =
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
+
+    setUp(
+      () => messenger.setMockMethodCallHandler(
+        channel,
+        (call) async => call.method == 'isIgnoringBatteryOptimizations',
+      ),
+    );
+    tearDown(() => messenger.setMockMethodCallHandler(channel, null));
+
+    PermissionHandlerGate gate(PermissionStatus requested, List<String> log) =>
+        PermissionHandlerGate(
+          locationStatus: () async => PermissionStatus.denied,
+          locationAccuracy: () async => LocationAccuracyStatus.precise,
+          requestLocationPermission: () async => requested,
+          requestNotificationPermission: () async {
+            log.add('notification');
+            return PermissionStatus.granted;
+          },
+        );
+
+    test('요청 결과가 영구 거부면 locationDeniedForever (알림 권한은 그래도 요청)', () async {
+      final log = <String>[];
+      final g = gate(PermissionStatus.permanentlyDenied, log);
+      expect(await g.requestLocation(), GateResult.locationDeniedForever);
+      expect(log, ['notification']);
+    });
+
+    test('요청 결과가 허용이면 check() 결과를 돌려준다', () async {
+      final g = PermissionHandlerGate(
+        locationStatus: () async => PermissionStatus.granted,
+        locationAccuracy: () async => LocationAccuracyStatus.precise,
+        requestLocationPermission: () async => PermissionStatus.granted,
+        requestNotificationPermission: () async => PermissionStatus.granted,
+      );
+      messenger.setMockMethodCallHandler(
+        channel,
+        (call) async => call.method == 'isIgnoringBatteryOptimizations',
+      );
+      expect(await g.requestLocation(), GateResult.ready);
+    });
+
+    test('요청 결과가 거부(영구 아님)면 check() 결과를 돌려준다', () async {
+      final g = gate(PermissionStatus.denied, []);
+      expect(await g.requestLocation(), GateResult.needsLocation);
+    });
+  });
+
   group('PermissionHandlerGate 배터리 확인', () {
     const channel = MethodChannel('runmagochi/battery');
     final messenger =
