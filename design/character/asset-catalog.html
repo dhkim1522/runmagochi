@@ -1,0 +1,342 @@
+<title>런마고치 캐릭터 에셋</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Jua&family=Noto+Sans+KR:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* 레이아웃: 앱의 말랑 클레이 토큰으로 만든 에셋 카탈로그. 맨 위 보기 도구가 아래 모든 캐릭터 무대를 함께 바꾼다. */
+:root {
+  --cream: #FFF7ED; --surface: #FFFFFF; --surface-soft: #FFEDD5;
+  --line: #FED7AA; --line-strong: #FDBA74;
+  --ink: #431407; --ink-muted: #9A3412;
+  --primary: #F97316; --primary-deep: #C2410C; --on-primary: #1C0A00;
+  --accent: #2563EB;
+  --font-display: "Jua", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+  --font-body: "Noto Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --cream: #1C1410; --surface: #2A1F18; --surface-soft: #3A2A1F;
+  --line: #5A3B24; --line-strong: #120C08;
+  --ink: #FFEDD5; --ink-muted: #FDBA74;
+  --primary: #FB923C; --primary-deep: #EA580C; --on-primary: #1C0A00;
+  --accent: #60A5FA;
+  color-scheme: dark;
+} }
+:root[data-theme="dark"] {
+  --cream: #1C1410; --surface: #2A1F18; --surface-soft: #3A2A1F;
+  --line: #5A3B24; --line-strong: #120C08;
+  --ink: #FFEDD5; --ink-muted: #FDBA74;
+  --primary: #FB923C; --primary-deep: #EA580C; --on-primary: #1C0A00;
+  --accent: #60A5FA;
+  color-scheme: dark;
+}
+body { background: var(--cream); color: var(--ink); font: 15px/1.6 var(--font-body); }
+.wrap {
+  max-width: 1080px; margin: 0 auto;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 36px 64px;
+  display: flex; flex-direction: column; gap: 40px;
+}
+header { display: flex; flex-direction: column; gap: 12px; }
+.eyebrow { font: 500 13px/1.4 var(--font-body); letter-spacing: .05em; color: var(--ink-muted); }
+h1 { margin: 0; font: 40px/1.15 var(--font-display); text-wrap: balance; }
+h2 { margin: 0; font: 26px/1.25 var(--font-display); text-wrap: balance; }
+h3 { margin: 0; font: 19px/1.3 var(--font-display); }
+.lede { margin: 0; max-width: 40em; }
+.facts { display: flex; flex-wrap: wrap; gap: 8px; margin: 4px 0 0; padding: 0; list-style: none; }
+.facts li { background: var(--surface); border: 2px solid var(--line); border-radius: 999px; padding: 4px 12px; font-size: 13px; font-weight: 500; }
+section { display: flex; flex-direction: column; gap: 16px; }
+.section-note { margin: 0; color: var(--ink-muted); font-size: 14px; max-width: 46em; }
+code, .mono { font-family: var(--font-mono); font-size: 13px; }
+
+/* 보기 도구 */
+.controls {
+  background: var(--surface); border: 3px solid var(--line); border-radius: 24px;
+  box-shadow: 0 6px 0 var(--line-strong);
+  padding: 16px 20px; display: grid; gap: 12px 24px;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+.ctl { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.ctl-label { font-size: 13px; font-weight: 500; color: var(--ink-muted); }
+.seg { display: flex; flex-wrap: wrap; gap: 6px; }
+.seg button {
+  min-height: 40px; padding: 0 14px; border-radius: 999px; cursor: pointer;
+  font: 500 14px var(--font-body); color: var(--ink);
+  background: var(--surface); border: 2px solid var(--line);
+}
+.seg button[aria-pressed="true"] { background: var(--primary); border-color: var(--primary-deep); color: var(--on-primary); }
+.seg button:focus-visible, summary:focus-visible { outline: 3px solid var(--primary-deep); outline-offset: 2px; }
+
+/* 캐릭터 */
+.kind { display: flex; flex-direction: column; gap: 12px; }
+.kind-head { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.kind-head .mono { color: var(--ink-muted); }
+.stages { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+@media (max-width: 720px) { .stages { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.stage-card { background: var(--surface); border: 3px solid var(--line); border-radius: 20px; padding: 12px; display: flex; flex-direction: column; align-items: center; gap: 8px; min-width: 0; }
+.stage-floor { background: var(--surface-soft); border-radius: 18px; width: 100%; display: grid; place-items: center; padding: 10px 0; }
+.stage-name { font: 17px/1.2 var(--font-display); text-align: center; }
+.stage-meta { font-size: 13px; color: var(--ink-muted); text-align: center; }
+.pet { position: relative; width: calc(32px * var(--scale)); height: calc(32px * var(--scale)); }
+.pet .layer {
+  position: absolute; inset: 0; background-repeat: no-repeat;
+  background-size: calc(32px * var(--scale) * var(--frames)) 100%;
+  image-rendering: pixelated;
+  animation: play var(--dur) steps(var(--frames)) infinite;
+}
+@keyframes play { from { background-position: 0 0; } to { background-position: calc(-32px * var(--scale) * var(--frames)) 0; } }
+@media (prefers-reduced-motion: reduce) { .pet .layer { animation: none; } }
+
+/* 배지 */
+.badges { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
+.badge { background: var(--surface); border: 3px solid var(--line); border-radius: 20px; padding: 14px 10px; display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; min-width: 0; }
+.badge img { width: 72px; height: 72px; image-rendering: pixelated; }
+.badges[data-locked="true"] .badge img { filter: grayscale(1); opacity: .45; }
+.badge-name { font: 16px/1.25 var(--font-display); }
+.badge-cond { font-size: 13px; color: var(--ink-muted); }
+.badge-coin { font: 500 13px var(--font-body); }
+.tier { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 4px; vertical-align: 0; border: 1px solid var(--ink); }
+
+/* 팔레트 */
+.palette { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 12px; }
+.pal-group { background: var(--surface); border: 3px solid var(--line); border-radius: 20px; padding: 14px 16px; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.swatches { display: flex; flex-direction: column; gap: 6px; }
+.sw { display: grid; grid-template-columns: 28px 22px 70px minmax(0, 1fr); align-items: center; gap: 8px; font-size: 13px; }
+.chip { width: 28px; height: 28px; border-radius: 8px; border: 2px solid var(--line-strong); }
+.sw .key { font-family: var(--font-mono); font-weight: 500; text-align: center; background: var(--surface-soft); border-radius: 6px; }
+.sw .hex { font-family: var(--font-mono); }
+.sw .use { min-width: 0; color: var(--ink-muted); }
+
+/* 규격 */
+.table-wrap { overflow-x: auto; background: var(--surface); border: 3px solid var(--line); border-radius: 20px; }
+table { border-collapse: collapse; width: 100%; min-width: 560px; font-size: 14px; }
+th, td { text-align: left; padding: 10px 14px; border-bottom: 2px solid var(--line); vertical-align: top; }
+tr:last-child th, tr:last-child td { border-bottom: 0; }
+th { font-weight: 700; white-space: nowrap; width: 9em; }
+td { font-variant-numeric: tabular-nums; }
+
+details { background: var(--surface); border: 3px solid var(--line); border-radius: 20px; padding: 12px 16px; }
+summary { cursor: pointer; font: 18px var(--font-display); padding: 4px 0; }
+.sheets { display: flex; flex-direction: column; gap: 18px; margin-top: 12px; }
+.sheets figure { margin: 0; display: flex; flex-direction: column; gap: 6px; }
+.sheets .scroll { overflow-x: auto; background: var(--surface-soft); border-radius: 14px; }
+.sheets img { display: block; max-width: none; height: auto; width: 100%; min-width: 640px; image-rendering: pixelated; }
+.sheets figcaption { font-size: 13px; color: var(--ink-muted); }
+.foot { font-size: 13px; color: var(--ink-muted); margin: 0; }
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">런마고치 · 페이즈 6-1 산출물 · 2026-10-22</div>
+    <h1>런마고치 캐릭터 에셋</h1>
+    <p class="lede">달린 거리만큼 자라는 도트 친구 세 종류와 상점 아이템, 업적 배지예요. 주변 투표로 고른 <strong>말랑 클레이</strong> 그림체로 다시 그렸고, 아래 무대는 앱에 들어가는 실제 스프라이트 파일을 겹쳐서 재생해요.</p>
+    <ul class="facts">
+      <li>프레임 32×32px</li>
+      <li>3종 × 4단계</li>
+      <li>표정 3개</li>
+      <li>아이템 6개</li>
+      <li>배지 12개 (24×24px)</li>
+      <li>코드로 찍은 도트 (결정 0028)</li>
+    </ul>
+  </header>
+
+  <section aria-labelledby="pets-title">
+    <h2 id="pets-title">세 친구</h2>
+    <p class="section-note">첫 실행 때 셋 중 하나가 무작위로 찾아와요(결정 0011). 레벨 1·5·10·20 에서 다음 단계로 자라고, 단계마다 러닝화 → 손목 밴드 → 헤어밴드와 완주 메달이 생겨요(결정 0013).</p>
+    <div class="controls" role="group" aria-label="보기 도구">
+      <div class="ctl"><span class="ctl-label" id="l-action">동작</span><div class="seg" data-ctl="action" aria-labelledby="l-action"></div></div>
+      <div class="ctl"><span class="ctl-label" id="l-mood">표정</span><div class="seg" data-ctl="mood" aria-labelledby="l-mood"></div></div>
+      <div class="ctl"><span class="ctl-label" id="l-hat">모자</span><div class="seg" data-ctl="hat" aria-labelledby="l-hat"></div></div>
+      <div class="ctl"><span class="ctl-label" id="l-acc">소품</span><div class="seg" data-ctl="accessory" aria-labelledby="l-acc"></div></div>
+    </div>
+    <div id="kinds" style="display:flex;flex-direction:column;gap:28px"></div>
+  </section>
+
+  <section aria-labelledby="badges-title">
+    <h2 id="badges-title">업적 배지</h2>
+    <p class="section-note">같은 메달 틀에 배지마다 다른 그림을 넣었어요. 틀 색은 보상 등급이에요: 파랑 50코인, 동 100, 은 150·200, 금 300. 아직 못 받은 배지는 같은 그림을 회색으로 흐리게(투명도 0.45) 보여 줘요.</p>
+    <div class="seg" data-ctl="locked" role="group" aria-label="배지 상태"></div>
+    <div class="badges" id="badges"></div>
+  </section>
+
+  <section aria-labelledby="pal-title">
+    <h2 id="pal-title">팔레트</h2>
+    <p class="section-note">그림 데이터는 한 글자가 한 픽셀이에요. 글자마다 색이 하나씩 정해져 있고, 몸은 하이라이트·기본·그림자 세 단계로 칠해요. 원본은 <code>tool/sprites/pet_art.dart</code>.</p>
+    <div class="palette" id="palette"></div>
+  </section>
+
+  <section aria-labelledby="spec-title">
+    <h2 id="spec-title">규격</h2>
+    <div class="table-wrap">
+      <table>
+        <tbody>
+          <tr><th>프레임</th><td>32×32px, 투명 배경 PNG. 동작마다 프레임을 가로로 이은 시트 한 장: <span class="mono">(프레임 수 × 32) × 32</span></td></tr>
+          <tr><th>동작</th><td>서 있기 <span class="mono">idle</span> 2프레임 4fps · 걷기 <span class="mono">walk</span> 4프레임 6fps · 달리기 <span class="mono">run</span> 4프레임 10fps. 1단계 알은 걷는 대신 통통 튀어요.</td></tr>
+          <tr><th>레이어</th><td>아래부터 <span class="mono">body</span> → <span class="mono">face</span> → <span class="mono">hat</span> → <span class="mono">accessory</span>. 표정은 종류마다 하나로 4단계가 함께 써요.</td></tr>
+          <tr><th>기준점</th><td>발끝 y=29(공중 프레임 y=28). 모자: 병아리·젤리 y=18, 도토리 y=17. 소품: 셋 다 y=20. 가로는 모두 x=16. 모자는 눈(y=20·21)을 가리지 않아요.</td></tr>
+          <tr><th>파일</th><td><span class="mono">assets/sprites/&lt;종류&gt;/&lt;레이어&gt;/&lt;이름&gt;_&lt;동작&gt;.png</span><br>배지 <span class="mono">assets/badges/&lt;배지 id&gt;.png</span></td></tr>
+          <tr><th>화면 표시</th><td>정수 배율로만 키우고 보간 없이 그려요(<span class="mono">FilterQuality.none</span>).</td></tr>
+          <tr><th>다시 만들기</th><td><span class="mono">fvm dart run tool/render_sprites.dart</span> — 시트, 배지, 8배 미리보기를 모두 다시 써요. 저장소의 PNG 와 다르면 테스트가 실패해요.</td></tr>
+          <tr><th>원본 문서</th><td><span class="mono">docs/specs/sprite-spec.md</span>, 결정 0011·0013·0028</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <details>
+    <summary>8배 미리보기 시트</summary>
+    <div class="sheets">
+      <figure><div class="scroll"><img src="preview/chick.png" alt="병아리 1~4단계 프레임 시트" loading="lazy"></div><figcaption>병아리. 줄은 1~4단계, 칸은 서 있기 2 · 걷기 4 · 달리기 4 프레임, 마지막 줄은 표정.</figcaption></figure>
+      <figure><div class="scroll"><img src="preview/jelly.png" alt="젤리 1~4단계 프레임 시트" loading="lazy"></div><figcaption>젤리</figcaption></figure>
+      <figure><div class="scroll"><img src="preview/acorn.png" alt="도토리 1~4단계 프레임 시트" loading="lazy"></div><figcaption>도토리</figcaption></figure>
+      <figure><div class="scroll"><img src="preview/items.png" alt="아이템 6개를 세 종류 네 단계에 입힌 시트" loading="lazy"></div><figcaption>아이템. 줄은 아이템 없음과 6개, 칸은 종류 3 × 단계 4.</figcaption></figure>
+      <figure><div class="scroll"><img src="preview/badges.png" alt="배지 12개, 받은 상태와 못 받은 상태" loading="lazy"></div><figcaption>배지. 위는 받은 상태, 아래는 못 받은 상태.</figcaption></figure>
+    </div>
+  </details>
+
+  <p class="foot">저장소 <span class="mono">runmagochi</span> 커밋 73d3d44 기준. 1단계 알에 씌운 모자가 커 보이는 점은 페이즈 6 관문 3 에서 고칠지 정해요.</p>
+</div>
+
+<script>
+const ACTIONS = { idle: { label: "서 있기", frames: 2, fps: 4 }, walk: { label: "걷기", frames: 4, fps: 6 }, run: { label: "달리기", frames: 4, fps: 10 } };
+const MOODS = { normal: "보통", sleepy: "졸림", asleep: "잠듦" };
+const HATS = { none: "없음", cap: "러닝 캡 · 100", beanie: "비니 · 200", straw_hat: "밀짚모자 · 300" };
+const ACCS = { none: "없음", sunglasses: "선글라스 · 150", headphones: "헤드폰 · 250", flower_pin: "꽃 머리핀 · 350" };
+const KINDS = [
+  { id: "chick", name: "병아리", first: "알", note: "부리와 볏, 알 껍데기 모자로 시작해요" },
+  { id: "jelly", name: "젤리", first: "새싹", note: "말랑한 주황 몸에 잎 두 장" },
+  { id: "acorn", name: "도토리", first: "꼬마 도토리", note: "비늘무늬 도토리 모자를 쓰고 있어요" },
+];
+const STAGES = [
+  { n: 1, levels: "Lv.1~4" }, { n: 2, name: "어린 러너", levels: "Lv.5~9", gear: "러닝화" },
+  { n: 3, name: "러너", levels: "Lv.10~19", gear: "+ 손목 밴드" }, { n: 4, name: "마라토너", levels: "Lv.20~", gear: "+ 헤어밴드 · 완주 메달" },
+];
+const BADGES = [
+  ["first_run", "첫 러닝", "1km 이상 러닝 1회", 50], ["first_goal", "첫 목표 달성", "목표 달성 1회", 50],
+  ["dist_5k", "첫 5km", "한 번에 5km", 100], ["dist_10k", "첫 10km", "한 번에 10km", 150],
+  ["dist_half", "하프 완주", "한 번에 21.1km", 300], ["total_50", "누적 50km", "누적 50km", 100],
+  ["total_100", "누적 100km", "누적 100km", 200], ["total_300", "누적 300km", "누적 300km", 300],
+  ["goals_10", "목표 달성 10번", "목표 달성 10회", 100], ["goals_30", "목표 달성 30번", "목표 달성 30회", 200],
+  ["streak_3", "3일 연속", "1km 이상 서로 다른 3일 연속 러닝", 50], ["dawn", "새벽 러너", "1km 이상 러닝을 오전 6시 전에 시작", 50],
+];
+const TIER = { 50: ["#2563EB", "파랑"], 100: ["#B87333", "동"], 150: ["#A8B3C2", "은"], 200: ["#A8B3C2", "은"], 300: ["#E0A800", "금"] };
+const PALETTE = [
+  ["공통", [["o", "431407", "외곽선"], ["k", "431407", "눈·입"], ["w", "FFFFFF", "눈 반짝임, 신발 끈"], ["p", "FDA4AF", "볼"], ["z", "60A5FA", "잠든 z"]]],
+  ["병아리", [["q", "FFFBF5", "알 껍데기 하이라이트"], ["y", "FFE9CC", "알 껍데기"], ["Y", "F2C48D", "알 껍데기 그림자"], ["l", "FEF08A", "몸 하이라이트"], ["m", "FACC15", "몸"], ["M", "D99A06", "몸 그림자"], ["b", "FB923C", "부리"]]],
+  ["젤리", [["h", "FFEDD5", "반짝임"], ["i", "FDBA74", "몸 하이라이트"], ["b", "FB923C", "몸"], ["B", "EA580C", "몸 그림자"], ["G", "4ADE80", "잎 밝은 쪽"], ["g", "15803D", "잎"]]],
+  ["도토리", [["x", "D97706", "모자 하이라이트"], ["C", "B45309", "모자"], ["c", "92400E", "모자 그림자·무늬"], ["t", "FAC491", "몸 하이라이트"], ["n", "F4A261", "몸"], ["N", "D4783C", "몸 그림자"]]],
+  ["장비", [["r", "F97316", "러닝화"], ["j", "C2410C", "러닝화 그림자"], ["A", "60A5FA", "밴드 하이라이트"], ["a", "2563EB", "헤어밴드·손목 밴드"], ["d", "DC2626", "메달 끈"], ["D", "991B1B", "메달 끈 그림자"], ["e", "FDE047", "메달"], ["E", "A16207", "메달 테두리"]]],
+  ["모자", [["H", "99F6E4", "러닝 캡 하이라이트"], ["T", "2DD4BF", "러닝 캡"], ["W", "14B8A6", "러닝 캡 그림자"], ["U", "0F766E", "러닝 캡 챙"], ["I", "EDE9FE", "비니 하이라이트·방울"], ["v", "C4B5FD", "비니"], ["V", "8B5CF6", "비니 그림자·골"], ["F", "FEF9C3", "밀짚 하이라이트"], ["s", "FDE68A", "밀짚"], ["S", "D4A24C", "밀짚 그림자·결"]]],
+  ["소품", [["J", "475569", "선글라스 알 반사"], ["L", "1E293B", "선글라스 알"], ["X", "CBD5E1", "헤드폰 머리띠 하이라이트"], ["u", "94A3B8", "헤드폰 머리띠"], ["Z", "64748B", "헤드폰 머리띠 그림자"], ["Q", "FCA5A5", "귀덮개 하이라이트"], ["R", "EF4444", "귀덮개"], ["P", "FBCFE8", "꽃잎 하이라이트"], ["f", "F472B6", "꽃잎"], ["K", "DB2777", "꽃잎 그림자"]]],
+];
+
+const state = { action: "run", mood: "normal", hat: "none", accessory: "none", locked: "false" };
+try { Object.assign(state, JSON.parse(localStorage.getItem("rmg-assets") || "{}")); } catch (e) {}
+
+function seg(ctl, options) {
+  const el = document.querySelector(`[data-ctl="${ctl}"]`);
+  el.innerHTML = "";
+  for (const [value, label] of Object.entries(options)) {
+    const b = document.createElement("button");
+    b.type = "button"; b.textContent = label; b.id = `ctl-${ctl}-${value}`;
+    b.setAttribute("aria-pressed", String(state[ctl] === value));
+    b.addEventListener("click", () => { state[ctl] = value; save(); renderAll(); });
+    el.appendChild(b);
+  }
+}
+function save() { try { localStorage.setItem("rmg-assets", JSON.stringify(state)); } catch (e) {} }
+
+function layer(src, a) {
+  const d = document.createElement("div");
+  d.className = "layer";
+  d.style.backgroundImage = `url("${src}")`;
+  d.style.setProperty("--frames", a.frames);
+  d.style.setProperty("--dur", (a.frames / a.fps) + "s");
+  return d;
+}
+function pet(kind, stage, scale) {
+  const a = ACTIONS[state.action];
+  const p = document.createElement("div");
+  p.className = "pet"; p.style.setProperty("--scale", scale);
+  p.appendChild(layer(`sprites/${kind}/body/stage${stage}_${state.action}.png`, a));
+  p.appendChild(layer(`sprites/${kind}/face/${state.mood}_${state.action}.png`, a));
+  if (state.hat !== "none") p.appendChild(layer(`sprites/${kind}/hat/${state.hat}_${state.action}.png`, a));
+  if (state.accessory !== "none") p.appendChild(layer(`sprites/${kind}/accessory/${state.accessory}_${state.action}.png`, a));
+  p.setAttribute("role", "img");
+  p.setAttribute("aria-label", `${KINDS.find(k => k.id === kind).name} ${stage}단계 ${ACTIONS[state.action].label}`);
+  return p;
+}
+
+function renderKinds() {
+  const root = document.getElementById("kinds");
+  root.innerHTML = "";
+  const scale = matchMedia("(max-width: 720px)").matches ? 4 : 5;
+  for (const k of KINDS) {
+    const box = document.createElement("div"); box.className = "kind";
+    box.innerHTML = `<div class="kind-head"><h3>${k.name}</h3><span class="mono">${k.id}</span><span class="section-note" style="font-size:13px">${k.note}</span></div>`;
+    const grid = document.createElement("div"); grid.className = "stages";
+    for (const s of STAGES) {
+      const card = document.createElement("div"); card.className = "stage-card";
+      const floor = document.createElement("div"); floor.className = "stage-floor";
+      floor.appendChild(pet(k.id, s.n, scale));
+      card.appendChild(floor);
+      const name = document.createElement("div"); name.className = "stage-name";
+      name.textContent = `${s.n}단계 ${s.name || k.first}`;
+      const meta = document.createElement("div"); meta.className = "stage-meta";
+      meta.textContent = s.gear ? `${s.levels} · ${s.gear}` : s.levels;
+      card.append(name, meta);
+      grid.appendChild(card);
+    }
+    box.appendChild(grid);
+    root.appendChild(box);
+  }
+}
+
+function renderBadges() {
+  const root = document.getElementById("badges");
+  root.dataset.locked = state.locked;
+  root.innerHTML = "";
+  for (const [id, name, cond, coins] of BADGES) {
+    const [color, tierName] = TIER[coins];
+    const el = document.createElement("div"); el.className = "badge";
+    el.innerHTML = `<img src="badges/${id}.png" alt="${name} 배지" width="72" height="72">
+      <div class="badge-name"></div><div class="badge-cond"></div>
+      <div class="badge-coin"><span class="tier" style="background:${color}"></span>${tierName} · 코인 ${coins}</div>`;
+    el.querySelector(".badge-name").textContent = name;
+    el.querySelector(".badge-cond").textContent = cond;
+    root.appendChild(el);
+  }
+}
+
+function renderPalette() {
+  const root = document.getElementById("palette");
+  for (const [group, list] of PALETTE) {
+    const g = document.createElement("div"); g.className = "pal-group";
+    g.innerHTML = `<h3>${group}</h3>`;
+    const sw = document.createElement("div"); sw.className = "swatches";
+    for (const [key, hex, use] of list) {
+      const row = document.createElement("div"); row.className = "sw";
+      row.innerHTML = `<span class="chip" style="background:#${hex}"></span><span class="key">${key}</span><span class="hex">#${hex}</span><span class="use"></span>`;
+      row.querySelector(".use").textContent = use;
+      sw.appendChild(row);
+    }
+    g.appendChild(sw);
+    root.appendChild(g);
+  }
+}
+
+function renderAll() {
+  seg("action", Object.fromEntries(Object.entries(ACTIONS).map(([k, v]) => [k, v.label])));
+  seg("mood", MOODS);
+  seg("hat", HATS);
+  seg("accessory", ACCS);
+  seg("locked", { false: "받은 배지", true: "못 받은 배지" });
+  renderKinds();
+  renderBadges();
+}
+renderPalette();
+renderAll();
+matchMedia("(max-width: 720px)").addEventListener("change", renderKinds);
+</script>
