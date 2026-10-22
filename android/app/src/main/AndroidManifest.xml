@@ -7,7 +7,7 @@
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <application
-        android:label="runmagochi"
+        android:label="런마고치"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity
