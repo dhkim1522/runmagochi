@@ -143,7 +143,7 @@
   - 테스트: 빈 상태 화면 렌더, 애니메이션 줄이기에서 즉시 최종 상태, 넘침·다크
   - 확인: `fvm flutter test`
 
-- [ ] 16. 앱 아이콘·스플래시
+- [x] 16. 앱 아이콘·스플래시
   - 고른 캐릭터와 색으로 아이콘을 만든다. `tool/render_app_icon.dart`(새 파일)가 Android `mipmap-*/ic_launcher.png`, 적응형 아이콘(전경·배경 + `mipmap-anydpi-v26/ic_launcher.xml`), iOS `AppIcon.appiconset`, 스플래시 그림을 쓴다.
   - 스플래시: `launch_background.xml`(라이트·다크), Android 12 이상 `values-v31`·`values-night-v31` 의 `windowSplashScreen*`. 바탕은 `background` 토큰 값(결정 0029 뒤 이름).
   - 테스트: 도구 출력 크기(48·72·96·144·192, iOS 1024 포함), 투명 여백 비율(적응형 안전 영역 66%)
