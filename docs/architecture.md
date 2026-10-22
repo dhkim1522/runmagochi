@@ -8,7 +8,7 @@ Flutter로 개발한다. 근거는 [결정 0004](decisions/0004-flutter.md).
 
 | 영역 | 선택 | 이유 |
 | --- | --- | --- |
-| 위치 | `geolocator` | 무료, 유지보수 활발. Android 포그라운드 서비스 지원 |
+| 위치 | `geolocator` | 무료, 유지보수 활발. Android 포그라운드 서비스, iOS 백그라운드 위치 모드 지원 ([ios.md](ios.md)) |
 | 경로 표시 | `CustomPainter` 로 경로 선만 그림 | 지도 API 키·계정 불필요, 오프라인 동작 |
 | 로컬 DB | `drift` (SQLite) | 마이그레이션·타입 안전 쿼리, 서버 동기화에 맞는 관계형 구조 |
 | 상태 관리 | `riverpod` (코드 생성 없이) | 기록 엔진의 이벤트 스트림을 화면에 연결 |
