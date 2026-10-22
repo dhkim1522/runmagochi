@@ -1,0 +1,64 @@
+<!doctype html>
+<!-- Claude Design 캔버스 아트보드 사본(단독 렌더용). 원본: run.dc.html -->
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>a 러닝 중</title>
+<meta name="viewport" content="width=390">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Jua&amp;family=Noto+Sans+KR:wght@400;500;700&amp;display=swap">
+<style>
+body{margin:0}
+button{font:inherit;color:inherit;cursor:pointer}
+@keyframes runframe{0%{opacity:1}25%{opacity:0}100%{opacity:0}}
+.runf{position:absolute;inset:0;opacity:0;animation:runframe .4s steps(1,end) infinite}
+.runf0{opacity:1;animation-delay:0s}
+.runf1{animation-delay:-.3s}
+.runf2{animation-delay:-.2s}
+.runf3{animation-delay:-.1s}
+@media (prefers-reduced-motion: reduce){.runf{animation:none}}
+</style>
+</head>
+<body>
+<div style="width: 390px; height: 844px; box-sizing: border-box; background: #FFF7ED; font-family: 'Noto Sans KR', sans-serif; color: #431407; display: flex; flex-direction: column; padding: 24px 20px 32px 20px; gap: 24px">
+<h1 style="margin: 0; font-family: 'Jua', sans-serif; font-weight: 400; font-size: 28px; line-height: 34px">러닝 중</h1>
+<div style="display: flex; flex-direction: column; align-items: center; gap: 0px">
+<div style="display: flex; align-items: baseline; gap: 6px">
+<span style="font-family: 'Jua', sans-serif; font-size: 120px; line-height: 120px; letter-spacing: -0.02em">3.42</span>
+<span style="font-family: 'Jua', sans-serif; font-size: 30px; line-height: 34px; color: #9A3412">km</span>
+</div>
+</div>
+<div style="display: flex; flex-direction: column; gap: 8px">
+<div style="font-size: 14px; line-height: 20px; font-weight: 700; color: #9A3412">목표 5km</div>
+<div role="progressbar" aria-label="목표 진행" aria-valuenow="68" aria-valuemin="0" aria-valuemax="100" style="height: 12px; border-radius: 999px; background: #FFEDD5; overflow: hidden">
+<div style="width: 68%; height: 100%; border-radius: 999px; background: #F97316"></div>
+</div>
+</div>
+<div style="background: #FFFFFF; border-radius: 20px; padding: 16px 8px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px">
+<div style="display: flex; flex-direction: column; align-items: center; gap: 4px">
+<div style="font-size: 14px; line-height: 20px; font-weight: 700; color: #9A3412">평균 페이스</div>
+<div style="font-family: 'Jua', sans-serif; font-size: 26px; line-height: 30px">6'09"</div>
+</div>
+<div style="display: flex; flex-direction: column; align-items: center; gap: 4px">
+<div style="font-size: 14px; line-height: 20px; font-weight: 700; color: #9A3412">현재 페이스</div>
+<div style="font-family: 'Jua', sans-serif; font-size: 26px; line-height: 30px">6'02"</div>
+</div>
+<div style="display: flex; flex-direction: column; align-items: center; gap: 4px">
+<div style="font-size: 14px; line-height: 20px; font-weight: 700; color: #9A3412">시간</div>
+<div style="font-family: 'Jua', sans-serif; font-size: 26px; line-height: 30px">21:02</div>
+</div>
+</div>
+<div style="flex-grow: 1; display: flex; align-items: center; justify-content: center">
+<div style="width: 220px; height: 200px; background: #FFEDD5; border: 3px solid #FED7AA; border-radius: 32px; box-shadow: 0 6px 0 #FDBA74; display: flex; align-items: center; justify-content: center">
+<div style="position: relative; width: 160px; height: 160px">
+<div aria-hidden="true" style="position: absolute; left: 35px; bottom: 6px; width: 90px; height: 12px; border-radius: 999px; background: #FED7AA"></div>
+<img class="runf runf0" src="../../shared/chick_s3_run_0.png" alt="달리는 삐약이" width="160" height="160" style="width: 160px; height: 160px; image-rendering: pixelated">
+<img class="runf runf1" src="../../shared/chick_s3_run_1.png" alt="" width="160" height="160" style="width: 160px; height: 160px; image-rendering: pixelated">
+<img class="runf runf2" src="../../shared/chick_s3_run_2.png" alt="" width="160" height="160" style="width: 160px; height: 160px; image-rendering: pixelated">
+<img class="runf runf3" src="../../shared/chick_s3_run_3.png" alt="" width="160" height="160" style="width: 160px; height: 160px; image-rendering: pixelated">
+</div>
+</div>
+</div>
+<button style="flex-shrink: 0; height: 64px; margin-bottom: 6px; border: none; border-radius: 999px; background: #2563EB; box-shadow: 0 6px 0 #1E40AF; font-family: 'Jua', sans-serif; font-size: 24px; color: #FFFFFF">일시정지</button>
+</div>
+</body>
+</html>

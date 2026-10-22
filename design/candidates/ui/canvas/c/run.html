@@ -1,0 +1,60 @@
+<!doctype html>
+<!-- Claude Design 캔버스 아트보드 사본(단독 렌더용). 원본: run.dc.html -->
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>c 러닝 중</title>
+<meta name="viewport" content="width=390">
+<style>
+@font-face{font-family:'Pretendard';src:url(https://cdn.jsdelivr.net/npm/pretendard@1.3.9/dist/web/variable/woff2/PretendardVariable.woff2) format('woff2');font-weight:45 920;font-style:normal;font-display:swap}
+body{margin:0}
+button{font:inherit;color:inherit;cursor:pointer}
+@keyframes runframe{0%{opacity:1}25%{opacity:0}100%{opacity:0}}
+.runf{position:absolute;inset:0;opacity:0;animation:runframe .4s steps(1,end) infinite}
+.runf0{opacity:1;animation-delay:0s}
+.runf1{animation-delay:-.3s}
+.runf2{animation-delay:-.2s}
+.runf3{animation-delay:-.1s}
+@media (prefers-reduced-motion: reduce){.runf{animation:none}}
+</style>
+</head>
+<body>
+<div style="width: 390px; height: 844px; box-sizing: border-box; background: #F3F5EE; font-family: 'Pretendard', sans-serif; color: #16200F; display: flex; flex-direction: column; padding: 24px 20px 32px 20px; gap: 20px">
+<h1 style="margin: 0; font-size: 26px; line-height: 32px; font-weight: 800; letter-spacing: -0.02em">러닝 중</h1>
+<div style="display: flex; align-items: baseline; justify-content: center; gap: 6px; font-variant-numeric: tabular-nums">
+<span style="font-size: 128px; line-height: 1; font-weight: 800; letter-spacing: -0.04em">3.42</span>
+<span style="font-size: 26px; line-height: 32px; font-weight: 700; color: #5B6357">km</span>
+</div>
+<div style="display: flex; flex-direction: column; gap: 8px">
+<div style="font-size: 14px; line-height: 20px; font-weight: 700; color: #5B6357">목표 5km</div>
+<div role="progressbar" aria-label="목표 진행" aria-valuenow="68" aria-valuemin="0" aria-valuemax="100" style="height: 12px; border-radius: 999px; background: #E8ECE2; overflow: hidden">
+<div style="width: 68%; height: 100%; border-radius: 999px; background: #1E7B45"></div>
+</div>
+</div>
+<div style="background: #FFFFFF; border-radius: 24px; padding: 20px 12px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px">
+<div style="display: flex; flex-direction: column; align-items: center; gap: 4px">
+<div style="font-size: 14px; line-height: 20px; font-weight: 600; color: #5B6357">평균 페이스</div>
+<div style="font-size: 22px; line-height: 28px; font-weight: 800; letter-spacing: -0.02em; font-variant-numeric: tabular-nums">6'09"</div>
+</div>
+<div style="display: flex; flex-direction: column; align-items: center; gap: 4px">
+<div style="font-size: 14px; line-height: 20px; font-weight: 600; color: #5B6357">현재 페이스</div>
+<div style="font-size: 22px; line-height: 28px; font-weight: 800; letter-spacing: -0.02em; font-variant-numeric: tabular-nums">6'02"</div>
+</div>
+<div style="display: flex; flex-direction: column; align-items: center; gap: 4px">
+<div style="font-size: 14px; line-height: 20px; font-weight: 600; color: #5B6357">시간</div>
+<div style="font-size: 22px; line-height: 28px; font-weight: 800; letter-spacing: -0.02em; font-variant-numeric: tabular-nums">21:02</div>
+</div>
+</div>
+<div style="flex-grow: 1; position: relative; display: flex; align-items: center; justify-content: center; min-height: 220px">
+<div aria-hidden="true" style="position: absolute; width: 232px; height: 232px; border-radius: 999px; background: #E3F6C8"></div>
+<div style="position: relative; width: 192px; height: 192px; margin-top: 16px">
+<img class="runf runf0" src="../../shared/chick_s3_run_0.png" alt="달리는 삐약이" width="192" height="192" style="width: 192px; height: 192px; image-rendering: pixelated">
+<img class="runf runf1" src="../../shared/chick_s3_run_1.png" alt="" width="192" height="192" style="width: 192px; height: 192px; image-rendering: pixelated">
+<img class="runf runf2" src="../../shared/chick_s3_run_2.png" alt="" width="192" height="192" style="width: 192px; height: 192px; image-rendering: pixelated">
+<img class="runf runf3" src="../../shared/chick_s3_run_3.png" alt="" width="192" height="192" style="width: 192px; height: 192px; image-rendering: pixelated">
+</div>
+</div>
+<button style="flex-shrink: 0; height: 60px; border: none; border-radius: 30px; background: #16200F; color: #FFFFFF; font-size: 22px; font-weight: 700">일시정지</button>
+</div>
+</body>
+</html>

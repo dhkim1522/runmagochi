@@ -1,0 +1,120 @@
+{
+  "v": 3,
+  "createdOnFiles": {
+    "v": 1,
+    "at": "2026-10-22T03:12:00Z"
+  },
+  "title": "런마고치 UI 후보 (Claude Design)",
+  "launch": {
+    "view": "canvas"
+  },
+  "pages": [],
+  "boards": {
+    "Main.dc.html": {
+      "x": 0,
+      "y": 260,
+      "w": 390,
+      "h": 844,
+      "title": "a · 홈"
+    },
+    "a-run.dc.html": {
+      "x": 470,
+      "y": 260,
+      "w": 390,
+      "h": 844,
+      "title": "a · 러닝 중"
+    },
+    "a-summary.dc.html": {
+      "x": 940,
+      "y": 260,
+      "w": 390,
+      "h": 1988,
+      "title": "a · 러닝 요약"
+    },
+    "b-home.dc.html": {
+      "x": 0,
+      "y": 2628,
+      "w": 390,
+      "h": 844,
+      "title": "b · 홈"
+    },
+    "b-run.dc.html": {
+      "x": 470,
+      "y": 2628,
+      "w": 390,
+      "h": 844,
+      "title": "b · 러닝 중"
+    },
+    "b-summary.dc.html": {
+      "x": 940,
+      "y": 2628,
+      "w": 390,
+      "h": 1960,
+      "title": "b · 러닝 요약"
+    },
+    "c-home.dc.html": {
+      "x": 0,
+      "y": 4968,
+      "w": 390,
+      "h": 844,
+      "title": "c · 홈"
+    },
+    "c-run.dc.html": {
+      "x": 470,
+      "y": 4968,
+      "w": 390,
+      "h": 844,
+      "title": "c · 러닝 중"
+    },
+    "c-summary.dc.html": {
+      "x": 940,
+      "y": 4968,
+      "w": 390,
+      "h": 2024,
+      "title": "c · 러닝 요약"
+    }
+  },
+  "order": [
+    "Main.dc.html",
+    "a-run.dc.html",
+    "a-summary.dc.html",
+    "b-home.dc.html",
+    "b-run.dc.html",
+    "b-summary.dc.html",
+    "c-home.dc.html",
+    "c-run.dc.html",
+    "c-summary.dc.html"
+  ],
+  "notes": {
+    "rowA": {
+      "x": 0,
+      "y": 0,
+      "text": "a — 말랑 클레이 다듬기",
+      "kind": "title1",
+      "maxW": 1330
+    },
+    "rowB": {
+      "x": 0,
+      "y": 2368,
+      "text": "b — 도트 한 칸 (One motif)",
+      "kind": "title1",
+      "maxW": 1330
+    },
+    "rowC": {
+      "x": 0,
+      "y": 4708,
+      "text": "c — 연두 무드보드",
+      "kind": "title1",
+      "maxW": 1330
+    }
+  },
+  "designSystems": [
+    {
+      "title": "런마고치",
+      "namespace": "runmagochi",
+      "artifact": "https://claude.ai/artifact/FPihTBfX2CJserHVwUQ514",
+      "version": "1792638483-09d5",
+      "copiedAt": "2026-10-22T03:12:00Z"
+    }
+  ]
+}
