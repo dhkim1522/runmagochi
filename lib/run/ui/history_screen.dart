@@ -67,9 +67,11 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
     final t = AppText.of(context);
     final list = runs.value;
     final stats = statsFor(list ?? const [], _period, _anchor(now));
+    final c = AppColors.of(context);
+    // 시안 c 짜임새: 좌우 20, 카드 사이 12, 섹션 사이 28.
     return SafeArea(
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(Gap.s5, Gap.s6, Gap.s5, 0),
+        padding: const EdgeInsets.fromLTRB(Gap.s5, Gap.s5, Gap.s5, 0),
         child: CustomScrollView(
           slivers: [
             SliverToBoxAdapter(
@@ -95,7 +97,7 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                     onPrev: () => setState(() => _back++),
                     onNext: () => setState(() => _back--),
                   ),
-                  const SizedBox(height: Gap.s4),
+                  const SizedBox(height: Gap.s7),
                   Text('최근 러닝', style: t.heading),
                   const SizedBox(height: Gap.s3),
                 ],
@@ -116,9 +118,18 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
               ],
               data: (list) => list.isEmpty
                   ? [
-                      SliverFillRemaining(
-                        hasScrollBody: false,
-                        child: Center(child: Text('아직 기록이 없어요', style: t.body)),
+                      SliverToBoxAdapter(
+                        child: Padding(
+                          padding: const EdgeInsets.only(bottom: Gap.s5),
+                          child: EmptyState(
+                            icon: TabIcon(
+                              glyph: TabGlyph.history,
+                              color: c.inkMuted,
+                              size: 40,
+                            ),
+                            message: '아직 기록이 없어요',
+                          ),
+                        ),
                       ),
                     ]
                   : [
@@ -129,6 +140,7 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                           child: _RunTile(list[i]),
                         ),
                       ),
+                      const SliverToBoxAdapter(child: SizedBox(height: Gap.s2)),
                     ],
             ),
           ],
@@ -198,15 +210,13 @@ class _StatsCard extends StatelessWidget {
       StatsPeriod.year => ('월별', '월'),
       StatsPeriod.all => ('연도별', '년'),
     };
-    final small = t.label.copyWith(
-      fontWeight: FontWeight.w400,
-      color: c.inkMuted,
-    );
+    final small = t.label.copyWith(color: c.inkMuted);
     return AppCard(
-      padding: const EdgeInsets.symmetric(vertical: Gap.s3, horizontal: Gap.s4),
+      padding: const EdgeInsets.all(Gap.s5),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // 기간 이동 줄: 양 끝 48 동그라미 화살표, 가운데 기간.
           Row(
             children: [
               if (period != StatsPeriod.all)
@@ -217,12 +227,13 @@ class _StatsCard extends StatelessWidget {
                   onTap: onPrev,
                 ),
               Expanded(
-                child: Center(
-                  child: FittedBox(
-                    fit: BoxFit.scaleDown,
-                    child: Text(
-                      title,
-                      style: t.label.copyWith(color: c.inkMuted),
+                child: Container(
+                  constraints: const BoxConstraints(minHeight: 48),
+                  padding: const EdgeInsets.symmetric(horizontal: Gap.s2),
+                  child: Center(
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(title, style: t.label.copyWith(color: c.ink)),
                     ),
                   ),
                 ),
@@ -236,6 +247,7 @@ class _StatsCard extends StatelessWidget {
                 ),
             ],
           ),
+          const SizedBox(height: Gap.s3),
           Row(
             crossAxisAlignment: CrossAxisAlignment.baseline,
             textBaseline: TextBaseline.alphabetic,
@@ -247,18 +259,20 @@ class _StatsCard extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: Gap.s2),
-              Text('km', style: t.titleS.copyWith(color: c.primaryDeep)),
+              Text('km', style: t.titleS.copyWith(color: c.inkMuted)),
             ],
           ),
+          const SizedBox(height: Gap.s1),
           Wrap(
             spacing: Gap.s4,
+            runSpacing: Gap.s1,
             children: [
               Text(count, style: small),
               Text("평균 페이스 $pace", style: small),
               Text('시간 $time', style: small),
             ],
           ),
-          const SizedBox(height: Gap.s3),
+          const SizedBox(height: Gap.s5),
           StatsChart(bars: stats.bars, name: name, unit: unit),
         ],
       ),
@@ -266,6 +280,7 @@ class _StatsCard extends StatelessWidget {
   }
 }
 
+/// 기간 이동 화살표: 48 동그라미(surfaceSoft, 흰 카드 위). 못 가면 흐리고 안 눌린다.
 class _ArrowButton extends StatelessWidget {
   const _ArrowButton({
     super.key,
@@ -288,15 +303,19 @@ class _ArrowButton extends StatelessWidget {
       label: label,
       excludeSemantics: true,
       onTap: onTap,
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onTap: onTap,
-        child: SizedBox(
-          width: 44,
-          height: 44,
-          child: Icon(
-            icon,
-            color: enabled ? c.primaryDeep : c.inkMuted.withValues(alpha: 0.4),
+      child: Opacity(
+        opacity: enabled ? 1 : 0.4,
+        child: Pressable(
+          onTap: onTap,
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              color: c.surfaceSoft,
+              shape: BoxShape.circle,
+            ),
+            child: SizedBox.square(
+              dimension: 48,
+              child: Icon(icon, color: c.ink),
+            ),
           ),
         ),
       ),
@@ -331,19 +350,29 @@ class _RunTile extends StatelessWidget {
         onTap: open,
         child: AppCard(
           radius: Radii.md,
-          padding: const EdgeInsets.symmetric(vertical: 14, horizontal: Gap.s4),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          padding: const EdgeInsets.fromLTRB(Gap.s5, Gap.s4, Gap.s3, Gap.s4),
+          child: Row(
             children: [
-              Text(
-                '$date · ${run.name}',
-                style: t.caption.copyWith(color: c.inkMuted),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '$date · ${run.name}',
+                      style: t.label.copyWith(color: c.inkMuted),
+                    ),
+                    const SizedBox(height: Gap.s1),
+                    Text(
+                      stats,
+                      style: t.heading.copyWith(
+                        fontFeatures: const [FontFeature.tabularFigures()],
+                      ),
+                    ),
+                  ],
+                ),
               ),
-              const SizedBox(height: Gap.s1),
-              Text(
-                stats,
-                style: t.heading.copyWith(fontSize: 20, height: 26 / 20),
-              ),
+              const SizedBox(width: Gap.s2),
+              Icon(Icons.chevron_right, color: c.inkMuted),
             ],
           ),
         ),

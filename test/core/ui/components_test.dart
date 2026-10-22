@@ -56,6 +56,7 @@ void main() {
   _stageTests();
   _bubbleHeightTest();
   _dialogTests();
+  _task14Tests();
 
   testWidgets('ScreenTitle 은 헤더로 표시된다', (tester) async {
     final handle = tester.ensureSemantics();
@@ -850,4 +851,104 @@ void _dialogTests() {
       expect(filled.textStyle!.color, c.onPrimary);
     });
   }
+}
+
+void _task14Tests() {
+  for (final dark in [false, true]) {
+    final name = dark ? '다크' : '라이트';
+    testWidgets('CircleIconButton 은 48 흰 동그라미, ink 아이콘, 이름 있는 버튼 ($name)', (
+      tester,
+    ) async {
+      final handle = tester.ensureSemantics();
+      final c = _c(dark);
+      var taps = 0;
+      await _pump(
+        tester,
+        CircleIconButton(
+          icon: Icons.chevron_left,
+          label: '뒤로',
+          onPressed: () => taps++,
+        ),
+        dark: dark,
+      );
+      final size = tester.getSize(find.byType(CircleIconButton));
+      expect(size, const Size(48, 48));
+      final d = _decoration(tester, find.byType(CircleIconButton));
+      expect(d.color, c.surface);
+      expect(d.shape, BoxShape.circle);
+      expect(tester.widget<Icon>(find.byIcon(Icons.chevron_left)).color, c.ink);
+      final data = tester
+          .getSemantics(find.byType(CircleIconButton))
+          .getSemanticsData();
+      expect(data.label, '뒤로');
+      expect(data.flagsCollection.isButton, isTrue);
+      await tester.tap(find.byType(CircleIconButton));
+      expect(taps, 1);
+      final g = await tester.startGesture(
+        tester.getCenter(find.byType(CircleIconButton)),
+      );
+      await tester.pump();
+      expect(
+        _scale(tester, find.byType(CircleIconButton)),
+        Pressable.pressedScale,
+      );
+      await g.up();
+      handle.dispose();
+    });
+
+    testWidgets('EmptyState 는 흰 카드에 그림과 inkMuted 안내 문구 ($name)', (
+      tester,
+    ) async {
+      final c = _c(dark);
+      await _pump(
+        tester,
+        const EmptyState(icon: CoinIcon(size: 40), message: '달리면 코인이 쌓여요'),
+        dark: dark,
+        scale: 1.3,
+      );
+      expect(tester.takeException(), isNull);
+      final card = tester.widget<AppCard>(
+        find.descendant(
+          of: find.byType(EmptyState),
+          matching: find.byType(AppCard),
+        ),
+      );
+      expect(card.radius, Radii.lg);
+      expect(find.byType(CoinIcon), findsOneWidget);
+      final text = tester.widget<Text>(find.text('달리면 코인이 쌓여요'));
+      expect(text.style!.color, c.inkMuted);
+      expect(text.style!.fontSize, 17);
+      expect(text.textAlign, TextAlign.center);
+      // 그림이 문구 위에 있다.
+      expect(
+        tester.getRect(find.byType(CoinIcon)).bottom,
+        lessThan(tester.getRect(find.text('달리면 코인이 쌓여요')).top),
+      );
+    });
+  }
+
+  testWidgets('작은 무대(Stage.groundHeightMini)에도 펫 발끝이 땅에 묻힌다', (tester) async {
+    await _pump(
+      tester,
+      SizedBox(
+        width: 96,
+        child: PetStage(
+          scale: 2,
+          groundHeight: Stage.groundHeightMini,
+          radius: Radii.sm,
+          pet: const SizedBox.square(dimension: 64, key: Key('pet')),
+        ),
+      ),
+    );
+    final stage = tester.getRect(find.byType(PetStage));
+    final pet = tester.getRect(find.byKey(const Key('pet')));
+    expect(
+      stage.bottom - pet.bottom,
+      Stage.groundHeightMini - Stage.footSink - spriteFootGapRows * 2,
+    );
+    expect(
+      tester.getSize(find.byType(StageGround)).height,
+      Stage.groundHeightMini,
+    );
+  });
 }

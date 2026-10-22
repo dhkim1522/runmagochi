@@ -463,7 +463,13 @@ void main() {
     expect(Stage.radiusInCard, Radii.md);
     expect(Stage.groundHeight, 56);
     expect(Stage.groundHeightCompact, 40);
+    expect(Stage.groundHeightMini, 24);
     expect(Stage.footSink, 8);
+    // 작은 무대(2·3배)도 발이 묻히고 윗선이 보인다.
+    expect(
+      Stage.groundHeightMini,
+      greaterThan(Borders.groundLine + Stage.footSink),
+    );
     expect(
       Stage.groundHeight,
       greaterThan(Borders.groundLine + Stage.footSink),

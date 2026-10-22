@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:ui' as ui;
 
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Split;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:runmagochi/avatar/app/providers.dart';
@@ -9,6 +9,10 @@ import 'package:runmagochi/core/theme.dart';
 import 'package:runmagochi/core/ui/components.dart';
 import 'package:runmagochi/run/app/providers.dart';
 import 'package:runmagochi/run/data/run_repository.dart';
+import 'package:runmagochi/run/domain/run_summary.dart';
+import 'package:runmagochi/run/ui/route_painter.dart';
+import 'package:runmagochi/run/ui/split_pace_chart.dart';
+import 'package:runmagochi/run/ui/stats_chart.dart';
 import 'package:runmagochi/run/ui/history_screen.dart';
 import 'package:runmagochi/run/ui/summary_screen.dart';
 
@@ -52,11 +56,20 @@ Future<void> pump(
   await tester.pumpAndSettle();
 }
 
+/// 목록 카드가 모두 그려지게 긴 폰 화면(390×1400)으로 둔다.
+void _tall(WidgetTester tester) {
+  tester.view.physicalSize = const Size(390, 1400);
+  tester.view.devicePixelRatio = 1;
+  addTearDown(tester.view.reset);
+}
+
 void main() {
   _loadingLayoutTests();
   _deleteTests();
   _statsTests();
+  _designTests();
   testWidgets('기록 탭에 러닝 2개가 최신순으로 보이고 이번 주 합계가 보인다', (tester) async {
+    _tall(tester);
     final repo = FakeRepo(
       (8000, 2),
       runs: [
@@ -119,6 +132,7 @@ void main() {
   });
 
   testWidgets('러닝 카드는 버튼 시맨틱이고 카드 사이 간격은 12다', (tester) async {
+    _tall(tester);
     final handle = tester.ensureSemantics();
     final repo = FakeRepo(
       (8000, 2),
@@ -393,4 +407,113 @@ void _statsTests() {
       }
     });
   }
+}
+
+void _designTests() {
+  final runs = [
+    _item('b', '토요일 아침 러닝', DateTime(2026, 10, 17, 7), 5000),
+    _item('a', '목요일 저녁 러닝', DateTime(2026, 10, 15, 19), 3000),
+  ];
+
+  for (final dark in [false, true]) {
+    final name = dark ? '다크' : '라이트';
+    final c = dark ? AppColors.dark : AppColors.light;
+    final theme = dark ? appDarkTheme() : appLightTheme();
+
+    testWidgets('막대 채움은 primaryDeep(연두 채움 금지), 그래프 높이 160 ($name)', (
+      tester,
+    ) async {
+      await pump(tester, FakeRepo((0, 0), runs: runs), null, 1, theme);
+      final paint = tester.widget<CustomPaint>(
+        find.descendant(
+          of: find.byType(StatsChart),
+          matching: find.byType(CustomPaint),
+        ),
+      );
+      final painter = paint.painter! as StatsChartPainter;
+      expect(painter.barColor, c.primaryDeep);
+      expect(painter.barColor, isNot(c.primary));
+      expect(tester.getSize(find.byType(StatsChart)).height, 160);
+    });
+
+    testWidgets('기간 카드: 거리 64 + km inkMuted, 화살표 48×48 ($name)', (
+      tester,
+    ) async {
+      await pump(tester, FakeRepo((0, 0), runs: runs), null, 1, theme);
+      expect(tester.widget<Text>(find.text('8.00')).style!.fontSize, 64);
+      expect(
+        tester.widget<Text>(find.text('km').first).style!.color,
+        c.inkMuted,
+      );
+      for (final key in ['stats-prev', 'stats-next']) {
+        expect(tester.getSize(find.byKey(Key(key))), const Size(48, 48));
+      }
+      final card = tester.widget<AppCard>(find.byType(AppCard).first);
+      expect(card.radius, Radii.lg);
+      expect(card.padding, const EdgeInsets.all(Gap.s5));
+    });
+
+    testWidgets('섹션 사이 28, 러닝 카드는 작은 카드 + 오른쪽 화살표 ($name)', (tester) async {
+      _tall(tester);
+      await pump(tester, FakeRepo((0, 0), runs: runs), null, 1, theme);
+      final stats = tester.getRect(find.byType(AppCard).first);
+      final section = tester.getRect(find.text('최근 러닝'));
+      expect(section.top - stats.bottom, Gap.s7);
+      final tile = tester.widget<AppCard>(find.byType(AppCard).at(1));
+      expect(tile.radius, Radii.md);
+      expect(find.byIcon(Icons.chevron_right), findsNWidgets(2 + 1));
+      final line = tester.widget<Text>(find.text("5.00km · 6'40\" · 20:00"));
+      expect(line.style!.fontSize, 17);
+      expect(
+        line.style!.fontFeatures,
+        contains(const FontFeature.tabularFigures()),
+      );
+      // 좌우 여백 20.
+      expect(stats.left, Gap.s5);
+    });
+
+    testWidgets('기록이 없으면 빈 상태 카드(기록 그림 + 안내) ($name)', (tester) async {
+      await pump(tester, FakeRepo((0, 0)), null, 1, theme);
+      final empty = find.byType(EmptyState);
+      expect(empty, findsOneWidget);
+      expect(
+        find.descendant(of: empty, matching: find.text('아직 기록이 없어요')),
+        findsOneWidget,
+      );
+      final icon = tester.widget<TabIcon>(
+        find.descendant(of: empty, matching: find.byType(TabIcon)),
+      );
+      expect(icon.glyph, TabGlyph.history);
+      expect(icon.color, c.inkMuted);
+    });
+  }
+
+  testWidgets('기록 상세는 요약의 경로 페이스 색·범례·구간 그래프를 쓴다', (tester) async {
+    tester.view.physicalSize = const Size(400, 2400);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    final item = runs.first;
+    final repo = FakeRepo(
+      (0, 0),
+      runs: [item],
+      details: {
+        'b': RunDetail(
+          run: item,
+          calories: 300,
+          route: [for (var i = 0; i < 30; i++) (37.5 + i * 0.0015, 127.0)],
+          splits: const [
+            Split(index: 1, distanceM: 1000, duration: Duration(seconds: 300)),
+            Split(index: 2, distanceM: 1000, duration: Duration(seconds: 360)),
+            Split(index: 3, distanceM: 1000, duration: Duration(seconds: 420)),
+          ],
+        ),
+      },
+    );
+    await pump(tester, repo);
+    await tester.tap(find.textContaining('토요일 아침 러닝'));
+    await tester.pumpAndSettle();
+    expect(find.byType(SummaryScreen), findsOneWidget);
+    expect(find.byType(RoutePaceLegend), findsOneWidget);
+    expect(find.byType(SplitPaceChart), findsOneWidget);
+  });
 }

@@ -688,7 +688,7 @@ class _SummaryBody extends StatelessWidget {
             ),
           ),
         ],
-        if (footer != null) ...[const SizedBox(height: Gap.s5), footer!],
+        if (footer != null) ...[const SizedBox(height: Gap.s7), footer!],
       ],
     );
   }

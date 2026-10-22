@@ -19,7 +19,8 @@ class StatsChart extends StatelessWidget {
   final String name;
   final String unit;
 
-  static const height = 132.0;
+  /// 막대 + 라벨 높이. 요약 구간 그래프와 같다.
+  static const height = 160.0;
 
   @override
   Widget build(BuildContext context) {
@@ -37,9 +38,10 @@ class StatsChart extends StatelessWidget {
         height: height,
         width: double.infinity,
         child: CustomPaint(
-          painter: _ChartPainter(
+          painter: StatsChartPainter(
             bars: bars,
-            barColor: c.primary,
+            // 연두는 흰 카드 위 1.3:1 이라 막대 채움은 초록(진행 막대·구간 막대와 같다).
+            barColor: c.primaryDeep,
             baseColor: c.inkMuted.withValues(alpha: 0.35),
             labelStyle: t.caption.copyWith(color: c.inkMuted),
             textScaler: MediaQuery.textScalerOf(context),
@@ -50,8 +52,9 @@ class StatsChart extends StatelessWidget {
   }
 }
 
-class _ChartPainter extends CustomPainter {
-  _ChartPainter({
+/// [StatsChart] 막대 그림. 테스트가 색을 읽도록 공개한다.
+class StatsChartPainter extends CustomPainter {
+  StatsChartPainter({
     required this.bars,
     required this.barColor,
     required this.baseColor,
@@ -94,11 +97,16 @@ class _ChartPainter extends CustomPainter {
       final d = bars[i].distanceM;
       if (d > 0) {
         final h = math.max(3.0, plotH * d / maxD);
+        // 위끝은 둥글게(구간 막대와 같은 radius-sm, 좁은 막대는 폭의 절반), 아래는 살짝.
+        final top = Radius.circular(math.min(Radii.sm, math.min(barW, h) / 2));
+        final bottom = Radius.circular(math.min(4.0, math.min(barW, h) / 2));
         canvas.drawRRect(
           RRect.fromRectAndCorners(
             Rect.fromLTWH(cx - barW / 2, plotH - h, barW, h),
-            topLeft: const Radius.circular(4),
-            topRight: const Radius.circular(4),
+            topLeft: top,
+            topRight: top,
+            bottomLeft: bottom,
+            bottomRight: bottom,
           ),
           fill,
         );
@@ -125,7 +133,7 @@ class _ChartPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(_ChartPainter old) =>
+  bool shouldRepaint(StatsChartPainter old) =>
       old.bars != bars ||
       old.barColor != barColor ||
       old.labelStyle != labelStyle ||

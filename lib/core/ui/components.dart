@@ -9,6 +9,8 @@ import '../theme.dart';
 /// - 누를 것: [AppButton](주요·보조·어두운 판), [AppChip]·[ChipRow](선택 표시 하나)
 /// - 진행: [ProgressBar]
 /// - 코인: [CoinIcon]
+/// - 동그라미 아이콘 버튼: [CircleIconButton](뒤로·설정)
+/// - 빈 상태: [EmptyState]
 /// - 탭바: [AppTabBar], [TabIcon]
 /// - 무대: [PetStage], [StageGround], [SpeechBubble]
 /// - 다이얼로그: `AlertDialog` 를 그대로 쓴다. 판·버튼 모양은 테마(theme.dart)가 정한다.
@@ -928,6 +930,74 @@ class _TailPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(_TailPainter old) => old.color != color;
+}
+
+/// 흰 동그라미 아이콘 버튼(48×48, surface + ink 아이콘 24). 뒤로·설정처럼 머리줄의 작은 행동.
+/// 스크린 리더에는 [label] 버튼으로 읽힌다. 누르면 살짝 작아졌다 돌아온다.
+class CircleIconButton extends StatelessWidget {
+  const CircleIconButton({
+    super.key,
+    required this.icon,
+    required this.label,
+    required this.onPressed,
+  });
+
+  static const double size = 48;
+
+  final IconData icon;
+  final String label;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = AppColors.of(context);
+    return Semantics(
+      button: true,
+      label: label,
+      excludeSemantics: true,
+      onTap: onPressed,
+      child: Pressable(
+        onTap: onPressed,
+        child: DecoratedBox(
+          decoration: BoxDecoration(color: c.surface, shape: BoxShape.circle),
+          child: SizedBox.square(
+            dimension: size,
+            child: Icon(icon, size: 24, color: c.ink),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// 빈 상태: 흰 카드(radius-lg) 가운데 그림 하나와 안내 문구(body, inkMuted).
+/// 그림은 앱 그림([TabIcon]·[CoinIcon] 등)을 넘긴다. 문구는 화면의 기존 문구 그대로.
+class EmptyState extends StatelessWidget {
+  const EmptyState({super.key, required this.icon, required this.message});
+
+  final Widget icon;
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = AppColors.of(context);
+    final t = AppText.of(context);
+    return AppCard(
+      padding: const EdgeInsets.symmetric(vertical: Gap.s8, horizontal: Gap.s5),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          icon,
+          const SizedBox(height: Gap.s3),
+          Text(
+            message,
+            textAlign: TextAlign.center,
+            style: t.body.copyWith(color: c.inkMuted),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 /// 화면 제목(title 글자). 스크린 리더에는 헤더로 읽힌다.

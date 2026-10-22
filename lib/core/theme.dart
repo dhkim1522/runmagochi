@@ -71,6 +71,9 @@ class Stage {
   /// 땅 띠 높이(윗선 포함). 러닝 중(6배 캐릭터).
   static const double groundHeightCompact = 40;
 
+  /// 땅 띠 높이(윗선 포함). 카드 안 작은 무대(상점 아이템·성장 단계, 2~3배 캐릭터).
+  static const double groundHeightMini = 24;
+
   /// 캐릭터 발끝이 땅 윗선 아래로 묻히는 깊이.
   static const double footSink = 8;
 }

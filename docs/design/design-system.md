@@ -58,11 +58,13 @@ direction-c 이름과 토큰: `lime` = `primary`, `green` = `primary-deep`·`suc
 - 버튼 높이 60 알약, 칩·분할 선택 48 알약, 진행 막대 12 알약.
 - 모서리: 카드·무대·다이얼로그 `radius-lg` 24, 작은 카드·말풍선·카드 안 무대 `radius-md` 20, 마스코트 판 `radius-xl` 28, 구간 막대 위끝 `radius-sm` 12.
 - 간격: 좌우 `space-5` 20, 카드 사이 `space-3` 12, 섹션 사이 `space-7` 28, 카드 안 `space-5` 20.
+- 그래프 막대(기록 기간 막대·요약 구간 막대)는 `primary-deep` 채움, 위끝 둥글게(`radius-sm`, 좁으면 폭의 절반). 연두로 채우지 않는다.
+- 시안 없는 화면(기록·아바타·업적·상점·코인 내역, 작업 14)도 같은 짜임새: 머리줄(제목 또는 뒤로 동그라미 + 제목) → 흰 카드들, 섹션 제목은 `heading` 17/800.
 
 ## 사각 무대
 
 - 폭 전체, 모서리 `Stage.radius`(24, 카드 안 `Stage.radiusInCard` 20). 하늘 `stage-sky` 위 땅 띠 `stage-ground`, 윗선 `stage-ground-line` 4px(`Borders.groundLine`).
-- 땅 띠 높이(윗선 포함) `Stage.groundHeight` 56(8배), 러닝 중 `Stage.groundHeightCompact` 40(6배). 캐릭터 발끝은 윗선 아래로 `Stage.footSink` 8 묻힌다. 정수 배율, 보간 없음(`FilterQuality.none`).
+- 땅 띠 높이(윗선 포함) `Stage.groundHeight` 56(8배), 러닝 중 `Stage.groundHeightCompact` 40(6배), 카드 안 작은 무대 `Stage.groundHeightMini` 24(2~3배, 상점 아이템 카드·성장 단계 줄, 모서리 `radius-sm` 12, 작업 14). 캐릭터 발끝은 윗선 아래로 `Stage.footSink` 8 묻힌다. 정수 배율, 보간 없음(`FilterQuality.none`).
 - 무대는 하늘·땅 두 겹이고, 배경 아이템은 겹 단위로 바꾼다(겹마다 토큰이 따로 있는 까닭).
 - 말풍선: `bubble` 판 + 꼬리, `radius-md`, 캐릭터를 가리킨다. 문구는 기존 문구만. 다크에서 `surface` 는 `stage-sky` 와 톤이 같아(ΔE76 8) 모양·꼬리가 묻혀서 `bubble` 을 따로 둔다(작업 12, 다크 `#44573A`, 하늘과 ΔE76 19, 위 `ink` 7.0:1).
 
@@ -105,6 +107,6 @@ direction-c 이름과 토큰: `lime` = `primary`, `green` = `primary-deep`·`suc
 ## 작업 11~15 를 위한 메모
 
 - 토큰 이름 변경: `cream` → `background`, `accent`/`on-accent` → `panel`/`on-panel`, `accent-deep` → `coin`(코인) 또는 없앰(립). `primary-deep` 은 이름은 같고 뜻이 "주황 립" 에서 "초록 강조" 로 바뀌었다.
-- 공통 컴포넌트는 `lib/core/ui/components.dart`(작업 11, 옛 `clay.dart`): `AppCard`·`StatCard`·`StatsCard`(흰 카드 하나에 지표 칸 `StatCard.cell` 여러 개, 작업 12), `AppButton`(기본 연두·`.secondary` 흰·`.panel` 어두운 판), `AppChip`·`ChipRow`(칩·분할 선택 공통), `ProgressBar`, `CoinIcon`(코인 칩은 `lib/shop/ui/coin_chip.dart`), `AppTabBar`·`TabIcon`, `PetStage`·`StageGround`·`SpeechBubble`, `Pressable`(누름 0.97), `ScreenTitle`. 다이얼로그는 `AlertDialog` 를 그대로 쓰고 모양은 테마(`filledButtonTheme`·`textButtonTheme`·`dialogTheme`)가 정한다.
+- 공통 컴포넌트는 `lib/core/ui/components.dart`(작업 11, 옛 `clay.dart`): `AppCard`·`StatCard`·`StatsCard`(흰 카드 하나에 지표 칸 `StatCard.cell` 여러 개, 작업 12), `AppButton`(기본 연두·`.secondary` 흰·`.panel` 어두운 판), `AppChip`·`ChipRow`(칩·분할 선택 공통), `ProgressBar`, `CoinIcon`(코인 칩은 `lib/shop/ui/coin_chip.dart`), `AppTabBar`·`TabIcon`, `PetStage`·`StageGround`·`SpeechBubble`, `Pressable`(누름 0.97), `ScreenTitle`, `CircleIconButton`(48 흰 동그라미 아이콘 버튼: 뒤로, 작업 14), `EmptyState`(흰 카드 + 앱 그림 + `ink-muted` 안내 문구, 작업 14). 다이얼로그는 `AlertDialog` 를 그대로 쓰고 모양은 테마(`filledButtonTheme`·`textButtonTheme`·`dialogTheme`)가 정한다.
 - `PetStage` 는 펫(`32 × scale`)을 발끝이 땅 윗선 아래 `Stage.footSink` 에 묻히게 놓는다(8배 땅 56 → 펫 상자 아래 32, 6배 땅 40 → 20). 하늘·땅 겹은 `sky`·`ground` 로 바꾼다. 화면 적용은 작업 12~14.
 - 옛 `Borders.thick`·`lip`·`lipPressed` 는 지웠다. 포커스 윤곽은 `Borders.focus` 3.
