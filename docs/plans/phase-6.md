@@ -137,7 +137,7 @@
   - `history_screen.dart`·`stats_chart.dart`·`avatar_screen.dart`·`achievement_screen.dart`·`shop_screen.dart`·`coin_history_screen.dart` 개편.
   - 테스트·확인: 작업 12 와 같은 기준, `fvm flutter test`
 
-- [ ] 15. 첫 실행·설정·권한, 빈 상태·오류 화면
+- [x] 15. 첫 실행·설정·권한, 빈 상태·오류 화면
   - `onboarding_screen.dart`·`settings_screen.dart`·`permission_screen.dart`, 기록 없음·코인 내역 없음·위치 신호 오류·백업 실패 등 빈 상태·오류 표시를 새 시스템으로 맞춘다.
   - 화면 전환·레벨업·배지 획득 애니메이션을 토큰 시간으로 정리한다. 시스템 "애니메이션 줄이기" 를 켜면 움직임을 뺀다(`MediaQuery.disableAnimations`).
   - 테스트: 빈 상태 화면 렌더, 애니메이션 줄이기에서 즉시 최종 상태, 넘침·다크
@@ -203,6 +203,7 @@
 - 관문 1 투표 페이지(2026-10-22): https://claude.ai/artifact/SBshrAFUGtLfBbaLHQxMnb . 저장 기능 없음(db 아티팩트는 조직 내부 전용이라 외부 사람이 못 엶). 고르면 `런마고치 캐릭터: A/B/C` 문구가 나오고 사용자가 표를 모은다. 결과: **A 말랑 클레이 확정**(2026-10-22 사용자). 기준점은 지금 값(모자 y=18, 소품 y=20) 유지
 
 ## 자동 결정
+- 작업 15: 스낵바는 아래 붙은 띠, 화면 전환은 Android 만 앱 전환(iOS 뒤로 밀기 유지), 누름 최소 유지 `Motion.press`, 첫 실행 진행 점 primaryDeep, 설정 묶음 이름 heading ink, 불러오기 실패는 inkMuted 느낌표, 권한 안내 그림은 Material 아이콘, 좁은 화면 기록 기간 문구는 두 줄.
 - 작업 14(시안 없는 화면): 상점 무대 6배(아바타 8배), 업적 배지 48→72, 코인 내역 `+N` 색 coin, 아바타 성장 단계 `달성` 글자 primaryDeep, 기록 기간 화살표 48 동그라미, 쓴 코인 줄에도 CoinIcon(ink).
 - 작업 13: 경로 페이스 색 범례 문구 `느림`·`보통`·`빠름`·`빠른 이동` 을 새로 넣었다. 문구 유지 원칙의 예외로, 3색 경로는 범례 없이는 읽을 수 없어서다. 관문 3 에서 함께 본다.
 - 작업 5: 1단계 알에 모자가 커 보이는 점(버섯처럼 보임)은 그대로 둔다. 아이템 파일 경로에 단계가 없어 단계별 그림을 쓰려면 앱 코드를 바꿔야 한다. 관문 3 에서 사용자가 보고 고칠지 정한다(고치면 `itemSheet` 에 단계를 넣고 1단계 작은 모자를 그린다).
