@@ -56,22 +56,48 @@ void main() {
     fastColor: fast,
   );
 
-  test('빠른 구간일수록 막대가 길다', () {
+  test('이 러닝의 가장 느린 구간은 35%, 가장 빠른 구간은 100%, 사이는 속도에 비례', () {
     final l = layout([_s(1, 300), _s(2, 360), _s(3, 450)], 360);
-    expect(l.bars[0].height, 100);
-    expect(l.bars[0].height, greaterThan(l.bars[1].height));
-    expect(l.bars[1].height, greaterThan(l.bars[2].height));
-    expect(l.bars[2].height, closeTo(100 * 300 / 450, 1e-9));
+    // 속도 1/360 은 1/450~1/300 사이 정확히 가운데: 35 + 65 × 0.5.
+    expect(l.bars[0].height, closeTo(100, 1e-9));
+    expect(l.bars[1].height, closeTo(67.5, 1e-9));
+    expect(l.bars[2].height, closeTo(35, 1e-9));
   });
 
-  test('평균선 y 는 알려진 입력에서 정확하고 가장 빠른·느린 막대 사이', () {
+  test('6\'02"~6\'15" 처럼 비슷한 구간도 높이 차이가 눈에 띈다', () {
+    final l = layout([_s(1, 375), _s(2, 369), _s(3, 362)], 368);
+    expect(l.bars[0].height, closeTo(35, 1e-9));
+    expect(l.bars[2].height, closeTo(100, 1e-9));
+    // 1/369 는 1/375~1/362 의 (1/369-1/375)/(1/362-1/375) 지점.
+    final t = (1 / 369 - 1 / 375) / (1 / 362 - 1 / 375);
+    expect(l.bars[1].height, closeTo(35 + 65 * t, 1e-9));
+  });
+
+  test('평균선 y 는 같은 눈금으로 막대 사이에 놓인다', () {
     final l = layout([_s(1, 300), _s(2, 450)], 360);
-    // 속도 비 300/360 = 0.8333 -> 막대 높이 83.33, y = 100 - 83.33.
-    expect(l.avgLineY, closeTo(100 - 100 * 300 / 360, 1e-9));
-    expect(l.avgLineY, lessThan(100 - l.bars[1].height + 100)); // 안전 상한
+    // 평균 360 → 높이 67.5 → y = 100 - 67.5.
+    expect(l.avgLineY, closeTo(32.5, 1e-9));
     expect(l.avgLineY, greaterThan(100 - l.bars[0].height));
     expect(l.avgLineY, lessThan(100 - l.bars[1].height));
     expect(layout([_s(1, 300), _s(2, 450)], null).avgLineY, isNull);
+    // 평균이 범위 밖이면 막대 범위 끝(0·35%)에 붙는다.
+    expect(layout([_s(1, 300), _s(2, 450)], 200).avgLineY, closeTo(0, 1e-9));
+    expect(layout([_s(1, 300), _s(2, 450)], 600).avgLineY, closeTo(65, 1e-9));
+  });
+
+  test('구간이 1개거나 모두 같으면(1초 미만 차이) 모두 꽉 찬 같은 높이', () {
+    expect(layout([_s(1, 360)], 360).bars.single.height, 100);
+    final same = layout([_s(1, 360), _s(2, 360), _s(3, 180, 500)], 360);
+    expect(same.bars.map((b) => b.height), everyElement(100));
+    expect(same.avgLineY, closeTo(0, 1e-9));
+  });
+
+  test('빠른 이동 구간은 범위에서 빼고 가장 긴 막대(100%)로 그린다', () {
+    final l = layout([_s(1, 300), _s(2, 140), _s(3, 450)], 360);
+    expect(l.bars[0].height, closeTo(100, 1e-9));
+    expect(l.bars[1].height, closeTo(100, 1e-9));
+    expect(l.bars[1].color, fast);
+    expect(l.bars[2].height, closeTo(35, 1e-9));
   });
 
   test('마지막 짧은 구간은 알파 0.4, 빠른 구간은 inkMuted', () {

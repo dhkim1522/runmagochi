@@ -197,9 +197,22 @@ class PaceLayout {
 const _minBarHeight = 3.0;
 const _shortSplitAlpha = 0.4;
 
-/// 막대 높이·색을 계산한다. 높이는 속도(1/페이스)에 비례해 빠를수록 크다.
-/// 페이스를 알 수 없는 구간(시간 0 등)은 최소 높이의 `fastColor` 막대로 그린다.
-/// 1km 미만 구간은 알파 0.4 로 흐리게 한다.
+/// 가장 느린 구간 막대 높이(그래프 높이 대비). 0 부터 세면 6'02"~6'15" 같은 차이가 3% 라
+/// 보이지 않아, 이 러닝의 가장 느린 구간을 이 높이에, 가장 빠른 구간을 꼭대기에 둔다.
+const paceBarMinFraction = 0.35;
+
+/// 이보다 페이스 차이가 작으면(초/km) 모든 구간이 같다고 본다(경로 페이스 색과 같은 기준).
+const double _samePaceSecPerKm = 1;
+
+/// 막대 높이·색을 계산한다. 빠를수록 길다.
+///
+/// - 높이 눈금: 빠른 이동·페이스를 알 수 없는 구간을 뺀 구간 중 가장 느린 구간이
+///   [paceBarMinFraction], 가장 빠른 구간이 100% 이고 그 사이는 속도(1/페이스)에 비례한다.
+/// - 그런 구간이 1개 이하이거나 모두 같으면(1초 미만 차이) 모두 꽉 찬 같은 높이.
+/// - 빠른 이동 구간은 `fastColor` 이고 눈금 밖이라 100% 로 자른다.
+/// - 페이스를 알 수 없는 구간(시간 0 등)은 최소 높이의 `fastColor` 막대.
+/// - 1km 미만 구간은 알파 0.4 로 흐리게 한다.
+/// - 평균 페이스 가로선도 같은 눈금이라 막대 사이에 놓인다(범위 밖이면 끝에 붙는다).
 PaceLayout layoutPaceBars({
   required List<Split> splits,
   required double? avgPaceSecPerKm,
@@ -208,23 +221,36 @@ PaceLayout layoutPaceBars({
   required Color fastColor,
 }) {
   bool valid(double p) => p.isFinite && p > 0;
-  final maxSpeed = splits.fold<double>(
-    0,
-    (m, s) => valid(s.paceSecPerKm) ? math.max(m, 1 / s.paceSecPerKm) : m,
-  );
+  final rated = [
+    for (final s in splits)
+      if (valid(s.paceSecPerKm) && !isFastSplit(s)) s.paceSecPerKm,
+  ];
+  final fastest = rated.isEmpty ? 0.0 : rated.reduce(math.min);
+  final slowest = rated.isEmpty ? 0.0 : rated.reduce(math.max);
+  final flat = slowest - fastest < _samePaceSecPerKm;
+
+  /// 눈금 위 페이스 [p] 의 높이 비율([paceBarMinFraction]~1). 범위 밖은 끝에 붙는다.
+  double scaled(double p) {
+    final t = (1 / p - 1 / slowest) / (1 / fastest - 1 / slowest);
+    return paceBarMinFraction + (1 - paceBarMinFraction) * t.clamp(0.0, 1.0);
+  }
+
   final bars = <PaceBar>[];
   for (final s in splits) {
     final p = s.paceSecPerKm;
-    final height = valid(p)
-        ? math.max(_minBarHeight, plotH * (1 / p) / maxSpeed)
-        : _minBarHeight;
+    final height = !valid(p)
+        ? _minBarHeight
+        : flat
+        ? plotH
+        : plotH * scaled(p);
     var color = (!valid(p) || isFastSplit(s)) ? fastColor : barColor;
     if (s.distanceM < 1000) color = color.withValues(alpha: _shortSplitAlpha);
     bars.add(PaceBar(height, color));
   }
   final avg = avgPaceSecPerKm;
-  final y = (avg != null && valid(avg) && maxSpeed > 0)
-      ? plotH - plotH * ((1 / avg) / maxSpeed).clamp(0.0, 1.0)
+  // 눈금이 없으면(모두 같은 페이스) 평균선은 예전처럼 속도 비례로 둔다.
+  final y = (avg != null && valid(avg) && rated.isNotEmpty)
+      ? plotH - plotH * (flat ? (fastest / avg).clamp(0.0, 1.0) : scaled(avg))
       : null;
   return PaceLayout(bars, y);
 }

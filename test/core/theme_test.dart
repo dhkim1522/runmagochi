@@ -30,9 +30,9 @@ const _light = {
   'stageSky': 0xFFE3F6C8,
   'stageGround': 0xFFCDEBA8,
   'stageGroundLine': 0xFFB3DB82,
-  'paceSlow': 0xFF2B59C3,
-  'paceMid': 0xFF1E7B45,
-  'paceFast': 0xFFC8650A,
+  'paceSlow': 0xFF3A75D6,
+  'paceMid': 0xFF5C1A5C,
+  'paceFast': 0xFFB35C00,
   'spriteRim': 0x00000000,
   'bubble': 0xFFFFFFFF,
 };
@@ -58,9 +58,9 @@ const _dark = {
   'stageSky': 0xFF1D2C15,
   'stageGround': 0xFF2A3F1D,
   'stageGroundLine': 0xFF3E5C2A,
-  'paceSlow': 0xFF6E95F0,
-  'paceMid': 0xFF5DD08A,
-  'paceFast': 0xFFF08A3C,
+  'paceSlow': 0xFF4F7FE8,
+  'paceMid': 0xFFF2C0FA,
+  'paceFast': 0xFFB8641A,
   'spriteRim': 0xFFEEF4E6,
   'bubble': 0xFF44573A,
 };
@@ -120,6 +120,80 @@ double _deltaE(Color a, Color b, [String? kind]) {
     math.pow(la[0] - lb[0], 2) +
         math.pow(la[1] - lb[1], 2) +
         math.pow(la[2] - lb[2], 2),
+  );
+}
+
+/// 두 색의 거리(CIEDE2000). [kind] 가 있으면 그 색각 이상(Machado 2009)으로 본 색끼리 잰다.
+/// ΔE76 은 채도 차이를 부풀려 녹·주황처럼 적·녹 색각 이상에서 헷갈리는 짝도 15 를 넘긴다.
+double _deltaE2000(Color a, Color b, [String? kind]) {
+  List<double> see(Color c) {
+    final l = [_lin(c.r), _lin(c.g), _lin(c.b)];
+    if (kind == null) return l;
+    final m = _cvd[kind]!;
+    return [for (final row in m) row[0] * l[0] + row[1] * l[1] + row[2] * l[2]];
+  }
+
+  return _de2000Lab(_lab(see(a)), _lab(see(b)));
+}
+
+/// CIEDE2000(Sharma·Wu·Dalal 2005) 을 L*a*b* 두 값에 적용한다.
+double _de2000Lab(List<double> lab1, List<double> lab2) {
+  final [l1, a1, b1] = lab1;
+  final [l2, a2, b2] = lab2;
+  double rad(double d) => d * math.pi / 180;
+  double deg(double r) => r * 180 / math.pi;
+  final cBar =
+      (math.sqrt(a1 * a1 + b1 * b1) + math.sqrt(a2 * a2 + b2 * b2)) / 2;
+  final g =
+      0.5 *
+      (1 -
+          math.sqrt(math.pow(cBar, 7) / (math.pow(cBar, 7) + math.pow(25, 7))));
+  final a1p = (1 + g) * a1, a2p = (1 + g) * a2;
+  final c1p = math.sqrt(a1p * a1p + b1 * b1),
+      c2p = math.sqrt(a2p * a2p + b2 * b2);
+  final h1p = (deg(math.atan2(b1, a1p)) + 360) % 360;
+  final h2p = (deg(math.atan2(b2, a2p)) + 360) % 360;
+  final dLp = l2 - l1, dCp = c2p - c1p;
+  var dh = h2p - h1p;
+  if (c1p * c2p == 0) {
+    dh = 0;
+  } else if (dh > 180) {
+    dh -= 360;
+  } else if (dh < -180) {
+    dh += 360;
+  }
+  final dHp = 2 * math.sqrt(c1p * c2p) * math.sin(rad(dh / 2));
+  final lBar = (l1 + l2) / 2, cBarP = (c1p + c2p) / 2;
+  final double hBar;
+  if (c1p * c2p == 0) {
+    hBar = h1p + h2p;
+  } else if ((h1p - h2p).abs() <= 180) {
+    hBar = (h1p + h2p) / 2;
+  } else if (h1p + h2p < 360) {
+    hBar = (h1p + h2p + 360) / 2;
+  } else {
+    hBar = (h1p + h2p - 360) / 2;
+  }
+  final t =
+      1 -
+      0.17 * math.cos(rad(hBar - 30)) +
+      0.24 * math.cos(rad(2 * hBar)) +
+      0.32 * math.cos(rad(3 * hBar + 6)) -
+      0.20 * math.cos(rad(4 * hBar - 63));
+  final dTheta = 30 * math.exp(-math.pow((hBar - 275) / 25, 2));
+  final rc =
+      2 *
+      math.sqrt(math.pow(cBarP, 7) / (math.pow(cBarP, 7) + math.pow(25, 7)));
+  final sl =
+      1 +
+      0.015 * math.pow(lBar - 50, 2) / math.sqrt(20 + math.pow(lBar - 50, 2));
+  final sc = 1 + 0.045 * cBarP, sh = 1 + 0.015 * cBarP * t;
+  final rt = -math.sin(rad(2 * dTheta)) * rc;
+  return math.sqrt(
+    math.pow(dLp / sl, 2) +
+        math.pow(dCp / sc, 2) +
+        math.pow(dHp / sh, 2) +
+        rt * (dCp / sc) * (dHp / sh),
   );
 }
 
@@ -270,19 +344,34 @@ void main() {
         });
       }
 
-      test('경로 페이스 3색은 색각 이상(적·녹·청)에서도 서로 구분된다(ΔE76 15 이상)', () {
-        final pace = [c.paceSlow, c.paceMid, c.paceFast];
+      test('경로 페이스 3색 + 빠른 이동(ink-muted)은 색각 이상(적·녹·청)에서도 서로 구분된다'
+          '(Machado 2009 흉내, CIEDE2000 15 이상)', () {
+        final pace = {
+          'slow': c.paceSlow,
+          'mid': c.paceMid,
+          'fast': c.paceFast,
+          'fastMove': c.inkMuted,
+        };
+        final names = pace.keys.toList();
         for (final kind in [null, 'protan', 'deutan', 'tritan']) {
-          for (var i = 0; i < 3; i++) {
-            for (var j = i + 1; j < 3; j++) {
+          for (var i = 0; i < names.length; i++) {
+            for (var j = i + 1; j < names.length; j++) {
               expect(
-                _deltaE(pace[i], pace[j], kind),
+                _deltaE2000(pace[names[i]]!, pace[names[j]]!, kind),
                 greaterThanOrEqualTo(15),
-                reason: '${kind ?? 'normal'} $i-$j',
+                reason: '${kind ?? 'normal'} ${names[i]}-${names[j]}',
               );
             }
           }
         }
+      });
+
+      test('CIEDE2000 계산 확인: Sharma 2005 표 1번 짝 = 2.0425', () {
+        // L*a*b* (50, 2.6772, -79.7751) vs (50, 0, -82.7485). 같은 식을 Lab 에 바로 적용.
+        expect(
+          _de2000Lab([50, 2.6772, -79.7751], [50, 0, -82.7485]),
+          closeTo(2.0425, 1e-4),
+        );
       });
 
       test('onError 가 error 위에서 4.5:1 이상', () {

@@ -31,16 +31,16 @@
 | 코인 | `coin`, 그림 안 별 `on-coin` | 코인 +N, 코인 그림 |
 | 무대 | `stage-sky` · `stage-ground` · `stage-ground-line`, 무대 위 글자 `stage-ink` | 사각 무대 두 겹 |
 | 말풍선 | `bubble` + `ink` | 무대 위 말풍선 판·꼬리. 라이트는 흰색, 다크는 하늘보다 밝은 판 |
-| 경로 페이스 | `pace-slow` 파랑 · `pace-mid` 초록 · `pace-fast` 주황 | 느림·보통·빠름. 빠른 이동 구간은 `ink-muted` |
+| 경로 페이스 | `pace-slow` 파랑 · `pace-mid` 자주 · `pace-fast` 주황 | 느림·보통·빠름. 빠른 이동 구간은 `ink-muted`, 한 색 경로는 `primary-deep` |
 
 비율: 바탕 50%, 흰 카드 35%, 연두·초록 10%, 진한 글자 5%.
 
-direction-c 이름과 토큰: `lime` = `primary`, `green` = `primary-deep`·`success`·`pace-mid`, `green-ink` = `stage-ink`, 어두운 판 = `panel`, 트랙 = `surface-soft`.
+direction-c 이름과 토큰: `lime` = `primary`, `green` = `primary-deep`·`success`, `green-ink` = `stage-ink`, 어두운 판 = `panel`, 트랙 = `surface-soft`.
 
 ### 새로 정한 것 (작업 10)
 
 - **코인 색**: `coin` 토큰을 따로 둔다(시안 `#1E40AF`, 다크 `#8FAEFF`). 옛 `accent-deep` 차용은 없앴다.
-- **경로 페이스 3단**: 파랑·초록·주황. 초록 안에서 밝기만 바꾸지 않고 색상을 달리해 적색맹·녹색맹·청색맹 흉내(Machado 2009)에서도 서로 ΔE76 19 이상 떨어진다(테스트 기준 15). 셋 다 흰 카드 위 3:1 이상. 구간이 1개 이하이거나 모두 같으면 한 색 **`primary-deep`**(계획 작업 13 의 "`primary`" 는 연두라 흰 카드 위 1.3:1 로 안 보여 초록으로 바꾼다). 색만으로 뜻을 전하지 않도록 범례(`느림`·`보통`·`빠름`·`빠른 이동`, 있는 색만)를 함께 둔다. 경로는 누적 거리로 1km 구간에 나누고(`routePaceSegments`), 시작 점은 연두 + `primary-edge` 경계, 끝 점은 `ink` + `surface` 고리(작업 13).
+- **경로 페이스 3단**: 파랑·자주·주황(작업 13 수정). 처음 고른 초록·주황(`#1E7B45`·`#C8650A`)은 적색맹 흉내에서 CIEDE2000 9.3 으로 헷갈리는 짝이라 바꿨다. 파랑·주황은 적·녹 색각 이상에서도 남는 파랑–노랑 축으로 떨어지고, 보통(자주)은 밝기를 크게 달리해(라이트 L* 23 가장 어둡게, 다크 L* 84 가장 밝게) 나머지와 떨어진다. 세 색과 빠른 이동 `ink-muted` 넷이 정상·적·녹·청 색각 이상(Machado 2009 흉내) 모두에서 서로 CIEDE2000 라이트 19.4·다크 21.4 이상(테스트 기준 15). 넷 다 `surface`·`background` 위 3:1 이상(라이트 4.07~10.87, 다크 3.76~11.99). 구간이 1개 이하이거나 모두 같으면 한 색 **`primary-deep`**(계획 작업 13 의 "`primary`" 는 연두라 흰 카드 위 1.3:1 로 안 보여 초록으로 바꾼다). 색만으로 뜻을 전하지 않도록 범례(`느림`·`보통`·`빠름`·`빠른 이동`, 있는 색만)를 함께 둔다. 경로는 누적 거리로 1km 구간에 나누고(`routePaceSegments`), 시작 점은 연두 + `primary-edge` 경계, 끝 점은 `ink` + `surface` 고리(작업 13).
 - **배경**: 단색 `background`. 무늬·그라데이션을 쓰지 않는다. 장면감은 사각 무대(하늘·땅 겹, 뒤에 배경 아이템)가 맡는다.
 - **전환 시간·곡선**: 아래 "움직임".
 - **연두 면 경계**(critique P1): 연두 면은 늘 `primary-edge` 2px(`Borders.edge`) 경계선을 두른다. 흰 보조 버튼은 `line-strong` 2px.
