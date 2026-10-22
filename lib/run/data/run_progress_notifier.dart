@@ -130,8 +130,8 @@ class LocalRunProgressNotifier implements RunProgressNotifier {
   static const notificationId = 75415;
 
   static const channelId = 'run_progress';
-  static const pauseActionId = 'run_pause';
-  static const resumeActionId = 'run_resume';
+  static const pauseActionId = runPauseActionId;
+  static const resumeActionId = runResumeActionId;
 
   /// 종료 예고 알림. 러닝 알림과 따로 띄워 진동한다.
   static const endWarningId = 1001;
@@ -149,6 +149,24 @@ class LocalRunProgressNotifier implements RunProgressNotifier {
   );
 
   final FlutterLocalNotificationsPlugin _plugin;
+
+  /// iOS 러닝 알림. 같은 번호로 몇 초마다 덮어쓰므로 소리·배너 없이 알림 목록에만
+  /// 조용히 둔다(passive). 버튼은 조합에 맞는 묶음(category)으로 붙인다.
+  static DarwinNotificationDetails _darwinProgress(
+    List<RunProgressAction> actions,
+  ) => DarwinNotificationDetails(
+    presentAlert: false,
+    presentBanner: false,
+    presentSound: false,
+    presentBadge: false,
+    presentList: true,
+    interruptionLevel: InterruptionLevel.passive,
+    categoryIdentifier: switch (actions) {
+      [RunProgressAction.pause] => darwinRunPauseCategory,
+      [RunProgressAction.resume] => darwinRunResumeCategory,
+      _ => darwinRunResumePauseCategory,
+    },
+  );
 
   @override
   Future<void> show(RunProgressContent content) async {
@@ -184,6 +202,7 @@ class LocalRunProgressNotifier implements RunProgressNotifier {
                 },
             ],
           ),
+          iOS: _darwinProgress(content.actions),
         ),
       );
     } catch (e, st) {
@@ -226,6 +245,10 @@ class LocalRunProgressNotifier implements RunProgressNotifier {
             chronometerCountDown: true,
             timeoutAfter: endWarningTimeoutMs(deadline, DateTime.now()),
             actions: const [_resumeAction],
+          ),
+          // iOS 는 시간이 지나도 스스로 사라지지 않는다. 컨트롤러가 재개·종료 때 지운다.
+          iOS: const DarwinNotificationDetails(
+            categoryIdentifier: darwinRunResumeCategory,
           ),
         ),
       );
