@@ -1,6 +1,6 @@
 # 스프라이트 규격
 
-> 산출물: [런마고치 캐릭터 에셋](https://claude.ai/artifact/ECbG2Fh4TXQwcr5fNUWCXA) — 3종 4단계·표정·아이템·배지를 실제 시트로 재생하는 카탈로그(2026-10-22, 페이즈 6-1). 페이지 원본은 `design/character/asset-catalog.html`(그림 경로는 아티팩트에 함께 올린 `sprites/`·`badges/`·`preview/` 기준).
+> 산출물: [런마고치 캐릭터 에셋](https://claude.ai/artifact/ECbG2Fh4TXQwcr5fNUWCXA) — 3종 4단계·표정·아이템·배지·앱 아이콘을 실제 시트로 재생하는 카탈로그(2026-10-22, 페이즈 6, 작업 18 에 최종 그림으로 갱신). 페이지 원본은 `design/character/asset-catalog.html`(그림 경로는 아티팩트에 함께 올린 `sprites/`·`badges/`·`preview/`·`icon/` 기준).
 
 아바타는 레이어를 겹쳐 그린다. 실제 에셋은 같은 이름의 파일로 교체하면 되고, 코드는 고치지 않는다.
 
@@ -62,7 +62,7 @@ face 레이어는 4개 외형 단계가 모두 공유한다. 그래서 어느 �
 업적 배지 12개(`lib/achievement/domain/badges.dart` 의 `badgeCatalog`)는 배지마다 그림 한 장이다(페이즈 6 작업 6).
 
 - 24×24px 투명 배경 PNG 한 장. 동작·레이어가 없다. 파일은 `assets/badges/<배지 id>.png`, 경로는 `lib/achievement/ui/badge_image.dart` 의 `badgeAsset` 이 만든다.
-- 그림체는 펫과 같다: 진한 외곽선 `o`, 빛은 왼쪽 위, 3단 명암.
+- 그림체는 펫과 같다: 진한 외곽선 `o`, 빛은 왼쪽 위, 3단 명암. 그림 데이터는 `tool/sprites/badges.dart`(한 글자 = 한 픽셀), 만드는 명령은 아래 "만드는 방법".
 - 12개가 같은 둥근 메달 테두리(`badgeMedal`)를 쓴다. 바깥 2줄은 볼록(왼쪽 위 밝음), 안쪽 1줄은 오목(왼쪽 위 어두움)이고, 그 안의 크림색 바탕(`f`)에만 문양을 그린다.
 - 테두리 색 = 등급. 보상 코인을 따른다: 50 파랑, 100 동, 150·200 은, 300 금. 같은 갈래는 단계가 오를수록 높은 등급이다.
 
@@ -82,12 +82,12 @@ face 레이어는 4개 외형 단계가 모두 공유한다. 그래서 어느 �
 
 ## 만드는 방법
 
-그림은 코드 안의 데이터다(작업 9, 페이즈 6 실제 아트 전까지).
+그림은 코드 안의 데이터다(코드 도트, 결정 0028). Aseprite·pixel-plugin·생성 AI·외주는 쓰지 않는다. 페이즈 6 에서 그림체를 후보 3개 중 a(말랑 클레이)로 고르고 3종·아이템·배지를 이 방식으로 다시 그렸다. 후보 그림·도구는 작업 18 에서 지웠다(git 기록에 남음).
 
 - `tool/sprites/<kind>.dart` (chick·jelly·acorn): 단계별 기본 그림(몸 + 장비, 눈 없음)과 표정 그림. 한 글자가 한 픽셀이고 색은 `tool/sprites/pet_art.dart` 의 팔레트에서 찾는다.
 - `tool/sprites/pet_art.dart`: 자세표로 기본 그림에서 idle·walk·run 프레임을 만든다. 머리가 움직인 만큼 face 프레임도 같이 움직이므로 4단계가 face 를 함께 쓸 수 있다. 1단계 알(병아리)은 걷기·달리기 대신 통통 튄다.
   - 자세표는 3종이 같이 쓴다. 숨쉬기·달리기는 머리를 늘이기만 한다(눌림은 `squashRow` 줄을 지운다). 달리기는 뜰 때 머리가 2px 오르고 팔을 ±2 흔든다.
-- 그림체(페이즈 6, 후보 a 말랑 클레이): 빛은 왼쪽 위, 3단 명암(하이라이트·기본·그림자), 진한 외곽선 `o`. 3종이 같은 그림체다.
+- 그림체(페이즈 6, 고른 후보 a 말랑 클레이): 빛은 왼쪽 위, 3단 명암(하이라이트·기본·그림자), 진한 외곽선 `o`. 3종이 같은 그림체다.
   - 병아리 `l`·`m`·`M`(알 `q`·`y`·`Y`), 젤리 `i`·`b`·`B`(왼쪽 위 반짝임 `h`, 외곽선 두른 잎 두 장), 도토리 몸 `t`·`n`·`N`, 모자 `x`·`C`·`c`(`c` 비늘 무늬).
   - 날개·팔·러닝화는 3종 모두 `clayArmRows`·`clayShoeFoot`. 젤리·도토리 1단계는 작은 발(`nubFoot`)로 걷고, 병아리 1단계 알만 통통 튄다.
   - 표정: 3종의 눈(y=20·21)은 같다. 졸린 눈꺼풀은 바깥으로 처진다(안쪽으로 내려오면 화난 눈처럼 보인다). 젤리·도토리의 입은 face 의 y=22 한 줄, 병아리 부리는 body 에 있다.
@@ -102,6 +102,7 @@ face 레이어는 4개 외형 단계가 모두 공유한다. 그래서 어느 �
   - `design/character/items.png` 8배 아이템 미리보기: 줄 = 아이템 없음 + 아이템 6개, 칸 = 종류 3 × 단계 1~4
   - `assets/badges/<배지 id>.png` 배지 12장(그림 데이터는 `tool/sprites/badges.dart`)
   - `design/character/badges.png` 8배 배지 미리보기: 위 두 줄 = 받은 모습, 아래 두 줄 = 못 받은 모습(앱과 같은 흑백·0.45)
+- 앱 아이콘·스플래시: `fvm dart run tool/render_app_icon.dart` — 사각 무대(하늘 + 땅 띠) 위 병아리 3단계 idle 첫 프레임을 정수 배율로 그린다. 그림 로직은 `tool/sprites/app_icon.dart`(병아리 긴 변이 아이콘 한 변의 0.61 에 가깝고 0.8 을 넘지 않는 배율, `fitIconScale`), 색은 `docs/design/tokens.json`. Android 런처·적응형 층·스플래시와 iOS AppIcon·LaunchImage 를 쓴다(목록은 스크립트 맨 위). 동기 검사 `test/tool/app_icon_sync_test.dart`, 규칙 검사 `test/tool/app_icon_test.dart`.
 - 콘셉트 한 장: `fvm dart run tool/render_concepts.dart` — `design/character/concepts.png`(3종 × 1·4단계 idle). 그림은 위 펫 데이터에서 가져온다.
 - 동기 검사: `test/tool/sprite_render_sync_test.dart` — 커밋된 시트·배지 PNG 가 데이터에서 그린 결과와 픽셀까지 같아야 한다. 데이터를 고치면 PNG 를 다시 만든다.
 - 배지 검사: `test/tool/badge_data_test.dart` — `badgeCatalog` 의 모든 id 에 그림(24×24, 투명 귀퉁이)과 PNG 가 있음, 테두리가 12개 같고 문양은 바탕 안, 갈래별 등급이 오름

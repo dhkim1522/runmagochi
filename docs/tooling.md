@@ -11,7 +11,7 @@
 | [ui-ux-pro-max](https://github.com/nextlevelbuilder/ui-ux-pro-max-skill) | 색상·글꼴·컴포넌트 규칙을 묶은 디자인 시스템 생성 | 페이즈 2.5 (기본 디자인), 페이즈 3 (나머지 화면), 페이즈 6-2 (UI/UX 개편) | 꺼짐 | `ui-ux-pro-max@ui-ux-pro-max-skill` |
 | [Impeccable](https://github.com/pbakaus/impeccable) | AI 티가 나는 디자인 패턴 점검, UX 리뷰(`critique`)·출시 전 마무리(`polish`) | 페이즈 6-2 (후보 시안 비교·전면 점검). 웹 대상이라 HTML 시안에 쓴다 | 꺼짐 | `impeccable@impeccable` |
 | [Taste Skill](https://github.com/Leonxlnx/taste-skill) | 아트 디렉션 20개 중 3개를 뽑아 디자인 방향 후보 제시 | 페이즈 6-2 (방향 후보 만들기). 웹 대상이라 HTML 시안에 쓴다 | 꺼짐 | `taste-skill@taste-skill` |
-| [pixel-plugin](https://github.com/willibrandon/pixel-plugin) | Aseprite 로 도트 그림·스프라이트 시트 제작 | 페이즈 6-1 (캐릭터 에셋). 페이즈 2.5 캐릭터는 코드로 그린다 | 꺼짐 | `pixel-plugin@pixel-plugin` |
+| [pixel-plugin](https://github.com/willibrandon/pixel-plugin) | Aseprite 로 도트 그림·스프라이트 시트 제작 | 쓰지 않음(결정 0028). 캐릭터·아이템·배지·앱 아이콘은 코드 도트(`tool/sprites/`)로 그린다 | 꺼짐 | `pixel-plugin@pixel-plugin` |
 | [skill-creator](https://github.com/anthropics/claude-plugins-official/tree/main/plugins/skill-creator) | 반복 작업을 프로젝트 스킬로 만들고 검증 | 반복 작업을 스킬로 만들 때 | 꺼짐 | `skill-creator@claude-plugins-official` |
 
 ## 마켓플레이스
@@ -42,12 +42,24 @@
 - **Flutter 버전**: 프로젝트 Flutter 는 `.fvmrc` 로 고정한다(결정 0008). [FVM](https://fvm.app) 을 설치하고(`dart pub global activate fvm` 또는 macOS `brew install fvm`) 저장소에서 `fvm install` 을 실행한다. Windows 는 개발자 모드를 켜야 한다.
 - **dart-flutter**: Dart MCP 서버가 전역 `dart` 명령을 쓴다. Flutter SDK를 설치하고 `dart` 가 PATH에 있어야 한다. 전역 버전도 `.fvmrc` 와 맞춰 두면 분석 결과가 같다.
 - **글꼴 서브셋**(`tool/subset_fonts.py`): Python 3 와 fonttools. 저장소 루트에서 `python3 -m venv .venv` 후 `.venv/bin/pip install fonttools==4.67.0`(Windows `py -m venv .venv`, `.venv\Scripts\pip ...`). `.venv/` 는 git 에 올리지 않는다. 앱 문구에 새 글자를 쓸 때만 필요하다.
-- **pixel-plugin**: [Aseprite](https://www.aseprite.org/) 1.3 이상이 설치돼 있어야 한다.
+- **pixel-plugin**: [Aseprite](https://www.aseprite.org/) 1.3 이상이 설치돼 있어야 한다. 지금은 쓰지 않는다(결정 0028).
 - **Taste Skill**: Node 22 이상과 Chrome·Edge·Chromium 중 하나가 필요하다.
 - **디자인 스킬**: ui-ux-pro-max·Impeccable·Taste Skill 은 지침이 겹친다. 단계마다 필요한 것만 켠다.
 - **skill-creator**: claude.ai 계정에 skill-creator 스킬이 이미 동기화돼 있으면 켜지 않아도 된다.
 - **에뮬레이터(E2E)**: `/e2e` 가 처음 실행될 때 Android Emulator, 시스템 이미지(Android 37 Google APIs), AVD `runmagochi` 가 있는지 보고 없으면 설치를 묻는다. 약 2GB 다운로드. Windows 는 하드웨어 가속(Windows 하이퍼바이저 플랫폼)이 필요하다.
 - **상태 표시줄**: `.claude/statusline.sh` 가 모델, 5시간·주간 사용량, 세션 시간, 컨텍스트, effort 를 하단에 표시한다. macOS 는 기본 bash, Windows 는 Git Bash 로 같은 설정이 그대로 동작한다(Claude Code 가 Windows 에서 Git Bash 로 실행). `jq` 같은 추가 설치는 필요 없다.
+
+## 페이즈 6 사용 기록
+
+UI 후보를 두 트랙(디자인 스킬 · Claude Design 캔버스) × 세 방향(a 말랑 클레이 다듬기 · b 도트 한 칸 · c 연두 무드보드)으로 만들어 비교했다(작업 7·8). 고른 안은 c · 캔버스(결정 0029). 고른 시안·규칙·비교는 `design/mockups/phase-6/`, 지운 나머지 후보는 git 기록과 비교 아티팩트 https://claude.ai/artifact/F5MsvhPE9fAXw5YtCwe3Xc 에 남아 있다.
+
+| 도구 | 쓴 곳 | 결과 |
+| --- | --- | --- |
+| ui-ux-pro-max | 트랙 1 의 a·c 방향 HTML 시안 | a 는 기존 클레이 토큰과 같은 추천이라 토큰 유지. c 는 추천(어두운 바탕·주황)이 무드보드와 맞지 않아 무드보드에서 뽑은 `direction-c.md` 값을 썼다 |
+| Taste Skill | 트랙 1 의 b 방향 고르기(`consumer-app`·`playful`, 3개 중 `one-motif`) | 도트 한 칸을 모든 모양에 쓰는 안. 같은 방향의 캔버스 안(b · 캔버스)이 점수 추천(27/30)이었으나 사용자는 c 를 골랐다 |
+| Claude Design 캔버스 | 트랙 2: 같은 세 방향을 캔버스 아트보드 9개로(https://claude.ai/artifact/FxKS7MR2twYmmE3k6SzNhe) | 고른 c · 캔버스. 사본은 `design/mockups/phase-6/canvas/c/`. 고르기 전에 연두 원을 사각 무대로 바꿨다 |
+| Impeccable | 작업 8 `critique`(6안 점수·P1~P3)와 `detect`(검출기) | `design/mockups/phase-6/critique.md`. P1·P2(코인 그림, 선택 표시 통일, 연두 면 경계, 탭 아이콘)는 작업 10~13 에서 반영. 서브에이전트 금지 지침 때문에 검토·검출을 한 컨텍스트에서 순서대로 돌렸다 |
+| pixel-plugin | 쓰지 않음 | 그림은 코드 도트(결정 0028) |
 
 ## 플러그인 추가
 

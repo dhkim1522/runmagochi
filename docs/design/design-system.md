@@ -92,7 +92,7 @@ direction-c 이름과 토큰: `lime` = `primary`, `green` = `primary-deep`·`suc
 시스템 "애니메이션 줄이기" 를 켜면 움직임을 빼고 바로 최종 상태를 보인다(작업 15). 화면은 시간을 `Motion.of(context, 토큰)` 으로 읽고(줄이기면 0), 컨트롤러로 돌리는 연출(레벨 업·배지 획득)은 `Motion.reduced(context)` 면 끝 값에 둔다.
 
 - 화면 전환(Android): `AppPageTransitionsBuilder` — 들어오는 화면이 화면 높이 4% 아래에서 올라오며 나타난다(`enter` + `enterCurve`), 나갈 때 거꾸로(`exit` + `exitCurve`). 테마 `pageTransitionsTheme` 이 정해 `MaterialPageRoute` 를 그대로 쓴다. iOS 는 뒤로 밀기 제스처가 있는 기본 전환.
-- 누름: 짧게 톡 눌러도 눌린 모양(0.97)이 `press` 동안 남는다(바로 떼면 한 프레임도 안 그려져 반응이 안 보였다). 탭바 탭도 같은 `Pressable`.
+- 누름: 짧게 톡 눌러도 눌린 모양(0.97)이 `press` 동안 남는다(바로 떼면 한 프레임도 안 그려져 반응이 안 보였다). 애니메이션 줄이기면 붙잡지 않고 누른 동안만 눌린 모양이다(작업 18). 탭바 탭도 같은 `Pressable`.
 - 첫 실행 장 넘김: `enter`/`exit` 교차 페이드. 레벨 업 커짐·배지 획득 튀어 오름: `celebrate` + `pop`.
 
 ## 다크 모드
@@ -120,9 +120,11 @@ direction-c 이름과 토큰: `lime` = `primary`, `green` = `primary-deep`·`suc
 - 빈 상태: `EmptyState`(앱 그림 + `ink-muted` 문구). 불러오기 실패: `EmptyState.error`(같은 카드에 느낌표 동그라미 `ink-muted`, 필요하면 `다시 시도` 버튼). 사용자가 고칠 문제가 아니라 `danger` 를 쓰지 않는다.
 - 진짜 문제 알림(위치 신호 오류·러닝 저장 실패): `NoticeCard` — 흰 작은 카드에 `danger` 경계선·느낌표·`body-strong` 글자.
 
-## 작업 11~15 를 위한 메모
+## 구현 메모 (작업 11~18)
+
+- 구현 화면 스크린샷은 `design/mockups/phase-6-screens/`, 화면별 구성과 컴포넌트는 `docs/screens.md` "화면 디자인".
 
 - 토큰 이름 변경: `cream` → `background`, `accent`/`on-accent` → `panel`/`on-panel`, `accent-deep` → `coin`(코인) 또는 없앰(립). `primary-deep` 은 이름은 같고 뜻이 "주황 립" 에서 "초록 강조" 로 바뀌었다.
-- 공통 컴포넌트는 `lib/core/ui/components.dart`(작업 11, 옛 `clay.dart`): `AppCard`·`StatCard`·`StatsCard`(흰 카드 하나에 지표 칸 `StatCard.cell` 여러 개, 작업 12), `AppButton`(기본 연두·`.secondary` 흰·`.panel` 어두운 판), `AppChip`·`ChipRow`(칩·분할 선택 공통), `ProgressBar`, `CoinIcon`(코인 칩은 `lib/shop/ui/coin_chip.dart`), `AppTabBar`·`TabIcon`, `PetStage`·`StageGround`·`SpeechBubble`, `Pressable`(누름 0.97), `ScreenTitle`, `CircleIconButton`(48 흰 동그라미 아이콘 버튼: 뒤로, 작업 14), `EmptyState`(흰 카드 + 앱 그림 + `ink-muted` 안내 문구, 작업 14). 다이얼로그는 `AlertDialog` 를 그대로 쓰고 모양은 테마(`filledButtonTheme`·`textButtonTheme`·`dialogTheme`)가 정한다.
-- `PetStage` 는 펫(`32 × scale`)을 발끝이 땅 윗선 아래 `Stage.footSink` 에 묻히게 놓는다(8배 땅 56 → 펫 상자 아래 32, 6배 땅 40 → 20). 하늘·땅 겹은 `sky`·`ground` 로 바꾼다. 화면 적용은 작업 12~14.
+- 공통 컴포넌트는 `lib/core/ui/components.dart`(작업 11, 옛 `clay.dart`): `AppCard`·`StatCard`·`StatsCard`(흰 카드 하나에 지표 칸 `StatCard.cell` 여러 개, 작업 12), `AppButton`(기본 연두·`.secondary` 흰·`.panel` 어두운 판), `AppChip`·`ChipRow`(칩·분할 선택 공통), `ProgressBar`, `CoinIcon`(코인 칩은 `lib/shop/ui/coin_chip.dart`), `AppTabBar`·`TabIcon`, `PetStage`·`StageGround`·`SpeechBubble`, `Pressable`(누름 0.97), `ScreenTitle`, `CircleIconButton`(48 흰 동그라미 아이콘 버튼: 뒤로, 작업 14), `EmptyState`(흰 카드 + 앱 그림 + `ink-muted` 안내 문구, 작업 14. 넘기는 그림은 `EmptyState.iconSize` 40 으로 그린다), `NoticeCard`(진짜 문제 알림, 작업 15). 다이얼로그는 `AlertDialog` 를 그대로 쓰고 모양은 테마(`filledButtonTheme`·`textButtonTheme`·`dialogTheme`)가 정한다.
+- `PetStage` 는 펫(`32 × scale`)을 발끝이 땅 윗선 아래 `Stage.footSink` 에 묻히게 놓는다(8배 땅 56 → 펫 상자 아래 32, 6배 땅 40 → 20). 하늘·땅 겹은 `sky`·`ground` 로 바꾼다. 펫 위끝이 무대 위끝에 닿는 높이는 `PetStage.fitHeight(scale:, groundHeight:)`(작업 18, 상점 무대·카드 미리보기가 쓴다).
 - 옛 `Borders.thick`·`lip`·`lipPressed` 는 지웠다. 포커스 윤곽은 `Borders.focus` 3.

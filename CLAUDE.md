@@ -29,8 +29,10 @@
 - `docs/ios.md` — iOS 빌드, 무료 Apple ID 로 iPhone 설치(7일 재설치), iOS 설정과 이유
 - `docs/tooling.md` — Claude Code 추천 플러그인 목록, 사용 시점, 기본값
 - `design/wireframes/` — 화면 콘티 10개 (MVP 6개 + 후속 범위, HTML 원본·PNG)
-- `design/mockups/` — 승인된 화면 시안(페이즈 2.5, 말랑 클레이)과 구현 메모
-- `design/character/` — 캐릭터 콘셉트·3종 미리보기. 그림 데이터는 `tool/sprites/`, PNG 생성은 `fvm dart run tool/render_sprites.dart`
+- `design/mockups/` — 화면 시안과 구현 메모. README 가 지금 방향(연두 무드보드, 결정 0029)과 옛 방향(말랑 클레이, 페이즈 2.5)을 나눈다
+  - `design/mockups/phase-6/` — 고른 방향 c 규칙(`direction-c.md`), 캔버스 시안(`canvas/c/`), 6안 비교(`critique.md`)
+  - `design/mockups/phase-6-screens/` — 페이즈 6 구현 화면 스크린샷(라이트, 화면마다 1장)
+- `design/character/` — 캐릭터 콘셉트·3종·아이템·배지 미리보기와 에셋 카탈로그(`asset-catalog.html`). 그림 데이터는 `tool/sprites/`, PNG 생성은 `fvm dart run tool/render_sprites.dart`, 앱 아이콘·스플래시는 `fvm dart run tool/render_app_icon.dart`
 - `design/references/` — 디자인 참고 이미지(Pinterest 무드보드). 방향 참고용이며 앱 에셋에 넣지 않는다
 
 ## 명령

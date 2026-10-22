@@ -11,7 +11,7 @@
 | 경로 | 내용 |
 | --- | --- |
 | `phase-6/direction-c.md` | 고른 방향 c 의 규칙 원본(색·글자·모양·컴포넌트). 토큰 이름 대응은 디자인 시스템 문서 "색" 절 |
-| `phase-6/canvas/c/` | 고른 시안(Claude Design 캔버스 트랙): 홈·러닝 중·요약. `*.dc.html` 은 캔버스 아트보드 원본, `*.html` 은 브라우저로 여는 사본, `*.png` 는 캡처. 고르기 전에 연두 원을 사각 무대로 바꿨다 |
+| `phase-6/canvas/c/` | 고른 시안(Claude Design 캔버스 트랙, 원본 캔버스 https://claude.ai/artifact/FxKS7MR2twYmmE3k6SzNhe 의 c 줄): 홈·러닝 중·요약. `*.dc.html` 은 캔버스 아트보드 원본, `*.html` 은 브라우저로 여는 사본, `*.png` 는 캡처. 고르기 전에 연두 원을 사각 무대로 바꿨다 |
 | `phase-6/shared/` | 시안이 `../../shared/` 로 읽는 캐릭터·배지 PNG(당시 스프라이트로 만든 1배 그림) |
 | `phase-6/critique.md` | 3방향 × 2트랙 = 6안 비교(Impeccable critique, 작업 8)와 고른 뒤 고칠 점(P1·P2) |
 | `phase-6-screens/` | 구현 화면 스크린샷(라이트, 화면마다 1장). 작업 12~17 확인용 위젯 테스트 스크린샷에서 골랐다. 에뮬레이터 실화면은 화면설계서(작업 19)가 맡는다 |
