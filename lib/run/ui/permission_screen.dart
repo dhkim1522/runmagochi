@@ -110,6 +110,11 @@ class _PermissionScreenState extends ConsumerState<PermissionScreen>
 
     final c = AppColors.of(context);
     final t = AppText.of(context);
+    final icon = _result == GateResult.needsBatteryGuide
+        ? Icons.battery_alert_outlined
+        : Icons.location_on_outlined;
+    final loading = _result == null && !_failed;
+    // 머리줄 → 흰 카드(무대색 동그라미 그림 + 안내) → 화면 아래 버튼.
     return Scaffold(
       body: SafeArea(
         child: Padding(
@@ -118,46 +123,69 @@ class _PermissionScreenState extends ConsumerState<PermissionScreen>
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               const ScreenTitle('권한 안내'),
+              const SizedBox(height: Gap.s5),
               Expanded(
-                child: Center(
-                  child: SingleChildScrollView(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        if (message.isNotEmpty)
-                          AppCard(
-                            padding: const EdgeInsets.all(Gap.s5),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                              children: [
-                                Text(
-                                  message,
-                                  textAlign: TextAlign.center,
-                                  style: t.body,
+                child: loading
+                    ? const Center(child: CircularProgressIndicator())
+                    : SingleChildScrollView(
+                        child: message.isEmpty
+                            ? const SizedBox.shrink()
+                            : AppCard(
+                                padding: const EdgeInsets.fromLTRB(
+                                  Gap.s5,
+                                  Gap.s8,
+                                  Gap.s5,
+                                  Gap.s6,
                                 ),
-                                if (_result ==
-                                    GateResult.needsPreciseLocation) ...[
-                                  const SizedBox(height: Gap.s2),
-                                  Text(
-                                    _preciseMessage,
-                                    textAlign: TextAlign.center,
-                                    style: t.bodyStrong.copyWith(
-                                      color: c.primaryDeep,
+                                child: Column(
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.stretch,
+                                  children: [
+                                    Center(
+                                      child: ExcludeSemantics(
+                                        child: DecoratedBox(
+                                          key: const ValueKey(
+                                            'permission-icon',
+                                          ),
+                                          decoration: BoxDecoration(
+                                            color: c.stageSky,
+                                            shape: BoxShape.circle,
+                                          ),
+                                          child: SizedBox.square(
+                                            dimension: 72,
+                                            child: Icon(
+                                              icon,
+                                              size: 36,
+                                              color: c.stageInk,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
                                     ),
-                                  ),
-                                ],
-                              ],
-                            ),
-                          ),
-                        const SizedBox(height: Gap.s6),
-                        if (_result == null && !_failed)
-                          const Center(child: CircularProgressIndicator()),
-                        ...actions,
-                      ],
-                    ),
-                  ),
-                ),
+                                    const SizedBox(height: Gap.s5),
+                                    Text(
+                                      message,
+                                      textAlign: TextAlign.center,
+                                      style: t.body,
+                                    ),
+                                    if (_result ==
+                                        GateResult.needsPreciseLocation) ...[
+                                      const SizedBox(height: Gap.s3),
+                                      Text(
+                                        _preciseMessage,
+                                        textAlign: TextAlign.center,
+                                        style: t.bodyStrong.copyWith(
+                                          color: c.primaryDeep,
+                                        ),
+                                      ),
+                                    ],
+                                  ],
+                                ),
+                              ),
+                      ),
               ),
+              if (actions.isNotEmpty) const SizedBox(height: Gap.s4),
+              ...actions,
             ],
           ),
         ),

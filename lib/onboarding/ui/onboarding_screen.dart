@@ -9,6 +9,7 @@ import '../../avatar/app/providers.dart';
 import '../../avatar/domain/avatar_name.dart';
 import '../../avatar/domain/growth_rules.dart';
 import '../../avatar/ui/avatar_view.dart';
+import '../../avatar/ui/sprite_sheet.dart' show spriteFramePx;
 import '../../core/korean.dart';
 import '../../core/theme.dart';
 import '../../core/ui/components.dart';
@@ -132,7 +133,6 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   void _retry() => setState(() => _load = _read());
 
   Widget _body(BuildContext context, _Loaded data) {
-    final reduceMotion = MediaQuery.of(context).disableAnimations;
     final page = switch (_page) {
       0 => _IntroPage(kind: data.kind),
       _ => _NamePage(
@@ -152,10 +152,12 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
           _Dots(index: _page, count: _pageCount),
           const SizedBox(height: Gap.s5),
           Expanded(
+            // 장 넘김은 화면 전환과 같은 시간(들어오기 enter, 나가기 exit)의 교차 페이드.
             child: AnimatedSwitcher(
-              duration: reduceMotion
-                  ? Duration.zero
-                  : const Duration(milliseconds: 200),
+              duration: Motion.of(context, Motion.enter),
+              reverseDuration: Motion.of(context, Motion.exit),
+              switchInCurve: Motion.enterCurve,
+              switchOutCurve: Motion.exitCurve,
               child: KeyedSubtree(key: ValueKey(_page), child: page),
             ),
           ),
@@ -191,7 +193,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   }
 }
 
-/// 진행 점. 지금 장은 넓은 primary 알약, 나머지는 line 점.
+/// 진행 점. 지금 장은 넓은 primary-deep 알약, 나머지는 line-strong 점(둘 다 바탕과 3:1).
 class _Dots extends StatelessWidget {
   const _Dots({required this.index, required this.count});
 
@@ -201,7 +203,6 @@ class _Dots extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = AppColors.of(context);
-    final reduceMotion = MediaQuery.of(context).disableAnimations;
     return Semantics(
       label: '$count단계 중 ${index + 1}단계',
       excludeSemantics: true,
@@ -211,13 +212,12 @@ class _Dots extends StatelessWidget {
           for (var i = 0; i < count; i++) ...[
             if (i > 0) const SizedBox(width: Gap.s2),
             AnimatedContainer(
-              duration: reduceMotion
-                  ? Duration.zero
-                  : const Duration(milliseconds: 200),
+              duration: Motion.of(context, Motion.quick),
+              curve: Motion.standard,
               width: i == index ? 28 : 8,
               height: 8,
               decoration: BoxDecoration(
-                color: i == index ? c.primary : c.line,
+                color: i == index ? c.primaryDeep : c.lineStrong,
                 borderRadius: BorderRadius.circular(Radii.pill),
               ),
             ),
@@ -242,23 +242,81 @@ class _PageScroll extends StatelessWidget {
   }
 }
 
-/// 무대: surface-soft 바탕, line 테두리.
-class _Stage extends StatelessWidget {
-  const _Stage({required this.child, this.padding = Gap.s6});
+/// 첫 실행 무대: 남은 높이를 채우는 사각 무대에 마스코트(1단계)를 들어가는 가장 큰 정수
+/// 배율로 세운다(8배까지, 3배 아래로는 줄이지 않고 장이 스크롤한다). [bubble] 은 오른쪽 위
+/// 말풍선이고, 펫 그림을 가리지 않게(프레임 위 빈 줄까지만 겹치게) 자리를 늘 잡아 둔다.
+/// 그래서 말풍선이 사라져도 무대 높이·배율은 그대로다.
+class _FillStage extends StatelessWidget {
+  const _FillStage({
+    required this.stageKey,
+    required this.kind,
+    this.withBubble = false,
+    this.bubble,
+  });
 
-  final Widget child;
-  final double padding;
+  final Key stageKey;
+  final AvatarKind kind;
+
+  /// 말풍선 자리를 잡는다.
+  final bool withBubble;
+
+  /// 말풍선 문구. null 이면 자리만 두고 그리지 않는다.
+  final String? bubble;
+
+  static const int _maxScale = 8;
+  static const int _minScale = 3;
+
+  /// [scale] 배 펫(과 말풍선)이 서는 무대 높이.
+  double _needed(int scale, double bubbleHeight) {
+    final pet =
+        spriteFramePx * scale +
+        Stage.groundHeight -
+        Stage.footSink -
+        spriteFootGapRows * scale;
+    final top = withBubble
+        ? Gap.s4 + bubbleHeight - spriteTopGapRows * scale
+        : Gap.s6;
+    return pet + math.max(0, top);
+  }
 
   @override
   Widget build(BuildContext context) {
-    final c = AppColors.of(context);
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: c.surfaceSoft,
-        borderRadius: BorderRadius.circular(Radii.xl),
-        border: Border.all(color: c.line, width: Borders.edge),
+    final bubbleHeight = SpeechBubble.heightFor(
+      MediaQuery.textScalerOf(context),
+    );
+    return MinIntrinsicHeight(
+      height: _needed(_minScale, bubbleHeight),
+      child: LayoutBuilder(
+        builder: (context, box) {
+          final scale =
+              PetStage.largestScale(
+                max: _maxScale,
+                min: _minScale,
+                fits: (s) =>
+                    _needed(s, bubbleHeight) <= box.maxHeight &&
+                    spriteFramePx * s + 2 * Gap.s4 <= box.maxWidth,
+              ) ??
+              _minScale;
+          return PetStage(
+            key: stageKey,
+            height: box.maxHeight,
+            scale: scale,
+            pet: ExcludeSemantics(
+              child: AvatarView(
+                kind: kind,
+                stage: 1,
+                mood: AvatarMood.normal,
+                action: AvatarAction.idle,
+                scale: scale,
+              ),
+            ),
+            // 입력칸이 이미 읽히므로 이름 말풍선은 스크린 리더에서 뺀다.
+            bubble: bubble == null
+                ? null
+                : ExcludeSemantics(child: SpeechBubble(bubble!)),
+          );
+        },
       ),
-      child: Padding(padding: EdgeInsets.all(padding), child: child),
     );
   }
 }
@@ -281,58 +339,55 @@ class _IntroPage extends StatelessWidget {
             textAlign: TextAlign.center,
             style: t.label.copyWith(color: c.inkMuted),
           ),
-          const SizedBox(height: Gap.s5),
+          const SizedBox(height: Gap.s3),
           Expanded(
-            child: _Stage(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  ExcludeSemantics(
-                    child: AvatarView(
-                      kind: kind,
-                      stage: 1,
-                      mood: AvatarMood.normal,
-                      action: AvatarAction.idle,
-                      scale: 4,
-                    ),
-                  ),
-                  const SizedBox(height: Gap.s4),
-                  Semantics(
-                    header: true,
-                    child: _KeepAllText(
-                      _headline(kind),
-                      textAlign: TextAlign.center,
-                      style: t.title,
-                    ),
-                  ),
-                  const SizedBox(height: Gap.s4),
-                  _MaxWidth(
-                    280,
-                    child: _KeepAllText(
-                      '달린 거리만큼 자라서 러닝화를 신고, 언젠가 마라토너가 돼요.',
-                      textAlign: TextAlign.center,
-                      style: t.body,
-                    ),
-                  ),
-                ],
+            child: _FillStage(
+              stageKey: const ValueKey('onboarding-stage'),
+              kind: kind,
+            ),
+          ),
+          const SizedBox(height: Gap.s5),
+          Semantics(
+            header: true,
+            child: _KeepAllText(
+              _headline(kind),
+              textAlign: TextAlign.center,
+              style: t.title,
+            ),
+          ),
+          const SizedBox(height: Gap.s2),
+          Center(
+            child: _MaxWidth(
+              300,
+              child: _KeepAllText(
+                '달린 거리만큼 자라서 러닝화를 신고, 언젠가 마라토너가 돼요.',
+                textAlign: TextAlign.center,
+                style: t.body.copyWith(color: c.inkMuted),
               ),
             ),
           ),
           const SizedBox(height: Gap.s5),
           AppCard(
             radius: Radii.md,
-            padding: const EdgeInsets.symmetric(
-              vertical: 14,
-              horizontal: Gap.s4,
-            ),
+            padding: const EdgeInsets.all(Gap.s4),
             child: MergeSemantics(
               child: Row(
                 children: [
+                  // 무대색 작은 판 위 무대 글자색 그림(무대 겹과 같은 말).
                   ExcludeSemantics(
-                    child: Icon(
-                      Icons.directions_walk,
-                      size: 28,
-                      color: c.primaryDeep,
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        color: c.stageSky,
+                        borderRadius: BorderRadius.circular(Radii.sm),
+                      ),
+                      child: SizedBox.square(
+                        dimension: 48,
+                        child: Icon(
+                          Icons.directions_walk,
+                          size: 28,
+                          color: c.stageInk,
+                        ),
+                      ),
                     ),
                   ),
                   const SizedBox(width: Gap.s3),
@@ -340,11 +395,11 @@ class _IntroPage extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('걷다 뛰다 OK', style: t.bodyStrong),
+                        Text('걷다 뛰다 OK', style: t.heading),
                         const SizedBox(height: 2),
                         _KeepAllText(
                           '빨리 달리지 않아도 움직인 만큼 자라요.',
-                          style: t.caption.copyWith(color: c.inkMuted),
+                          style: t.label.copyWith(color: c.inkMuted),
                         ),
                       ],
                     ),
@@ -377,10 +432,6 @@ class _NamePage extends StatelessWidget {
     final c = AppColors.of(context);
     final t = AppText.of(context);
     final name = controller.text.trim();
-    OutlineInputBorder border(Color color) => OutlineInputBorder(
-      borderRadius: BorderRadius.circular(Radii.sm),
-      borderSide: BorderSide(color: color, width: Borders.edge),
-    );
     return _PageScroll(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -392,35 +443,17 @@ class _NamePage extends StatelessWidget {
             style: t.body.copyWith(color: c.inkMuted),
           ),
           const SizedBox(height: Gap.s5),
-          _Stage(
-            padding: Gap.s5,
-            child: Column(
-              children: [
-                ExcludeSemantics(
-                  child: AvatarView(
-                    kind: kind,
-                    stage: 1,
-                    mood: AvatarMood.normal,
-                    action: AvatarAction.idle,
-                    scale: 3,
-                  ),
-                ),
-                const SizedBox(height: Gap.s2),
-                // 입력칸이 이미 읽히므로 미리보기는 스크린 리더에서 뺀다.
-                ExcludeSemantics(
-                  child: Text(
-                    name.isEmpty ? ' ' : name,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    textAlign: TextAlign.center,
-                    style: t.titleS,
-                  ),
-                ),
-              ],
+          // 마스코트가 지금 이름을 말풍선으로 단다. 키보드가 올라오면 무대가 줄어든다.
+          Expanded(
+            child: _FillStage(
+              stageKey: const ValueKey('onboarding-name-stage'),
+              kind: kind,
+              withBubble: true,
+              bubble: name.isEmpty ? null : name,
             ),
           ),
           const SizedBox(height: Gap.s5),
-          ExcludeSemantics(child: Text('이름', style: t.label)),
+          ExcludeSemantics(child: Text('이름', style: t.heading)),
           const SizedBox(height: Gap.s2),
           Semantics(
             label: '이름',
@@ -435,29 +468,17 @@ class _NamePage extends StatelessWidget {
                 FilteringTextInputFormatter.deny(RegExp(r'[\n\r]')),
               ],
               onSubmitted: (_) => onSubmitted(),
+              // 모양은 테마(inputDecorationTheme). 글자 수는 넘치면 danger.
               decoration: InputDecoration(
-                filled: true,
-                fillColor: c.surface,
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: Gap.s4,
-                  vertical: Gap.s4,
-                ),
-                enabledBorder: border(c.line),
-                focusedBorder: border(c.primary),
-                errorBorder: border(c.danger),
-                focusedErrorBorder: border(c.danger),
                 helperText: '1~$avatarNameMaxLength자',
-                helperStyle: t.caption.copyWith(color: c.inkMuted),
                 errorText: error,
-                errorStyle: t.caption.copyWith(color: c.danger),
                 counterText: '${name.runes.length}/$avatarNameMaxLength',
-                counterStyle: t.caption.copyWith(
-                  color: error == null ? c.inkMuted : c.danger,
-                ),
+                counterStyle: error == null
+                    ? null
+                    : t.caption.copyWith(color: c.danger),
               ),
             ),
           ),
-          const Spacer(),
         ],
       ),
     );
@@ -473,18 +494,13 @@ class _LoadError extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.all(Gap.s5),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Text(
-            '불러오지 못했어요',
-            textAlign: TextAlign.center,
-            style: AppText.of(context).body,
+      child: Center(
+        child: SingleChildScrollView(
+          child: EmptyState.error(
+            message: '불러오지 못했어요',
+            action: AppButton(label: '다시 시도', onPressed: onRetry),
           ),
-          const SizedBox(height: Gap.s4),
-          AppButton(label: '다시 시도', onPressed: onRetry),
-        ],
+        ),
       ),
     );
   }

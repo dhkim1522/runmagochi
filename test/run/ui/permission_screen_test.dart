@@ -60,7 +60,111 @@ Future<void> pump(WidgetTester tester, FakeGate gate) async {
   await tester.pump();
 }
 
+Future<void> pumpThemed(
+  WidgetTester tester,
+  FakeGate gate, {
+  bool dark = false,
+  double textScale = 1,
+  Size size = const Size(390, 844),
+}) async {
+  tester.view.physicalSize = size;
+  tester.view.devicePixelRatio = 1;
+  addTearDown(tester.view.reset);
+  await tester.pumpWidget(
+    ProviderScope(
+      overrides: [permissionGateProvider.overrideWithValue(gate)],
+      child: MaterialApp(
+        theme: dark ? appDarkTheme() : appLightTheme(),
+        builder: (context, child) => MediaQuery(
+          data: MediaQuery.of(
+            context,
+          ).copyWith(textScaler: TextScaler.linear(textScale)),
+          child: child!,
+        ),
+        home: PermissionScreen(onReady: () {}),
+      ),
+    ),
+  );
+  await tester.pump();
+}
+
+/// 작업 15: 새 시스템 짜임새.
+void task15Tests() {
+  for (final dark in [false, true]) {
+    final name = dark ? '다크' : '라이트';
+    final c = dark ? AppColors.dark : AppColors.light;
+    for (final (result, icon) in [
+      (GateResult.needsLocation, Icons.location_on_outlined),
+      (GateResult.locationDeniedForever, Icons.location_on_outlined),
+      (GateResult.needsBatteryGuide, Icons.battery_alert_outlined),
+    ]) {
+      testWidgets('$result: 흰 카드 위 무대색 동그라미 그림 + 문구, 버튼은 아래 ($name)', (
+        tester,
+      ) async {
+        await pumpThemed(tester, FakeGate(result), dark: dark);
+        final badge = find.byKey(const ValueKey('permission-icon'));
+        expect(badge, findsOneWidget);
+        final d =
+            tester
+                    .widget<DecoratedBox>(
+                      find
+                          .descendant(
+                            of: badge,
+                            matching: find.byType(DecoratedBox),
+                            matchRoot: true,
+                          )
+                          .first,
+                    )
+                    .decoration
+                as BoxDecoration;
+        expect(d.color, c.stageSky);
+        expect(d.shape, BoxShape.circle);
+        expect(tester.getSize(badge), const Size(72, 72));
+        final i = tester.widget<Icon>(find.byIcon(icon));
+        expect(i.color, c.stageInk);
+        // 그림·문구는 한 흰 카드 안.
+        final card = find.ancestor(of: badge, matching: find.byType(AppCard));
+        expect(card, findsOneWidget);
+        expect(tester.widget<AppCard>(card).radius, Radii.lg);
+        // 주요 버튼은 화면 아래(아래 여백 16 안쪽).
+        final button = tester.getRect(find.byType(AppButton));
+        expect(button.bottom, greaterThan(844 - Gap.s4 - 60));
+        expect(button.top, greaterThan(tester.getRect(card).bottom));
+      });
+    }
+
+    testWidgets('첫 확인 중 진행 표시는 primaryDeep ($name)', (tester) async {
+      final gate = FakeGate(GateResult.ready)..checkGate = Completer();
+      await pumpThemed(tester, gate, dark: dark);
+      final indicator = find.byType(CircularProgressIndicator);
+      expect(indicator, findsOneWidget);
+      final semanticsColor = Theme.of(
+        tester.element(indicator),
+      ).progressIndicatorTheme.color;
+      expect(semanticsColor, c.primaryDeep);
+    });
+
+    testWidgets('360×640 글자 1.3배에서 넘치지 않는다 ($name)', (tester) async {
+      for (final r in [
+        GateResult.needsPreciseLocation,
+        GateResult.needsBatteryGuide,
+      ]) {
+        await pumpThemed(
+          tester,
+          FakeGate(r),
+          dark: dark,
+          textScale: 1.3,
+          size: const Size(360, 640),
+        );
+        expect(tester.takeException(), isNull);
+        expect(find.byType(AppButton), findsOneWidget);
+      }
+    });
+  }
+}
+
 void main() {
+  task15Tests();
   testWidgets('글자 크기 1.3배에서 overflow 없이 그려진다', (tester) async {
     tester.view.physicalSize = const Size(390, 844);
     tester.view.devicePixelRatio = 1;

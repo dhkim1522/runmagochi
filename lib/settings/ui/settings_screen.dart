@@ -175,32 +175,21 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       child: Scaffold(
         body: SafeArea(
           child: ListView(
-            padding: const EdgeInsets.fromLTRB(Gap.s5, Gap.s4, Gap.s5, Gap.s6),
+            padding: const EdgeInsets.fromLTRB(Gap.s5, Gap.s4, Gap.s5, Gap.s7),
             children: [
               Row(
                 children: [
-                  Semantics(
-                    container: true,
-                    button: true,
+                  CircleIconButton(
+                    key: const ValueKey('settings-back'),
+                    icon: Icons.chevron_left,
                     label: '뒤로',
-                    excludeSemantics: true,
-                    enabled: back != null,
-                    onTap: back,
-                    child: IconButton(
-                      key: const ValueKey('settings-back'),
-                      onPressed: back,
-                      constraints: const BoxConstraints.tightFor(
-                        width: 48,
-                        height: 48,
-                      ),
-                      icon: Icon(Icons.chevron_left, size: 32, color: c.ink),
-                    ),
+                    onPressed: back,
                   ),
-                  const SizedBox(width: Gap.s1),
+                  const SizedBox(width: Gap.s3),
                   const Flexible(child: ScreenTitle('설정')),
                 ],
               ),
-              const _SectionLabel('내 정보'),
+              const _SectionLabel('내 정보', first: true),
               _RowsCard(
                 children: [
                   _SettingsRow(
@@ -231,15 +220,15 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               ),
               const _SectionLabel('백업'),
               AppCard(
-                padding: const EdgeInsets.all(Gap.s4),
+                padding: const EdgeInsets.all(Gap.s5),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     Text(
                       '기기를 바꿀 때 백업 파일로 기록을 옮겨요. 가져오면 지금 데이터는 백업 내용으로 모두 바뀌어요.',
-                      style: t.caption.copyWith(color: c.inkMuted),
+                      style: t.label.copyWith(color: c.inkMuted),
                     ),
-                    const SizedBox(height: Gap.s3),
+                    const SizedBox(height: Gap.s4),
                     Row(
                       children: [
                         Expanded(
@@ -275,19 +264,20 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   }
 }
 
-/// 묶음 이름(label, ink-muted). 위 묶음과 간격을 두고 카드 바로 위에 붙는다.
+/// 묶음 이름(heading 17/800, 다른 화면의 섹션 제목과 같다). 위 묶음과 섹션 사이([Gap.s7])를
+/// 두고 카드 바로 위에 [Gap.s3] 로 붙는다. [first] 는 머리줄 바로 아래 첫 묶음.
 class _SectionLabel extends StatelessWidget {
-  const _SectionLabel(this.text);
+  const _SectionLabel(this.text, {this.first = false});
   final String text;
+  final bool first;
 
   @override
   Widget build(BuildContext context) {
-    final c = AppColors.of(context);
     return Padding(
-      padding: const EdgeInsets.fromLTRB(Gap.s1, Gap.s4, Gap.s1, Gap.s2),
-      child: Text(
-        text,
-        style: AppText.of(context).label.copyWith(color: c.inkMuted),
+      padding: EdgeInsets.only(top: first ? Gap.s6 : Gap.s7, bottom: Gap.s3),
+      child: Semantics(
+        header: true,
+        child: Text(text, style: AppText.of(context).heading),
       ),
     );
   }
@@ -398,7 +388,7 @@ class _SettingsRow extends StatelessWidget {
                 ],
                 if (tappable) ...[
                   const SizedBox(width: Gap.s1),
-                  Icon(Icons.chevron_right, size: 24, color: c.primaryDeep),
+                  Icon(Icons.chevron_right, size: 24, color: c.inkMuted),
                 ],
               ],
             );
@@ -473,15 +463,11 @@ class _SwitchRow extends StatelessWidget {
                 ),
                 const SizedBox(width: Gap.s2),
                 // 줄 전체가 누름 영역이라 스위치는 모양만 맡는다.
+                // 모양은 테마(switchTheme): 켜짐 연두 + primary-edge, 꺼짐 트랙 + line-strong.
                 IgnorePointer(
                   child: Switch(
                     value: value,
                     onChanged: change == null ? null : (_) {},
-                    activeThumbColor: c.onPrimary,
-                    activeTrackColor: c.primary,
-                    inactiveThumbColor: c.inkMuted,
-                    inactiveTrackColor: c.surfaceSoft,
-                    trackOutlineColor: WidgetStatePropertyAll(c.lineStrong),
                   ),
                 ),
               ],

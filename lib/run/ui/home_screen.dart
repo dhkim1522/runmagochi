@@ -1,7 +1,6 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../achievement/app/providers.dart';
@@ -366,7 +365,7 @@ class _HomeStage extends StatelessWidget {
       MediaQuery.textScalerOf(context),
     );
     // 홈 스크롤(SliverFillRemaining)은 이 가장 작은 높이로 쓸 높이를 잰다.
-    return _MinIntrinsicHeight(
+    return MinIntrinsicHeight(
       height: _needed(_minScale, bubbleHeight),
       child: LayoutBuilder(
         builder: (context, box) {
@@ -388,47 +387,6 @@ class _HomeStage extends StatelessWidget {
       ),
     );
   }
-}
-
-/// 자식 대신 [height] 를 고유 높이로 알린다. 자식([LayoutBuilder])은 고유 크기를 잴 수 없어서
-/// 스크롤이 쓸 높이를 잴 때 무대의 가장 작은 높이를 대신 답한다. 실제 배치는 자식에 맡긴다.
-class _MinIntrinsicHeight extends SingleChildRenderObjectWidget {
-  const _MinIntrinsicHeight({required this.height, super.child});
-
-  final double height;
-
-  @override
-  RenderObject createRenderObject(BuildContext context) =>
-      _RenderMinIntrinsicHeight(height);
-
-  @override
-  void updateRenderObject(
-    BuildContext context,
-    _RenderMinIntrinsicHeight renderObject,
-  ) => renderObject.height = height;
-}
-
-class _RenderMinIntrinsicHeight extends RenderProxyBox {
-  _RenderMinIntrinsicHeight(this._height);
-
-  double _height;
-  set height(double v) {
-    if (v == _height) return;
-    _height = v;
-    markNeedsLayout();
-  }
-
-  @override
-  double computeMinIntrinsicHeight(double width) => _height;
-
-  @override
-  double computeMaxIntrinsicHeight(double width) => _height;
-
-  @override
-  double computeMinIntrinsicWidth(double height) => 0;
-
-  @override
-  double computeMaxIntrinsicWidth(double height) => 0;
 }
 
 /// 홈 오른쪽 위 설정 버튼(흰 동그라미 48×48). 스크린 리더에는 "설정" 버튼으로 읽힌다.

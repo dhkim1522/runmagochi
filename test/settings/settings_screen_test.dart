@@ -11,6 +11,7 @@ import 'package:runmagochi/backup/app/backup_service.dart';
 import 'package:runmagochi/backup/app/providers.dart';
 import 'package:runmagochi/core/app_info.dart';
 import 'package:runmagochi/core/theme.dart';
+import 'package:runmagochi/core/ui/components.dart';
 import 'package:runmagochi/profile/app/providers.dart';
 import 'package:runmagochi/profile/data/profile_repository.dart';
 import 'package:runmagochi/run/app/permission_gate.dart';
@@ -165,8 +166,100 @@ Future<void> _tapSave(WidgetTester tester) async {
   await settle(tester);
 }
 
+/// 작업 15: 새 시스템 짜임새.
+void task15Tests() {
+  for (final dark in [false, true]) {
+    final name = dark ? '다크' : '라이트';
+    final c = dark ? AppColors.dark : AppColors.light;
+    ThemeData theme() => dark ? appDarkTheme() : appLightTheme();
+
+    testWidgets('머리줄은 뒤로 흰 동그라미, 묶음 이름은 heading, 묶음 사이 28 ($name)', (
+      tester,
+    ) async {
+      tester.view.physicalSize = const Size(390, 1400);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      await pumpSettings(tester, theme: theme());
+      final back = find.byKey(const ValueKey('settings-back'));
+      expect(tester.widget(back), isA<CircleIconButton>());
+      for (final s in ['내 정보', '러닝 · 아바타', '백업', '정보']) {
+        final style = tester.widget<Text>(find.text(s)).style!;
+        expect(style.fontSize, 17, reason: s);
+        expect(style.fontWeight, FontWeight.w800, reason: s);
+        expect(style.color, c.ink, reason: s);
+      }
+      // 첫 카드 아래 → 다음 묶음 이름 위 = 섹션 사이 28.
+      final firstCard = find
+          .ancestor(of: find.text('체중'), matching: find.byType(AppCard))
+          .first;
+      expect(
+        tester.getRect(find.text('러닝 · 아바타')).top -
+            tester.getRect(firstCard).bottom,
+        Gap.s7,
+      );
+      // 묶음 이름 아래 카드까지 12.
+      expect(
+        tester.getRect(firstCard).top -
+            tester.getRect(find.text('내 정보')).bottom,
+        Gap.s3,
+      );
+    });
+
+    testWidgets('행 꺾쇠는 inkMuted, 값은 primaryDeep, 백업 설명은 label 14 ($name)', (
+      tester,
+    ) async {
+      await pumpSettings(tester, theme: theme());
+      for (final icon in tester.widgetList<Icon>(
+        find.byIcon(Icons.chevron_right),
+      )) {
+        expect(icon.color, c.inkMuted);
+      }
+      expect(
+        tester.widget<Text>(find.text('입력 안 함')).style!.color,
+        c.primaryDeep,
+      );
+      final desc = tester
+          .widget<Text>(
+            find.text('기기를 바꿀 때 백업 파일로 기록을 옮겨요. 가져오면 지금 데이터는 백업 내용으로 모두 바뀌어요.'),
+          )
+          .style!;
+      expect(desc.fontSize, 14);
+      expect(desc.color, c.inkMuted);
+    });
+
+    testWidgets('스위치·입력칸 모양은 테마가 정한다 ($name)', (tester) async {
+      await pumpSettings(tester, theme: theme());
+      final sw = tester.widget<Switch>(find.byType(Switch));
+      expect(sw.activeTrackColor, isNull);
+      expect(sw.trackOutlineColor, isNull);
+      expect(sw.inactiveThumbColor, isNull);
+      await tester.tap(find.text('체중'));
+      await settle(tester);
+      final field = tester.widget<TextField>(find.byType(TextField));
+      expect(field.decoration!.enabledBorder, isNull);
+      expect(field.decoration!.fillColor, isNull);
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('360×640 글자 1.3배에서 넘치지 않는다 ($name)', (tester) async {
+      tester.view.physicalSize = const Size(360, 640);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      await pumpSettings(tester, theme: theme(), textScale: 1.3);
+      expect(tester.takeException(), isNull);
+      await tester.scrollUntilVisible(find.text('버전'), 200);
+      expect(tester.takeException(), isNull);
+    });
+  }
+}
+
 void main() {
+  task15Tests();
   testWidgets('시안의 묶음과 행이 보인다', (tester) async {
+    // 묶음 사이가 28 로 넓어져(작업 15) 한 화면에 다 보이게 키 큰 화면을 쓴다.
+    tester.view.physicalSize = const Size(390, 1400);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
     await pumpSettings(tester);
     expect(find.text('설정'), findsOneWidget);
     for (final s in ['내 정보', '러닝 · 아바타', '백업', '정보']) {
@@ -427,7 +520,9 @@ void main() {
       expect(find.byType(SettingsScreen), findsOneWidget);
       expect(
         tester
-            .widget<IconButton>(find.byKey(const ValueKey('settings-back')))
+            .widget<CircleIconButton>(
+              find.byKey(const ValueKey('settings-back')),
+            )
             .onPressed,
         isNull,
       );
@@ -462,7 +557,8 @@ void main() {
 
   testWidgets('오픈소스 라이선스를 누르면 라이선스 화면이 열린다', (tester) async {
     await pumpSettings(tester);
-    await tester.ensureVisible(find.text('오픈소스 라이선스'));
+    // 묶음 사이가 28 로 넓어져(작업 15) 기본 800×600 에서는 아래 행이 아직 만들어지지 않는다.
+    await tester.scrollUntilVisible(find.text('오픈소스 라이선스'), 200);
     await tester.pump();
     await tester.tap(find.text('오픈소스 라이선스'));
     await settle(tester);

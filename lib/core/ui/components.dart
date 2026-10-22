@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 
 import '../theme.dart';
 
@@ -296,7 +297,9 @@ class AppButton extends StatelessWidget {
     };
     final t = AppText.of(context);
     final enabled = onPressed != null;
+    // 머리줄에서 제목과 한 노드로 합쳐지지 않게 따로 둔다.
     return Semantics(
+      container: true,
       button: true,
       enabled: enabled,
       label: label,
@@ -985,7 +988,9 @@ class CircleIconButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = AppColors.of(context);
     final enabled = onPressed != null;
+    // 머리줄에서 제목과 한 노드로 합쳐지지 않게 따로 둔다.
     return Semantics(
+      container: true,
       button: true,
       enabled: enabled,
       label: label,
@@ -1093,6 +1098,46 @@ class NoticeCard extends StatelessWidget {
       ),
     );
   }
+}
+
+/// 자식 대신 [height] 를 고유 높이로 알린다. 자식([LayoutBuilder])은 고유 크기를 잴 수 없어서
+/// 스크롤이 쓸 높이를 잴 때 무대의 가장 작은 높이를 대신 답한다. 실제 배치는 자식에 맡긴다.
+/// 남은 높이를 채우는 무대(홈·첫 실행)가 쓴다.
+class MinIntrinsicHeight extends SingleChildRenderObjectWidget {
+  const MinIntrinsicHeight({super.key, required this.height, super.child});
+
+  final double height;
+
+  @override
+  RenderObject createRenderObject(BuildContext context) =>
+      _RenderMinIntrinsicHeight(height);
+
+  @override
+  void updateRenderObject(BuildContext context, RenderObject renderObject) =>
+      (renderObject as _RenderMinIntrinsicHeight).height = height;
+}
+
+class _RenderMinIntrinsicHeight extends RenderProxyBox {
+  _RenderMinIntrinsicHeight(this._height);
+
+  double _height;
+  set height(double v) {
+    if (v == _height) return;
+    _height = v;
+    markNeedsLayout();
+  }
+
+  @override
+  double computeMinIntrinsicHeight(double width) => _height;
+
+  @override
+  double computeMaxIntrinsicHeight(double width) => _height;
+
+  @override
+  double computeMinIntrinsicWidth(double height) => 0;
+
+  @override
+  double computeMaxIntrinsicWidth(double height) => 0;
 }
 
 /// 화면 제목(title 글자). 스크린 리더에는 헤더로 읽힌다.

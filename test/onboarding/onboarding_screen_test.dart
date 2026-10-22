@@ -7,8 +7,10 @@ import 'package:runmagochi/avatar/app/providers.dart';
 import 'package:runmagochi/avatar/data/growth_repository.dart';
 import 'package:runmagochi/avatar/domain/avatar_name.dart';
 import 'package:runmagochi/avatar/domain/growth_rules.dart';
+import 'package:runmagochi/avatar/ui/avatar_view.dart';
 import 'package:runmagochi/core/korean.dart';
 import 'package:runmagochi/core/theme.dart';
+import 'package:runmagochi/core/ui/components.dart';
 import 'package:runmagochi/onboarding/ui/onboarding_screen.dart';
 import 'package:runmagochi/profile/app/providers.dart';
 
@@ -124,6 +126,7 @@ bool enabled(WidgetTester tester, String label) => isSemantics(
 ).matches(tester.getSemantics(find.bySemanticsLabel(label).last), {});
 
 void main() {
+  task15Tests();
   testWidgets('1장: 종류별 1단계 소개 문구와 걷다 뛰다 OK 카드', (tester) async {
     for (final (kind, headline) in [
       (AvatarKind.chick, '병아리 알이 왔어요!'),
@@ -348,5 +351,157 @@ void main() {
       scaffold.backgroundColor ?? appDarkTheme().scaffoldBackgroundColor,
       AppColors.dark.background,
     );
+  });
+}
+
+/// 작업 15: 새 시스템(사각 무대·입력칸 테마·움직임 토큰).
+void task15Tests() {
+  for (final dark in [false, true]) {
+    final name = dark ? '다크' : '라이트';
+    final c = dark ? AppColors.dark : AppColors.light;
+    ThemeData theme() => dark ? appDarkTheme() : appLightTheme();
+
+    testWidgets('1장: 마스코트는 사각 무대 위 큰 그림(390×844 에서 6배 이상) ($name)', (
+      tester,
+    ) async {
+      tester.view.physicalSize = const Size(390, 844);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      await pumpOnboarding(tester, theme: theme());
+      final stage = find.byKey(const ValueKey('onboarding-stage'));
+      expect(stage, findsOneWidget);
+      final pet = tester.widget<AvatarView>(
+        find.descendant(of: stage, matching: find.byType(AvatarView)),
+      );
+      expect(pet.scale, greaterThanOrEqualTo(6));
+      expect(tester.getSize(stage).width, 390 - 2 * Gap.s5);
+      // 무대 위에는 글자가 없고, 제목은 무대 아래.
+      expect(
+        find.descendant(of: stage, matching: find.byType(Text)),
+        findsNothing,
+      );
+      expect(
+        tester.getRect(findText('병아리 알이 왔어요!')).top,
+        greaterThan(tester.getRect(stage).bottom),
+      );
+      final title = tester.widget<Text>(findText('병아리 알이 왔어요!'));
+      expect(title.style!.fontSize, 26);
+      expect(title.style!.color, c.ink);
+    });
+
+    testWidgets('진행 점: 지금 장은 넓은 primaryDeep, 나머지는 lineStrong ($name)', (
+      tester,
+    ) async {
+      await pumpOnboarding(tester, theme: theme());
+      final dots = tester
+          .widgetList<AnimatedContainer>(
+            find.descendant(
+              of: find.bySemanticsLabel('2단계 중 1단계'),
+              matching: find.byType(AnimatedContainer),
+            ),
+          )
+          .toList();
+      expect(dots, hasLength(2));
+      final first = dots[0].decoration! as BoxDecoration;
+      final second = dots[1].decoration! as BoxDecoration;
+      expect(first.color, c.primaryDeep);
+      expect(second.color, c.lineStrong);
+    });
+
+    testWidgets('2장: 무대 위 마스코트가 이름 말풍선을 단다, 입력칸은 테마 모양 ($name)', (
+      tester,
+    ) async {
+      await pumpOnboarding(tester, theme: theme());
+      await goToName(tester);
+      final stage = find.byKey(const ValueKey('onboarding-name-stage'));
+      expect(stage, findsOneWidget);
+      expect(
+        find.descendant(of: stage, matching: find.byType(SpeechBubble)),
+        findsOneWidget,
+      );
+      expect(
+        find.descendant(of: stage, matching: findText('삐약이')),
+        findsOneWidget,
+      );
+      // 모양은 테마(inputDecorationTheme)가 정한다: 화면이 경계·채움을 따로 주지 않는다.
+      final field = tester.widget<TextField>(find.byType(TextField));
+      expect(field.decoration!.enabledBorder, isNull);
+      expect(field.decoration!.focusedBorder, isNull);
+      expect(field.decoration!.fillColor, isNull);
+      final decorator = tester.widget<InputDecorator>(
+        find.byType(InputDecorator),
+      );
+      expect(decorator.decoration.helperText, '1~10자');
+      // 이름을 다 지우면 말풍선을 내린다(무대 높이는 그대로).
+      final height = tester.getSize(stage).height;
+      await tester.enterText(find.byType(TextField), '');
+      await tester.pump();
+      expect(
+        find.descendant(of: stage, matching: find.byType(SpeechBubble)),
+        findsNothing,
+      );
+      expect(tester.getSize(stage).height, height);
+    });
+  }
+
+  testWidgets('장 넘김은 Motion.enter 동안 교차해 바뀐다', (tester) async {
+    await pumpOnboarding(tester);
+    await tester.tap(findText('다음'));
+    await tester.pump();
+    await tester.pump(Motion.enter ~/ 3);
+    expect(findText('병아리 알이 왔어요!'), findsOneWidget, reason: '나가는 장');
+    expect(findText('이름을 지어 주세요'), findsOneWidget, reason: '들어오는 장');
+    await settle(tester);
+    expect(findText('병아리 알이 왔어요!'), findsNothing);
+  });
+
+  testWidgets('애니메이션 줄이기면 장이 바로 바뀌고 진행 점도 바로 최종 모양', (tester) async {
+    final e = OnboardingEnv();
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          growthRepositoryProvider.overrideWithValue(e.repo),
+          growthServiceProvider.overrideWithValue(e.growth),
+          profileRepositoryProvider.overrideWithValue(e.profile),
+        ],
+        child: MaterialApp(
+          theme: appLightTheme(),
+          builder: (context, child) => MediaQuery(
+            data: MediaQuery.of(context).copyWith(disableAnimations: true),
+            child: child!,
+          ),
+          home: OnboardingScreen(onFinished: () {}),
+        ),
+      ),
+    );
+    await settle(tester);
+    await tester.tap(findText('다음'));
+    await tester.pump();
+    await tester.pump();
+    expect(findText('병아리 알이 왔어요!'), findsNothing);
+    expect(findText('이름을 지어 주세요'), findsOneWidget);
+    for (final dot in tester.widgetList<AnimatedContainer>(
+      find.descendant(
+        of: find.bySemanticsLabel('2단계 중 2단계'),
+        matching: find.byType(AnimatedContainer),
+      ),
+    )) {
+      expect(dot.duration, Duration.zero);
+    }
+  });
+
+  testWidgets('360×640 글자 1.3배: 1장 무대는 줄어도 3배 이상, 넘침 없음', (tester) async {
+    tester.view.physicalSize = const Size(360, 640);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    await pumpOnboarding(tester, textScale: 1.3, theme: appDarkTheme());
+    expect(tester.takeException(), isNull);
+    final pet = tester.widget<AvatarView>(
+      find.descendant(
+        of: find.byKey(const ValueKey('onboarding-stage')),
+        matching: find.byType(AvatarView),
+      ),
+    );
+    expect(pet.scale, greaterThanOrEqualTo(3));
   });
 }
