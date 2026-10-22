@@ -75,7 +75,7 @@
   - 테스트: 아이템 세로 이동 = face 세로 이동, 모자가 눈을 가리지 않음(기존 테스트)
   - 확인: `fvm flutter test test/tool test/shop`
 
-- [ ] 6. 배지 그림 12개
+- [x] 6. 배지 그림 12개
   - 배지마다 24×24 도트 그림 하나. 업적 화면 격자·다음 배지 줄·요약 새 배지 줄의 자리표시 아이콘(`_iconFor`)을 그림으로 바꾼다. 못 받은 배지는 같은 그림을 회색·흐리게(`ColorFilter`, 투명도 0.45).
   - 파일: `tool/sprites/badges.dart`(새 파일), `tool/render_sprites.dart`, `assets/badges/<배지 id>.png`, `pubspec.yaml` assets, `lib/achievement/ui/badge_image.dart`(새 파일), `lib/achievement/ui/achievement_screen.dart`, `lib/run/ui/summary_screen.dart`, `docs/specs/sprite-spec.md` 배지 절
   - 테스트: `badgeCatalog` 의 모든 id 에 그림 데이터가 있음(24×24, 투명 배경), 위젯이 받은 배지는 컬러·못 받은 배지는 회색, `FilterQuality.none`
