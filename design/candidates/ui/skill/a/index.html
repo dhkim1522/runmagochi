@@ -1,0 +1,315 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>후보 a · 말랑 클레이 다듬기</title>
+<!-- 페이즈 6 작업 7 트랙 1(디자인 스킬, ui-ux-pro-max) 방향 a. 내용은 ../../shared/content.md, 방향은 ../../shared/direction-a.md -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Jua&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    /* docs/design/tokens.json 라이트 값 그대로 */
+    --cream: #FFF7ED; --surface: #FFFFFF; --surface-soft: #FFEDD5;
+    --line: #FED7AA; --line-strong: #FDBA74;
+    --ink: #431407; --ink-muted: #9A3412;
+    --primary: #F97316; --on-primary: #1C0A00; --primary-deep: #C2410C;
+    --accent: #2563EB; --on-accent: #FFFFFF; --accent-deep: #1E40AF;
+    --success: #15803D;
+    --r-sm: 12px; --r-md: 20px; --r-lg: 24px; --r-xl: 32px; --r-pill: 999px;
+    --border: 3px; --lip: 6px;
+    --display: "Jua", "Noto Sans KR", sans-serif;
+    --body: "Noto Sans KR", system-ui, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body { margin: 0; background: #F3E6D6; color: var(--ink); font-family: var(--body); }
+  .page-head { max-width: 1290px; margin: 0 auto; padding: 32px 20px 8px; }
+  .page-head h1 { font-family: var(--display); font-weight: 400; font-size: 28px; margin: 0 0 4px; }
+  .page-head p { margin: 0; font-size: 15px; color: var(--ink-muted); }
+  .board { display: flex; flex-wrap: wrap; gap: 40px; justify-content: center; padding: 24px 20px 64px; }
+  .phone { width: 390px; min-height: 844px; background: var(--cream); position: relative; display: flex; flex-direction: column; overflow: hidden; }
+  body.only { background: var(--cream); }
+  body.only .page-head { display: none; }
+  body.only .board { padding: 0; gap: 0; }
+  body.only .phone:not(.on) { display: none; }
+  @media (max-width: 430px) { .board { padding: 0; gap: 24px; } }
+
+  .num { font-family: var(--display); font-weight: 400; font-variant-numeric: tabular-nums; }
+  .pixel { image-rendering: pixelated; image-rendering: crisp-edges; display: block; }
+  .label { font-size: 14px; line-height: 20px; font-weight: 700; color: var(--ink-muted); }
+  .caption { font-size: 13px; line-height: 18px; font-weight: 500; color: var(--ink-muted); }
+  .title { font-family: var(--display); font-size: 28px; line-height: 34px; margin: 0; font-weight: 400; }
+  svg.ic { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+
+  /* 누르는 것만 도톰하게: 테두리 + 아래 립 */
+  .clay { border: var(--border) solid var(--line); background: var(--surface); box-shadow: 0 var(--lip) 0 var(--line-strong); }
+  button { font: inherit; color: inherit; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+  button:focus-visible, a:focus-visible { outline: var(--border) solid var(--primary-deep); outline-offset: 3px; }
+  .btn { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; min-height: 64px; border-radius: var(--r-pill);
+         font-family: var(--display); font-size: 24px; line-height: 28px; transition: transform .12s ease-out, box-shadow .12s ease-out; }
+  .btn:active, .chip:active, .seg button:active { transform: translateY(4px); box-shadow: 0 2px 0 var(--line-strong); }
+  .btn-primary { background: var(--primary); color: var(--on-primary); border: var(--border) solid var(--primary-deep); box-shadow: 0 var(--lip) 0 var(--primary-deep); }
+  .btn-primary:active { box-shadow: 0 2px 0 var(--primary-deep); }
+  .btn-accent { background: var(--accent); color: var(--on-accent); border: var(--border) solid var(--accent-deep); box-shadow: 0 var(--lip) 0 var(--accent-deep); }
+  .btn-accent:active { box-shadow: 0 2px 0 var(--accent-deep); }
+  .btn-white { color: var(--ink); }
+
+  /* 읽기만 하는 판: 평평하게 */
+  .flat { background: var(--surface); border-radius: var(--r-lg); border: 2px solid var(--line); }
+
+  .bar { height: 10px; border-radius: var(--r-pill); background: var(--surface); overflow: hidden; }
+  .bar > i { display: block; height: 100%; border-radius: var(--r-pill); }
+
+  /* ---------- 홈 ---------- */
+  .home { padding: 16px 20px 0; gap: 16px; }
+  .goal { padding: 16px 16px 20px; }
+  .goal .label { margin: 0 0 10px 4px; }
+  .seg { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; padding: 6px; background: var(--surface-soft); border-radius: var(--r-pill); margin-bottom: 14px; }
+  .seg button { min-height: 48px; border: 0; background: transparent; border-radius: var(--r-pill); font-family: var(--display); font-size: 20px; color: var(--ink-muted); }
+  .seg button[aria-pressed="true"] { background: var(--surface); color: var(--ink); border: var(--border) solid var(--line); box-shadow: 0 3px 0 var(--line-strong); }
+  .chips { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+  .chip { min-height: 52px; border-radius: var(--r-pill); font-family: var(--display); font-size: 20px; color: var(--ink); padding: 0; }
+  .chip[aria-pressed="true"] { background: var(--primary); color: var(--on-primary); border-color: var(--primary-deep); box-shadow: 0 var(--lip) 0 var(--primary-deep); }
+  .stage { flex: 1; border-radius: var(--r-xl); background: var(--surface-soft); border: var(--border) solid var(--line); box-shadow: 0 var(--lip) 0 var(--line-strong);
+           position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 64px 20px 24px; }
+  .stage-top { position: absolute; top: 12px; left: 12px; right: 12px; display: flex; justify-content: space-between; align-items: center; }
+  .coin-chip { display: flex; align-items: center; gap: 8px; min-height: 48px; padding: 0 18px 0 12px; border-radius: var(--r-pill); box-shadow: 0 4px 0 var(--line-strong); }
+  .coin-chip .num { font-size: 22px; line-height: 28px; }
+  .coin { width: 26px; height: 26px; flex: none; }
+  .icon-btn { width: 48px; height: 48px; border-radius: var(--r-pill); display: grid; place-items: center; padding: 0; color: var(--ink); box-shadow: 0 4px 0 var(--line-strong); }
+  .pet-wrap { position: relative; display: grid; place-items: center; }
+  .pet-shadow { position: absolute; bottom: 6px; width: 140px; height: 16px; border-radius: 50%; background: var(--line); }
+  .pet-name { margin-top: 12px; }
+  .level { width: 220px; margin-top: 12px; }
+  .level > i { background: var(--accent); width: 94%; }
+  .next { margin-top: 10px; font-size: 14px; line-height: 20px; color: var(--ink-muted); }
+  .tabbar { margin: 4px -20px 0; border-top: 2px solid var(--line); display: grid; grid-template-columns: repeat(4, 1fr); padding: 6px 12px 14px; background: var(--cream); }
+  .tab { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; min-height: 56px; color: var(--ink-muted); font-size: 13px; line-height: 18px; font-weight: 500; text-decoration: none; border-radius: var(--r-sm); }
+  .tab[aria-current="page"] { color: var(--primary-deep); font-weight: 700; }
+
+  /* ---------- 러닝 중 ---------- */
+  .run { padding: 20px 20px 28px; }
+  .run-main { flex: 1; display: flex; flex-direction: column; justify-content: space-evenly; }
+  .run .dist { text-align: center; }
+  .run .dist .num { display: block; font-size: 120px; line-height: 120px; letter-spacing: -2px; }
+  .run .dist .unit { font-family: var(--display); font-size: 22px; line-height: 28px; color: var(--ink-muted); }
+  .goal-line { display: flex; flex-direction: column; align-items: center; gap: 8px; margin-top: 18px; }
+  .goal-line .bar { width: 240px; height: 12px; background: var(--surface-soft); border: 2px solid var(--line); }
+  .goal-line .bar > i { width: 68.4%; background: var(--primary); }
+  .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; padding: 16px 12px; }
+  .stats > div { text-align: center; display: flex; flex-direction: column; gap: 2px; }
+  .stats .num { font-size: 26px; line-height: 30px; }
+  .run-stage { align-self: center; width: 264px; height: 224px; border-radius: var(--r-xl); background: var(--surface-soft); border: var(--border) solid var(--line);
+               display: grid; place-items: center; position: relative; }
+  .run-stage .ground { position: absolute; left: 28px; right: 28px; bottom: 19px; height: 4px; border-radius: 2px;
+                       background: var(--line-strong); }
+  .run .btn { margin-top: 8px; }
+
+  /* ---------- 요약 ---------- */
+  .sum { padding: 20px 20px 32px; gap: 0; }
+  .sum-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+  .text-btn { display: flex; align-items: center; gap: 6px; min-height: 48px; min-width: 48px; padding: 0 10px; margin-right: -10px; border: 0; background: none;
+              color: var(--primary-deep); font-family: var(--display); font-size: 20px; border-radius: var(--r-sm); }
+  .growth { border-radius: var(--r-xl); background: var(--surface-soft); border: var(--border) solid var(--line); padding: 20px 16px 16px; text-align: center; }
+  .growth .lvup { color: var(--primary-deep); }
+  .growth .from { margin-top: 4px; }
+  .growth .new-stage { font-family: var(--display); font-size: 18px; line-height: 24px; margin-top: 10px; }
+  .growth .pet-wrap { margin: 8px auto 16px; }
+  .rows { display: flex; flex-direction: column; gap: 10px; text-align: left; }
+  .row { display: flex; align-items: center; gap: 12px; padding: 12px 16px; background: var(--surface); border-radius: var(--r-md); min-height: 64px; }
+  .row .what { flex: 1; font-size: 16px; line-height: 22px; }
+  .row .val { text-align: right; display: flex; flex-direction: column; align-items: flex-end; }
+  .row .xp { font-family: var(--display); font-size: 22px; line-height: 28px; color: var(--success); }
+  .row .coins { font-size: 13px; line-height: 18px; font-weight: 500; color: var(--accent-deep); }
+  .row .xp.coin-val { color: var(--accent-deep); }
+  .meta { margin-top: 28px; }
+  .meta .name { font-family: var(--display); font-size: 22px; line-height: 28px; margin-top: 2px; }
+  .big { display: flex; align-items: baseline; gap: 6px; margin-top: 6px; }
+  .big .num { font-size: 64px; line-height: 68px; letter-spacing: -1px; }
+  .big .unit { font-family: var(--display); font-size: 22px; color: var(--ink-muted); }
+  .sum .stats { margin-top: 14px; }
+  .route { margin-top: 14px; padding: 14px; }
+  .route svg { display: block; width: 100%; height: auto; }
+  .splits { margin-top: 14px; padding: 16px 20px 12px; }
+  .splits h2 { font-family: var(--display); font-weight: 400; font-size: 18px; line-height: 24px; margin: 0 0 12px; }
+  .chart { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; align-items: end; height: 150px; padding: 0 8px; border-bottom: 2px solid var(--line); }
+  .chart i { display: block; background: var(--primary); border-radius: 10px 10px 4px 4px; }
+  .chart-x { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; padding: 6px 8px 0; text-align: center; }
+  table { width: 100%; border-collapse: collapse; margin-top: 18px; }
+  th { text-align: left; font-size: 14px; font-weight: 700; color: var(--ink-muted); padding: 0 4px 6px; }
+  th:last-child, td:last-child { text-align: right; }
+  td { padding: 10px 4px; font-size: 16px; line-height: 24px; border-top: 2px solid var(--surface-soft); }
+  td.num { font-size: 18px; }
+  .sum .actions { display: flex; flex-direction: column; gap: 18px; margin-top: 28px; }
+
+  @media (prefers-reduced-motion: reduce) { .btn, .chip { transition: none; } }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-run" viewBox="0 0 24 24"><circle cx="14.5" cy="4.5" r="2"/><path d="M10 21l2.5-5 3 2.5V22"/><path d="M6.5 11.5L9 8.5h5l2.5 4 3 1"/><path d="M12.5 16l1.5-7.5"/><path d="M4 21h4"/></symbol>
+  <symbol id="i-history" viewBox="0 0 24 24"><path d="M3.5 12a8.5 8.5 0 1 0 2.5-6L3.5 8.5"/><path d="M3.5 3.5v5h5"/><path d="M12 7.5V12l3 2"/></symbol>
+  <symbol id="i-paw" viewBox="0 0 24 24"><circle cx="5.5" cy="10.5" r="2"/><circle cx="9.5" cy="5.5" r="2"/><circle cx="14.5" cy="5.5" r="2"/><circle cx="18.5" cy="10.5" r="2"/><path d="M12 12c-3 0-6 4-6 6.5 0 2 2 2.8 3.5 2.3 1.6-.5 3.4-.5 5 0 1.5.5 3.5-.3 3.5-2.3 0-2.5-3-6.5-6-6.5z"/></symbol>
+  <symbol id="i-store" viewBox="0 0 24 24"><path d="M4 9l1.5-5h13L20 9"/><path d="M4 9a2.7 2.7 0 0 0 5.3 0 2.7 2.7 0 0 0 5.4 0 2.7 2.7 0 0 0 5.3 0"/><path d="M5.5 11.5V20h13v-8.5"/><path d="M10 20v-5h4v5"/></symbol>
+  <symbol id="i-share" viewBox="0 0 24 24"><path d="M12 3v12"/><path d="M7.5 7.5L12 3l4.5 4.5"/><path d="M5 13v5.5A2.5 2.5 0 0 0 7.5 21h9a2.5 2.5 0 0 0 2.5-2.5V13"/></symbol>
+</svg>
+
+<header class="page-head">
+  <h1>후보 a · 말랑 클레이 다듬기</h1>
+  <p>누르는 것만 도톰하게, 읽는 정보는 평평하게. 홈 · 러닝 중 · 러닝 요약 (390px)</p>
+</header>
+
+<main class="board">
+  <!-- ===== 홈 ===== -->
+  <section class="phone home" id="home" aria-label="홈">
+    <div class="flat goal">
+      <div class="label">오늘 목표</div>
+      <div class="seg" role="group" aria-label="목표 종류">
+        <button aria-pressed="true">거리</button>
+        <button aria-pressed="false">시간</button>
+      </div>
+      <div class="chips" role="group" aria-label="오늘 목표">
+        <button class="chip clay" aria-pressed="false">3km</button>
+        <button class="chip clay" aria-pressed="true">5km</button>
+        <button class="chip clay" aria-pressed="false">10km</button>
+        <button class="chip clay" aria-pressed="false">직접</button>
+      </div>
+    </div>
+
+    <div class="stage">
+      <div class="stage-top">
+        <button class="coin-chip clay" aria-label="코인 1,860, 상점으로">
+          <svg class="coin" viewBox="0 0 26 26" aria-hidden="true"><circle cx="13" cy="14.5" r="11.5" fill="#1E40AF"/><circle cx="13" cy="12.5" r="11.5" fill="#2563EB"/><path d="M13 6.8l1.7 3.6 3.9.5-2.9 2.7.8 3.9-3.5-2-3.5 2 .8-3.9-2.9-2.7 3.9-.5z" fill="#FFFFFF"/></svg>
+          <span class="num">1,860</span>
+        </button>
+        <button class="icon-btn clay" aria-label="설정">
+          <svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="7.6" stroke-width="3.4" stroke-dasharray="2.98 2.99" stroke-linecap="butt"/><circle cx="12" cy="12" r="5.4"/><circle cx="12" cy="12" r="1.9"/></svg>
+        </button>
+      </div>
+      <div class="pet-wrap">
+        <div class="pet-shadow"></div>
+        <img class="pixel" src="../../shared/chick_s3_idle_0.png" width="224" height="224" alt="삐약이, 3단계 병아리">
+      </div>
+      <h2 class="title pet-name">삐약이 <span class="num">Lv.19</span></h2>
+      <div class="bar level" role="progressbar" aria-label="레벨 진행" aria-valuenow="94" aria-valuemin="0" aria-valuemax="100"><i></i></div>
+      <div class="next">다음 레벨까지 6.0km</div>
+    </div>
+
+    <button class="btn btn-primary">시작</button>
+
+    <nav class="tabbar" aria-label="탭">
+      <a class="tab" href="#home" aria-current="page"><svg class="ic" aria-hidden="true"><use href="#i-run"/></svg>러닝</a>
+      <a class="tab" href="#home"><svg class="ic" aria-hidden="true"><use href="#i-history"/></svg>기록</a>
+      <a class="tab" href="#home"><svg class="ic" aria-hidden="true"><use href="#i-paw"/></svg>아바타</a>
+      <a class="tab" href="#home"><svg class="ic" aria-hidden="true"><use href="#i-store"/></svg>상점</a>
+    </nav>
+  </section>
+
+  <!-- ===== 러닝 중 ===== -->
+  <section class="phone run" id="run" aria-label="러닝 중">
+    <h2 class="title">러닝 중</h2>
+    <div class="run-main">
+    <div class="dist-group">
+    <div class="dist">
+      <span class="num">3.42</span>
+      <span class="unit">km</span>
+    </div>
+    <div class="goal-line">
+      <span class="label">목표 5km</span>
+      <div class="bar" role="progressbar" aria-label="목표 진행" aria-valuenow="68" aria-valuemin="0" aria-valuemax="100"><i></i></div>
+    </div>
+    </div>
+    <div class="flat stats">
+      <div><span class="label">평균 페이스</span><span class="num">6'09"</span></div>
+      <div><span class="label">현재 페이스</span><span class="num">6'02"</span></div>
+      <div><span class="label">시간</span><span class="num">21:02</span></div>
+    </div>
+    <div class="run-stage">
+      <img class="pixel" id="runner" src="../../shared/chick_s3_run_0.png" width="192" height="192" alt="달리는 삐약이">
+      <div class="ground" aria-hidden="true"></div>
+    </div>
+    </div>
+        <button class="btn btn-accent">일시정지</button>
+  </section>
+
+  <!-- ===== 요약 ===== -->
+  <section class="phone sum" id="summary" aria-label="러닝 요약">
+    <div class="sum-head">
+      <h2 class="title">러닝 요약</h2>
+      <button class="text-btn"><svg class="ic" aria-hidden="true"><use href="#i-share"/></svg>공유</button>
+    </div>
+
+    <div class="growth">
+      <h2 class="title lvup">레벨 업!</h2>
+      <div class="label from">Lv.19 에서 Lv.20 로</div>
+      <div class="new-stage">새 외형 단계!</div>
+      <div class="pet-wrap">
+        <div class="pet-shadow"></div>
+        <img class="pixel" src="../../shared/chick_s4_idle_0.png" width="192" height="192" alt="4단계로 자란 삐약이">
+      </div>
+      <div class="rows">
+        <div class="row"><span class="what">달린 거리 5.24km</span><span class="val"><span class="xp">경험치 +52</span><span class="coins">코인 +26</span></span></div>
+        <div class="row"><span class="what">목표 5km 달성</span><span class="val"><span class="xp">보너스 +25</span><span class="coins">코인 +25</span></span></div>
+        <div class="row"><img class="pixel" src="../../shared/badge_goals_30.png" width="48" height="48" alt=""><span class="what">배지 획득: 목표 달성 30번</span><span class="val"><span class="xp coin-val">코인 +200</span></span></div>
+      </div>
+    </div>
+
+    <div class="meta">
+      <div class="caption">10월 22일 (목) 오전 7:12</div>
+      <div class="name">목요일 아침 러닝</div>
+      <div class="big"><span class="num">5.24</span><span class="unit">km</span></div>
+    </div>
+    <div class="flat stats">
+      <div><span class="label">평균 페이스</span><span class="num">6'08"</span></div>
+      <div><span class="label">시간</span><span class="num">32:09</span></div>
+      <div><span class="label">칼로리</span><span class="num">353</span></div>
+    </div>
+
+    <div class="flat route" aria-label="경로">
+      <svg viewBox="0 0 300 200" role="img" aria-label="경로 선">
+        <rect width="300" height="200" rx="16" fill="#FFF7ED"/>
+        <path d="M 46 150 C 40 110, 52 70, 92 52 S 170 30, 206 44 S 262 82, 258 118 S 236 168, 196 172 S 120 176, 88 166 S 60 160, 62 146" fill="none" stroke="#F97316" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle cx="46" cy="150" r="8" fill="#2563EB" stroke="#FFFFFF" stroke-width="3"/>
+        <circle cx="62" cy="146" r="8" fill="#431407" stroke="#FFFFFF" stroke-width="3"/>
+      </svg>
+    </div>
+
+    <div class="flat splits">
+      <h2>구간</h2>
+      <div class="chart" aria-hidden="true">
+        <i style="height:52%"></i><i style="height:72%"></i><i style="height:90%"></i><i style="height:64%"></i><i style="height:100%"></i><i style="height:82%"></i>
+      </div>
+      <div class="chart-x caption" aria-hidden="true"><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>5.24</span></div>
+      <table>
+        <thead><tr><th>km</th><th>페이스</th></tr></thead>
+        <tbody>
+          <tr><td>1</td><td class="num">6'15"</td></tr>
+          <tr><td>2</td><td class="num">6'09"</td></tr>
+          <tr><td>3</td><td class="num">6'04"</td></tr>
+          <tr><td>4</td><td class="num">6'11"</td></tr>
+          <tr><td>5</td><td class="num">6'02"</td></tr>
+          <tr><td>5.24</td><td class="num">6'05"</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="actions">
+      <button class="btn btn-white clay">끝부분 잘라내기</button>
+      <button class="btn btn-primary">확인</button>
+    </div>
+  </section>
+</main>
+
+<script>
+  const only = new URLSearchParams(location.search).get('only');
+  if (only) { document.body.classList.add('only'); document.getElementById(only)?.classList.add('on'); }
+  const runner = document.getElementById('runner');
+  if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    let f = 0;
+    setInterval(() => { f = (f + 1) % 4; runner.src = `../../shared/chick_s3_run_${f}.png`; }, 100);
+  }
+</script>
+</body>
+</html>
