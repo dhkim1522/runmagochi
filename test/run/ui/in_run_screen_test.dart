@@ -524,9 +524,7 @@ void main() {
   group('시안 배치(작업 12)', () {
     // 실제 글자 폭으로 배치를 잰다(테스트 기본 글꼴은 모든 글자가 정사각형이다).
     setUpAll(() async {
-      final font = File(
-        'assets/fonts/RunmagochiSans.ttf',
-      ).readAsBytesSync();
+      final font = File('assets/fonts/RunmagochiSans.ttf').readAsBytesSync();
       await (FontLoader(
         'RunmagochiSans',
       )..addFont(Future.value(ByteData.sublistView(font)))).load();

@@ -13,9 +13,7 @@ void main() {
       .runes
       .where((r) => r >= 0x20) // 줄바꿈(Windows 의 CR 포함)은 뺀다.
       .toSet();
-  final fontBytes = File(
-    'assets/fonts/RunmagochiSans.ttf',
-  ).readAsBytesSync();
+  final fontBytes = File('assets/fonts/RunmagochiSans.ttf').readAsBytesSync();
   final font = _Ttf(fontBytes);
 
   test('lib 의 .dart 파일에 나오는 모든 글자가 font_chars.txt 에 있다', () {

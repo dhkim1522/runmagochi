@@ -507,9 +507,7 @@ GrowthGain _gain({bool levelUp = true}) => GrowthGain(
 void layoutTests() {
   group('시안 배치(작업 13)', () {
     setUpAll(() async {
-      final font = File(
-        'assets/fonts/RunmagochiSans.ttf',
-      ).readAsBytesSync();
+      final font = File('assets/fonts/RunmagochiSans.ttf').readAsBytesSync();
       await (FontLoader(
         'RunmagochiSans',
       )..addFont(Future.value(ByteData.sublistView(font)))).load();
