@@ -8,7 +8,7 @@
 
 **Goal:** 캐릭터를 후보 3개 중 투표로 골라 3종·아이템·배지를 다시 그리고, UI 를 후보 3개 중 고른 방향으로 전 화면 개편해 출시해도 될 수준으로 만든다.
 
-**Architecture:** 두 단계에 사람이 고르는 관문이 셋 있다. 관문 1(작업 2): 캐릭터 투표. 관문 2(작업 9): UI 방향 선택. 관문 3(완료 기준): 출시 품질 승인. 관문에서는 멈추고 사용자에게 묻는다. 캐릭터는 지금처럼 코드 안의 픽셀 격자로 그린다(`tool/sprites/`, 사용자 결정 2026-10-22). 파일 이름·레이어·기준점 규격(`docs/specs/sprite-spec.md`)을 지키면 앱 코드는 그대로다. UI 는 토큰(`docs/design/tokens.json` → `lib/core/theme.dart`)과 공통 컴포넌트(`lib/core/ui/clay.dart`)를 먼저 바꾸고 화면을 그 위에 맞춘다.
+**Architecture:** UI 후보는 디자인 스킬(저장소 HTML)과 Claude Design 캔버스 두 트랙으로 같은 3방향을 만들어 6안 중 고른다. 두 단계에 사람이 고르는 관문이 셋 있다. 관문 1(작업 2): 캐릭터 투표. 관문 2(작업 9): UI 방향 선택. 관문 3(완료 기준): 출시 품질 승인. 관문에서는 멈추고 사용자에게 묻는다. 캐릭터는 지금처럼 코드 안의 픽셀 격자로 그린다(`tool/sprites/`, 사용자 결정 2026-10-22). 파일 이름·레이어·기준점 규격(`docs/specs/sprite-spec.md`)을 지키면 앱 코드는 그대로다. UI 는 토큰(`docs/design/tokens.json` → `lib/core/theme.dart`)과 공통 컴포넌트(`lib/core/ui/clay.dart`)를 먼저 바꾸고 화면을 그 위에 맞춘다.
 
 **Tech Stack:** Flutter 3.47.7 (FVM), Dart 도구 스크립트(`image` 패키지, 개발 의존성), fonttools(글꼴 서브셋, 앱 의존성 아님)
 
@@ -82,25 +82,30 @@
 
 ### B. 6-2 UI/UX 개편
 
-- [ ] 7. UI 후보 시안 3개
-  - 홈·러닝 중·요약 3개 화면, 390px 폰 화면 HTML. 고른 캐릭터 PNG 를 넣는다. 라이트 기준, 같은 문구·같은 데이터.
-  - 후보
-    - `a` 말랑 클레이 다듬기 (스킬: ui-ux-pro-max:ui-ux-pro-max)
-    - `b` Taste Skill 이 뽑은 방향 (스킬: taste-skill:design-taste-frontend)
-    - `c` 무드보드 `design/references/` 방향: 밝은 연두·초록 포인트, 테두리 없는 둥근 카드, 큰 마스코트 (스킬: ui-ux-pro-max:ui-ux-pro-max)
-  - 파일: `design/candidates/ui/<a|b|c>/index.html`, 같은 폴더에 Chrome 헤드리스 스크린샷 `home.png`·`run.png`·`summary.png`
-  - 확인: 세 폴더에 HTML 1개·PNG 3장, 화면 폭 390 에서 가로 스크롤 없음
+- [ ] 7. UI 후보 시안 6개 (두 트랙 × 3방향, 2026-10-22 사용자 결정)
+  - 홈·러닝 중·요약 3개 화면, 390px 폰 화면. 고른 캐릭터 PNG 를 넣는다. 라이트 기준, 같은 문구·같은 데이터.
+  - 방향 3개(두 트랙 공통)
+    - `a` 말랑 클레이 다듬기
+    - `b` Taste Skill 이 뽑은 방향(트랙 1 에서 먼저 뽑아 트랙 2 에도 같은 방향을 준다)
+    - `c` 무드보드 `design/references/` 방향: 밝은 연두·초록 포인트, 테두리 없는 둥근 카드, 큰 마스코트
+  - 트랙 1, 디자인 스킬: `design/candidates/ui/skill/<a|b|c>/index.html`, 같은 폴더에 Chrome 헤드리스 스크린샷 `home.png`·`run.png`·`summary.png`
+    - 스킬: ui-ux-pro-max:ui-ux-pro-max (a·c), taste-skill:design-taste-frontend (b)
+  - 트랙 2, Claude Design: Design 캔버스 아티팩트 하나에 방향별 3개 화면 아트보드 9개. 페이즈 2.5 디자인 시스템 아티팩트(`docs/design/design-system.md` 의 링크)를 출발점으로 쓴다. 아트보드 사본(HTML)과 스크린샷을 `design/candidates/ui/canvas/<a|b|c>/` 에 남긴다
+    - 스킬: Artifact quickstart(design), artifact-design
+  - 두 트랙은 파일이 겹치지 않아 동시에 진행한다.
+  - 확인: 두 트랙 × 세 방향 모두 화면 3장, 폭 390 에서 가로 스크롤 없음
 
 - [ ] 8. 후보 비교
-  - Impeccable `critique` 로 세 후보를 같은 기준(한눈에 읽힘, 위계, 일관성, 접근성, AI 티)으로 비교한다. 결과 `design/candidates/ui/critique.md`.
-  - 세 후보 스크린샷과 비교 결과를 한 장짜리 아티팩트로 만들어 링크를 준다.
+  - Impeccable `critique` 로 6안을 같은 기준(한눈에 읽힘, 위계, 일관성, 접근성, AI 티)으로 비교한다. 결과 `design/candidates/ui/critique.md`.
+  - 방향별로 두 트랙 안을 나란히 놓은 비교 페이지를 아티팩트로 만들어 링크를 준다.
   - 스킬: impeccable:impeccable, artifact-design
 
 - [ ] 9. 관문 2: UI 방향 선택
-  - 사용자가 고를 때까지 **멈춘다**. 고른 안과 고칠 점을 "관문 기록" 에 적는다.
+  - 사용자가 6안 중 고를 때까지 **멈춘다**(조합 선택 가능, 예: a 방향의 캔버스 안). 고른 안과 고칠 점을 "관문 기록" 에 적는다.
 
 - [ ] 10. 디자인 시스템 갱신
   - 고른 방향으로 `docs/design/tokens.json`·`docs/design/design-system.md`·`lib/core/theme.dart` 를 고친다. 라이트·다크.
+  - Claude Design System 아티팩트도 새 토큰·컴포넌트로 갱신하고 `design-system.md` 의 원본 링크를 고친다.
   - 새로 정할 것: 코인 색(지금 `accent-deep` 차용), 경로 페이스 색 3단(느림·보통·빠름), 배경(무늬·그라데이션 여부), 화면 전환 시간·곡선 토큰
   - 테스트: `test/core/theme_test.dart` 에 새 토큰의 대비(글자·바탕 쌍마다 4.5:1, 큰 글자 3:1), 다크 값 존재
   - 확인: `fvm flutter test test/core`
