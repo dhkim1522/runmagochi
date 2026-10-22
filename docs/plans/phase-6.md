@@ -23,7 +23,7 @@
 - 글자 대비는 4.5:1 이상(24px 이상 3:1), 누를 수 있는 것은 48×48 이상, 글자 13 미만 금지. 라이트·다크 둘 다.
 - 문구는 바꾸지 않는다(한국어 존댓말 `-요` 체). 레이아웃·모양·그림만 바꾼다. 문구를 고쳐야 하면 계획 "자동 결정" 에 적는다.
 - Nike 코드·리소스를 넣지 않는다. 무드보드 이미지는 방향 참고용이고 앱에 넣지 않는다.
-- 후보 결과물은 `design/candidates/` 에 두고 작업 18 에서 지운다.
+- 후보 결과물은 `design/candidates/` 에 두고 작업 18 에서 지운다. (작업 18 완료: 고른 안은 `design/mockups/phase-6/` 로 옮겼고, 나머지 후보는 git 기록과 비교 아티팩트에 남는다. 아래 작업 1·7·8 의 후보 경로는 당시 기록이다.)
 - 산출물은 아티팩트로 정리한다(2026-10-22 사용자 요청): 캐릭터 에셋 카탈로그(완료), UI 후보 비교(작업 8), 디자인 시스템(작업 10), 화면설계서(작업 19). 페이지 원본은 저장소에 두고 문서·HANDOFF 에 링크한다.
 - Android 기준으로 확인한다. 명령은 `fvm flutter ...`, `fvm dart ...`.
 
@@ -155,7 +155,7 @@
   - 테스트: `test/tool/font_chars_test.dart` — `lib/**.dart` 문자열 리터럴의 모든 글자가 `font_chars.txt` 에 있음
   - 확인: 글꼴 두 파일 합계 4MB 이하, `fvm flutter build apk --debug` 크기가 줄어듦(전후 값을 계획에 적는다)
 
-- [ ] 18. 정리
+- [x] 18. 정리
   - 고른 안을 `design/character/`·`design/mockups/`(`phase-6-screens/` 스크린샷, README 갱신)·`docs/design/tokens.json` 에 반영하고 `design/candidates/` 와 후보 도구 코드(`tool/sprites/candidates/`, `tool/render_candidates.dart`, `tool/render_ui_candidate_pets.dart`, 해당 테스트)를 지운다.
   - 캐릭터 에셋 카탈로그 아티팩트(https://claude.ai/artifact/ECbG2Fh4TXQwcr5fNUWCXA, 원본 `design/character/asset-catalog.html`)를 최종 그림으로 다시 올린다
   - 문서: `docs/design/design-system.md`, `docs/specs/sprite-spec.md`(만드는 방법·배지), `docs/screens.md`, `docs/tooling.md`(pixel-plugin 6-1 사용 시점을 "쓰지 않음(결정 0028)" 으로, Impeccable·Taste Skill 사용 기록), `CLAUDE.md` 문서 지도
@@ -198,7 +198,7 @@
 - [ ] 실기기(Android·iPhone)에서 아이콘·스플래시·글꼴·화면 확인 (페이즈 7)
 
 ## 관문 기록
-- 관문 2 비교 페이지: https://claude.ai/artifact/F5MsvhPE9fAXw5YtCwe3Xc (critique `design/candidates/ui/critique.md`). 추천 b · 캔버스(27/30), 차선 a · 스킬(23). 결과: **c · 캔버스 확정**(2026-10-22 사용자, 결정 0029). 사용자가 c · 캔버스에 관심, 요청으로 c 의 연두 원을 사각 무대(하늘+땅 띠)로 바꿈(배경 아이템 확장 대비, 2026-10-22). 원래 모양은 커밋 206afd5. 함께 고칠 점: `$` 코인 아이콘 → 앱 코인, 선택 표시 하나로(분할 48 높이), 연두 버튼 면 경계, 배지 `코인 +200` 강조, 탭 아이콘 앱 고유, 다크 모드 새 설계, 글꼴 Pretendard
+- 관문 2 비교 페이지: https://claude.ai/artifact/F5MsvhPE9fAXw5YtCwe3Xc (critique `design/mockups/phase-6/critique.md`). 추천 b · 캔버스(27/30), 차선 a · 스킬(23). 결과: **c · 캔버스 확정**(2026-10-22 사용자, 결정 0029). 사용자가 c · 캔버스에 관심, 요청으로 c 의 연두 원을 사각 무대(하늘+땅 띠)로 바꿈(배경 아이템 확장 대비, 2026-10-22). 원래 모양은 커밋 206afd5. 함께 고칠 점: `$` 코인 아이콘 → 앱 코인, 선택 표시 하나로(분할 48 높이), 연두 버튼 면 경계, 배지 `코인 +200` 강조, 탭 아이콘 앱 고유, 다크 모드 새 설계, 글꼴 Pretendard
 - UI 후보 캔버스(트랙 2): https://claude.ai/artifact/FxKS7MR2twYmmE3k6SzNhe
 - 관문 1 투표 페이지(2026-10-22): https://claude.ai/artifact/SBshrAFUGtLfBbaLHQxMnb . 저장 기능 없음(db 아티팩트는 조직 내부 전용이라 외부 사람이 못 엶). 고르면 `런마고치 캐릭터: A/B/C` 문구가 나오고 사용자가 표를 모은다. 결과: **A 말랑 클레이 확정**(2026-10-22 사용자). 기준점은 지금 값(모자 y=18, 소품 y=20) 유지
 
