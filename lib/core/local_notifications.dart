@@ -22,13 +22,14 @@ Future<void> ensureLocalNotificationsInitialized(
 
 Future<void> _initialize(FlutterLocalNotificationsPlugin plugin) async {
   await plugin.initialize(
-    settings: const InitializationSettings(
-      android: AndroidInitializationSettings('@mipmap/ic_launcher'),
+    settings: InitializationSettings(
+      android: const AndroidInitializationSettings('@mipmap/ic_launcher'),
       // 권한은 PermissionGate 가 묻는다. 초기화에서는 묻지 않는다.
       iOS: DarwinInitializationSettings(
         requestAlertPermission: false,
         requestBadgePermission: false,
         requestSoundPermission: false,
+        notificationCategories: darwinRunNotificationCategories,
       ),
     ),
     onDidReceiveNotificationResponse: forwardRunNotificationAction,
@@ -36,6 +37,35 @@ Future<void> _initialize(FlutterLocalNotificationsPlugin plugin) async {
         onRunNotificationBackgroundResponse,
   );
 }
+
+/// 러닝 알림 버튼 id. Android·iOS 가 같은 id 를 쓴다.
+const String runPauseActionId = 'run_pause';
+const String runResumeActionId = 'run_resume';
+
+/// iOS 는 알림 버튼을 초기화 때 등록한 묶음(category)으로만 붙일 수 있다.
+/// 러닝 알림에 나오는 버튼 조합마다 묶음을 하나씩 둔다. 버튼은 앱을 열지 않고
+/// 백그라운드에서 처리된다([onRunNotificationBackgroundResponse]).
+const String darwinRunPauseCategory = 'run_actions_pause';
+const String darwinRunResumeCategory = 'run_actions_resume';
+const String darwinRunResumePauseCategory = 'run_actions_resume_pause';
+
+final List<DarwinNotificationCategory> darwinRunNotificationCategories = [
+  DarwinNotificationCategory(
+    darwinRunPauseCategory,
+    actions: [DarwinNotificationAction.plain(runPauseActionId, '일시정지')],
+  ),
+  DarwinNotificationCategory(
+    darwinRunResumeCategory,
+    actions: [DarwinNotificationAction.plain(runResumeActionId, '재개')],
+  ),
+  DarwinNotificationCategory(
+    darwinRunResumePauseCategory,
+    actions: [
+      DarwinNotificationAction.plain(runResumeActionId, '재개'),
+      DarwinNotificationAction.plain(runPauseActionId, '일시정지'),
+    ],
+  ),
+];
 
 /// 메인 isolate 가 알림 버튼 id 를 받는 포트의 등록 이름.
 const runNotificationActionsPortName = 'run_notification_actions';

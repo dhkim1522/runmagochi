@@ -26,6 +26,7 @@
 - `docs/research/market.md` — 시장조사: 유사 앱 전수 조사, 경쟁·타깃·수익화·위험, 제안
 - `docs/research/naming.md` — 앱 이름 대안 후보 6개와 상표·스토어·도메인 검색 결과
 - `docs/beta.md` — 베타 배포: 서명 키, 릴리스 APK 만들기, 테스터 안내문, 의견 질문
+- `docs/ios.md` — iOS 빌드, 무료 Apple ID 로 iPhone 설치(7일 재설치), iOS 설정과 이유
 - `docs/tooling.md` — Claude Code 추천 플러그인 목록, 사용 시점, 기본값
 - `design/wireframes/` — 화면 콘티 10개 (MVP 6개 + 후속 범위, HTML 원본·PNG)
 - `design/mockups/` — 승인된 화면 시안(페이즈 2.5, 말랑 클레이)과 구현 메모

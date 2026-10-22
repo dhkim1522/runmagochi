@@ -7,7 +7,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>Runmagochi</string>
+	<string>런마고치</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -26,6 +26,21 @@
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>CFBundleLocalizations</key>
+	<array>
+		<string>ko</string>
+	</array>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>러닝 경로와 거리를 기록하려고 위치를 사용해요. 위치는 이 기기에만 저장돼요.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>러닝 중 화면을 끄거나 다른 앱을 써도 경로와 거리를 이어서 기록하려고 위치를 사용해요. 위치는 이 기기에만 저장돼요.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>공유 창에서 러닝 카드를 사진 앱에 저장하려고 사진 추가 권한을 사용해요.</string>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>location</string>
+		<string>audio</string>
+	</array>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

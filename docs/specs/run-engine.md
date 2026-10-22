@@ -138,7 +138,7 @@ stateDiagram-v2
 
 - **Android**: '시작' 버튼을 누를 때 위치 타입 포그라운드 서비스를 띄운다. 앱이 화면에 보일 때 시작하므로 백그라운드 위치 권한(`ACCESS_BACKGROUND_LOCATION`)은 요청하지 않는다. Android 14 이상 타깃은 Play Console 에 포그라운드 서비스 유형을 신고한다.
 - **제조사 배터리 정책**: Samsung·Xiaomi 등은 앱을 강제 종료할 수 있다. 기종별 배터리 최적화 예외 안내 화면을 둔다.
-- **iOS**: Background Modes의 Location updates를 켜고, 위치 권한은 '앱 사용 중'만 요청한다. geolocator 가 요구하는 Always 설명 키를 넣지 않으려면 `BYPASS_PERMISSION_LOCATION_ALWAYS` 를 설정한다.
+- **iOS**: Background Modes의 Location updates를 켜고, 위치 권한은 '앱 사용 중'만 요청한다. 위치 스트림은 `AppleSettings` 로 백그라운드 위치를 켜고 자동 멈춤을 끈다. geolocator 코드에 '항상' 요청이 있어 Always 설명 키도 넣는다 (결정 0031, [ios.md](../ios.md)).
 - **강제 종료 대비**: 위치 점을 10초마다 로컬 DB에 저장해, 다시 열면 이어서 기록한다.
 
 ## 검증
@@ -153,4 +153,4 @@ stateDiagram-v2
 
 ## 미확인
 
-- iOS 17 이상에서 '앱 사용 중' 권한으로 백그라운드 기록을 유지하는 데 `CLBackgroundActivitySession` 이 필요한지
+- iOS 17 이상에서 '앱 사용 중' 권한으로 백그라운드 기록을 유지하는 데 `CLBackgroundActivitySession` 이 필요한지. geolocator 는 `CLLocationManager` 의 `allowsBackgroundLocationUpdates` 를 쓰므로 필요 없다고 보고 넣지 않았다(결정 0031). iPhone 화면 꺼짐 기록으로 확인한다
