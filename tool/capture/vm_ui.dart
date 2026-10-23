@@ -16,16 +16,26 @@ late WebSocket _ws;
 int _id = 0;
 final _pending = <int, Completer<Map<String, dynamic>>>{};
 
-Future<Map<String, dynamic>> call(String method, [Map<String, dynamic>? params]) {
+Future<Map<String, dynamic>> call(
+  String method, [
+  Map<String, dynamic>? params,
+]) {
   final id = ++_id;
   final c = Completer<Map<String, dynamic>>();
   _pending[id] = c;
-  _ws.add(jsonEncode({'jsonrpc': '2.0', 'id': id, 'method': method, 'params': params ?? {}}));
+  _ws.add(
+    jsonEncode({
+      'jsonrpc': '2.0',
+      'id': id,
+      'method': method,
+      'params': params ?? {},
+    }),
+  );
   return c.future;
 }
 
 Future<void> main(List<String> a) async {
-  final url = a[0].replaceFirst('http://', 'ws://') + 'ws';
+  final url = '${a[0].replaceFirst('http://', 'ws://')}ws';
   _ws = await WebSocket.connect(url);
   _ws.listen((m) {
     final j = jsonDecode(m as String) as Map<String, dynamic>;
@@ -34,11 +44,20 @@ Future<void> main(List<String> a) async {
   });
   final vm = (await call('getVM'))['result'] as Map<String, dynamic>;
   final isolates = (vm['isolates'] as List).cast<Map<String, dynamic>>();
-  final iso = isolates.firstWhere((i) => i['name'] == 'main', orElse: () => isolates.first)['id'] as String;
-  final isolate = (await call('getIsolate', {'isolateId': iso}))['result'] as Map<String, dynamic>;
-  String libId(String uri) => (isolate['libraries'] as List)
-      .cast<Map<String, dynamic>>()
-      .firstWhere((l) => l['uri'] == uri)['id'] as String;
+  final iso =
+      isolates.firstWhere(
+            (i) => i['name'] == 'main',
+            orElse: () => isolates.first,
+          )['id']
+          as String;
+  final isolate =
+      (await call('getIsolate', {'isolateId': iso}))['result']
+          as Map<String, dynamic>;
+  String libId(String uri) =>
+      (isolate['libraries'] as List).cast<Map<String, dynamic>>().firstWhere(
+            (l) => l['uri'] == uri,
+          )['id']
+          as String;
   final eventsLib = libId('package:flutter/src/gestures/events.dart');
   final bindingLib = libId('package:flutter/src/gestures/binding.dart');
 
@@ -58,7 +77,8 @@ Future<void> main(List<String> a) async {
     final r = await call('evaluate', {
       'isolateId': iso,
       'targetId': bindingLib,
-      'expression': 'GestureBinding.instance.handlePointerEvent(e as PointerEvent)',
+      'expression':
+          'GestureBinding.instance.handlePointerEvent(e as PointerEvent)',
       'scope': {'e': id},
     });
     if (r['error'] != null) {
@@ -76,7 +96,10 @@ Future<void> main(List<String> a) async {
 
   switch (a[1]) {
     case 'banner':
-      await call('ext.flutter.debugAllowBanner', {'isolateId': iso, 'enabled': 'false'});
+      await call('ext.flutter.debugAllowBanner', {
+        'isolateId': iso,
+        'enabled': 'false',
+      });
     case 'tap':
       final x = double.parse(a[2]), y = double.parse(a[3]);
       await eval(ev('PointerAddedEvent', x, y));
@@ -100,7 +123,13 @@ Future<void> main(List<String> a) async {
       await eval(ev('PointerDownEvent', x1, y1));
       for (var i = 1; i <= steps; i++) {
         await Future<void>.delayed(Duration(milliseconds: ms ~/ steps));
-        await eval(ev('PointerMoveEvent', x1 + (x2 - x1) * i / steps, y1 + (y2 - y1) * i / steps));
+        await eval(
+          ev(
+            'PointerMoveEvent',
+            x1 + (x2 - x1) * i / steps,
+            y1 + (y2 - y1) * i / steps,
+          ),
+        );
       }
       await eval(ev('PointerUpEvent', x2, y2));
       await eval(ev('PointerRemovedEvent', x2, y2));
