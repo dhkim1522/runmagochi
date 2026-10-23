@@ -17,17 +17,18 @@ iOS 빌드, `Info.plist` 권한 문구, 백그라운드 위치(`AppleSettings`, 
   - 테스트: 탈것 의심 상태에서 위치 서비스가 꺼지면 GPS 꺼짐 카드가 뜨고 신호 끊김 말풍선은 뜨지 않는 케이스를 먼저 쓰고 실패 확인. 재현되지 않으면 결함이 아님을 테스트로 남기고 닫는다
   - 확인: `fvm flutter test`, `fvm dart analyze`
   - 결과: 재현되지 않음. 컨트롤러는 탈것 의심 중 위치를 꺼도 신호 끊김 뒤 꺼짐 문구(`lastError`)를 유지하고, 화면은 그때 말풍선을 숨긴다. 회귀 테스트만 추가(전체 1369개 통과). 기기에서 다르게 보이면 Android 실측 때 다시 연다
-- [ ] 2. 실측용 앱 상태 점검과 최신 main 빌드
+- [x] 2. 실측용 앱 상태 점검과 최신 main 빌드
   - 파일: 코드 변경 없음(빌드만). 필요하면 `docs/ios.md`
   - 확인: `fvm flutter test`, `fvm dart analyze`, `fvm flutter build apk --debug`, `fvm flutter build apk --release`, `fvm flutter build ios --no-codesign --release` 모두 통과
-- [ ] 3. 실측 안내문 `docs/field-test.md`
+- [x] 3. 실측 안내문 `docs/field-test.md`
   - 내용: 30분 러닝 3회·트랙 400m × 10바퀴 절차, 기기별(Android·iPhone) 기록표(날짜·시간·앱 거리·실제 거리·오차%·누락 여부), 사전 설정(권한·배터리·알림), 확인 항목 모음(아래 "사람 확인"을 기기별로 묶음), 값 조정 표(탈것 22km/h·2분·30초, 자동 일시정지 기준, 시작 직후 정확도 20m), 결과를 계획 파일에 옮기는 법
   - 테스트: 없음(문서). `docs/roadmap.md` 문서 지도·`CLAUDE.md` 문서 지도에 링크
   - 확인: 안내문의 항목이 페이즈 1~6 "사람 확인"과 빠짐없이 대응하는지 대조
-- [ ] 4. 지인 베타 자료 점검
+- [x] 4. 지인 베타 자료 점검
   - 파일: `docs/beta.md`
   - 내용: 최신 릴리스 APK 빌드 절차·서명 키 위치 확인, 테스터 안내문과 의견 질문에 "아바타 때문에 다시 달리고 싶은지"가 있는지, 페이즈 6 디자인 이후 문구가 맞는지 점검해 고친다
   - 확인: `fvm flutter build apk --release` 산출물 경로 기록
+  - 결과: 안내문에서 금요일 알림(페이즈 3.5 제거)을 빼고 목표·상점을 넣음, 앱 이름 런마고치, 버전 0.4.0+4 로 올림. **회사 Mac 에 릴리스 서명 키와 `key.properties` 가 없어** 여기서 만든 `app-release.apk`(63.0MB, `build/app/outputs/flutter-apk/`)는 디버그 서명이다. 지인 베타용은 키가 있는 집 PC 에서 빌드하거나 키를 Mac 으로 옮긴 뒤 빌드(사람 확인에 추가)
 - [ ] 5. iPhone 에 최신 main 설치
   - 내용: 연결된 iPhone(김동현의 iPhone, iOS 27.0.1)에 `docs/ios.md` 6번 명령으로 릴리스 설치. 무료 서명 7일 만료일을 `HANDOFF.md` 에 적는다. 서명 팀은 저장소에 커밋하지 않는다(임시 worktree `~/personal/runmagochi-merge-check` 사용). 설치가 막히면(Xcode 16.4 < iOS 27) 막힌 지점을 이 파일에 적고 사용자에게 알린다
   - 확인: `fvm flutter devices` 에 iPhone 이 보이고 설치 명령이 성공해 앱이 열린다(사용자 눈으로 확인)
@@ -59,6 +60,7 @@ iOS 빌드, `Info.plist` 권한 문구, 백그라운드 위치(`AppleSettings`, 
 - [ ] `distanceFilter 0` 배터리: 30분 러닝 전후 배터리 소모가 받아들일 만한지
 - [ ] 첫 구독 위치 켜기 창: 위치 서비스를 꺼 둔 채 시작했을 때 시스템 창이 뜨고 이어지는지 (Android)
 - [ ] 다른 Android 기기로 백업 복원 (페이즈 3)
+- [ ] 릴리스 서명 키로 베타 APK 빌드 (키는 집 Windows PC, `docs/beta.md` 1번)
 - [ ] Android 지인 베타 배포와 의견 수집("아바타 때문에 다시 달리고 싶은지" 포함)
 
 ## 자동 결정
