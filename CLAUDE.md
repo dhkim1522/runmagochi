@@ -12,15 +12,22 @@
 
 원천 문서는 `docs/` 다. 결정이 바뀌면 해당 문서를 고치고, 이 파일에는 문서 위치만 둔다.
 
-- `docs/product.md` — 기획서: 목표, 요구사항(F1~F19), 사용자 시나리오
+- `docs/product.md` — 기획서(PRD): 목표, 요구사항(F1~F25, 상태·페이즈·결정), 범위 밖, 가정과 위험
+- `docs/user-flows.md` — 유저 시나리오 S1~S6과 예외 흐름·화면 이동 다이어그램
 - `docs/roadmap.md` — 페이즈별 범위·완료 기준, 현재 위치, 미결정 항목
 - `docs/architecture.md` — 기술 스택, 구조, 데이터 모델, 서버 이전 경로
+- `docs/data-model.md` — 데이터 모델 ERD, 스키마 판 이력 (`test/docs/data_model_doc_test.dart` 가 코드와 대조)
+- `docs/sequences.md` — 시퀀스 다이어그램 4종: 러닝 기록~보상, 알림 버튼, 자동 일시정지·종료, 백업
 - `docs/screens.md` — MVP 화면 7개, 이동 흐름, UX 원칙
 - `docs/specs/run-engine.md` — 기록 엔진 규칙
 - `docs/specs/game-rules.md` — 게임 규칙과 수치
 - `docs/specs/sprite-spec.md` — 스프라이트 규격: 프레임·레이어·파일 이름
 - `docs/design/design-system.md` — 디자인 시스템(색·글꼴·간격·컴포넌트 규칙), 값은 `docs/design/tokens.json`
-- `docs/decisions/` — 결정 기록 (번호순)
+- `docs/design/design-process.md` — 디자인 의사결정 기록(페이즈 2.5~6 비교·선택·근거)
+- `docs/decisions/` — 결정 기록 (번호순). 색인과 흐름도는 `docs/decisions/README.md`
+- `docs/dev-log.md` — 페이즈별 개발 기록(테스트 수 추이, 검증에서 잡은 결함)
+- `docs/playbook.md` — 다음 프로젝트용 진행 순서. 같은 내용의 스킬 `.claude/skills/playbook`
+- `docs/portfolio.md` — 포트폴리오 산출물 모음과 현황
 - `docs/plans/` — 페이즈별 구현 계획과 진행 상태 (`/phase` 가 작성)
 - `docs/research/nrc-analysis.md` — Nike Run Club 분석 요약
 - `docs/research/market.md` — 시장조사: 유사 앱 전수 조사, 경쟁·타깃·수익화·위험, 제안
