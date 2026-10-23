@@ -11,7 +11,7 @@
   <img src="design/readme/28-shop.png" width="150" alt="상점">
 </p>
 
-화면 64컷 전체는 [화면설계서](design/screens/index.html)에 있다.
+화면 64컷 전체는 [화면설계서](https://dhkim1522.github.io/runmagochi/design/screens/)에 있고, 앱 소개는 [포트폴리오](https://dhkim1522.github.io/runmagochi/)에 있다.
 
 ## 기능
 
@@ -30,18 +30,18 @@ Flutter 3(FVM 고정) · Riverpod · Drift/SQLite(스키마 7판, 10개 표) · 
 
 ## 산출물
 
-개발 과정에서 만든 문서와 그림은 [포트폴리오 산출물 모음](docs/portfolio.md)에 모았고, 한 장으로 보는 정적 페이지 [포트폴리오](design/portfolio/index.html)도 있다. (HTML) 표시는 웹페이지라 GitHub 에서는 코드로 보이고, 내려받아 브라우저로 열거나 GitHub Pages 로 본다.
+개발 과정에서 만든 문서와 그림은 [포트폴리오 산출물 모음](docs/portfolio.md)에 모았고, 한 장으로 보는 정적 페이지 [포트폴리오](https://dhkim1522.github.io/runmagochi/design/portfolio/)도 있다. (HTML) 표시는 GitHub Pages 웹페이지로 열린다.
 
 | 문서 | 내용 |
 | --- | --- |
 | [기획서](docs/product.md) | 목표, 요구사항, 범위 밖, 가정과 위험 |
 | [유저 시나리오·흐름](docs/user-flows.md) | 시나리오 S1~S6, 예외 흐름, 화면 이동 |
-| [화면설계서](design/screens/index.html) (HTML) | 실제 앱 화면 64컷, 화면별 요소·상태·인터랙션 |
+| [화면설계서](https://dhkim1522.github.io/runmagochi/design/screens/) (HTML) | 실제 앱 화면 64컷, 화면별 요소·상태·인터랙션 |
 | [화면 목록](docs/screens.md) | 화면 목록, 이동 흐름, UX 원칙 |
 | [와이어프레임](design/wireframes/README.md) | 화면 콘티 |
-| [디자인 시스템](docs/design/design-system/index.html) (HTML) · [규칙](docs/design/design-system.md) | 색·글꼴·간격 토큰, 컴포넌트 미리보기 |
-| [디자인 과정](docs/design/design-process.md) · [UI 후보 비교](design/mockups/phase-6/compare/index.html) (HTML) | 방향 비교·선택·근거 |
-| [캐릭터 에셋](design/character/asset-catalog.html) (HTML) | 캐릭터 3종·단계·아이템·배지·앱 아이콘 |
+| [디자인 시스템](https://dhkim1522.github.io/runmagochi/docs/design/design-system/) (HTML) · [규칙](docs/design/design-system.md) | 색·글꼴·간격 토큰, 컴포넌트 미리보기 |
+| [디자인 과정](docs/design/design-process.md) · [UI 후보 비교](https://dhkim1522.github.io/runmagochi/design/mockups/phase-6/compare/) (HTML) | 방향 비교·선택·근거 |
+| [캐릭터 에셋](https://dhkim1522.github.io/runmagochi/design/character/asset-catalog.html) (HTML) | 캐릭터 3종·단계·아이템·배지·앱 아이콘 |
 | [설계서](docs/architecture.md) | 기술 스택, 모듈 지도, 플랫폼 경계 |
 | [데이터 모델](docs/data-model.md) | ERD, 스키마 판 이력 |
 | [시퀀스 다이어그램](docs/sequences.md) | 기록~보상, 알림 버튼, 자동 일시정지·종료, 백업 |
