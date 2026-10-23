@@ -95,9 +95,9 @@ int endWarningTimeoutMs(DateTime deadline, DateTime now) {
 /// 자동 일시정지·탈것 의심·신호 끊김은 재개와 함께 사용자 일시정지로 바꾸는 버튼을
 /// 둔다(오래 쉴 때).
 ///
-/// [vehicleNotice] 는 본문에 탈것 의심 문구를 보일지다(기록 중·탈것 의심에만 쓴다).
-/// 없으면 탈것 의심 상태일 때 보인다. 컨트롤러는 문구가 60초에 한 번만 바뀌도록
-/// 따로 정해 넘긴다. 제목·버튼·시간은 늘 상태를 따른다.
+/// [vehicleNotice] 는 탈것 의심일 때 본문에 의심 문구를 보일지다(없으면 보인다).
+/// 컨트롤러는 다시 켜기가 60초에 한 번이 되도록 따로 정해 넘긴다. 다른 상태에는
+/// 쓰지 않아 문구가 제목과 어긋나지 않는다.
 RunProgressContent runProgressContent({
   required RunState state,
   required double distanceM,
@@ -106,9 +106,7 @@ RunProgressContent runProgressContent({
   required bool goalReached,
   bool? vehicleNotice,
 }) {
-  final showVehicle =
-      (vehicleNotice ?? state == RunState.vehicle) &&
-      (state == RunState.vehicle || state == RunState.recording);
+  final showVehicle = state == RunState.vehicle && (vehicleNotice ?? true);
   final km = '${formatKm(distanceM)}km';
   if (state == RunState.autoPaused) {
     return RunProgressContent(

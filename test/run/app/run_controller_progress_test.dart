@@ -281,7 +281,7 @@ void main() {
     });
   });
 
-  test('탈것 의심 문구는 60초에 한 번만 바뀌고 제목은 상태를 따른다 (결정 0033)', () {
+  test('탈것 의심 문구는 풀리면 바로 끄고, 다시 켜기는 60초에 한 번이다 (결정 0033)', () {
     _run((async, container, progress, sampleAt) {
       container
           .read(runControllerProvider.notifier)
@@ -298,35 +298,35 @@ void main() {
       const notice = '혹시 뭘 타셨나요? 이 구간은 기록에서 뺄게요';
       move(1, 60, 3);
       move(61, 100, 7); // 84초에 의심
-      move(101, 130, 3); // 107초에 풀림
-      move(131, 170, 7); // 154초에 다시 의심
-      final changes = <(Duration, bool)>[];
-      var shownAt = Duration.zero;
+      move(101, 110, 3); // 107초에 풀림
+      move(111, 150, 7); // 133초에 다시 의심, 첫 안내 60초 안
+      final changes = <(int, bool)>[];
       for (final (i, c) in progress.shown.indexed) {
         final on = c.body == notice;
         if (i == 0 || on != (progress.shown[i - 1].body == notice)) {
-          changes.add((progress.shownAt[i], on));
+          changes.add((progress.shownAt[i].inSeconds, on));
         }
-        if (on && c.title.startsWith('러닝 중')) shownAt = progress.shownAt[i];
+        // 문구는 탈것 의심(일시정지 제목)일 때만 보인다.
+        if (on) expect(c.title, startsWith('일시정지'), reason: '$i');
       }
-      // 켜짐(84초) → 꺼짐(60초 뒤) 두 번만 바뀌고, 다시 의심해도 60초 안이라 안 켠다.
-      expect(changes.map((c) => (c.$1.inSeconds, c.$2)), [
-        (0, false),
-        (84, true),
-        (144, false),
-      ]);
-      // 풀린 뒤에도 문구가 남은 동안 제목은 러닝 중이다.
-      expect(shownAt, greaterThan(const Duration(seconds: 107)));
+      expect(changes, [(0, false), (84, true), (107, false), (144, true)]);
+      // 다시 의심했지만 아직 켜지 못한 동안은 일시정지 제목에 목표 본문.
+      final waiting = [
+        for (final (i, c) in progress.shown.indexed)
+          if (progress.shownAt[i].inSeconds >= 133 &&
+              progress.shownAt[i].inSeconds < 144)
+            c,
+      ];
+      expect(waiting, isNotEmpty);
+      for (final c in waiting) {
+        expect(c.title, startsWith('일시정지'));
+        expect(c.body, startsWith('목표 5km까지'));
+        expect(c.actions, [RunProgressAction.resume, RunProgressAction.pause]);
+      }
       expect(
         container.read(runControllerProvider).snapshot.state,
         RunState.vehicle,
       );
-      expect(progress.shown.last.title, startsWith('일시정지'));
-      expect(progress.shown.last.body, isNot(notice));
-      expect(progress.shown.last.actions, [
-        RunProgressAction.resume,
-        RunProgressAction.pause,
-      ]);
     });
   });
 

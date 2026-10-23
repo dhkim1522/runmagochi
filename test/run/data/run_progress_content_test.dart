@@ -115,7 +115,7 @@ void main() {
       expect(c.actions, [RunProgressAction.resume, RunProgressAction.pause]);
     });
 
-    test('풀린 뒤 문구가 남으면 러닝 중 제목·시간에 문구 본문', () {
+    test('기록 중에는 탈것 의심 문구를 쓰지 않는다', () {
       final c = runProgressContent(
         state: RunState.recording,
         distanceM: 2310,
@@ -125,9 +125,7 @@ void main() {
         vehicleNotice: true,
       );
       expect(c.title, '러닝 중 · 2.31km');
-      expect(c.body, '혹시 뭘 타셨나요? 이 구간은 기록에서 뺄게요');
-      expect(c.elapsed, const Duration(minutes: 12, seconds: 34));
-      expect(c.actions, [RunProgressAction.pause]);
+      expect(c.body, '목표 5km까지 2.69km');
     });
 
     test('일시정지에는 탈것 의심 문구를 쓰지 않는다', () {

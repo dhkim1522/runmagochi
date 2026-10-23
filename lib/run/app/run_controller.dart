@@ -22,7 +22,7 @@ import 'voice_guide.dart';
 const Duration _flushInterval = Duration(seconds: 10);
 const Duration _tickInterval = Duration(seconds: 1);
 
-/// 탈것 의심 안내(음성·러닝 알림 문구)와 신호 끊김 음성이 바뀌는 최소 간격.
+/// 탈것 의심 안내(음성·러닝 알림 문구)를 다시 켜고, 신호 끊김을 다시 읽는 최소 간격.
 /// 문턱 언저리 버스나 터널 입구에서 상태가 오가도 안내가 되풀이되지 않게 한다.
 const Duration noticeDebounce = Duration(seconds: 60);
 
@@ -154,9 +154,10 @@ class RunController extends Notifier<RunViewState> {
   /// 음성으로 안내한 마지막 1km 구간 번호. 같은 구간은 두 번 읽지 않는다.
   int _spokenSplits = 0;
 
-  /// 러닝 알림 본문에 탈것 의심 문구를 보이는 중. [noticeDebounce] 에 한 번만 바뀐다.
+  /// 러닝 알림 본문에 탈것 의심 문구를 보이는 중과 마지막으로 켠 시각.
+  /// 다시 켜기는 [noticeDebounce] 에 한 번만 한다.
   bool _vehicleNotice = false;
-  DateTime? _vehicleNoticeChangedAt;
+  DateTime? _vehicleNoticeOnAt;
 
   /// 지금 탈것 의심 구간을 음성으로 안내했다. 풀릴 때 "다시 기록해요" 를 읽는다.
   bool _vehicleAnnounced = false;
@@ -772,32 +773,27 @@ class RunController extends Notifier<RunViewState> {
     _syncEndWarning(engine);
   }
 
-  /// 탈것 의심이면 러닝 알림 문구를 켜고 음성으로 안내한다. 기록 중으로 풀리면 끈다.
-  /// 켜고 끄기는 [noticeDebounce] 에 한 번만 한다(문턱 언저리에서 오가도 되풀이하지
-  /// 않는다). 다른 상태(일시정지 등)로 가면 그 상태 문구를 쓰도록 바로 끈다.
+  /// 탈것 의심이면 러닝 알림 문구를 켜고 음성으로 안내한다. 다시 켜기는 마지막으로
+  /// 켠 뒤 [noticeDebounce] 가 지나야 한다(문턱 언저리에서 오가도 되풀이하지 않는다).
+  /// 의심이 아니면 바로 끈다(문구가 제목과 어긋나지 않게).
   void _syncVehicleNotice(RunState runState) {
-    if (runState != RunState.vehicle && runState != RunState.recording) {
+    if (runState != RunState.vehicle) {
       _vehicleNotice = false;
       return;
     }
-    final want = runState == RunState.vehicle;
-    if (want == _vehicleNotice) return;
+    if (_vehicleNotice) return;
     final now = ref.read(clockProvider)();
-    final changedAt = _vehicleNoticeChangedAt;
-    if (changedAt != null && now.difference(changedAt) < noticeDebounce) {
-      return;
-    }
-    _vehicleNotice = want;
-    _vehicleNoticeChangedAt = now;
-    if (want) {
-      _vehicleAnnounced = true;
-      _speak(const VoiceVehicle());
-    }
+    final onAt = _vehicleNoticeOnAt;
+    if (onAt != null && now.difference(onAt) < noticeDebounce) return;
+    _vehicleNotice = true;
+    _vehicleNoticeOnAt = now;
+    _vehicleAnnounced = true;
+    _speak(const VoiceVehicle());
   }
 
   void _resetNotices() {
     _vehicleNotice = false;
-    _vehicleNoticeChangedAt = null;
+    _vehicleNoticeOnAt = null;
     _vehicleAnnounced = false;
     _signalSpokenAt = null;
     _signalAnnounced = false;

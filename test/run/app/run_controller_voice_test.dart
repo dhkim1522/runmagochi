@@ -324,7 +324,7 @@ void main() {
     });
   });
 
-  test('탈것 의심 안내는 60초에 한 번만 바뀐다', () {
+  test('탈것 의심 안내는 다시 켜기가 60초에 한 번이다', () {
     _run((async, container, speaker, profile, sampleAt) {
       container
           .read(runControllerProvider.notifier)
@@ -333,14 +333,19 @@ void main() {
       const vehicle = '너무 빨라서 이 구간은 기록에서 뺄게요';
       sampleAt(const Duration(seconds: 1), 0);
       sampleAt(const Duration(seconds: 61), 180);
-      // 버스 40초 → 내려서 30초 → 다시 버스 40초. 두 번째 의심은 첫 안내 60초 안이다.
+      // 버스 40초 → 내려서 10초 → 다시 버스. 두 번째 의심은 첫 안내 60초 안이다.
       sampleAt(const Duration(seconds: 101), 460);
-      sampleAt(const Duration(seconds: 131), 550);
-      sampleAt(const Duration(seconds: 171), 830);
-      final state = container.read(runControllerProvider).snapshot.state;
-      expect(state, RunState.vehicle);
+      sampleAt(const Duration(seconds: 111), 490);
+      sampleAt(const Duration(seconds: 141), 700);
+      expect(
+        container.read(runControllerProvider).snapshot.state,
+        RunState.vehicle,
+      );
       expect(speaker.spoken.where((l) => l == vehicle), hasLength(1));
       expect(speaker.spoken.where((l) => l == '다시 기록해요'), hasLength(1));
+      // 첫 안내 60초가 지나도 의심 중이면 한 번 더 안내한다.
+      sampleAt(const Duration(seconds: 161), 840);
+      expect(speaker.spoken.where((l) => l == vehicle), hasLength(2));
     });
   });
 
