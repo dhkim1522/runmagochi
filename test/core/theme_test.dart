@@ -30,9 +30,9 @@ const _light = {
   'stageSky': 0xFFE3F6C8,
   'stageGround': 0xFFCDEBA8,
   'stageGroundLine': 0xFFB3DB82,
-  'paceSlow': 0xFF3A75D6,
-  'paceMid': 0xFF5C1A5C,
-  'paceFast': 0xFFB35C00,
+  'paceSlow': 0xFF679C1C,
+  'paceMid': 0xFF126812,
+  'paceFast': 0xFF14301A,
   'spriteRim': 0x00000000,
   'bubble': 0xFFFFFFFF,
 };
@@ -58,9 +58,9 @@ const _dark = {
   'stageSky': 0xFF1D2C15,
   'stageGround': 0xFF2A3F1D,
   'stageGroundLine': 0xFF3E5C2A,
-  'paceSlow': 0xFF4F7FE8,
-  'paceMid': 0xFFF2C0FA,
-  'paceFast': 0xFFB8641A,
+  'paceSlow': 0xFF4D7722,
+  'paceMid': 0xFF61AE13,
+  'paceFast': 0xFFEAF6AC,
   'spriteRim': 0xFFEEF4E6,
   'bubble': 0xFF44573A,
 };
@@ -365,6 +365,28 @@ void main() {
             }
           }
         }
+      });
+
+      test('경로 페이스 3색은 연두 계열 한 줄이다: 색상 60~160도, 느림→빠름으로 한 방향 명도 단계', () {
+        final hsl = [
+          for (final col in [c.paceSlow, c.paceMid, c.paceFast])
+            HSLColor.fromColor(col),
+        ];
+        for (final h in hsl) {
+          expect(h.hue, inInclusiveRange(60, 160));
+          expect(h.saturation, greaterThan(0.3));
+        }
+        final lightness = [for (final h in hsl) h.lightness];
+        final light = e.key == 'light';
+        // 라이트는 빠를수록 진하게(어둡게), 다크는 빠를수록 밝게.
+        expect(
+          lightness[0] > lightness[1] && lightness[1] > lightness[2],
+          light,
+        );
+        expect(
+          lightness[0] < lightness[1] && lightness[1] < lightness[2],
+          !light,
+        );
       });
 
       test('CIEDE2000 계산 확인: Sharma 2005 표 1번 짝 = 2.0425', () {

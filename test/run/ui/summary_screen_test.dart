@@ -662,13 +662,13 @@ void layoutTests() {
       expect(painter.segments.length, 6);
       final legend = find.byKey(const ValueKey('route-legend'));
       expect(legend, findsOneWidget);
-      for (final t in ['느림', '보통', '빠름']) {
+      for (final t in ['천천히', '보통', '빠르게']) {
         expect(
           find.descendant(of: legend, matching: find.text(t)),
           findsOneWidget,
         );
       }
-      expect(find.text('빠른 이동'), findsNothing);
+      expect(find.text('빠른 이동 · 제외'), findsNothing);
     });
 
     testWidgets('구간 페이스가 모두 같으면 한 색이고 범례가 없다', (tester) async {

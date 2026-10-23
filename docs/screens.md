@@ -75,7 +75,8 @@ flowchart LR
 | 권한 안내 | 제목 → 안내 카드 → 상태(위치·정확한 위치·배터리 최적화·거부)마다 연두 버튼 하나, 배터리 안내는 `나중에` 글자 버튼을 더한다 | `AppCard`, `AppButton` |
 
 - 빈 상태·불러오기 실패는 `EmptyState`/`EmptyState.error`(앱 그림 + `ink-muted` 문구), 진짜 문제는 `NoticeCard`(`danger`).
-- 앱 아이콘·스플래시는 같은 사각 무대 위 병아리(`tool/render_app_icon.dart`, sprite-spec "만드는 방법").
+- 앱 아이콘·스플래시는 같은 사각 무대 위 병아리(`tool/render_app_icon.dart`, sprite-spec "만드는 방법"). 스플래시 타일은 `primary-edge` 테두리를 두르고, 안드로이드 알림 작은 아이콘은 병아리 흰 실루엣(`ic_stat_chick`)이다.
+- 경로 범례: `천천히`·`보통`·`빠르게`(연두 한 계열 3단)와 `빠른 이동 · 제외`(회색).
 
 ## UX 원칙
 

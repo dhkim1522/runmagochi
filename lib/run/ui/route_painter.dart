@@ -63,7 +63,7 @@ class RoutePaceColors {
     required this.single,
   });
 
-  /// 느림 pace-slow, 보통 pace-mid, 빠름 pace-fast, 빠른 이동 ink-muted, 한 색 primary-deep.
+  /// 천천히 pace-slow, 보통 pace-mid, 빠르게 pace-fast, 빠른 이동(제외) ink-muted, 한 색 primary-deep.
   factory RoutePaceColors.of(AppColors c) => RoutePaceColors(
     slow: c.paceSlow,
     mid: c.paceMid,
@@ -194,10 +194,10 @@ class RoutePaceLegend extends StatelessWidget {
   final List<RouteSegment> segments;
 
   static const _labels = {
-    RoutePace.slow: '느림',
+    RoutePace.slow: '천천히',
     RoutePace.mid: '보통',
-    RoutePace.fast: '빠름',
-    RoutePace.fastMove: '빠른 이동',
+    RoutePace.fast: '빠르게',
+    RoutePace.fastMove: '빠른 이동 · 제외',
   };
 
   /// 범례가 보이는가.

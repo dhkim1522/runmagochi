@@ -296,9 +296,9 @@ class AppColors extends ThemeExtension<AppColors> {
   /// 풀밭 풀잎 점, 앱 아이콘 땅 윗선([Borders.groundLine]).
   final Color stageGroundLine;
 
-  /// 경로 페이스 3단(느림·보통·빠름): 파랑·자주·주황. 보통(자주)만 밝기를 크게 달리해
-  /// (라이트는 가장 어둡게, 다크는 가장 밝게) 적·녹·청 색각 이상과 빠른 이동(ink-muted)
-  /// 사이에서도 CIEDE2000 15 이상 떨어진다(theme_test).
+  /// 경로 페이스 3단(천천히·보통·빠르게): 연두 한 계열의 명도 단계(라이트는 빠를수록 짙게,
+  /// 다크는 빠를수록 옅게). 적·녹·청 색각 이상과 빠른 이동(ink-muted) 사이에서도
+  /// CIEDE2000 15 이상 떨어진다(theme_test).
   final Color paceSlow;
   final Color paceMid;
   final Color paceFast;
@@ -375,9 +375,9 @@ class AppColors extends ThemeExtension<AppColors> {
     stageSky: Color(0xFFE3F6C8),
     stageGround: Color(0xFFCDEBA8),
     stageGroundLine: Color(0xFFB3DB82),
-    paceSlow: Color(0xFF3A75D6),
-    paceMid: Color(0xFF5C1A5C),
-    paceFast: Color(0xFFB35C00),
+    paceSlow: Color(0xFF679C1C),
+    paceMid: Color(0xFF126812),
+    paceFast: Color(0xFF14301A),
     spriteRim: Color(0x00000000),
     bubble: Color(0xFFFFFFFF),
   );
@@ -404,9 +404,9 @@ class AppColors extends ThemeExtension<AppColors> {
     stageSky: Color(0xFF1D2C15),
     stageGround: Color(0xFF2A3F1D),
     stageGroundLine: Color(0xFF3E5C2A),
-    paceSlow: Color(0xFF4F7FE8),
-    paceMid: Color(0xFFF2C0FA),
-    paceFast: Color(0xFFB8641A),
+    paceSlow: Color(0xFF4D7722),
+    paceMid: Color(0xFF61AE13),
+    paceFast: Color(0xFFEAF6AC),
     spriteRim: Color(0xFFEEF4E6),
     bubble: Color(0xFF44573A),
   );
