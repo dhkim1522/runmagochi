@@ -98,6 +98,10 @@ class _Instant implements InstantNotifier {
 
 class _Progress implements RunProgressNotifier {
   final shown = <RunProgressContent>[];
+
+  /// [shown] 과 같은 순서로, 띄운 때(시작 기준).
+  final shownAt = <Duration>[];
+  Duration Function() now = () => Duration.zero;
   int cancels = 0;
   bool fails = false;
 
@@ -105,6 +109,7 @@ class _Progress implements RunProgressNotifier {
   Future<void> show(RunProgressContent content) async {
     if (fails) throw StateError('알림 실패');
     shown.add(content);
+    shownAt.add(now());
   }
 
   @override
@@ -136,7 +141,9 @@ void _run(
 }) {
   fakeAsync((async) {
     final location = _Location();
-    final progress = _Progress()..fails = fails;
+    final progress = _Progress()
+      ..fails = fails
+      ..now = () => async.elapsed;
     final container = ProviderContainer(
       overrides: [
         speakerProvider.overrideWithValue(FakeSpeaker()),
@@ -271,6 +278,55 @@ void main() {
       sampleAt(const Duration(seconds: 31), 102);
       expect(container.read(runControllerProvider).goalReached, isTrue);
       expect(progress.shown.last.body, '목표 0분 달성!');
+    });
+  });
+
+  test('탈것 의심 문구는 60초에 한 번만 바뀌고 제목은 상태를 따른다 (결정 0033)', () {
+    _run((async, container, progress, sampleAt) {
+      container
+          .read(runControllerProvider.notifier)
+          .start(goal: DistanceGoal(5000));
+      async.flushMicrotasks();
+      var m = 0.0;
+      void move(int from, int until, double speed) {
+        for (var i = from; i <= until; i++) {
+          m += speed;
+          sampleAt(Duration(seconds: i), m);
+        }
+      }
+
+      const notice = '혹시 뭘 타셨나요? 이 구간은 기록에서 뺄게요';
+      move(1, 60, 3);
+      move(61, 100, 7); // 84초에 의심
+      move(101, 130, 3); // 107초에 풀림
+      move(131, 170, 7); // 154초에 다시 의심
+      final changes = <(Duration, bool)>[];
+      var shownAt = Duration.zero;
+      for (final (i, c) in progress.shown.indexed) {
+        final on = c.body == notice;
+        if (i == 0 || on != (progress.shown[i - 1].body == notice)) {
+          changes.add((progress.shownAt[i], on));
+        }
+        if (on && c.title.startsWith('러닝 중')) shownAt = progress.shownAt[i];
+      }
+      // 켜짐(84초) → 꺼짐(60초 뒤) 두 번만 바뀌고, 다시 의심해도 60초 안이라 안 켠다.
+      expect(changes.map((c) => (c.$1.inSeconds, c.$2)), [
+        (0, false),
+        (84, true),
+        (144, false),
+      ]);
+      // 풀린 뒤에도 문구가 남은 동안 제목은 러닝 중이다.
+      expect(shownAt, greaterThan(const Duration(seconds: 107)));
+      expect(
+        container.read(runControllerProvider).snapshot.state,
+        RunState.vehicle,
+      );
+      expect(progress.shown.last.title, startsWith('일시정지'));
+      expect(progress.shown.last.body, isNot(notice));
+      expect(progress.shown.last.actions, [
+        RunProgressAction.resume,
+        RunProgressAction.pause,
+      ]);
     });
   });
 

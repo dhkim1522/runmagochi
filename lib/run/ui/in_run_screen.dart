@@ -14,7 +14,7 @@ import '../../core/theme.dart';
 import '../../core/ui/components.dart';
 import '../app/providers.dart';
 import '../data/run_progress_notifier.dart'
-    show signalLostNotice, vehicleNotice;
+    show signalLostNotice, vehicleNoticeText;
 import '../domain/run_engine.dart';
 import '../domain/run_goal.dart';
 import '../domain/run_summary.dart';
@@ -78,7 +78,7 @@ class _InRunScreenState extends ConsumerState<InRunScreen> {
     final paused = snap.state == RunState.paused || autoStopped || ended;
     // 탈것 의심·신호 끊김은 펫이 말풍선으로 까닭을 알린다 (결정 0033).
     final bubble = switch (snap.state) {
-      RunState.vehicle => vehicleNotice,
+      RunState.vehicle => vehicleNoticeText,
       RunState.signalLost => signalLostNotice,
       _ => null,
     };

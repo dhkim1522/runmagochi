@@ -616,6 +616,31 @@ void main() {
       });
     });
 
+    test('1km 를 넘겼어도 첫 의심 전으로 잘라 1km 미만이 되면 저장하지 않는다', () {
+      _run((env) {
+        env.controller.start(goal: DistanceGoal(3000));
+        env.async.flushMicrotasks();
+        pos = 0;
+        void go(int from, int until, double speed) {
+          for (var i = from; i <= until; i++) {
+            pos += speed;
+            env.sampleAt(Duration(seconds: i), pos);
+          }
+        }
+
+        go(1, 270, 3); // 810m, 마지막 정상 점 270초
+        go(271, 320, 7); // 294초에 의심
+        go(321, 470, 3); // 풀린 뒤 달리기
+        expect(env.view.snapshot.state, RunState.recording);
+        expect(env.view.snapshot.distanceM, greaterThan(1000));
+        go(471, 560, 7); // 다시 의심, 합계 2분에 끝낸다
+        expect(env.repo.completed, isEmpty);
+        expect(env.repo.discarded, [_runId]);
+        expect(env.view.discardedShortRun, isTrue);
+        expect(env.notifier.shown, [('러닝을 마쳤어요', '1km 미만은 기록하지 않아요')]);
+      });
+    });
+
     test('provider 로 줄인 기준을 따른다', () {
       _run(config: const RunGuardConfig(vehicle: Duration(seconds: 30)), (env) {
         startRun(env);

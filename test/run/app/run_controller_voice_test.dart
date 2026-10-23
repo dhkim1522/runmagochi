@@ -15,6 +15,7 @@ import '../ui/fakes.dart' show FakeRunProgressNotifier, FakeSpeaker;
 import 'package:runmagochi/run/data/location_source.dart';
 import 'package:runmagochi/run/data/run_repository.dart';
 import 'package:runmagochi/run/domain/location_sample.dart';
+import 'package:runmagochi/run/domain/run_engine.dart';
 import 'package:runmagochi/run/domain/run_summary.dart';
 
 const _lat0 = 37.5;
@@ -113,7 +114,7 @@ void _run(
     ProviderContainer container,
     FakeSpeaker speaker,
     _Profile profile,
-    void Function(Duration at, double meters) sampleAt,
+    void Function(Duration at, double meters, {bool jump}) sampleAt,
   )
   body, {
   ActiveRun? activeRun,
@@ -146,9 +147,12 @@ void _run(
 
     double? lastMeters;
     var lastAt = Duration.zero;
-    void sampleAt(Duration at, double meters) {
+
+    /// 앞 점부터 5초마다 사이 점을 채워 [at] 에 [meters] 점을 보낸다. [jump] 면
+    /// 사이를 채우지 않는다(점이 끊긴 사이).
+    void sampleAt(Duration at, double meters, {bool jump = false}) {
       final from = lastMeters;
-      if (from != null) {
+      if (from != null && !jump) {
         const step = Duration(seconds: 5);
         for (var t = lastAt + step; t < at; t += step) {
           final f = (t - lastAt).inMicroseconds / (at - lastAt).inMicroseconds;
@@ -317,6 +321,54 @@ void main() {
       // 내려서 초속 3m 로 달리면 풀린다.
       sampleAt(const Duration(seconds: 201), 840);
       expect(speaker.spoken, ['러닝을 시작해요', '너무 빨라서 이 구간은 기록에서 뺄게요', '다시 기록해요']);
+    });
+  });
+
+  test('탈것 의심 안내는 60초에 한 번만 바뀐다', () {
+    _run((async, container, speaker, profile, sampleAt) {
+      container
+          .read(runControllerProvider.notifier)
+          .start(goal: const DistanceGoal(5000));
+      async.flushMicrotasks();
+      const vehicle = '너무 빨라서 이 구간은 기록에서 뺄게요';
+      sampleAt(const Duration(seconds: 1), 0);
+      sampleAt(const Duration(seconds: 61), 180);
+      // 버스 40초 → 내려서 30초 → 다시 버스 40초. 두 번째 의심은 첫 안내 60초 안이다.
+      sampleAt(const Duration(seconds: 101), 460);
+      sampleAt(const Duration(seconds: 131), 550);
+      sampleAt(const Duration(seconds: 171), 830);
+      final state = container.read(runControllerProvider).snapshot.state;
+      expect(state, RunState.vehicle);
+      expect(speaker.spoken.where((l) => l == vehicle), hasLength(1));
+      expect(speaker.spoken.where((l) => l == '다시 기록해요'), hasLength(1));
+    });
+  });
+
+  test('신호 끊김 안내는 60초에 한 번만 읽는다', () {
+    _run((async, container, speaker, profile, sampleAt) {
+      container
+          .read(runControllerProvider.notifier)
+          .start(goal: const DistanceGoal(5000));
+      async.flushMicrotasks();
+      const lost = '신호가 끊겼어요. 밖으로 나오면 다시 찾을게요';
+      sampleAt(const Duration(seconds: 1), 0);
+      sampleAt(const Duration(seconds: 61), 180);
+      // 터널 입구: 40초 끊김 → 5초 이어짐 → 40초 끊김.
+      async.elapse(const Duration(seconds: 40));
+      sampleAt(const Duration(seconds: 101), 300, jump: true);
+      sampleAt(const Duration(seconds: 106), 315);
+      async.elapse(const Duration(seconds: 40));
+      expect(
+        container.read(runControllerProvider).snapshot.state,
+        RunState.signalLost,
+      );
+      expect(speaker.spoken.where((l) => l == lost), hasLength(1));
+      expect(speaker.spoken.where((l) => l == '다시 기록해요'), hasLength(1));
+      // 60초가 지난 뒤 다시 끊기면 읽는다.
+      sampleAt(const Duration(seconds: 150), 400, jump: true);
+      sampleAt(const Duration(seconds: 155), 415);
+      async.elapse(const Duration(seconds: 40));
+      expect(speaker.spoken.where((l) => l == lost), hasLength(2));
     });
   });
 

@@ -65,7 +65,7 @@ const String pausedEndWarningTitle = '일시정지가 길어 러닝을 마쳐요
 const String pausedEndWarningBody = '30초 안에 재개를 누르세요';
 
 /// 탈것 의심 안내. 러닝 화면 무대 말풍선과 러닝 알림이 같이 쓴다 (결정 0033).
-const String vehicleNotice = '혹시 뭘 타셨나요? 이 구간은 기록에서 뺄게요';
+const String vehicleNoticeText = '혹시 뭘 타셨나요? 이 구간은 기록에서 뺄게요';
 
 /// 신호 끊김 안내. 러닝 화면 무대 말풍선·러닝 알림·음성 안내가 같이 쓴다 (결정 0033).
 const String signalLostNotice = '신호가 끊겼어요. 밖으로 나오면 다시 찾을게요';
@@ -94,13 +94,21 @@ int endWarningTimeoutMs(DateTime deadline, DateTime now) {
 /// 상태·거리·목표로 알림 문구를 만든다. 끝나지 않은 러닝 상태만 다룬다.
 /// 자동 일시정지·탈것 의심·신호 끊김은 재개와 함께 사용자 일시정지로 바꾸는 버튼을
 /// 둔다(오래 쉴 때).
+///
+/// [vehicleNotice] 는 본문에 탈것 의심 문구를 보일지다(기록 중·탈것 의심에만 쓴다).
+/// 없으면 탈것 의심 상태일 때 보인다. 컨트롤러는 문구가 60초에 한 번만 바뀌도록
+/// 따로 정해 넘긴다. 제목·버튼·시간은 늘 상태를 따른다.
 RunProgressContent runProgressContent({
   required RunState state,
   required double distanceM,
   required Duration movingTime,
   required RunGoal? goal,
   required bool goalReached,
+  bool? vehicleNotice,
 }) {
+  final showVehicle =
+      (vehicleNotice ?? state == RunState.vehicle) &&
+      (state == RunState.vehicle || state == RunState.recording);
   final km = '${formatKm(distanceM)}km';
   if (state == RunState.autoPaused) {
     return RunProgressContent(
@@ -110,16 +118,18 @@ RunProgressContent runProgressContent({
       actions: [RunProgressAction.resume, RunProgressAction.pause],
     );
   }
-  if (state == RunState.vehicle || state == RunState.signalLost) {
+  if (state == RunState.signalLost) {
     return RunProgressContent(
       title: '일시정지 · $km',
-      body: state == RunState.vehicle ? vehicleNotice : signalLostNotice,
+      body: signalLostNotice,
       elapsed: null,
       actions: [RunProgressAction.resume, RunProgressAction.pause],
     );
   }
   final String body;
-  if (goal == null) {
+  if (showVehicle) {
+    body = vehicleNoticeText;
+  } else if (goal == null) {
     body = '화면을 꺼도 기록이 이어져요';
   } else if (goalReached) {
     body = '목표 ${goal.label} 달성!';
@@ -138,6 +148,14 @@ RunProgressContent runProgressContent({
       body: body,
       elapsed: null,
       actions: [RunProgressAction.resume],
+    );
+  }
+  if (state == RunState.vehicle) {
+    return RunProgressContent(
+      title: '일시정지 · $km',
+      body: body,
+      elapsed: null,
+      actions: [RunProgressAction.resume, RunProgressAction.pause],
     );
   }
   return RunProgressContent(

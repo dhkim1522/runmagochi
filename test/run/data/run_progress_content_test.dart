@@ -100,6 +100,48 @@ void main() {
       expect(c.actions, [RunProgressAction.resume, RunProgressAction.pause]);
     });
 
+    test('탈것 의심 문구를 끄면 일시정지 제목에 목표 본문', () {
+      final c = runProgressContent(
+        state: RunState.vehicle,
+        distanceM: 2310,
+        movingTime: const Duration(minutes: 12, seconds: 34),
+        goal: const DistanceGoal(5000),
+        goalReached: false,
+        vehicleNotice: false,
+      );
+      expect(c.title, '일시정지 · 2.31km');
+      expect(c.body, '목표 5km까지 2.69km');
+      expect(c.elapsed, isNull);
+      expect(c.actions, [RunProgressAction.resume, RunProgressAction.pause]);
+    });
+
+    test('풀린 뒤 문구가 남으면 러닝 중 제목·시간에 문구 본문', () {
+      final c = runProgressContent(
+        state: RunState.recording,
+        distanceM: 2310,
+        movingTime: const Duration(minutes: 12, seconds: 34),
+        goal: const DistanceGoal(5000),
+        goalReached: false,
+        vehicleNotice: true,
+      );
+      expect(c.title, '러닝 중 · 2.31km');
+      expect(c.body, '혹시 뭘 타셨나요? 이 구간은 기록에서 뺄게요');
+      expect(c.elapsed, const Duration(minutes: 12, seconds: 34));
+      expect(c.actions, [RunProgressAction.pause]);
+    });
+
+    test('일시정지에는 탈것 의심 문구를 쓰지 않는다', () {
+      final c = runProgressContent(
+        state: RunState.paused,
+        distanceM: 2310,
+        movingTime: const Duration(minutes: 12, seconds: 34),
+        goal: const DistanceGoal(5000),
+        goalReached: false,
+        vehicleNotice: true,
+      );
+      expect(c.body, '목표 5km까지 2.69km');
+    });
+
     test('신호 끊김: 다시 찾는다고 알리고 재개·일시정지 버튼', () {
       final c = _content(RunState.signalLost, reached: true);
       expect(c.title, '일시정지 · 2.31km');

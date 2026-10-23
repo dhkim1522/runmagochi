@@ -15,6 +15,11 @@ const double vehicleSpeedMps = 22 / 3.6;
 /// [vehicleSpeedMps] 를 넘으면 탈것 의심이다.
 const Duration vehicleWindow = Duration(seconds: 30);
 
+/// 기록 중 마지막 받아들인 점에서 이만큼(m) 안의 점은 받아들이지 않는다(거리에
+/// 넣지 않는다). 위치 스트림은 거리 거름 없이 1초마다 점을 주고, 이 거름은 엔진이
+/// 한다. 멈춰 서도 점이 와서 신호 끊김과 멈춤을 구별한다 (결정 0033).
+const double minMoveM = 3;
+
 /// 정확도 거름을 통과한 점이 이만큼 없으면 신호 끊김이다 (결정 0033).
 const Duration signalLostAfter = Duration(seconds: 30);
 const Duration _currentPaceWindow = Duration(seconds: 30);
@@ -161,6 +166,11 @@ class RunEngine {
   /// 탈것 의심이 되면 버리고, 다시 느린 점이 오면 그 점과 함께 받아들인다.
   final List<LocationSample> _held = [];
 
+  /// 점을 미루기 시작한 순간의 마지막 받아들인 점 시각(이번 기록 구간 시작보다
+  /// 앞이면 시작). 미루는 동안 움직인 시간은 여기서 멈추고, 미룬 점을 받아들이면
+  /// 그 시간을 더하고 버리면 함께 버린다. 미룬 점이 없으면 null.
+  DateTime? _holdFrom;
+
   /// 정확도 거름을 통과한 마지막 점의 시각. 없으면 위치를 받기 시작한 시각.
   DateTime? _lastSignalAt;
 
@@ -262,7 +272,7 @@ class RunEngine {
   Duration get confirmedMovingTime {
     final since = _recordingSince;
     if (since == null) return _movingBase;
-    final now = _clock();
+    final now = _recordedUntil(_clock());
     var movedAt = _movedAt ?? since;
     if (movedAt.isBefore(since)) movedAt = since;
     if (movedAt.isAfter(now)) movedAt = now;
@@ -506,12 +516,16 @@ class RunEngine {
           _distance(ref, s) /
                   (dt.inMicroseconds / Duration.microsecondsPerSecond) >
               vehicleSpeedMps) {
+        if (held.isEmpty) {
+          final since = _recordingSince!;
+          _holdFrom = ref.time.isBefore(since) ? since : ref.time;
+        }
         if (held.isEmpty || s.time.isAfter(held.last.time)) held.add(s);
         if (s.time.difference(held.first.time) < vehicleWindow) {
           return const [];
         }
         final points = List.of(held);
-        held.clear();
+        _clearHeld();
         return [
           for (final p in points)
             if (_accept(p)) p,
@@ -519,7 +533,7 @@ class RunEngine {
       }
     }
     final points = [...held, s];
-    held.clear();
+    _clearHeld();
     return [
       for (final p in points)
         if (_accept(p)) p,
@@ -561,7 +575,9 @@ class RunEngine {
       if (dt <= Duration.zero) return false;
       if (!_segmentPending) {
         final seconds = dt.inMicroseconds / Duration.microsecondsPerSecond;
-        if (_distance(last, s) / seconds > _maxSpeedMps) return false;
+        final d = _distance(last, s);
+        // 좌표 계산 오차(1mm 미만)로 3m 이동이 3m 아래로 재지는 것은 받아들인다.
+        if (d / seconds > _maxSpeedMps || d < minMoveM - 0.001) return false;
       }
     }
     _append(s);
@@ -631,14 +647,15 @@ class RunEngine {
     final now = at ?? _clock();
     if (!auto || to == RunState.signalLost) _speedWindow.clear();
     if (!auto && to == RunState.recording) _lastSignalAt = now;
-    _held.clear();
+    final recordedUntil = _recordedUntil(now);
+    _clearHeld();
     if (from == RunState.vehicle) {
       final since = _stateSince!;
       if (now.isAfter(since)) _vehicleBase += now.difference(since);
     }
     _resumeWindow.clear();
     if (from == RunState.recording) {
-      _movingBase += now.difference(_recordingSince!);
+      _movingBase += recordedUntil.difference(_recordingSince!);
       _recordingSince = null;
       _pausedAt = now;
     }
@@ -659,7 +676,18 @@ class RunEngine {
     final since = _recordingSince;
     return since == null
         ? _movingBase
-        : _movingBase + (at ?? _clock()).difference(since);
+        : _movingBase + _recordedUntil(at ?? _clock()).difference(since);
+  }
+
+  /// 움직인 시간을 [at] 까지 센다. 점을 미루는 중이면 미루기 시작한 시각까지다.
+  DateTime _recordedUntil(DateTime at) {
+    final hold = _holdFrom;
+    return hold != null && hold.isBefore(at) ? hold : at;
+  }
+
+  void _clearHeld() {
+    _held.clear();
+    _holdFrom = null;
   }
 
   /// 현재 구간에서 `clock()` 까지 최근 30초 창의 시간 ÷ 거리.

@@ -22,6 +22,10 @@ import 'voice_guide.dart';
 const Duration _flushInterval = Duration(seconds: 10);
 const Duration _tickInterval = Duration(seconds: 1);
 
+/// 탈것 의심 안내(음성·러닝 알림 문구)와 신호 끊김 음성이 바뀌는 최소 간격.
+/// 문턱 언저리 버스나 터널 입구에서 상태가 오가도 안내가 되풀이되지 않게 한다.
+const Duration noticeDebounce = Duration(seconds: 60);
+
 /// 거리만 바뀐 러닝 알림 갱신 사이의 최소 간격.
 const Duration _progressMinInterval = Duration(seconds: 3);
 const int _progressTimeStepSeconds = 15;
@@ -129,6 +133,7 @@ class RunController extends Notifier<RunViewState> {
 
   /// 러닝 알림에 마지막으로 띄운 상태·거리 표기·시각.
   RunState? _progressState;
+  bool _progressVehicleNotice = false;
   String? _progressKm;
   int? _progressTimeStep;
   bool _progressReached = false;
@@ -148,6 +153,17 @@ class RunController extends Notifier<RunViewState> {
 
   /// 음성으로 안내한 마지막 1km 구간 번호. 같은 구간은 두 번 읽지 않는다.
   int _spokenSplits = 0;
+
+  /// 러닝 알림 본문에 탈것 의심 문구를 보이는 중. [noticeDebounce] 에 한 번만 바뀐다.
+  bool _vehicleNotice = false;
+  DateTime? _vehicleNoticeChangedAt;
+
+  /// 지금 탈것 의심 구간을 음성으로 안내했다. 풀릴 때 "다시 기록해요" 를 읽는다.
+  bool _vehicleAnnounced = false;
+
+  /// 마지막으로 신호 끊김을 읽은 시각과, 지금 끊김을 읽었는지.
+  DateTime? _signalSpokenAt;
+  bool _signalAnnounced = false;
 
   /// 저장된 체중. 없거나 읽지 못하면 기본 체중.
   Future<double> _readWeight() async {
@@ -209,6 +225,7 @@ class RunController extends Notifier<RunViewState> {
       _runId = runId;
       _goal = goal;
       _goalReached = false;
+      _resetNotices();
       _listenVoice(engine, spokenSplits: 0);
       _speak(const VoiceStart());
       _subscribe();
@@ -395,6 +412,7 @@ class RunController extends Notifier<RunViewState> {
     );
     _runId = active.id;
     _goal = active.goal;
+    _resetNotices();
     // 이미 넘긴 목표는 알리지 않는다(사용자가 이미 알았거나 앱이 죽어 있었다).
     final goal = active.goal;
     _goalReached = goal != null && _reaches(goal, engine.snapshot);
@@ -749,8 +767,40 @@ class RunController extends Notifier<RunViewState> {
       // 한 박자 미룬다.
       scheduleMicrotask(() => _speak(VoiceGoalReached(goal)));
     }
+    _syncVehicleNotice(snapshot.state);
     _updateProgress(snapshot);
     _syncEndWarning(engine);
+  }
+
+  /// 탈것 의심이면 러닝 알림 문구를 켜고 음성으로 안내한다. 기록 중으로 풀리면 끈다.
+  /// 켜고 끄기는 [noticeDebounce] 에 한 번만 한다(문턱 언저리에서 오가도 되풀이하지
+  /// 않는다). 다른 상태(일시정지 등)로 가면 그 상태 문구를 쓰도록 바로 끈다.
+  void _syncVehicleNotice(RunState runState) {
+    if (runState != RunState.vehicle && runState != RunState.recording) {
+      _vehicleNotice = false;
+      return;
+    }
+    final want = runState == RunState.vehicle;
+    if (want == _vehicleNotice) return;
+    final now = ref.read(clockProvider)();
+    final changedAt = _vehicleNoticeChangedAt;
+    if (changedAt != null && now.difference(changedAt) < noticeDebounce) {
+      return;
+    }
+    _vehicleNotice = want;
+    _vehicleNoticeChangedAt = now;
+    if (want) {
+      _vehicleAnnounced = true;
+      _speak(const VoiceVehicle());
+    }
+  }
+
+  void _resetNotices() {
+    _vehicleNotice = false;
+    _vehicleNoticeChangedAt = null;
+    _vehicleAnnounced = false;
+    _signalSpokenAt = null;
+    _signalAnnounced = false;
   }
 
   /// 오래 멈춤 예고 구간에 들어가면 종료 예고를 한 번 띄우고, 구간을 벗어나면
@@ -817,7 +867,9 @@ class RunController extends Notifier<RunViewState> {
         ? (goal.time - snapshot.movingTime).inSeconds ~/
               _progressTimeStepSeconds
         : null;
-    final stateChanged = snapshot.state != _progressState;
+    final stateChanged =
+        snapshot.state != _progressState ||
+        _vehicleNotice != _progressVehicleNotice;
     final shownAt = _progressShownAt;
     if (!stateChanged) {
       if (km == _progressKm &&
@@ -830,6 +882,7 @@ class RunController extends Notifier<RunViewState> {
       }
     }
     _progressState = snapshot.state;
+    _progressVehicleNotice = _vehicleNotice;
     _progressKm = km;
     _progressTimeStep = timeStep;
     _progressReached = _goalReached;
@@ -845,6 +898,7 @@ class RunController extends Notifier<RunViewState> {
                 movingTime: snapshot.movingTime,
                 goal: _goal,
                 goalReached: _goalReached,
+                vehicleNotice: _vehicleNotice,
               ),
             )
             .catchError((Object e) => debugPrint('알림: 러닝 진행 알림 실패 $e')),
@@ -873,6 +927,7 @@ class RunController extends Notifier<RunViewState> {
 
   void _cancelProgress() {
     _progressState = null;
+    _progressVehicleNotice = false;
     _progressKm = null;
     _progressTimeStep = null;
     _progressReached = false;
@@ -899,13 +954,31 @@ class RunController extends Notifier<RunViewState> {
           _speakSplit(engine, split);
         case StateChanged(from: RunState.recording, to: RunState.autoPaused):
           _speak(const VoiceAutoPaused());
-        case StateChanged(to: RunState.vehicle):
-          _speak(const VoiceVehicle());
-        case StateChanged(to: RunState.signalLost):
-          _speak(const VoiceSignalLost());
-        case StateChanged(:final from, to: RunState.recording)
-            when autoStoppedStates.contains(from):
+        case StateChanged(from: RunState.autoPaused, to: RunState.recording):
           _speak(const VoiceAutoResumed());
+        // 신호 끊김은 60초에 한 번 읽고, 읽은 끊김이 풀릴 때만 "다시 기록해요".
+        case StateChanged(:final from, to: RunState.signalLost):
+          if (from == RunState.vehicle) _vehicleAnnounced = false;
+          final now = ref.read(clockProvider)();
+          final spokenAt = _signalSpokenAt;
+          _signalAnnounced =
+              spokenAt == null || now.difference(spokenAt) >= noticeDebounce;
+          if (_signalAnnounced) {
+            _signalSpokenAt = now;
+            _speak(const VoiceSignalLost());
+          }
+        // 탈것 의심 안내는 상태 발행(`_syncVehicleNotice`)이 60초에 한 번 읽는다.
+        // 풀림은 그 구간을 안내했을 때만 읽는다.
+        case StateChanged(from: RunState.vehicle, :final to):
+          if (to == RunState.recording && _vehicleAnnounced) {
+            _speak(const VoiceAutoResumed());
+          }
+          _vehicleAnnounced = false;
+        case StateChanged(from: RunState.signalLost, :final to):
+          if (to == RunState.recording && _signalAnnounced) {
+            _speak(const VoiceAutoResumed());
+          }
+          _signalAnnounced = false;
         case StateChanged() || RunEnded():
           break;
       }

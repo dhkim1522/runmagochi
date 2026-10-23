@@ -339,16 +339,17 @@ void main() {
     LocationSample north(int sec, double meters, {double accuracy = 5}) =>
         at(sec, _northOf(meters), _lng0, accuracy: accuracy);
 
-    /// 초속 1m 로 2초마다 점을 넣어 [untilSec] 초까지 걷는다. 매초 판정한다.
+    /// 초속 1m 로 3초마다 점(3m, 최소 이동 [minMoveM])을 넣어 [untilSec] 초까지
+    /// 걷는다. 매초 판정한다.
     void walk(int untilSec) {
       for (var s = 0; s <= untilSec; s++) {
         now = sec(s);
-        if (s.isEven) engine.addSample(north(s, s.toDouble()));
+        if (s % 3 == 0) engine.addSample(north(s, s.toDouble()));
         expect(engine.autoPauseIfStill(now), isFalse, reason: '$s초');
       }
     }
 
-    test('초속 1m 로 2초마다 걸으면 기록 중을 유지한다', () {
+    test('초속 1m 로 3초마다 걸으면 기록 중을 유지한다', () {
       engine.start();
       walk(120);
       expect(engine.state, RunState.recording);

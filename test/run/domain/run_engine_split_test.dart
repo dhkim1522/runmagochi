@@ -134,18 +134,19 @@ void main() {
     expect(summary.calories, closeTo(estimateCalories(1500), 1e-6));
     expect(summary.name, '금요일 저녁 러닝');
     expect(summary.splits.map((s) => s.distanceM), [1000, closeTo(500, 1e-6)]);
-    expect(summary.points, hasLength(601));
+    // 2.5m 간격 점은 최소 이동 3m 에 걸려 하나 걸러 받아들인다.
+    expect(summary.points, hasLength(301));
     expect(engine.end, throwsStateError);
     await events;
   });
 
   test('end 는 기록 중에도 되고, 점을 구간 순서대로 펼친다', () {
     engine.start();
-    runAt(0, 0, 10, 2);
+    runAt(0, 0, 10, 3);
     engine.pause();
     now = t0.add(const Duration(seconds: 100));
     engine.resume();
-    runAt(100, 500, 5, 2);
+    runAt(100, 500, 5, 3);
     final summary = engine.end();
     expect(engine.snapshot.state, RunState.ended);
     expect(summary.points, [...engine.segments[0], ...engine.segments[1]]);

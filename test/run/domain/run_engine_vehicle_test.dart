@@ -23,7 +23,8 @@ void main() {
   /// 지금 위치(북쪽 m).
   var pos = 0.0;
 
-  DateTime sec(int s) => t0.add(Duration(seconds: s));
+  DateTime sec(int s, [int ms = 0]) =>
+      t0.add(Duration(seconds: s, milliseconds: ms));
 
   LocationSample north(int s, double meters, {double accuracy = 5}) =>
       LocationSample(
@@ -151,7 +152,9 @@ void main() {
       move(100, 140, 3);
       expect(engine.state, RunState.recording);
       final first = engine.vehicleTime(now);
-      expect(first, greaterThan(const Duration(seconds: 40)));
+      // 59초(마지막 정상 점)부터 평균이 내려온 106초 점까지.
+      expect(first, const Duration(seconds: 106 - 59));
+      expect(engine.recordingSince, sec(106));
       move(141, 200, 7);
       expect(engine.state, RunState.vehicle);
       expect(engine.firstVehicleAt, sec(59));
@@ -268,11 +271,78 @@ void main() {
       expect(restored.snapshot.movingTime, engine.snapshot.movingTime);
     });
 
+    test('미루는 동안 움직인 시간은 멈추고, 받아들이면 그 시간을 더한다', () {
+      move(1, 10, 3);
+      move(11, 15, 6.5);
+      expect(engine.heldCount, 5);
+      expect(engine.snapshot.movingTime, const Duration(seconds: 10));
+      now = sec(15, 500);
+      expect(engine.snapshot.movingTime, const Duration(seconds: 10));
+      move(16, 16, 3);
+      expect(engine.heldCount, 0);
+      expect(engine.snapshot.movingTime, const Duration(seconds: 16));
+    });
+
+    test('탈것 의심이 되어도 움직인 시간은 뒤로 뛰지 않는다', () {
+      move(1, 59, 3);
+      var last = engine.snapshot.movingTime;
+      for (var s = 60; s <= 100; s++) {
+        move(s, s, 6.67);
+        final t = engine.snapshot.movingTime;
+        expect(t, greaterThanOrEqualTo(last), reason: '$s초');
+        expect(t, const Duration(seconds: 59), reason: '$s초');
+        last = t;
+      }
+      expect(engine.state, RunState.vehicle);
+    });
+
+    test('미루는 중 사용자 일시정지·종료는 미룬 점과 그 시간을 함께 버린다', () {
+      move(1, 10, 3);
+      move(11, 15, 6.67);
+      now = sec(16);
+      engine.pause();
+      expect(engine.pausedAt, sec(16));
+      expect(engine.snapshot.movingTime, const Duration(seconds: 10));
+      expect(engine.segments.single, hasLength(11));
+
+      now = sec(30);
+      engine.resume();
+      pos += 100;
+      move(31, 40, 3);
+      move(41, 45, 6.67);
+      now = sec(46);
+      final summary = engine.end();
+      expect(summary.movingTime, const Duration(seconds: 10 + 40 - 30));
+    });
+
     test('끝내면 미룬 점은 넣지 않는다', () {
       move(1, 10, 3);
       move(11, 15, 6.67);
       final summary = engine.end();
       expect(summary.points, hasLength(11));
+    });
+  });
+
+  group('최소 이동 3m (거리 거름은 엔진이 한다)', () {
+    test('3m 안의 점은 거리에 넣지 않지만 신호로 센다', () {
+      move(1, 59, 3);
+      for (var s = 60; s <= 400; s++) {
+        now = sec(s);
+        expect(engine.addSample(north(s, pos + (s.isEven ? 1 : 0))), isFalse);
+        engine.autoPauseIfStill(now);
+        engine.signalLostIfSilent(now);
+        expect(engine.state, isNot(RunState.signalLost), reason: '$s초');
+      }
+      expect(engine.state, RunState.autoPaused);
+      expect(engine.segments.single, hasLength(60));
+      expect(engine.snapshot.distanceM, closeTo(along(0, 177, 3), 1e-6));
+    });
+
+    test('기록 중 2m 씩 오는 점은 3m 를 넘을 때 받아들여 거리는 그대로 쌓인다', () {
+      move(1, 60, 2);
+      expect(engine.state, RunState.recording);
+      expect(engine.segments.single, hasLength(31));
+      expect(engine.snapshot.distanceM, closeTo(_dist(0, 120), 1e-6));
     });
   });
 

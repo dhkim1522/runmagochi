@@ -157,10 +157,16 @@ void main() {
       });
     }
 
-    testWidgets('기록 중·자동 일시정지에는 말풍선이 없다', (tester) async {
-      await open(tester, initial: snap(RunState.recording));
-      expect(find.byType(SpeechBubble), findsNothing);
-    });
+    for (final state in [
+      RunState.recording,
+      RunState.autoPaused,
+      RunState.paused,
+    ]) {
+      testWidgets('$state 에는 말풍선이 없다', (tester) async {
+        await open(tester, initial: snap(state));
+        expect(find.byType(SpeechBubble), findsNothing);
+      });
+    }
   });
 
   testWidgets('재개 버튼은 resume 을 부른다', (tester) async {
