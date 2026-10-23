@@ -260,11 +260,11 @@ const _largeTextPairs = [('primaryDeep', 'stageSky'), ('ink', 'stageGround')];
 
 /// 면 경계·그림 쌍(글자 아님): 3:1 이상.
 const _graphicPairs = [
-  // 연두 면은 바탕과 1.2:1 이라 primaryEdge 경계선이 대신 모양을 보인다.
+  // 고른 카드 윤곽·경로 시작 점·스플래시 타일 테두리(연두 버튼·칩 면에는 두르지 않는다).
   ('primaryEdge', 'background'),
   ('primaryEdge', 'surface'),
   ('primaryEdge', 'surfaceSoft'),
-  // 흰 보조 버튼·스위치 테두리.
+  // 입력칸·꺼진 스위치 테두리.
   ('lineStrong', 'background'),
   ('lineStrong', 'surface'),
   ('lineStrong', 'surfaceSoft'),
@@ -289,6 +289,7 @@ void main() {
   _titleSTests();
   _tokensJsonTests();
   _formTests();
+  _elevationTests();
   final themes = {
     'light': (appLightTheme(), _light),
     'dark': (appDarkTheme(), _dark),
@@ -389,16 +390,19 @@ void main() {
         );
       });
 
-      test('라이트 빠르게(가장 짙은 값)는 본문 ink 와 구분된다(CIEDE2000 정상 15 이상, 색각 이상 12 이상)', () {
-        if (e.key != 'light') return;
-        for (final kind in [null, 'protan', 'deutan', 'tritan']) {
-          expect(
-            _deltaE2000(c.paceFast, c.ink, kind),
-            greaterThanOrEqualTo(kind == null ? 15 : 12),
-            reason: kind ?? 'normal',
-          );
-        }
-      });
+      test(
+        '라이트 빠르게(가장 짙은 값)는 본문 ink 와 구분된다(CIEDE2000 정상 15 이상, 색각 이상 12 이상)',
+        () {
+          if (e.key != 'light') return;
+          for (final kind in [null, 'protan', 'deutan', 'tritan']) {
+            expect(
+              _deltaE2000(c.paceFast, c.ink, kind),
+              greaterThanOrEqualTo(kind == null ? 15 : 12),
+              reason: kind ?? 'normal',
+            );
+          }
+        },
+      );
 
       test('CIEDE2000 계산 확인: Sharma 2005 표 1번 짝 = 2.0425', () {
         // L*a*b* (50, 2.6772, -79.7751) vs (50, 0, -82.7485). 같은 식을 Lab 에 바로 적용.
@@ -724,9 +728,80 @@ void _tokensJsonTests() {
     };
     expect(border, {
       'border-edge': '${Borders.edge.round()}px',
+      'border-hairline': '${Borders.hairline.round()}px',
       'border-ground-line': '${Borders.groundLine.round()}px',
       'border-focus': '${Borders.focus.round()}px',
     });
+  });
+}
+
+/// 작업 31: 연두 버튼·칩의 진한 테두리를 없애고 옅은 플로팅 그림자(elevation-float)로 뜬다.
+void _elevationTests() {
+  final json =
+      jsonDecode(File('docs/design/tokens.json').readAsStringSync())
+          as Map<String, dynamic>;
+  final token = ((json['elevation'] as Map)['tokens'] as List)
+      .cast<Map>()
+      .singleWhere((t) => t['name'] == 'elevation-float');
+
+  for (final (name, theme, c, mode) in [
+    ('라이트', 'light', AppColors.light, 'light'),
+    ('다크', 'dark', AppColors.dark, 'dark'),
+  ].map((e) => (e.$1, e.$2, e.$3, e.$2))) {
+    test(
+      'elevation-float ($name): tokens.json 층이 AppColors.floatShadow 와 같다',
+      () {
+        final layers = ((token['value'] as Map)[theme] as List).cast<Map>();
+        expect(layers.length, c.floatShadow.length);
+        for (final (i, l) in layers.indexed) {
+          final sh = c.floatShadow[i];
+          final base = l['color'] == 'ink'
+              ? AppColors.light.ink
+              : const Color(0xFF000000);
+          expect(sh.color.toARGB32() & 0xFFFFFF, base.toARGB32() & 0xFFFFFF);
+          expect(sh.color.a, closeTo((l['alpha'] as num).toDouble(), 0.01));
+          expect(
+            sh.offset,
+            Offset((l['x'] as num).toDouble(), (l['y'] as num).toDouble()),
+          );
+          expect(sh.blurRadius, (l['blur'] as num).toDouble());
+          expect(sh.spreadRadius, (l['spread'] as num).toDouble());
+        }
+        expect(mode, theme);
+      },
+    );
+  }
+
+  test('elevation-float 는 비교 C 안(0 6 14 -4 38% + 0 1 2 22%)보다 훨씬 옅다', () {
+    final l = AppColors.light.floatShadow;
+    expect(l[0].color.a, lessThanOrEqualTo(0.38 / 2));
+    expect(l[1].color.a, lessThanOrEqualTo(0.22 / 2));
+    expect(l[0].blurRadius, lessThan(14));
+    expect(l[0].offset.dy, lessThan(6));
+    // 다크는 거의 안 보이는 수준: 한 겹, 25% 이하, 번짐 6 이하.
+    final d = AppColors.dark.floatShadow;
+    expect(d.length, 1);
+    expect(d.single.color.a, lessThanOrEqualTo(0.25));
+    expect(d.single.blurRadius, lessThanOrEqualTo(6));
+  });
+
+  for (final (name, c) in [('라이트', AppColors.light), ('다크', AppColors.dark)]) {
+    test('연두 위 글자 대비 4.5:1 이상 ($name)', () {
+      expect(_contrast(c.onPrimary, c.primary), greaterThanOrEqualTo(4.5));
+    });
+  }
+
+  test('연두 버튼·칩 코드에 면 경계선(primaryEdge·lineStrong)을 쓰지 않는다', () {
+    final src = File('lib/core/ui/components.dart').readAsStringSync();
+    final code = src
+        .split('\n')
+        .where(
+          (l) =>
+              !l.trimLeft().startsWith('///') && !l.trimLeft().startsWith('//'),
+        )
+        .join('\n');
+    expect(code.contains('primaryEdge'), isFalse);
+    expect(code.contains('lineStrong'), isFalse);
   });
 }
 
@@ -780,12 +855,12 @@ void _formTests() {
         expect(theme.progressIndicatorTheme.color, c.primaryDeep);
       });
 
-      test('스위치: 켜짐 연두 + primaryEdge 경계, 꺼짐 surfaceSoft + lineStrong 경계', () {
+      test('스위치: 켜짐 연두(경계 없음), 꺼짐 surfaceSoft + lineStrong 경계', () {
         final s = theme.switchTheme;
         const on = {WidgetState.selected};
         const off = <WidgetState>{};
         expect(s.trackColor!.resolve(on), c.primary);
-        expect(s.trackOutlineColor!.resolve(on), c.primaryEdge);
+        expect(s.trackOutlineColor!.resolve(on), const Color(0x00000000));
         expect(s.thumbColor!.resolve(on), c.onPrimary);
         expect(s.trackColor!.resolve(off), c.surfaceSoft);
         expect(s.trackOutlineColor!.resolve(off), c.lineStrong);

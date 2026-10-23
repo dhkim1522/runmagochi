@@ -169,18 +169,22 @@ void _buttonTests() {
       );
       final p = _decoration(tester, find.byKey(const Key('p')));
       expect(p.color, c.primary);
-      expect(p.border, Border.all(color: c.primaryEdge, width: Borders.edge));
-      expect(p.boxShadow, isNull);
+      // 작업 31: 연두 버튼은 경계선 없이 옅은 플로팅 그림자로 뜬다.
+      expect(p.border, isNull);
+      expect(p.boxShadow, c.floatShadow);
       expect(tester.widget<Text>(find.text('시작')).style!.color, c.onPrimary);
 
       final s = _decoration(tester, find.byKey(const Key('s')));
       expect(s.color, c.surface);
-      expect(s.border, Border.all(color: c.lineStrong, width: Borders.edge));
+      // 흰 보조 버튼: 진한 테두리 없이 그림자 + line 머리카락 선.
+      expect(s.border, Border.all(color: c.line, width: Borders.hairline));
+      expect(s.boxShadow, c.floatShadow);
       expect(tester.widget<Text>(find.text('이전')).style!.color, c.ink);
 
       final d = _decoration(tester, find.byKey(const Key('d')));
       expect(d.color, c.panel);
       expect(d.border, isNull);
+      expect(d.boxShadow, isNull);
       expect(tester.widget<Text>(find.text('일시정지')).style!.color, c.onPanel);
     });
   }
@@ -258,20 +262,42 @@ void _chipTests() {
 
   for (final dark in [false, true]) {
     final name = dark ? '다크' : '라이트';
-    testWidgets('AppChip 선택 표시는 연두 면 + primaryEdge 경계선 하나 ($name)', (
+    testWidgets('AppChip 선택 표시는 연두 면 + 체크 아이콘 + 옅은 그림자, 경계선 없음 ($name)', (
       tester,
     ) async {
       final c = _c(dark);
       await _pump(tester, chips(), dark: dark);
       final on = _decoration(tester, find.widgetWithText(AppChip, '5km'));
       expect(on.color, c.primary);
-      expect(on.border, Border.all(color: c.primaryEdge, width: Borders.edge));
+      expect(on.border, isNull);
+      expect(on.boxShadow, c.floatShadow);
       expect(tester.widget<Text>(find.text('5km')).style!.color, c.onPrimary);
+      // 색만으로 알리지 않는다: 선택된 칩에만 체크 아이콘(글자는 더 굵다).
+      expect(
+        find.descendant(
+          of: find.widgetWithText(AppChip, '5km'),
+          matching: find.byIcon(Icons.check_rounded),
+        ),
+        findsOneWidget,
+      );
+      expect(
+        find.descendant(
+          of: find.widgetWithText(AppChip, '3km'),
+          matching: find.byIcon(Icons.check_rounded),
+        ),
+        findsNothing,
+      );
+      expect(
+        tester.widget<Text>(find.text('5km')).style!.fontWeight!.value,
+        greaterThan(
+          tester.widget<Text>(find.text('3km')).style!.fontWeight!.value,
+        ),
+      );
 
       final off = _decoration(tester, find.widgetWithText(AppChip, '3km'));
       expect(off.color, c.surfaceSoft);
-      // 경계선 자리는 같고 색만 면과 같아 보이지 않는다(선택이 바뀌어도 크기가 같다).
-      expect(off.border, Border.all(color: c.surfaceSoft, width: Borders.edge));
+      expect(off.border, isNull);
+      expect(off.boxShadow, isNull);
       expect(tester.widget<Text>(find.text('3km')).style!.color, c.ink);
     });
   }
@@ -876,10 +902,8 @@ void _dialogTests() {
             .first,
       );
       expect(filled.color, c.primary);
-      expect(
-        (filled.shape! as StadiumBorder).side,
-        BorderSide(color: c.primaryEdge, width: Borders.edge),
-      );
+      expect((filled.shape! as StadiumBorder).side, BorderSide.none);
+      expect(filled.elevation, greaterThan(0));
       expect(filled.textStyle!.color, c.onPrimary);
     });
   }

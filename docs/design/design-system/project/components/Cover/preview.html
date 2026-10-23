@@ -7,7 +7,7 @@
   .ground { fill: var(--stage-ground); }
   .gline { fill: var(--stage-ground-line); }
   .lime { fill: var(--primary); }
-  .edge { fill: none; stroke: var(--primary-edge); stroke-width: 2; }
+  .lime { filter: drop-shadow(0 3px 4px rgba(22,32,15,.14)); }
   .deep { fill: var(--primary-deep); }
   .panel { fill: var(--panel); }
   .card { fill: var(--surface); }
@@ -22,7 +22,7 @@
     <!--
       blocks: stage-sky 240x260 slab (radius-lg 24) with stage-ground 56 band + stage-ground-line 4, primary-deep 120x168, panel 96x96, surface 160x96, coin disc 48
       arrangement: one tall slab (the square stage) bleeding off the top with satellites to its right and below
-      pattern: lime pills 48 high (chip height, radius-pill) with primary-edge 2px rims — README "연두는 누를 것·선택된 것에만, 늘 경계선"
+      pattern: lime pills 48 high (chip height, radius-pill) no rims, a faint float shadow (작업 31)
       steps & radii: gaps space-5 20 / space-7 28, radius-lg 24, radius-md 20, pills half the short side (24)
     -->
     <rect class="sky stage" x="28" y="-24" width="240" height="260"></rect>
@@ -36,11 +36,8 @@
     <rect class="card" x="296" y="176" width="160" height="96" rx="20"></rect>
     <circle class="coin" cx="420" cy="224" r="24"></circle>
     <rect class="lime" x="60" y="252" width="120" height="48" rx="24"></rect>
-    <rect class="edge" x="61" y="253" width="118" height="46" rx="23"></rect>
     <rect class="lime" x="80" y="60" width="96" height="48" rx="24"></rect>
-    <rect class="edge" x="81" y="61" width="94" height="46" rx="23"></rect>
     <rect class="lime" x="316" y="196" width="72" height="48" rx="24"></rect>
-    <rect class="edge" x="317" y="197" width="70" height="46" rx="23"></rect>
   </svg>
   <div class="text">
     <h1 class="name">런마고치</h1>

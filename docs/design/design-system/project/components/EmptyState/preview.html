@@ -1,5 +1,8 @@
 <!-- @dsCard group="Feedback" height=280 subtitle="앱 그림 + ink-muted 문구, 실패도 벌주지 않게" -->
 <style>
+:root{--float:0 3px 8px -3px rgba(22,32,15,.14),0 1px 2px rgba(22,32,15,.08)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--float:0 2px 4px -1px rgba(0,0,0,.2)}}
+:root[data-theme="dark"]{--float:0 2px 4px -1px rgba(0,0,0,.2)}
 body{margin:0;background:var(--background);color:var(--ink);font-family:var(--font-sans,"Pretendard",system-ui,sans-serif)}
 .row{display:flex;flex-wrap:wrap;gap:12px;padding:20px;align-items:flex-start}
 .card{background:var(--surface);border-radius:24px;padding:32px 20px;width:260px;box-sizing:border-box;display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center}
@@ -7,7 +10,7 @@ body{margin:0;background:var(--background);color:var(--ink);font-family:var(--fo
 .muted{color:var(--ink-muted)}
 .line{fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .c-face{fill:var(--coin)}.c-ring{fill:none;stroke:var(--primary);stroke-width:2}.c-star{fill:var(--on-coin)}
-.btn{margin-top:8px;height:60px;padding:0 28px;border-radius:999px;background:var(--primary);color:var(--on-primary);border:2px solid var(--primary-edge);font:700 22px/28px var(--font-sans,"Pretendard",sans-serif);cursor:pointer}
+.btn{margin-top:8px;height:60px;padding:0 28px;border-radius:999px;background:var(--primary);color:var(--on-primary);border:0;box-shadow:var(--float);font:700 22px/28px var(--font-sans,"Pretendard",sans-serif);cursor:pointer}
 .btn:focus-visible{outline:3px solid var(--primary-deep);outline-offset:3px}
 </style>
 <div class="row">

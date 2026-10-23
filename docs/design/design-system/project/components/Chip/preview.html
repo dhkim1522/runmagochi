@@ -1,5 +1,8 @@
-<!-- @dsCard group="Selection" height=220 subtitle="선택 표시는 하나: 연두 면 + 경계선" -->
+<!-- @dsCard group="Selection" height=220 subtitle="선택 표시는 하나: 연두 면 + 체크 + 옅은 그림자" -->
 <style>
+:root{--float:0 3px 8px -3px rgba(22,32,15,.14),0 1px 2px rgba(22,32,15,.08)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--float:0 2px 4px -1px rgba(0,0,0,.2)}}
+:root[data-theme="dark"]{--float:0 2px 4px -1px rgba(0,0,0,.2)}
 body{margin:0;background:var(--background);color:var(--ink);font-family:var(--font-sans,"Pretendard",system-ui,sans-serif)}
 .row{display:flex;flex-wrap:wrap;gap:12px;align-items:center;padding:20px}
 .cap{font-size:13px;line-height:18px;font-weight:600;color:var(--ink-muted)}
@@ -9,7 +12,8 @@ body{margin:0;background:var(--background);color:var(--ink);font-family:var(--fo
 .seg,.chips{display:grid;gap:8px}
 .seg{grid-template-columns:1fr 1fr}.chips{grid-template-columns:repeat(4,1fr)}
 .chip{height:48px;border-radius:999px;border:2px solid transparent;background:var(--surface-soft);color:var(--ink);font:700 17px/24px var(--font-sans,"Pretendard",sans-serif);letter-spacing:-.02em;cursor:pointer}
-.chip[aria-pressed="true"]{background:var(--primary);color:var(--on-primary);border-color:var(--primary-edge);font-weight:800}
+.chip[aria-pressed="true"]{background:var(--primary);color:var(--on-primary);font-weight:800;box-shadow:var(--float)}
+.chip[aria-pressed="true"]::before{content:"✓";margin-right:4px;font-weight:800}
 </style>
 <div class="row">
   <section class="card">

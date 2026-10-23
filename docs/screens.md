@@ -56,7 +56,7 @@ flowchart LR
 
 ## 화면 디자인 (페이즈 6, 결정 0029)
 
-모든 화면은 옅은 풀빛 바탕에 머리줄(화면 제목 `ScreenTitle` 또는 뒤로 `CircleIconButton` + 제목) → 테두리 없는 흰 카드(`AppCard`) 순서다. 연두 버튼(`AppButton`)은 화면마다 하나, 선택 표시는 연두 면 + 경계선(`AppChip`·`ChipRow`), 진행은 초록 막대(`ProgressBar`)다. 마스코트는 사각 무대(`PetStage`: 공원 산책로 한 점 투시 배경, 소실점은 펫 뒤) 위에 정수 배율로 선다. 러닝 중에만 길이 소실점 쪽으로 흐르고(일시정지·애니메이션 줄이기면 멈춤) 다른 화면 무대는 멈춰 있다(작업 25). 컴포넌트는 `lib/core/ui/components.dart`.
+모든 화면은 옅은 풀빛 바탕에 머리줄(화면 제목 `ScreenTitle` 또는 뒤로 `CircleIconButton` + 제목) → 테두리 없는 흰 카드(`AppCard`) 순서다. 연두 버튼(`AppButton`)은 화면마다 하나(경계선 없이 옅은 그림자 `elevation-float`, 흰 보조 버튼은 그림자 + `line` 1px 머리카락 선), 선택 표시는 연두 면 + 체크 아이콘(`AppChip`·`ChipRow`, 경계선 없이 옅은 그림자), 진행은 초록 막대(`ProgressBar`)다. 마스코트는 사각 무대(`PetStage`: 공원 산책로 한 점 투시 배경, 소실점은 펫 뒤) 위에 정수 배율로 선다. 러닝 중에만 길이 소실점 쪽으로 흐르고(일시정지·애니메이션 줄이기면 멈춤) 다른 화면 무대는 멈춰 있다(작업 25). 컴포넌트는 `lib/core/ui/components.dart`.
 
 | 화면 | 구성 | 주요 컴포넌트 |
 | --- | --- | --- |

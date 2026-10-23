@@ -370,8 +370,8 @@ class _RunStage extends StatelessWidget {
 }
 
 /// 1.5초 동안 누르고 있어야 [onComplete] 가 불리는 종료 버튼.
-/// 흰 보조 버튼 모양(surface + line-strong 경계선) 알약이고,
-/// 누르는 동안 경계선 안쪽이 왼쪽부터 surface-soft 로 차오른다.
+/// 흰 보조 버튼 모양(surface + 옅은 그림자 + line 머리카락 선) 알약이고,
+/// 누르는 동안 선 안쪽이 왼쪽부터 surface-soft 로 차오른다.
 class _HoldToStopButton extends StatefulWidget {
   const _HoldToStopButton({
     super.key,
@@ -422,34 +422,41 @@ class _HoldToStopButtonState extends State<_HoldToStopButton>
         },
         onPointerUp: (_) => _release(),
         onPointerCancel: (_) => _release(),
-        child: AppCard(
-          radius: Radii.pill,
-          borderColor: c.lineStrong,
-          // 차오르는 면이 경계선을 덮지 않게 선 두께만큼 안쪽에 그린다.
-          padding: const EdgeInsets.all(Borders.edge),
-          child: SizedBox(
-            height: AppButton.height - 2 * Borders.edge,
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(Radii.pill),
-              child: Stack(
-                alignment: Alignment.center,
-                children: [
-                  Positioned.fill(
-                    child: AnimatedBuilder(
-                      animation: _progress,
-                      builder: (context, _) => Align(
-                        alignment: Alignment.centerLeft,
-                        child: FractionallySizedBox(
-                          key: const Key('hold-fill'),
-                          widthFactor: _progress.value,
-                          heightFactor: 1,
-                          child: ColoredBox(color: c.surfaceSoft),
+        // 흰 보조 버튼과 같은 모양: surface + 옅은 floatShadow + line 머리카락 선.
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            color: c.surface,
+            borderRadius: BorderRadius.circular(Radii.pill),
+            border: Border.all(color: c.line, width: Borders.hairline),
+            boxShadow: c.floatShadow,
+          ),
+          // 차오르는 면이 선을 덮지 않게 선 두께만큼 안쪽에 그린다.
+          child: Padding(
+            padding: const EdgeInsets.all(Borders.hairline),
+            child: SizedBox(
+              height: AppButton.height - 2 * Borders.hairline,
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(Radii.pill),
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    Positioned.fill(
+                      child: AnimatedBuilder(
+                        animation: _progress,
+                        builder: (context, _) => Align(
+                          alignment: Alignment.centerLeft,
+                          child: FractionallySizedBox(
+                            key: const Key('hold-fill'),
+                            widthFactor: _progress.value,
+                            heightFactor: 1,
+                            child: ColoredBox(color: c.surfaceSoft),
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                  Text('길게 눌러 종료', style: AppText.of(context).titleS),
-                ],
+                    Text('길게 눌러 종료', style: AppText.of(context).titleS),
+                  ],
+                ),
               ),
             ),
           ),

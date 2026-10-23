@@ -256,9 +256,9 @@ enum _ButtonKind { primary, secondary, panel }
 
 /// 높이 60 알약 버튼. [onPressed] 가 null 이면 비활성(50%).
 ///
-/// - 기본: 연두 주요 버튼(primary + primaryEdge 경계선, onPrimary 글자). 화면마다 하나.
-/// - [AppButton.secondary]: 흰 보조 버튼(surface + lineStrong 경계선, ink 글자).
-/// - [AppButton.panel]: 어두운 판(panel + onPanel 글자). 일시정지·재개.
+/// - 기본: 연두 주요 버튼(primary + onPrimary 글자, 경계선 없이 옅은 floatShadow). 화면마다 하나.
+/// - [AppButton.secondary]: 흰 보조 버튼(surface + ink 글자, floatShadow + line 머리카락 선).
+/// - [AppButton.panel]: 어두운 판(panel + onPanel 글자, 그림자 없음). 일시정지·재개.
 /// - [small]: 높이 48, 글자 body-strong 17. 주요 버튼 옆 보조 행동(끝부분 잘라내기).
 ///
 /// 글자가 길거나 커지면 줄을 바꾸지 않고 버튼 안에서 작아진다.
@@ -300,10 +300,10 @@ class AppButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = AppColors.of(context);
-    final (background, foreground, edge) = switch (_kind) {
-      _ButtonKind.primary => (c.primary, c.onPrimary, c.primaryEdge),
-      _ButtonKind.secondary => (c.surface, c.ink, c.lineStrong),
-      _ButtonKind.panel => (c.panel, c.onPanel, null),
+    final (background, foreground, edge, shadow) = switch (_kind) {
+      _ButtonKind.primary => (c.primary, c.onPrimary, null, c.floatShadow),
+      _ButtonKind.secondary => (c.surface, c.ink, c.line, c.floatShadow),
+      _ButtonKind.panel => (c.panel, c.onPanel, null, null),
     };
     final t = AppText.of(context);
     final enabled = onPressed != null;
@@ -325,7 +325,8 @@ class AppButton extends StatelessWidget {
               borderRadius: BorderRadius.circular(Radii.pill),
               border: edge == null
                   ? null
-                  : Border.all(color: edge, width: Borders.edge),
+                  : Border.all(color: edge, width: Borders.hairline),
+              boxShadow: shadow,
             ),
             child: ConstrainedBox(
               constraints: BoxConstraints(
@@ -361,8 +362,8 @@ class AppButton extends StatelessWidget {
 /// 높이 48 알약 선택 칩. 분할 선택(거리·시간)도 같은 칩을 쓴다(선택 표시 하나).
 ///
 /// - 선택 안 됨: surfaceSoft 면, ink 글자 17/700.
-/// - 선택됨: primary 면 + primaryEdge 경계선, onPrimary 글자 17/800.
-/// 경계선 자리는 늘 있어(안 고르면 면과 같은 색) 선택이 바뀌어도 크기가 같다.
+/// - 선택됨: primary 면 + 옅은 floatShadow(경계선 없음), onPrimary 글자 17/800 + 앞에 체크 아이콘.
+///   면 색만으로 알리지 않게 체크 아이콘이 선택 표시다(칩 높이는 늘 같다).
 class AppChip extends StatelessWidget {
   const AppChip({
     super.key,
@@ -386,6 +387,13 @@ class AppChip extends StatelessWidget {
     final c = AppColors.of(context);
     final t = AppText.of(context);
     final fill = selected ? c.primary : c.surfaceSoft;
+    final text = Text(
+      label,
+      maxLines: 1,
+      style: selected
+          ? t.heading.copyWith(color: c.onPrimary)
+          : t.bodyStrong.copyWith(color: c.ink),
+    );
     return Semantics(
       button: true,
       selected: selected,
@@ -403,20 +411,25 @@ class AppChip extends StatelessWidget {
           decoration: BoxDecoration(
             color: fill,
             borderRadius: BorderRadius.circular(Radii.pill),
-            border: Border.all(
-              color: selected ? c.primaryEdge : fill,
-              width: Borders.edge,
-            ),
+            boxShadow: selected ? c.floatShadow : null,
           ),
           child: FittedBox(
             fit: BoxFit.scaleDown,
-            child: Text(
-              label,
-              maxLines: 1,
-              style: selected
-                  ? t.heading.copyWith(color: c.onPrimary)
-                  : t.bodyStrong.copyWith(color: c.ink),
-            ),
+            child: selected
+                ? Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.check_rounded,
+                        key: const Key('chip-check'),
+                        size: 20,
+                        color: c.onPrimary,
+                      ),
+                      const SizedBox(width: Gap.s1),
+                      text,
+                    ],
+                  )
+                : text,
           ),
         ),
       ),

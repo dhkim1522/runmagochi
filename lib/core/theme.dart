@@ -45,8 +45,12 @@ class Radii {
 class Borders {
   Borders._();
 
-  /// 연두 면·흰 보조 버튼의 경계선(primaryEdge·lineStrong). 바탕 대비 3:1 을 이 선이 맡는다.
+  /// 선택 카드 윤곽(primaryEdge)·입력칸·스위치(lineStrong) 경계선. 바탕 대비 3:1 을 이 선이 맡는다.
+  /// 연두 버튼·칩 면과 흰 보조 버튼에는 두르지 않는다(작업 31, 옅은 플로팅 그림자로 뜬다).
   static const double edge = 2;
+
+  /// 흰 보조 버튼의 머리카락 선(line 계열, 진하지 않게). 흰 면이 바탕과 구분되도록 돕는다(작업 31).
+  static const double hairline = 1;
 
   /// 땅 띠 윗선(stageGroundLine). 앱 아이콘 무대가 쓴다(앱 안 무대는 작업 25 부터 공원 산책로 배경).
   static const double groundLine = 4;
@@ -240,6 +244,7 @@ class AppColors extends ThemeExtension<AppColors> {
     required this.paceFast,
     required this.spriteRim,
     required this.bubble,
+    required this.floatShadow,
   });
 
   /// 화면 바탕(옅은 풀빛). 무늬·그라데이션 없음.
@@ -254,7 +259,7 @@ class AppColors extends ThemeExtension<AppColors> {
   /// 옅은 구분선.
   final Color line;
 
-  /// 흰 보조 버튼·스위치 테두리. 바탕·카드·트랙 대비 3:1 이상.
+  /// 입력칸·스위치(꺼짐)·진행 점 테두리. 바탕·카드·트랙 대비 3:1 이상. 흰 보조 버튼에는 쓰지 않는다.
   final Color lineStrong;
 
   final Color ink;
@@ -264,7 +269,8 @@ class AppColors extends ThemeExtension<AppColors> {
   final Color primary;
   final Color onPrimary;
 
-  /// 연두 면 경계선. 연두 면은 늘 이 선을 [Borders.edge] 두께로 두른다.
+  /// 윤곽 연두: 고른 카드 윤곽, 경로 시작 점·스플래시 타일 테두리.
+  /// 연두 버튼·칩·스위치 면에는 두르지 않는다(작업 31, 면은 [floatShadow] 로 뜬다).
   final Color primaryEdge;
 
   /// 초록: 강조 글자, 경험치 +, 진행 막대·구간 막대 채움, 한 색 경로 선, 글자 버튼.
@@ -310,6 +316,10 @@ class AppColors extends ThemeExtension<AppColors> {
   /// (다크 surface 는 하늘과 톤이 같아 말풍선 모양·꼬리가 묻힌다). 위 글자는 ink.
   final Color bubble;
 
+  /// 버튼·선택된 칩이 면 경계선 없이 뜨는 옅은 그림자(elevation-float, 작업 31).
+  /// 라이트는 ink 계열 8~14%, 다크는 어두운 바탕에서 거의 안 보이는 검정 20%.
+  final List<BoxShadow> floatShadow;
+
   static AppColors of(BuildContext context) =>
       Theme.of(context).extension<AppColors>()!;
 
@@ -348,10 +358,12 @@ class AppColors extends ThemeExtension<AppColors> {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is AppColors && listEquals(other._values, _values);
+      other is AppColors &&
+          listEquals(other._values, _values) &&
+          listEquals(other.floatShadow, floatShadow);
 
   @override
-  int get hashCode => Object.hashAll(_values);
+  int get hashCode => Object.hashAll([..._values, ...floatShadow]);
 
   static const light = AppColors(
     background: Color(0xFFF3F5EE),
@@ -380,6 +392,16 @@ class AppColors extends ThemeExtension<AppColors> {
     paceFast: Color(0xFF003647),
     spriteRim: Color(0x00000000),
     bubble: Color(0xFFFFFFFF),
+    // elevation-float 라이트: ink(#16200F) 14% 큰 그림자 + 8% 맞닿는 그림자. 비교 C 안(38%·22%)의 약 3분의 1.
+    floatShadow: [
+      BoxShadow(
+        color: Color(0x2416200F),
+        offset: Offset(0, 3),
+        blurRadius: 8,
+        spreadRadius: -3,
+      ),
+      BoxShadow(color: Color(0x1416200F), offset: Offset(0, 1), blurRadius: 2),
+    ],
   );
 
   static const dark = AppColors(
@@ -409,6 +431,16 @@ class AppColors extends ThemeExtension<AppColors> {
     paceFast: Color(0xFFEAF6AC),
     spriteRim: Color(0xFFEEF4E6),
     bubble: Color(0xFF44573A),
+    // elevation-float 다크: 어두운 바탕에서 그림자는 거의 안 보이므로 검정 20% 한 겹만 둔다.
+    // 면 구분은 연두 면 자체(바탕 13:1)와 surface 한 단계 밝기가 맡는다.
+    floatShadow: [
+      BoxShadow(
+        color: Color(0x33000000),
+        offset: Offset(0, 2),
+        blurRadius: 4,
+        spreadRadius: -1,
+      ),
+    ],
   );
 
   @override
@@ -439,6 +471,7 @@ class AppColors extends ThemeExtension<AppColors> {
     Color? paceFast,
     Color? spriteRim,
     Color? bubble,
+    List<BoxShadow>? floatShadow,
   }) {
     return AppColors(
       background: background ?? this.background,
@@ -467,6 +500,7 @@ class AppColors extends ThemeExtension<AppColors> {
       paceFast: paceFast ?? this.paceFast,
       spriteRim: spriteRim ?? this.spriteRim,
       bubble: bubble ?? this.bubble,
+      floatShadow: floatShadow ?? this.floatShadow,
     );
   }
 
@@ -501,6 +535,8 @@ class AppColors extends ThemeExtension<AppColors> {
       paceFast: l(paceFast, other.paceFast),
       spriteRim: l(spriteRim, other.spriteRim),
       bubble: l(bubble, other.bubble),
+      floatShadow:
+          BoxShadow.lerpList(floatShadow, other.floatShadow, t) ?? floatShadow,
     );
   }
 }
@@ -719,27 +755,18 @@ ThemeData _build(AppColors c, Brightness brightness) {
         minimumSize: const Size(48, 48),
       ),
     ),
-    // 다이얼로그 확인 버튼: 연두 면 + primary-edge 경계선(연두 면 규칙), 48 이상 알약.
-    // 비활성은 Material 기본 흐린 면에 line 경계선.
+    // 다이얼로그 확인 버튼: 연두 면, 경계선 없이 옅은 그림자(작업 31), 48 이상 알약.
     filledButtonTheme: FilledButtonThemeData(
-      style:
-          FilledButton.styleFrom(
-            backgroundColor: c.primary,
-            foregroundColor: c.onPrimary,
-            textStyle: text.bodyStrong,
-            minimumSize: const Size(48, 48),
-            padding: const EdgeInsets.symmetric(horizontal: Gap.s5),
-            shape: const StadiumBorder(),
-          ).copyWith(
-            side: WidgetStateProperty.resolveWith(
-              (states) => BorderSide(
-                color: states.contains(WidgetState.disabled)
-                    ? c.line
-                    : c.primaryEdge,
-                width: Borders.edge,
-              ),
-            ),
-          ),
+      style: FilledButton.styleFrom(
+        backgroundColor: c.primary,
+        foregroundColor: c.onPrimary,
+        textStyle: text.bodyStrong,
+        minimumSize: const Size(48, 48),
+        padding: const EdgeInsets.symmetric(horizontal: Gap.s5),
+        shape: const StadiumBorder(),
+        elevation: 1,
+        shadowColor: c.floatShadow.first.color.withValues(alpha: 0.5),
+      ),
     ),
     // 입력칸: 흰 판 + line-strong 2 경계(바탕·카드 모두 3:1), 포커스는 primary-deep 3
     // (키보드 포커스 윤곽과 같은 두께), 오류는 danger. 모서리는 작은 카드와 같은 radius-md.
@@ -780,7 +807,7 @@ ThemeData _build(AppColors c, Brightness brightness) {
       inactiveTickMarkColor: c.inkMuted,
       overlayColor: c.primaryDeep.withValues(alpha: 0.12),
     ),
-    // 스위치: 켜짐은 연두 면 + primary-edge 경계(연두 면 규칙), 꺼짐은 트랙 + line-strong.
+    // 스위치: 켜짐은 연두 면(경계 없음, 손잡이가 오른쪽), 꺼짐은 트랙 + line-strong 경계.
     switchTheme: SwitchThemeData(
       thumbColor: WidgetStateProperty.resolveWith(
         (s) => s.contains(WidgetState.selected) ? c.onPrimary : c.inkMuted,
@@ -789,7 +816,9 @@ ThemeData _build(AppColors c, Brightness brightness) {
         (s) => s.contains(WidgetState.selected) ? c.primary : c.surfaceSoft,
       ),
       trackOutlineColor: WidgetStateProperty.resolveWith(
-        (s) => s.contains(WidgetState.selected) ? c.primaryEdge : c.lineStrong,
+        (s) => s.contains(WidgetState.selected)
+            ? const Color(0x00000000)
+            : c.lineStrong,
       ),
       trackOutlineWidth: const WidgetStatePropertyAll(Borders.edge),
     ),

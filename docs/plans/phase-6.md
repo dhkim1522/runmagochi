@@ -214,6 +214,10 @@
 
 - [x] 30. 라이트 경로색 단계 구분
   - 라이트 `pace-mid`·`pace-fast` 가 둘 다 어두운 초록이라 구분이 약했다 → `#659325`(연두) · `#066B0E`(초록) · `#003647`(청록). 세 색+ink-muted 색각 이상(적·녹·청) CIEDE2000 15.6 이상, 빠름은 ink 와도 정상 20.5. 다크 값은 그대로. 화면설계서 7판
+
+- [x] 31. 버튼 진한 테두리 제거, 옅은 플로팅 그림자 (관문 3 이후 의견, 비교 C)
+  - 비교 페이지 https://claude.ai/artifact/Cpm6JZRHtx4z1sqzL2x12p (`design/mockups/phase-6/button-compare.html`). 연두 버튼·칩의 `primary-edge` 2px, 흰 보조 버튼의 `line-strong` 2px 를 없애고 `elevation-float`(라이트 `0 3 8 -3 ink14%` + `0 1 2 ink8%`, 다크 `0 2 4 -1 #000 20%`)로. 선택 칩은 체크 아이콘 추가, 보조 버튼은 `line` 1px 머리카락 선. 테스트 1365 통과
+
 ## 완료 기준
 
 ### 자동 확인

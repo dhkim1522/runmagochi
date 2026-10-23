@@ -1,0 +1,92 @@
+<title>버튼 테두리 비교</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+@font-face { font-family: "RunmagochiSans"; src: url("../../screens/fonts/RunmagochiSans.ttf") format("truetype"); font-weight: 100 900; font-display: swap; }
+:root {
+  --bg: #F3F5EE; --surface: #FFFFFF; --soft: #E8ECE1; --ink: #16200F; --muted: #5B6357; --line: #D5DBCC;
+  --lime: #B8F04A; --on-lime: #14210A; --edge: #4F8A16; --deep: #1E7B45; --line-strong: #737D6A;
+  --lime-low: #8FCB2A; --sh: 22, 32, 15;
+  --font: "RunmagochiSans", "Pretendard", "Apple SD Gothic Neo", "Noto Sans KR", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #10160D; --surface: #1A2316; --soft: #243020; --ink: #EEF4E6; --muted: #A3AE99; --line: #2F3D29;
+  --edge: #8CC63A; --deep: #5DD08A; --line-strong: #7F8B74; --lime-low: #7FB02C; --sh: 0, 0, 0; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #10160D; --surface: #1A2316; --soft: #243020; --ink: #EEF4E6; --muted: #A3AE99; --line: #2F3D29;
+  --edge: #8CC63A; --deep: #5DD08A; --line-strong: #7F8B74; --lime-low: #7FB02C; --sh: 0, 0, 0; color-scheme: dark }
+* { box-sizing: border-box }
+body { background: var(--bg); color: var(--ink); font-family: var(--font); font-size: 15px; line-height: 1.55; margin: 0 }
+.wrap { max-width: 1080px; margin: 0 auto; padding-block: 32px 56px; display: grid; gap: 24px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)) }
+.eyebrow { font-size: 12px; letter-spacing: .06em; color: var(--muted); font-weight: 600 }
+h1 { margin: 6px 0 8px; font-size: clamp(26px, 5vw, 34px); line-height: 1.2; font-weight: 800; text-wrap: balance }
+header p { margin: 0; color: var(--muted); max-width: 66ch }
+.controls { display: flex; gap: 8px; flex-wrap: wrap; align-items: center }
+.chip { font: inherit; font-size: 14px; font-weight: 600; color: var(--ink); background: var(--soft); border: 2px solid transparent;
+  border-radius: 999px; padding: 6px 14px; min-height: 40px; cursor: pointer }
+.chip[aria-pressed="true"] { background: var(--lime); border-color: var(--edge); color: var(--on-lime) }
+.chip:focus-visible { outline: 3px solid var(--deep); outline-offset: 2px }
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr)); gap: 16px }
+.opt { display: grid; gap: 10px; align-content: start; min-width: 0 }
+.opt h2 { margin: 0; font-size: 17px; font-weight: 800; display: flex; gap: 8px; align-items: baseline }
+.opt h2 span { font-size: 13px; color: var(--muted); font-weight: 600 }
+.opt > p { margin: 0; font-size: 13.5px; color: var(--muted) }
+.screen { background: var(--bg); border: 1px solid var(--line); border-radius: 28px; padding: 14px; display: grid; gap: 12px; align-content: start }
+.goal { background: var(--surface); border-radius: 18px; padding: 14px 16px; display: flex; justify-content: space-between; align-items: center; font-weight: 600; color: var(--muted) }
+.goal b { color: var(--ink); font-size: 20px }
+.btn { font: inherit; font-size: 17px; font-weight: 800; color: var(--on-lime); background: var(--lime); border-radius: 999px; min-height: 52px; width: 100%; cursor: pointer; border: 0 }
+.sub { font: inherit; font-size: 15px; font-weight: 700; color: var(--ink); background: var(--surface); border-radius: 999px; min-height: 44px; width: 100%; cursor: pointer; border: 0 }
+.chips { display: flex; gap: 8px }
+.cp { font-size: 13px; font-weight: 700; padding: 6px 12px; border-radius: 999px; background: var(--soft); color: var(--ink); min-height: 34px; display: inline-flex; align-items: center }
+.cp.on { background: var(--lime); color: var(--on-lime) }
+/* A 현재: 2px 진한 테두리, 그림자 없음 */
+.A .btn, .A .cp.on { border: 2px solid var(--edge) }
+.A .sub { border: 2px solid var(--line-strong) }
+/* B 채움만 */
+.B .sub { box-shadow: inset 0 0 0 1px var(--line) }
+/* C 플로팅: 얇은 그림자 */
+.C .btn { box-shadow: 0 6px 14px -4px rgba(var(--sh), .38), 0 1px 2px rgba(var(--sh), .22) }
+.C .sub { box-shadow: 0 4px 10px -4px rgba(var(--sh), .24), 0 1px 2px rgba(var(--sh), .16) }
+.C .cp.on { box-shadow: 0 3px 8px -3px rgba(var(--sh), .35) }
+/* D 눌림형: 한 톤 짙은 아래 면 */
+.D .btn { box-shadow: 0 4px 0 var(--lime-low); margin-bottom: 4px }
+.D .sub { box-shadow: 0 3px 0 var(--line-strong); margin-bottom: 3px }
+.D .cp.on { box-shadow: 0 2px 0 var(--lime-low) }
+.pick { background: var(--surface); border-radius: 18px; padding: 16px 18px; color: var(--muted) }
+.pick b { color: var(--ink) }
+</style>
+<div class="wrap">
+  <header>
+    <div class="eyebrow">런마고치 · 페이즈 6 관문 3 이후 의견</div>
+    <h1>버튼 모양 비교</h1>
+    <p>지금은 연두 버튼에 진한 초록 테두리(2px)를 두르고 있어요. 같은 버튼을 네 가지 방식으로 나란히 놓았어요. 아래에서 라이트·다크를 바꿔 볼 수 있어요.</p>
+  </header>
+  <div class="controls" role="group" aria-label="화면 모드">
+    <button class="chip" id="m-light" aria-pressed="true">라이트</button>
+    <button class="chip" id="m-dark" aria-pressed="false">다크</button>
+  </div>
+  <div class="grid">
+    <section class="opt A"><h2>A <span>지금</span></h2>
+      <div class="screen"><div class="goal">오늘 목표 <b>3km</b></div><div class="chips"><span class="cp on">3km</span><span class="cp">5km</span></div><button class="btn">시작</button><button class="sub">나중에</button></div>
+      <p>진한 테두리, 그림자 없음. 게임 같지도 깔끔하지도 않은 중간 상태.</p></section>
+    <section class="opt B"><h2>B <span>채움만</span></h2>
+      <div class="screen"><div class="goal">오늘 목표 <b>3km</b></div><div class="chips"><span class="cp on">3km</span><span class="cp">5km</span></div><button class="btn">시작</button><button class="sub">나중에</button></div>
+      <p>테두리 없이 면만. 가장 깔끔하고 일반 앱과 같음. 연두가 밝은 바탕에서 약해 보일 수 있음.</p></section>
+    <section class="opt C"><h2>C <span>플로팅 · 추천</span></h2>
+      <div class="screen"><div class="goal">오늘 목표 <b>3km</b></div><div class="chips"><span class="cp on">3km</span><span class="cp">5km</span></div><button class="btn">시작</button><button class="sub">나중에</button></div>
+      <p>테두리 없이 얇은 그림자로 살짝 뜬 느낌. 누를 것이 또렷하고 깔끔함.</p></section>
+    <section class="opt D"><h2>D <span>눌림형</span></h2>
+      <div class="screen"><div class="goal">오늘 목표 <b>3km</b></div><div class="chips"><span class="cp on">3km</span><span class="cp">5km</span></div><button class="btn">시작</button><button class="sub">나중에</button></div>
+      <p>테두리 대신 아래쪽 한 톤 짙은 면. 도트·게임 느낌이 가장 강함.</p></section>
+  </div>
+  <div class="pick"><b>고르는 방법</b> 마음에 드는 안의 글자(A~D)를 알려 주세요. 고른 안으로 버튼·칩·카드의 진한 테두리를 한 번에 정리해요(작업 31).</div>
+</div>
+<script>
+(function () {
+  var root = document.documentElement, l = document.getElementById('m-light'), d = document.getElementById('m-dark');
+  function set(mode) { root.setAttribute('data-theme', mode); l.setAttribute('aria-pressed', String(mode === 'light')); d.setAttribute('aria-pressed', String(mode === 'dark')); }
+  l.addEventListener('click', function () { set('light'); });
+  d.addEventListener('click', function () { set('dark'); });
+  if (window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches) set('dark');
+})();
+</script>
