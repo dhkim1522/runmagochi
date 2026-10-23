@@ -798,6 +798,35 @@ void main() {
       expect(c.startGoals, [DistanceGoal(10000)]);
     });
 
+    testWidgets('휠 가운데 칸은 surface-soft 알약(경계 없음), 고른 값은 굵은 ink', (
+      tester,
+    ) async {
+      final c = FakeController();
+      await pumpHome(tester, c);
+      await settle(tester);
+      await openSheet(tester);
+      final c0 = AppColors.of(tester.element(find.byType(CupertinoPicker)));
+      final pill = tester
+          .widgetList<Container>(
+            find.descendant(
+              of: find.bySemanticsLabel('목표 값'),
+              matching: find.byType(Container),
+            ),
+          )
+          .map((e) => e.decoration)
+          .whereType<BoxDecoration>()
+          .firstWhere((d) => d.color == c0.surfaceSoft);
+      expect(pill.border, isNull);
+      final selected = tester.widget<Text>(
+        find.descendant(
+          of: find.byType(CupertinoPicker),
+          matching: find.text('3km'),
+        ),
+      );
+      expect(selected.style!.color, c0.ink);
+      expect(selected.style!.fontWeight, FontWeight.w700);
+    });
+
     testWidgets('휠을 끌어 고른 값이 시작에 쓰인다', (tester) async {
       final c = FakeController();
       await pumpHome(tester, c);

@@ -250,7 +250,8 @@ class _RunGoalSheetState extends State<RunGoalSheet> {
   }
 }
 
-/// 목표 값 휠. 가운데 칸은 연두 면 + primaryEdge 경계(선택 표시 하나)다.
+/// 목표 값 휠. 가운데 칸은 조용한 알약(surfaceSoft, 경계 없음)이고 고른 값은 굵은 ink 다.
+/// 연두는 고른 분할과 확인 버튼에만 쓴다(관문 3 판정).
 class _GoalWheel extends StatelessWidget {
   const _GoalWheel({
     super.key,
@@ -289,9 +290,8 @@ class _GoalWheel extends StatelessWidget {
             Container(
               height: extent,
               decoration: BoxDecoration(
-                color: c.primary,
+                color: c.surfaceSoft,
                 borderRadius: BorderRadius.circular(Radii.pill),
-                border: Border.all(color: c.primaryEdge, width: Borders.edge),
               ),
             ),
             CupertinoPicker(
@@ -308,7 +308,10 @@ class _GoalWheel extends StatelessWidget {
                       v.label,
                       maxLines: 1,
                       style: v == selected
-                          ? style.copyWith(color: c.onPrimary)
+                          ? style.copyWith(
+                              color: c.ink,
+                              fontWeight: FontWeight.w700,
+                            )
                           : style.copyWith(color: c.inkMuted),
                     ),
                   ),
