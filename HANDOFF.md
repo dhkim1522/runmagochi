@@ -4,7 +4,7 @@
 
 ## 현재 상태
 
-- **페이즈 6 관문 3 고칠 점 대기** (`docs/plans/phase-6.md` 작업 20~30 완료, 상태 `실행`)
+- **페이즈 6 완료** (관문 3 승인 2026-10-23, 화면설계서 7판. `docs/plans/phase-6.md` 작업 1~30, 상태 `완료`). 다음은 페이즈 7
   - 관문 1 A 말랑 클레이, 관문 2 c · 캔버스(연두, 사각 무대, 결정 0029). 작업 1~19 완료, 자동 확인·E2E 6개 통과, 최종 리뷰 Ready with minors(수정 b9ce74e~4e4a7b2, 테스트 1231 통과)
   - 산출물 아티팩트: 화면설계서 https://claude.ai/artifact/456dWcNyLn1vbUsjV9FLVc (원본 `design/screens/`), 디자인 시스템 https://claude.ai/artifact/FPihTBfX2CJserHVwUQ514 , 에셋 카탈로그 https://claude.ai/artifact/ECbG2Fh4TXQwcr5fNUWCXA , UI 비교 https://claude.ai/artifact/F5MsvhPE9fAXw5YtCwe3Xc
   - 작업 29(관문 3 결정 3건): 경로 범례 보라 제거(연두 한 계열 3단, `천천히`·`보통`·`빠르게`·`빠른 이동 · 제외`), 라이트 스플래시 타일 `primary-edge` 테두리, 안드로이드 알림 작은 아이콘 `ic_stat_chick`(병아리 실루엣). 화면설계서는 6판(2026-10-23)으로 경로 화면(16·17·18·19·25·43)과 알림(36·38·39b~39e)을 다시 찍어 갱신, 디자인 시스템 아티팩트 13판. 알림 37(목표 달성)·39(종료 예고)와 iOS 52 는 이전 컷이라 이전 아이콘·옛 경로색 그대로
@@ -18,11 +18,12 @@
 
 ## 다음 할 일
 
-1. **관문 3 다시** (작업 20~30 완료, 화면설계서 6판 https://claude.ai/artifact/456dWcNyLn1vbUsjV9FLVc). 사용자가 승인하면 `/phase 6` 이 완료 판정
-2. 판단 남은 것: 1단계 알 모자, 첫 실행 1쪽 빈 하늘, 스프라이트 움직임 줄이기, **아이템 에셋 검토(사용자: 아직 예쁘지 않음, Claude Design 캔버스에서 별도)**
-3. 앱 결함 후보(미확인): 러닝 끝부분(탈것 의심 뒤)에 위치를 끄면 GPS 꺼짐 카드 대신 신호 끊김 말풍선이 뜸, 상점은 늘 아이템 하나를 미리보기로 입혀 맨 캐릭터를 못 봄
-4. iPhone 재설치: 사용자가 기기를 다시 연결하면 최신 main 빌드로(`docs/ios.md`, 임시 worktree `~/personal/runmagochi-merge-check`). 무료 서명 만료 10-29 무렵
-5. 확장 백로그: F23 라이브 액티비티, F24 땀·숨 동작, F25 배경 아이템·날씨, 워치(F15 앞당김 결정 필요), 걸음 센서 탈것 구별. 실기기 확인은 페이즈 7
+1. **페이즈 7 시작** (`/phase 7`): iOS 확장·본인 iPhone 실기기 확인. Android 기준 결정 필요. `distanceFilter 0` 배터리, 첫 구독 위치 켜기 창 확인 포함
+2. **아이템 에셋 검토**: 사용자 요청(아직 예쁘지 않음). 승인 뒤 따로, Claude Design 캔버스(https://claude.ai/artifact/FxKS7MR2twYmmE3k6SzNhe)에서. 상점 화면 재촬영(29~31)·상점 맨 캐릭터 미리보기 문제도 같이
+3. 화면설계서 잔여 정리: 알림 37(목표 달성)·39(종료 예고)는 옛 아이콘, iOS 52 는 옛 경로색 (재촬영)
+4. 앱 결함 후보(미확인): 탈것 의심 뒤 위치를 끄면 GPS 꺼짐 카드 대신 신호 끊김 말풍선이 뜸
+5. iPhone 재설치: 사용자가 기기를 다시 연결하면 최신 main 빌드로(`docs/ios.md`, 임시 worktree `~/personal/runmagochi-merge-check`). 무료 서명 만료 10-29 무렵
+6. 확장 백로그: F23 라이브 액티비티, F24 땀·숨 동작, F25 배경 아이템·날씨, 워치(F15 앞당김 결정 필요), 걸음 센서 탈것 구별. 정리 후보: 임시 worktree, 잠긴 agent worktree `.claude/worktrees/agent-aeb6a8b960c270fef`
 
 ## 환경 메모
 
