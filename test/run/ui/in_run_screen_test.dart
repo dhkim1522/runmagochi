@@ -664,6 +664,26 @@ void main() {
       }
     });
 
+    for (final state in [
+      RunState.recording,
+      RunState.paused,
+      RunState.autoPaused,
+      RunState.vehicle,
+      RunState.signalLost,
+    ]) {
+      final moving = state == RunState.recording;
+      testWidgets('${state.name}: 무대 길은 ${moving ? '흐른다' : '멈춘다'}(작업 25)', (
+        tester,
+      ) async {
+        await openAt(tester, state);
+        expect(tester.widget<PetStage>(find.byType(PetStage)).moving, moving);
+        expect(
+          tester.widget<StageBackdrop>(find.byType(StageBackdrop)).moving,
+          moving,
+        );
+      });
+    }
+
     testWidgets('일시정지도 같은 체계: 거리 64 → 목표 → 지표 카드 → 무대 → 재개 → 길게 눌러 종료', (
       tester,
     ) async {

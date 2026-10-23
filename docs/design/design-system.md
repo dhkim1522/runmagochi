@@ -29,7 +29,7 @@
 | 초록 | `primary-deep` | 강조 글자, 경험치 +, 레벨 업!, 진행·구간 막대 채움, 한 색 경로 선, 글자 버튼 |
 | 달성 | `success` | 목표 달성 문구 |
 | 코인 | `coin`, 그림 안 별 `on-coin` | 코인 +N, 코인 그림 |
-| 무대 | `stage-sky` · `stage-ground` · `stage-ground-line`, 무대 위 글자 `stage-ink` | 사각 무대 두 겹 |
+| 무대 | `stage-sky` · `stage-ground` · `stage-ground-line`, 무대 위 글자 `stage-ink`, 배경색 `stageScene.park` | 사각 무대 하늘·풀밭·풀잎, 공원 산책로 배경 |
 | 말풍선 | `bubble` + `ink` | 무대 위 말풍선 판·꼬리. 라이트는 흰색, 다크는 하늘보다 밝은 판 |
 | 경로 페이스 | `pace-slow` 파랑 · `pace-mid` 자주 · `pace-fast` 주황 | 느림·보통·빠름. 빠른 이동 구간은 `ink-muted`, 한 색 경로는 `primary-deep` |
 
@@ -41,7 +41,7 @@ direction-c 이름과 토큰: `lime` = `primary`, `green` = `primary-deep`·`suc
 
 - **코인 색**: `coin` 토큰을 따로 둔다(시안 `#1E40AF`, 다크 `#8FAEFF`). 옛 `accent-deep` 차용은 없앴다.
 - **경로 페이스 3단**: 파랑·자주·주황(작업 13 수정). 처음 고른 초록·주황(`#1E7B45`·`#C8650A`)은 적색맹 흉내에서 CIEDE2000 9.3 으로 헷갈리는 짝이라 바꿨다. 파랑·주황은 적·녹 색각 이상에서도 남는 파랑–노랑 축으로 떨어지고, 보통(자주)은 밝기를 크게 달리해(라이트 L* 23 가장 어둡게, 다크 L* 84 가장 밝게) 나머지와 떨어진다. 세 색과 빠른 이동 `ink-muted` 넷이 정상·적·녹·청 색각 이상(Machado 2009 흉내) 모두에서 서로 CIEDE2000 라이트 19.4·다크 21.4 이상(테스트 기준 15). 넷 다 `surface`·`background` 위 3:1 이상(라이트 4.07~10.87, 다크 3.76~11.99). 구간이 1개 이하이거나 모두 같으면 한 색 **`primary-deep`**(계획 작업 13 의 "`primary`" 는 연두라 흰 카드 위 1.3:1 로 안 보여 초록으로 바꾼다). 색만으로 뜻을 전하지 않도록 범례(`느림`·`보통`·`빠름`·`빠른 이동`, 있는 색만)를 함께 둔다. 경로는 누적 거리로 1km 구간에 나누고(`routePaceSegments`), 시작 점은 연두 + `primary-edge` 경계, 끝 점은 `ink` + `surface` 고리(작업 13).
-- **배경**: 단색 `background`. 무늬·그라데이션을 쓰지 않는다. 장면감은 사각 무대(하늘·땅 겹, 뒤에 배경 아이템)가 맡는다.
+- **배경**: 단색 `background`. 무늬·그라데이션을 쓰지 않는다. 장면감은 사각 무대(공원 산책로 네 겹, 배경 아이템이 겹을 바꾼다)가 맡는다.
 - **전환 시간·곡선**: 아래 "움직임".
 - **연두 면 경계**(critique P1): 연두 면은 늘 `primary-edge` 2px(`Borders.edge`) 경계선을 두른다. 흰 보조 버튼은 `line-strong` 2px.
 - **선택 표시 하나**(critique P1): 칩·분할 선택·목표 버튼 모두 연두 면 + `primary-edge` 경계선, 높이 48. 검은 알약(`panel`)은 탭바 선택에만.
@@ -66,9 +66,12 @@ direction-c 이름과 토큰: `lime` = `primary`, `green` = `primary-deep`·`suc
 
 ## 사각 무대
 
-- 폭 전체, 모서리 `Stage.radius`(24, 카드 안 `Stage.radiusInCard` 20). 하늘 `stage-sky` 위 땅 띠 `stage-ground`, 윗선 `stage-ground-line` 4px(`Borders.groundLine`).
-- 땅 띠 높이(윗선 포함) `Stage.groundHeight` 56(8배), 러닝 중 `Stage.groundHeightCompact` 40(6배), 카드 안 작은 무대 `Stage.groundHeightMini` 24(2~3배, 상점 아이템 카드·성장 단계 줄, 모서리 `radius-sm` 12, 작업 14). 캐릭터 발끝은 윗선 아래로 `Stage.footSink` 8 묻힌다. 정수 배율, 보간 없음(`FilterQuality.none`).
-- 무대는 하늘·땅 두 겹이고, 배경 아이템은 겹 단위로 바꾼다(겹마다 토큰이 따로 있는 까닭).
+- 폭 전체, 모서리 `Stage.radius`(24, 카드 안 `Stage.radiusInCard` 20). 정수 배율, 보간 없음(`FilterQuality.none`).
+- 배경은 **공원 산책로**(작업 25, 관문 3 에서 고른 안 2) 한 점 투시 도트 그림이다. 소실점은 펫 몸 뒤 지평선에 있고, 모래빛 흙길이 소실점으로 좁아진다. 길 위 자갈·풀잎·작은 꽃 점, 길가 둥근 나무(±1.7)·덤불(±1.15), 지평선 위 두 겹 나무 줄. 위쪽 하늘은 말풍선·날씨 자리로 비운다. 연두 `primary` 는 배경에 쓰지 않는다. 그림 원본(투시 식·색·속도)은 `design/mockups/phase-6/stage-background/gen.py`·`notes.md`, 시안은 [캔버스](https://claude.ai/artifact/FxKS7MR2twYmmE3k6SzNhe) "무대 배경 시안 — 작업 25".
+- 겹(아래 → 위): 1 하늘(`stage-sky` 단색) → 2 먼 풍경(지평선 위 12칸 띠, 멈춤) → 3 땅·길(풀밭 `stage-ground`, 풀잎 `stage-ground-line`, 길·점) → 4 앞 장식(길가 물체, 먼 것부터) → 펫(발밑 도트 그림자) → 말풍선. 4 는 이름과 달리 펫 뒤에 그린다(펫보다 가까운 물체는 화면 좌우 끝이라 겹치지 않는다). 겹은 `StageScene`(`lib/core/stage/stage_scene.dart`)으로 묶고, 배경 아이템은 다른 `StageScene` 을 `PetStage.scene` 에 준다. 공원 산책로만의 색은 `ParkPalette`(`lib/core/stage/park_scene.dart`, `tokens.json` 의 `stageScene.park`).
+- 배경 도트 1칸 = 4px(6배 이상, 펫 8배 도트의 절반). 펫이 작으면 `2·배율/3` 내림(최소 1px). 지평선은 발끝 위 13 스프라이트 줄(가슴 높이), 무대가 아주 낮으면 무대 높이의 3/4 를 넘지 않는다. 길가 물체는 3배 이상에서만 그린다(성장 단계 줄 2배 무대는 하늘·먼 풍경·길만).
+- 펫 발끝은 무대 아래에서 `땅 높이 − Stage.footSink` 위에 선다: `Stage.groundHeight` 56(8배) → 48, 러닝 중 `Stage.groundHeightCompact` 40(6배) → 32, 카드 안 `Stage.groundHeightMini` 24(2~3배, 모서리 `radius-sm` 12) → 16. 땅 띠가 없어진 대신 발밑 도트 그림자(폭 20 스프라이트 칸, 배경 도트 3줄, 라이트 `ink` 14%·다크 검정 30%)가 땅에 선 느낌을 준다.
+- 러닝 중(일시정지가 아닐 때)에만 땅·길 무늬와 길가 물체가 소실점 쪽으로 물러난다: 0.5칸/초, 무늬 주기 2칸을 32장으로 끊어 초당 8장(도트 느낌, 배터리). 하늘·먼 풍경은 멈춤. 홈·요약·아바타·상점·첫 실행·공유 카드는 늘 멈춤. 일시정지·자동 일시정지면 그 자리에 멈추고 재개하면 이어서 흐른다. 애니메이션 줄이기면 0번 장에 멈춘다. 흐름은 펫을 다시 만들지 않는다(`StageBackdrop` 의 `RepaintBoundary` 안 `CustomPaint` 만 다시 그리고, 멈춘 겹·장마다의 흐르는 겹을 크기·테마별 `Picture` 로 담아 둔다).
 - 말풍선: `bubble` 판 + 꼬리, `radius-md`, 캐릭터를 가리킨다. 문구는 기존 문구만. 다크에서 `surface` 는 `stage-sky` 와 톤이 같아(ΔE76 8) 모양·꼬리가 묻혀서 `bubble` 을 따로 둔다(작업 12, 다크 `#44573A`, 하늘과 ΔE76 19, 위 `ink` 7.0:1).
 
 ## 아이콘
@@ -103,7 +106,7 @@ direction-c 이름과 토큰: `lime` = `primary`, `green` = `primary-deep`·`suc
 - 바탕은 풀빛 어둠(`background` #10160D), 카드 `surface`·트랙 `surface-soft` 가 한 단계씩 밝아 테두리 없이 떨어진다.
 - 연두 `primary` 와 `on-primary` 는 라이트와 같은 값. 연두 면은 다크 바탕 위에서 13:1 이라 경계선 `primary-edge` 는 덜 진한 연두.
 - 초록·코인·페이스·위험 색은 어두운 바탕에서 읽히도록 밝은 쪽으로 옮겼다. `panel` 은 밝은 판 + 짙은 글자.
-- 무대는 어두운 풀빛 하늘·땅. 스프라이트는 `sprite-rim` 얇은 윤곽으로 무대에 묻히지 않게 한다(라이트는 투명). 윤곽 두께는 `max(1, round(배율/4))` 화면 px(8배 2px, 6배 2px, 3배 1px). 도트 1칸 두께는 굵어서 관문 3 에서 비교 B(얇게)를 골랐다(`design/mockups/phase-6/rim-compare.html`).
+- 무대는 어두운 풀빛 하늘·풀밭에 어두운 흙길·나무(다크 `ParkPalette`). 스프라이트는 `sprite-rim` 얇은 윤곽으로 무대에 묻히지 않게 한다(라이트는 투명). 윤곽 두께는 `max(1, round(배율/4))` 화면 px(8배 2px, 6배 2px, 3배 1px). 도트 1칸 두께는 굵어서 관문 3 에서 비교 B(얇게)를 골랐다(`design/mockups/phase-6/rim-compare.html`).
 
 ## 접근성
 
@@ -126,6 +129,6 @@ direction-c 이름과 토큰: `lime` = `primary`, `green` = `primary-deep`·`suc
 - 구현 화면 스크린샷은 `design/mockups/phase-6-screens/`, 화면별 구성과 컴포넌트는 `docs/screens.md` "화면 디자인".
 
 - 토큰 이름 변경: `cream` → `background`, `accent`/`on-accent` → `panel`/`on-panel`, `accent-deep` → `coin`(코인) 또는 없앰(립). `primary-deep` 은 이름은 같고 뜻이 "주황 립" 에서 "초록 강조" 로 바뀌었다.
-- 공통 컴포넌트는 `lib/core/ui/components.dart`(작업 11, 옛 `clay.dart`): `AppCard`·`StatCard`·`StatsCard`(흰 카드 하나에 지표 칸 `StatCard.cell` 여러 개, 작업 12), `AppButton`(기본 연두·`.secondary` 흰·`.panel` 어두운 판), `AppChip`·`ChipRow`(칩·분할 선택 공통), `ProgressBar`, `CoinIcon`(코인 칩은 `lib/shop/ui/coin_chip.dart`), `AppTabBar`·`TabIcon`, `PetStage`·`StageGround`·`SpeechBubble`, `Pressable`(누름 0.97), `ScreenTitle`, `CircleIconButton`(48 흰 동그라미 아이콘 버튼: 뒤로, 작업 14), `EmptyState`(흰 카드 + 앱 그림 + `ink-muted` 안내 문구, 작업 14. 넘기는 그림은 `EmptyState.iconSize` 40 으로 그린다), `NoticeCard`(진짜 문제 알림, 작업 15). 다이얼로그는 `AlertDialog` 를 그대로 쓰고 모양은 테마(`filledButtonTheme`·`textButtonTheme`·`dialogTheme`)가 정한다.
-- `PetStage` 는 펫(`32 × scale`)을 발끝이 땅 윗선 아래 `Stage.footSink` 에 묻히게 놓는다(8배 땅 56 → 펫 상자 아래 32, 6배 땅 40 → 20). 하늘·땅 겹은 `sky`·`ground` 로 바꾼다. 펫 위끝이 무대 위끝에 닿는 높이는 `PetStage.fitHeight(scale:, groundHeight:)`(작업 18, 상점 무대·카드 미리보기가 쓴다).
+- 공통 컴포넌트는 `lib/core/ui/components.dart`(작업 11, 옛 `clay.dart`): `AppCard`·`StatCard`·`StatsCard`(흰 카드 하나에 지표 칸 `StatCard.cell` 여러 개, 작업 12), `AppButton`(기본 연두·`.secondary` 흰·`.panel` 어두운 판), `AppChip`·`ChipRow`(칩·분할 선택 공통), `ProgressBar`, `CoinIcon`(코인 칩은 `lib/shop/ui/coin_chip.dart`), `AppTabBar`·`TabIcon`, `PetStage`·`StageBackdrop`·`SpeechBubble`, `Pressable`(누름 0.97), `ScreenTitle`, `CircleIconButton`(48 흰 동그라미 아이콘 버튼: 뒤로, 작업 14), `EmptyState`(흰 카드 + 앱 그림 + `ink-muted` 안내 문구, 작업 14. 넘기는 그림은 `EmptyState.iconSize` 40 으로 그린다), `NoticeCard`(진짜 문제 알림, 작업 15). 다이얼로그는 `AlertDialog` 를 그대로 쓰고 모양은 테마(`filledButtonTheme`·`textButtonTheme`·`dialogTheme`)가 정한다.
+- `PetStage` 는 펫(`32 × scale`)을 발끝이 무대 아래에서 `groundHeight − Stage.footSink` 에 서게 놓는다(8배 땅 56 → 펫 상자 아래 32, 6배 땅 40 → 20). 배경은 `scene`(기본 `parkScene`)으로 바꾸고, 러닝 중에는 `moving: true`(작업 25). 펫 위끝이 무대 위끝에 닿는 높이는 `PetStage.fitHeight(scale:, groundHeight:)`(작업 18, 상점 무대·카드 미리보기가 쓴다).
 - 옛 `Borders.thick`·`lip`·`lipPressed` 는 지웠다. 포커스 윤곽은 `Borders.focus` 3.

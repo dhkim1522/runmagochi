@@ -47,15 +47,15 @@ class Borders {
   /// 연두 면·흰 보조 버튼의 경계선(primaryEdge·lineStrong). 바탕 대비 3:1 을 이 선이 맡는다.
   static const double edge = 2;
 
-  /// 사각 무대 땅 윗선(stageGroundLine).
+  /// 땅 띠 윗선(stageGroundLine). 앱 아이콘 무대가 쓴다(앱 안 무대는 작업 25 부터 공원 산책로 배경).
   static const double groundLine = 4;
 
   /// 키보드 포커스 윤곽(primaryDeep).
   static const double focus = 3;
 }
 
-/// 사각 무대(마스코트 뒤 하늘 + 땅 띠) 치수. 색은 [AppColors.stageSky] 등.
-/// 무대는 하늘·땅 두 겹이고, 배경 아이템은 겹 단위로 바꾼다.
+/// 사각 무대(마스코트 뒤 배경 네 겹) 치수. 색은 [AppColors.stageSky] 등.
+/// 배경 그림은 `lib/core/stage/` 의 `StageScene`(기본 공원 산책로)이고, 배경 아이템은 겹 단위로 바꾼다.
 class Stage {
   Stage._();
 
@@ -65,16 +65,16 @@ class Stage {
   /// 카드 안 무대 모서리.
   static const double radiusInCard = Radii.md;
 
-  /// 땅 띠 높이(윗선 포함). 홈·요약(8배 캐릭터).
+  /// 땅 높이(발끝 기준, 옛 땅 띠). 홈·요약(8배 캐릭터): 발끝이 무대 아래 48.
   static const double groundHeight = 56;
 
-  /// 땅 띠 높이(윗선 포함). 러닝 중(6배 캐릭터).
+  /// 땅 높이(발끝 기준). 러닝 중(6배 캐릭터): 발끝이 무대 아래 32.
   static const double groundHeightCompact = 40;
 
-  /// 땅 띠 높이(윗선 포함). 카드 안 작은 무대(상점 아이템·성장 단계, 2~3배 캐릭터).
+  /// 땅 높이(발끝 기준). 카드 안 작은 무대(상점 아이템·성장 단계, 2~3배 캐릭터): 발끝이 무대 아래 16.
   static const double groundHeightMini = 24;
 
-  /// 캐릭터 발끝이 땅 윗선 아래로 묻히는 깊이.
+  /// 발끝 기준: 발끝은 무대 아래에서 (땅 높이 − 이 값) 위에 선다(옛 땅 띠 윗선 아래 8px 자리).
   static const double footSink = 8;
 }
 
@@ -286,13 +286,13 @@ class AppColors extends ThemeExtension<AppColors> {
   final Color success;
   final Color danger;
 
-  /// 사각 무대 하늘 겹.
+  /// 사각 무대 하늘 겹(배경 1).
   final Color stageSky;
 
-  /// 사각 무대 땅 겹.
+  /// 사각 무대 풀밭(배경 3 땅·길의 길 밖 바닥 면).
   final Color stageGround;
 
-  /// 땅 윗선([Borders.groundLine]).
+  /// 풀밭 풀잎 점, 앱 아이콘 땅 윗선([Borders.groundLine]).
   final Color stageGroundLine;
 
   /// 경로 페이스 3단(느림·보통·빠름): 파랑·자주·주황. 보통(자주)만 밝기를 크게 달리해

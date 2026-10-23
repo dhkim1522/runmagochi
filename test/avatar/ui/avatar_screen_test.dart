@@ -196,12 +196,12 @@ void _designTests() {
         find.descendant(of: _mainStage(), matching: find.byType(Text)),
         findsNothing,
       );
-      final sky = tester.widget<ColoredBox>(
-        find
-            .descendant(of: _mainStage(), matching: find.byType(ColoredBox))
-            .first,
+      // 무대 배경(공원 산책로)은 멈춰 있다.
+      final backdrop = tester.widget<StageBackdrop>(
+        find.descendant(of: _mainStage(), matching: find.byType(StageBackdrop)),
       );
-      expect(sky.color, c.stageSky);
+      expect(backdrop.scene, same(parkScene));
+      expect(backdrop.moving, isFalse);
       // 이름·레벨은 무대 아래 26.
       final title = find.text('러니 Lv.5');
       expect(tester.widget<Text>(title).style!.fontSize, 26);

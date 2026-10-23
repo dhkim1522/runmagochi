@@ -91,6 +91,8 @@ class _InRunScreenState extends ConsumerState<InRunScreen> {
     // 무대 높이에 맞춰 펫 배율을 고른다. 종류를 읽기 전(또는 실패)에는 같은 크기의 빈자리만 둔다.
     final stage = _RunStage(
       bubble: bubble,
+      // 기록 중에만 길이 흐른다. 일시정지·자동 멈춤이면 그 자리에 멈춘다(작업 25).
+      moving: snap.state == RunState.recording,
       pet: (scale) => growth == null
           ? AvatarSlot(scale: scale)
           : AvatarView(
@@ -310,13 +312,16 @@ class _GoalRow extends StatelessWidget {
 /// [bubble] 이 있으면 오른쪽 위 말풍선이 펫 그림을 가리지 않게(프레임 위 빈 줄
 /// [spriteTopGapRows] 까지만 겹치게) 배율을 고른다.
 class _RunStage extends StatelessWidget {
-  const _RunStage({required this.pet, this.bubble});
+  const _RunStage({required this.pet, this.bubble, this.moving = false});
 
   /// 배율을 받아 펫(32 × 배율 정사각형)을 만든다.
   final Widget Function(int scale) pet;
 
   /// 말풍선 문구. null 이면 말풍선을 두지 않는다.
   final String? bubble;
+
+  /// 무대 길이 소실점 쪽으로 흐르는가([PetStage.moving]).
+  final bool moving;
 
   static const int _maxScale = 6;
   static const int _minScale = 1;
@@ -354,6 +359,7 @@ class _RunStage extends StatelessWidget {
           height: box.maxHeight,
           scale: scale,
           groundHeight: Stage.groundHeightCompact,
+          moving: moving,
           pet: pet(scale),
           bubble: text == null ? null : SpeechBubble(text),
         );

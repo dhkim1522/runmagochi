@@ -3,6 +3,7 @@ import 'dart:ui' show Tristate;
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:runmagochi/avatar/ui/sprite_sheet.dart';
+import 'package:runmagochi/core/stage/stage_scene.dart';
 import 'package:runmagochi/core/theme.dart';
 import 'package:runmagochi/core/ui/components.dart';
 
@@ -653,7 +654,9 @@ void _stageTests() {
     (8, Stage.groundHeight, 32.0),
     (6, Stage.groundHeightCompact, 20.0),
   ]) {
-    testWidgets('PetStage $scale배: 발끝이 땅 윗선 아래 8px 에 묻힌다', (tester) async {
+    testWidgets('PetStage $scale배: 발끝이 무대 아래에서 땅 높이 − 8px 에 선다', (
+      tester,
+    ) async {
       await _pump(
         tester,
         PetStage(
@@ -704,33 +707,26 @@ void _stageTests() {
 
   for (final dark in [false, true]) {
     final name = dark ? '다크' : '라이트';
-    testWidgets('PetStage 기본 겹: 하늘 stageSky, 땅 stageGround + 윗선 4px ($name)', (
+    testWidgets('PetStage 기본 배경: 공원 산책로 네 겹, 모서리 Stage.radius ($name)', (
       tester,
     ) async {
-      final c = _c(dark);
       await _pump(
         tester,
         PetStage(height: 300, scale: 8, pet: pet(8)),
         dark: dark,
       );
-      final sky = tester.widget<ColoredBox>(
+      final backdrop = tester.widget<StageBackdrop>(
         find.descendant(
           of: find.byType(PetStage),
-          matching: find.byType(ColoredBox),
+          matching: find.byType(StageBackdrop),
         ),
       );
-      expect(sky.color, c.stageSky);
-      final ground = _decoration(tester, find.byType(StageGround));
-      expect(ground.color, c.stageGround);
+      expect(backdrop.scene, same(parkScene));
+      expect(backdrop.scale, 8);
+      expect(backdrop.feetFromBottom, Stage.groundHeight - Stage.footSink);
       expect(
-        ground.border,
-        Border(
-          top: BorderSide(color: c.stageGroundLine, width: Borders.groundLine),
-        ),
-      );
-      expect(
-        tester.getSize(find.byType(StageGround)).height,
-        Stage.groundHeight,
+        tester.getRect(find.byType(StageBackdrop)),
+        tester.getRect(find.byType(PetStage)),
       );
       final clip = tester.widget<ClipRRect>(
         find.descendant(
@@ -742,24 +738,29 @@ void _stageTests() {
     });
   }
 
-  testWidgets('PetStage 하늘·땅 겹은 바꿀 수 있다(배경 아이템 자리)', (tester) async {
+  testWidgets('PetStage 배경은 바꿀 수 있다(배경 아이템 자리)', (tester) async {
+    const other = StageScene(
+      name: 'other',
+      sky: _Fill(),
+      far: _Fill(),
+      ground: _Fill(),
+      roadside: _Fill(),
+    );
     await _pump(
       tester,
       PetStage(
         height: 300,
         scale: 8,
         radius: Stage.radiusInCard,
-        sky: const SizedBox.expand(key: Key('park-sky')),
-        ground: const SizedBox.expand(key: Key('park-ground')),
+        scene: other,
         pet: pet(8),
       ),
     );
-    expect(find.byType(StageGround), findsNothing);
-    final stage = tester.getRect(find.byType(PetStage));
-    expect(tester.getRect(find.byKey(const Key('park-sky'))), stage);
-    final ground = tester.getRect(find.byKey(const Key('park-ground')));
-    expect(ground.height, Stage.groundHeight);
-    expect(ground.bottom, stage.bottom);
+    expect(
+      tester.widget<StageBackdrop>(find.byType(StageBackdrop)).scene,
+      same(other),
+    );
+    expect(tester.takeException(), isNull);
   });
 
   test('PetStage.largestScale 는 들어가는 가장 큰 정수 배율, 없으면 null', () {
@@ -978,8 +979,8 @@ void _task14Tests() {
       Stage.groundHeightMini - Stage.footSink - spriteFootGapRows * 2,
     );
     expect(
-      tester.getSize(find.byType(StageGround)).height,
-      Stage.groundHeightMini,
+      tester.widget<StageBackdrop>(find.byType(StageBackdrop)).feetFromBottom,
+      Stage.groundHeightMini - Stage.footSink,
     );
   });
 }
@@ -1089,4 +1090,12 @@ void _task15Tests() {
       expect(retried, 1);
     });
   }
+}
+
+/// 무대 전체를 하늘색으로 칠하는 겹(배경 바꾸기 테스트용).
+class _Fill extends StageLayer {
+  const _Fill();
+
+  @override
+  void paintStill(StagePixels px, StageView v) => px.fill(v.colors.surface);
 }

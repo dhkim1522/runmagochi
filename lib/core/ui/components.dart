@@ -3,7 +3,14 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 
+import '../stage/park_scene.dart';
+import '../stage/stage_scene.dart';
 import '../theme.dart';
+import 'stage_backdrop.dart';
+
+export '../stage/park_scene.dart' show parkScene;
+export '../stage/stage_scene.dart' show StageScene;
+export 'stage_backdrop.dart' show StageBackdrop;
 
 /// 공통 컴포넌트(연두 무드보드, 결정 0029). 규칙은 docs/design/design-system.md,
 /// 값은 [AppColors]·[AppText]·`Gap`·`Radii`·`Borders`·`Stage`·`Motion` 토큰만 쓴다.
@@ -16,7 +23,7 @@ import '../theme.dart';
 /// - 빈 상태·불러오기 실패: [EmptyState], [EmptyState.error]
 /// - 진짜 문제 알림(위치 신호 오류 등): [NoticeCard]
 /// - 탭바: [AppTabBar], [TabIcon]
-/// - 무대: [PetStage], [StageGround], [SpeechBubble]
+/// - 무대: [PetStage]([StageBackdrop], [StageScene]), [SpeechBubble]
 /// - 다이얼로그: `AlertDialog` 를 그대로 쓴다. 판·버튼 모양은 테마(theme.dart)가 정한다.
 
 /// [style] 의 굵기를 [w] 로 바꾼다. 가변 글꼴이라 wght 축도 함께 바꾼다.
@@ -787,19 +794,21 @@ const int _spriteFramePx = 32;
 /// 무대의 말풍선이 이만큼은 펫 상자와 겹쳐도 그림을 가리지 않는다(sprite_assets_test 확인).
 const int spriteTopGapRows = 5;
 
-/// 마스코트 뒤 사각 무대: 하늘 겹 위에 땅 겹(띠). 폭 전체, 모서리를 잘라 땅이 모서리를 따른다.
+/// 마스코트 뒤 사각 무대: [scene] 네 겹(하늘 → 먼 풍경 → 땅·길 → 앞 장식, 기본 공원 산책로)을
+/// 한 점 투시로 깐다. 소실점은 펫 몸 뒤 지평선에 있다([StageBackdrop]). 폭 전체, 모서리를 자른다.
 ///
-/// [pet] 은 `32 × [scale]` 정사각형 스프라이트. 발끝이 땅 윗선 아래 [Stage.footSink] 에
-/// 묻히도록 무대가 놓는다. [sky]·[ground] 를 주면 기본 겹(stageSky·[StageGround]) 대신
-/// 그린다(배경 아이템 자리). [height] 를 주지 않으면 부모 높이를 따르고, 부모가 높이를
-/// 정하지 않으면 펫이 들어갈 만큼만 커진다. [bubble] 은 오른쪽 위에 놓는다([SpeechBubble]).
+/// [pet] 은 `32 × [scale]` 정사각형 스프라이트. 발끝이 무대 아래에서
+/// `[groundHeight] − [Stage.footSink]` 위에 서도록 무대가 놓는다(옛 땅 띠 윗선 아래 8px 자리,
+/// 발밑에 도트 그림자). [moving] 이면 길이 소실점 쪽으로 흐른다(러닝 중에만, 애니메이션
+/// 줄이기면 멈춤). [height] 를 주지 않으면 부모 높이를 따르고, 부모가 높이를 정하지 않으면
+/// 펫이 들어갈 만큼만 커진다. [bubble] 은 오른쪽 위에 놓는다([SpeechBubble]).
 class PetStage extends StatelessWidget {
   const PetStage({
     super.key,
     required this.pet,
     required this.scale,
-    this.sky,
-    this.ground,
+    this.scene = parkScene,
+    this.moving = false,
     this.groundHeight = Stage.groundHeight,
     this.radius = Stage.radius,
     this.height,
@@ -810,10 +819,15 @@ class PetStage extends StatelessWidget {
 
   /// 스프라이트 정수 배율.
   final int scale;
-  final Widget? sky;
-  final Widget? ground;
 
-  /// 땅 띠 높이(윗선 포함). 8배 [Stage.groundHeight], 6배 [Stage.groundHeightCompact].
+  /// 배경 네 겹. 상점 배경 아이템은 다른 [StageScene] 으로 바꾼다.
+  final StageScene scene;
+
+  /// 길이 흐르는가(러닝 중이고 일시정지가 아닐 때만 켠다).
+  final bool moving;
+
+  /// 발끝 기준 높이: 발끝이 무대 아래에서 이 값 − [Stage.footSink] 위에 선다.
+  /// 8배 [Stage.groundHeight], 6배 [Stage.groundHeightCompact], 카드 안 [Stage.groundHeightMini].
   final double groundHeight;
   final double radius;
   final double? height;
@@ -847,7 +861,6 @@ class PetStage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final c = AppColors.of(context);
     return SizedBox(
       width: double.infinity,
       height: height,
@@ -856,13 +869,13 @@ class PetStage extends StatelessWidget {
         child: Stack(
           alignment: Alignment.bottomCenter,
           children: [
-            Positioned.fill(child: sky ?? ColoredBox(color: c.stageSky)),
-            Positioned(
-              left: 0,
-              right: 0,
-              bottom: 0,
-              height: groundHeight,
-              child: ground ?? const StageGround(),
+            Positioned.fill(
+              child: StageBackdrop(
+                scene: scene,
+                scale: scale,
+                feetFromBottom: groundHeight - Stage.footSink,
+                moving: moving,
+              ),
             ),
             Padding(
               padding: EdgeInsets.only(bottom: petBottom),
@@ -876,24 +889,6 @@ class PetStage extends StatelessWidget {
                 child: Align(alignment: Alignment.topRight, child: bubble),
               ),
           ],
-        ),
-      ),
-    );
-  }
-}
-
-/// 기본 땅 겹: stageGround 띠 + stageGroundLine 윗선 [Borders.groundLine].
-class StageGround extends StatelessWidget {
-  const StageGround({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    final c = AppColors.of(context);
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: c.stageGround,
-        border: Border(
-          top: BorderSide(color: c.stageGroundLine, width: Borders.groundLine),
         ),
       ),
     );

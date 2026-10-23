@@ -7,6 +7,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:image/image.dart' as img;
 import 'package:runmagochi/avatar/app/providers.dart';
 import 'package:runmagochi/avatar/domain/growth_rules.dart';
+import 'package:runmagochi/core/stage/park_scene.dart';
 import 'package:runmagochi/core/theme.dart';
 import 'package:runmagochi/core/ui/components.dart';
 import 'package:runmagochi/run/app/providers.dart';
@@ -226,6 +227,20 @@ void main() {
       }
     }
     expect(different, greaterThan(200));
+    // 무대 배경(공원 산책로 라이트) 흙길이 찍혔다.
+    final path = ParkPalette.light.path;
+    var road = 0;
+    for (var y = 0; y < png.height; y += 3) {
+      for (var x = 0; x < png.width; x += 3) {
+        final p = png.getPixel(x, y);
+        if (p.r.toInt() == (path.r * 255).round() &&
+            p.g.toInt() == (path.g * 255).round() &&
+            p.b.toInt() == (path.b * 255).round()) {
+          road++;
+        }
+      }
+    }
+    expect(road, greaterThan(100));
     expect(find.text('공유하지 못했어요'), findsNothing);
   });
 
@@ -310,6 +325,14 @@ void main() {
       expect(
         AppColors.of(tester.element(find.byType(PetStage))).stageSky,
         c.stageSky,
+      );
+      // 무대 배경은 공원 산책로 라이트 그림이고 멈춰 있다(작업 25).
+      final backdrop = tester.widget<StageBackdrop>(find.byType(StageBackdrop));
+      expect(backdrop.scene, same(parkScene));
+      expect(backdrop.moving, isFalse);
+      expect(
+        Theme.of(tester.element(find.byType(StageBackdrop))).brightness,
+        Brightness.light,
       );
       final painter = tester
           .widgetList<CustomPaint>(find.byType(CustomPaint))
