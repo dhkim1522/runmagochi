@@ -20,16 +20,16 @@
 
 | 항목 | 값 | 얻는 법 |
 | --- | --- | --- |
-| 테스트 수 | | `fvm flutter test` |
-| DB 테이블·스키마 판 | | `lib/run/data/app_database.dart` |
-| 화면 수·컷 수 | | `docs/screens.md`, `design/screens/` |
-| 결정 기록 수 | | `ls docs/decisions` |
-| 앱 버전 | | `pubspec.yaml` |
-| 코드 줄 수(lib / test) | | `find ... \| xargs wc -l` |
+| 테스트 수 | 1369 통과 (2026-10-23) | `fvm flutter test` |
+| DB 테이블·스키마 판 | 10개(Runs·RunPoints·Splits·Avatars·WeeklyGoals·Profiles·XpTxns·CoinTxns·OwnedItems·Badges), 스키마 7판 | `lib/run/data/app_database.dart` |
+| 화면 수·컷 수 | MVP 화면 7개, 컷 PNG 64개 | `docs/screens.md`, `design/screens/` |
+| 결정 기록 수 | 35 (0001~0035) | `ls docs/decisions` |
+| 앱 버전 | 0.4.0+4 | `pubspec.yaml` |
+| 코드 줄 수(lib / test) | 16,657 / 25,693 (`.g.dart` 제외) | `find ... \| xargs wc -l` |
 
 ## 작업
 
-- [ ] 0. 기준값 수집과 산출물 현황표
+- [x] 0. 기준값 수집과 산출물 현황표
   - 파일: 이 파일의 기준값 표, `docs/portfolio.md`(산출물 목록과 상태 표만 먼저. 작업 11에서 완성)
   - 내용: 위 표를 채우고, 산출물 12종마다 "있음/낡음/없음"과 만들 파일을 적는다
   - 테스트: 없음(문서)
