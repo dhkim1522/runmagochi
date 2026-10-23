@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+# cap.py 실행 래퍼: 저장소 .venv 의 파이썬을 쓴다.
+D="$(cd "$(dirname "$0")/../.." && pwd)"
+exec "$D/.venv/bin/python" "$D/tool/capture/cap.py" "$@"

@@ -48,3 +48,4 @@ devtools_options.yaml
 
 # 글꼴 서브셋 도구(fonttools) 가상환경. tool/subset_fonts.py 참고
 .venv/
+tool/capture/ring_run.log
