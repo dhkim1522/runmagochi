@@ -30,9 +30,9 @@ const _light = {
   'stageSky': 0xFFE3F6C8,
   'stageGround': 0xFFCDEBA8,
   'stageGroundLine': 0xFFB3DB82,
-  'paceSlow': 0xFF679C1C,
-  'paceMid': 0xFF126812,
-  'paceFast': 0xFF14301A,
+  'paceSlow': 0xFF659325,
+  'paceMid': 0xFF066B0E,
+  'paceFast': 0xFF003647,
   'spriteRim': 0x00000000,
   'bubble': 0xFFFFFFFF,
 };
@@ -367,13 +367,13 @@ void main() {
         }
       });
 
-      test('경로 페이스 3색은 연두 계열 한 줄이다: 색상 60~160도, 느림→빠름으로 한 방향 명도 단계', () {
+      test('경로 페이스 3색은 연두→초록→청록 한 줄이다: 색상 60~200도, 느림→빠름으로 한 방향 명도 단계', () {
         final hsl = [
           for (final col in [c.paceSlow, c.paceMid, c.paceFast])
             HSLColor.fromColor(col),
         ];
         for (final h in hsl) {
-          expect(h.hue, inInclusiveRange(60, 160));
+          expect(h.hue, inInclusiveRange(60, 200));
           expect(h.saturation, greaterThan(0.3));
         }
         final lightness = [for (final h in hsl) h.lightness];
@@ -387,6 +387,17 @@ void main() {
           lightness[0] < lightness[1] && lightness[1] < lightness[2],
           !light,
         );
+      });
+
+      test('라이트 빠르게(가장 짙은 값)는 본문 ink 와 구분된다(CIEDE2000 정상 15 이상, 색각 이상 12 이상)', () {
+        if (e.key != 'light') return;
+        for (final kind in [null, 'protan', 'deutan', 'tritan']) {
+          expect(
+            _deltaE2000(c.paceFast, c.ink, kind),
+            greaterThanOrEqualTo(kind == null ? 15 : 12),
+            reason: kind ?? 'normal',
+          );
+        }
       });
 
       test('CIEDE2000 계산 확인: Sharma 2005 표 1번 짝 = 2.0425', () {

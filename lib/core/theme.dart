@@ -375,9 +375,9 @@ class AppColors extends ThemeExtension<AppColors> {
     stageSky: Color(0xFFE3F6C8),
     stageGround: Color(0xFFCDEBA8),
     stageGroundLine: Color(0xFFB3DB82),
-    paceSlow: Color(0xFF679C1C),
-    paceMid: Color(0xFF126812),
-    paceFast: Color(0xFF14301A),
+    paceSlow: Color(0xFF659325),
+    paceMid: Color(0xFF066B0E),
+    paceFast: Color(0xFF003647),
     spriteRim: Color(0x00000000),
     bubble: Color(0xFFFFFFFF),
   );
