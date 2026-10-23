@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart' show ThemeMode;
 import 'package:drift/drift.dart' show Value;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -28,6 +29,17 @@ void main() {
     await repo.setVoiceGuide(true);
     expect(await repo.voiceGuide(), isTrue);
     expect(await db.select(db.profiles).get(), hasLength(1));
+  });
+
+  test('화면 모드는 행이 없어도 시스템이고 바꾸면 저장된다', () async {
+    expect(await repo.themeMode(), ThemeMode.system);
+    expect(await db.select(db.profiles).get(), isEmpty);
+    await repo.setThemeMode(ThemeMode.dark);
+    expect(await repo.themeMode(), ThemeMode.dark);
+    await repo.setThemeMode(ThemeMode.light);
+    expect(await repo.themeMode(), ThemeMode.light);
+    await repo.setWeightKg(60);
+    expect(await repo.themeMode(), ThemeMode.light);
   });
 
   test('음성 안내를 바꿔도 체중·첫 실행 표시는 그대로다', () async {

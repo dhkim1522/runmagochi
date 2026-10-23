@@ -7,6 +7,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:runmagochi/avatar/data/notification_scheduler.dart';
 import 'package:runmagochi/run/domain/run_goal.dart';
 import 'package:flutter/widgets.dart' show AppLifecycleState;
+import 'package:flutter/material.dart' show ThemeMode;
 import 'package:runmagochi/profile/app/providers.dart';
 import 'package:runmagochi/profile/data/profile_repository.dart';
 import 'package:runmagochi/run/app/app_lifecycle.dart';
@@ -160,6 +161,10 @@ class _FakeProfileRepository implements ProfileRepository {
   Future<bool> voiceGuide() async => voice;
   @override
   Future<void> setVoiceGuide(bool on) async => voice = on;
+  @override
+  Future<ThemeMode> themeMode() async => ThemeMode.system;
+  @override
+  Future<void> setThemeMode(ThemeMode mode) async {}
   @override
   Future<bool> isOnboarded() async => false;
   @override

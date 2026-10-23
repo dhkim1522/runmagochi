@@ -247,4 +247,28 @@ PRAGMA user_version = 5;
     expect(profile.voiceGuide, isTrue);
     expect(await db.select(db.badges).get(), isEmpty);
   });
+
+  test('스키마 6 DB 를 열면 프로필 화면 모드는 시스템이고 값이 남는다', () async {
+    final executor = NativeDatabase.memory(
+      setup: (raw) {
+        raw.execute('''
+CREATE TABLE profiles (
+  id TEXT NOT NULL, weight_kg REAL NULL, onboarded_at TEXT NULL,
+  voice_guide INTEGER NOT NULL DEFAULT 1 CHECK (voice_guide IN (0, 1)),
+  created_at TEXT NOT NULL, updated_at TEXT NOT NULL, deleted_at TEXT NULL,
+  PRIMARY KEY (id));
+INSERT INTO profiles (id, weight_kg, voice_guide, created_at, updated_at)
+VALUES ('p1', 62.5, 0, '2026-10-01T00:00:00.000Z', '2026-10-01T00:00:00.000Z');
+PRAGMA user_version = 6;
+''');
+      },
+    );
+    final db = AppDatabase(executor);
+    addTearDown(db.close);
+
+    final profile = (await db.select(db.profiles).get()).single;
+    expect(profile.weightKg, 62.5);
+    expect(profile.voiceGuide, isFalse);
+    expect(profile.themeMode, 'system');
+  });
 }

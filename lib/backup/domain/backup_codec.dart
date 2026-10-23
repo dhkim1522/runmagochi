@@ -26,12 +26,12 @@ class BackupData {
 
 /// [BackupData] 와 JSON 문자열을 서로 바꾼다. 순수 함수만 있다.
 ///
-/// schemaVersion 3(러닝에 목표가 없다)·4(코인·보유·장착이 없다)·5(시간 목표·배지·음성 안내가 없다)·6 을 받는다. DB 스키마가 바뀌면 [currentSchemaVersion] 을 올리고,
+/// schemaVersion 3(러닝에 목표가 없다)·4(코인·보유·장착이 없다)·5(시간 목표·배지·음성 안내가 없다)·6(화면 모드가 없다)·7 을 받는다. DB 스키마가 바뀌면 [currentSchemaVersion] 을 올리고,
 /// 이전 버전 파일을 읽을 수 있게 [decode] 에 변환 단계를 더한다.
 abstract final class BackupCodec {
   static const format = 'runmagochi-backup';
   static const version = 1;
-  static const currentSchemaVersion = 6;
+  static const currentSchemaVersion = 7;
 
   /// 백업에 담는 테이블. RunPoints 는 담지 않는다.
   static const tableNames = [
@@ -112,6 +112,12 @@ abstract final class BackupCodec {
       // 음성 안내 열이 없던 파일의 프로필은 기본값(켬)으로 채운다.
       tables['profiles'] = [
         for (final row in tables['profiles']!) {...row, 'voiceGuide': true},
+      ];
+    }
+    if (s < 7) {
+      // 화면 모드 열이 없던 파일의 프로필은 기본값(시스템)으로 채운다.
+      tables['profiles'] = [
+        for (final row in tables['profiles']!) {...row, 'themeMode': 'system'},
       ];
     }
     return BackupData(exportedAt: exportedAt, schemaVersion: s, tables: tables);

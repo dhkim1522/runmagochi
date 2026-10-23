@@ -1,4 +1,5 @@
 import 'package:drift/drift.dart';
+import 'package:flutter/material.dart' show ThemeMode;
 import 'package:uuid/uuid.dart';
 
 import '../../run/data/app_database.dart';
@@ -33,6 +34,7 @@ class DriftProfileRepository implements ProfileRepository {
                 weightKg: c.weightKg,
                 onboardedAt: c.onboardedAt,
                 voiceGuide: c.voiceGuide,
+                themeMode: c.themeMode,
                 createdAt: now,
                 updatedAt: now,
               ),
@@ -57,6 +59,16 @@ class DriftProfileRepository implements ProfileRepository {
   @override
   Future<void> setVoiceGuide(bool on) =>
       _write((_) => ProfilesCompanion(voiceGuide: Value(on)));
+
+  @override
+  Future<ThemeMode> themeMode() async {
+    final name = (await _row())?.themeMode;
+    return ThemeMode.values.asNameMap()[name] ?? ThemeMode.system;
+  }
+
+  @override
+  Future<void> setThemeMode(ThemeMode mode) =>
+      _write((_) => ProfilesCompanion(themeMode: Value(mode.name)));
 
   @override
   Future<bool> isOnboarded() async => (await _row())?.onboardedAt != null;

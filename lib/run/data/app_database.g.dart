@@ -3587,6 +3587,18 @@ class $ProfilesTable extends Profiles with TableInfo<$ProfilesTable, Profile> {
     ),
     defaultValue: const Constant(true),
   );
+  static const VerificationMeta _themeModeMeta = const VerificationMeta(
+    'themeMode',
+  );
+  @override
+  late final GeneratedColumn<String> themeMode = GeneratedColumn<String>(
+    'theme_mode',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('system'),
+  );
   static const VerificationMeta _createdAtMeta = const VerificationMeta(
     'createdAt',
   );
@@ -3626,6 +3638,7 @@ class $ProfilesTable extends Profiles with TableInfo<$ProfilesTable, Profile> {
     weightKg,
     onboardedAt,
     voiceGuide,
+    themeMode,
     createdAt,
     updatedAt,
     deletedAt,
@@ -3666,6 +3679,12 @@ class $ProfilesTable extends Profiles with TableInfo<$ProfilesTable, Profile> {
       context.handle(
         _voiceGuideMeta,
         voiceGuide.isAcceptableOrUnknown(data['voice_guide']!, _voiceGuideMeta),
+      );
+    }
+    if (data.containsKey('theme_mode')) {
+      context.handle(
+        _themeModeMeta,
+        themeMode.isAcceptableOrUnknown(data['theme_mode']!, _themeModeMeta),
       );
     }
     if (data.containsKey('created_at')) {
@@ -3715,6 +3734,10 @@ class $ProfilesTable extends Profiles with TableInfo<$ProfilesTable, Profile> {
         DriftSqlType.bool,
         data['${effectivePrefix}voice_guide'],
       )!,
+      themeMode: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}theme_mode'],
+      )!,
       createdAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}created_at'],
@@ -3743,6 +3766,9 @@ class Profile extends DataClass implements Insertable<Profile> {
 
   /// 러닝 중 음성 안내. 기본으로 켜져 있다.
   final bool voiceGuide;
+
+  /// 화면 모드: `system`·`light`·`dark`. 기본은 시스템 설정을 따른다.
+  final String themeMode;
   final DateTime createdAt;
   final DateTime updatedAt;
   final DateTime? deletedAt;
@@ -3751,6 +3777,7 @@ class Profile extends DataClass implements Insertable<Profile> {
     this.weightKg,
     this.onboardedAt,
     required this.voiceGuide,
+    required this.themeMode,
     required this.createdAt,
     required this.updatedAt,
     this.deletedAt,
@@ -3766,6 +3793,7 @@ class Profile extends DataClass implements Insertable<Profile> {
       map['onboarded_at'] = Variable<DateTime>(onboardedAt);
     }
     map['voice_guide'] = Variable<bool>(voiceGuide);
+    map['theme_mode'] = Variable<String>(themeMode);
     map['created_at'] = Variable<DateTime>(createdAt);
     map['updated_at'] = Variable<DateTime>(updatedAt);
     if (!nullToAbsent || deletedAt != null) {
@@ -3784,6 +3812,7 @@ class Profile extends DataClass implements Insertable<Profile> {
           ? const Value.absent()
           : Value(onboardedAt),
       voiceGuide: Value(voiceGuide),
+      themeMode: Value(themeMode),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
       deletedAt: deletedAt == null && nullToAbsent
@@ -3802,6 +3831,7 @@ class Profile extends DataClass implements Insertable<Profile> {
       weightKg: serializer.fromJson<double?>(json['weightKg']),
       onboardedAt: serializer.fromJson<DateTime?>(json['onboardedAt']),
       voiceGuide: serializer.fromJson<bool>(json['voiceGuide']),
+      themeMode: serializer.fromJson<String>(json['themeMode']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
       deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
@@ -3815,6 +3845,7 @@ class Profile extends DataClass implements Insertable<Profile> {
       'weightKg': serializer.toJson<double?>(weightKg),
       'onboardedAt': serializer.toJson<DateTime?>(onboardedAt),
       'voiceGuide': serializer.toJson<bool>(voiceGuide),
+      'themeMode': serializer.toJson<String>(themeMode),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
       'deletedAt': serializer.toJson<DateTime?>(deletedAt),
@@ -3826,6 +3857,7 @@ class Profile extends DataClass implements Insertable<Profile> {
     Value<double?> weightKg = const Value.absent(),
     Value<DateTime?> onboardedAt = const Value.absent(),
     bool? voiceGuide,
+    String? themeMode,
     DateTime? createdAt,
     DateTime? updatedAt,
     Value<DateTime?> deletedAt = const Value.absent(),
@@ -3834,6 +3866,7 @@ class Profile extends DataClass implements Insertable<Profile> {
     weightKg: weightKg.present ? weightKg.value : this.weightKg,
     onboardedAt: onboardedAt.present ? onboardedAt.value : this.onboardedAt,
     voiceGuide: voiceGuide ?? this.voiceGuide,
+    themeMode: themeMode ?? this.themeMode,
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
     deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
@@ -3848,6 +3881,7 @@ class Profile extends DataClass implements Insertable<Profile> {
       voiceGuide: data.voiceGuide.present
           ? data.voiceGuide.value
           : this.voiceGuide,
+      themeMode: data.themeMode.present ? data.themeMode.value : this.themeMode,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
       deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
@@ -3861,6 +3895,7 @@ class Profile extends DataClass implements Insertable<Profile> {
           ..write('weightKg: $weightKg, ')
           ..write('onboardedAt: $onboardedAt, ')
           ..write('voiceGuide: $voiceGuide, ')
+          ..write('themeMode: $themeMode, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('deletedAt: $deletedAt')
@@ -3874,6 +3909,7 @@ class Profile extends DataClass implements Insertable<Profile> {
     weightKg,
     onboardedAt,
     voiceGuide,
+    themeMode,
     createdAt,
     updatedAt,
     deletedAt,
@@ -3886,6 +3922,7 @@ class Profile extends DataClass implements Insertable<Profile> {
           other.weightKg == this.weightKg &&
           other.onboardedAt == this.onboardedAt &&
           other.voiceGuide == this.voiceGuide &&
+          other.themeMode == this.themeMode &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt &&
           other.deletedAt == this.deletedAt);
@@ -3896,6 +3933,7 @@ class ProfilesCompanion extends UpdateCompanion<Profile> {
   final Value<double?> weightKg;
   final Value<DateTime?> onboardedAt;
   final Value<bool> voiceGuide;
+  final Value<String> themeMode;
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
   final Value<DateTime?> deletedAt;
@@ -3905,6 +3943,7 @@ class ProfilesCompanion extends UpdateCompanion<Profile> {
     this.weightKg = const Value.absent(),
     this.onboardedAt = const Value.absent(),
     this.voiceGuide = const Value.absent(),
+    this.themeMode = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.deletedAt = const Value.absent(),
@@ -3915,6 +3954,7 @@ class ProfilesCompanion extends UpdateCompanion<Profile> {
     this.weightKg = const Value.absent(),
     this.onboardedAt = const Value.absent(),
     this.voiceGuide = const Value.absent(),
+    this.themeMode = const Value.absent(),
     required DateTime createdAt,
     required DateTime updatedAt,
     this.deletedAt = const Value.absent(),
@@ -3927,6 +3967,7 @@ class ProfilesCompanion extends UpdateCompanion<Profile> {
     Expression<double>? weightKg,
     Expression<DateTime>? onboardedAt,
     Expression<bool>? voiceGuide,
+    Expression<String>? themeMode,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
     Expression<DateTime>? deletedAt,
@@ -3937,6 +3978,7 @@ class ProfilesCompanion extends UpdateCompanion<Profile> {
       if (weightKg != null) 'weight_kg': weightKg,
       if (onboardedAt != null) 'onboarded_at': onboardedAt,
       if (voiceGuide != null) 'voice_guide': voiceGuide,
+      if (themeMode != null) 'theme_mode': themeMode,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (deletedAt != null) 'deleted_at': deletedAt,
@@ -3949,6 +3991,7 @@ class ProfilesCompanion extends UpdateCompanion<Profile> {
     Value<double?>? weightKg,
     Value<DateTime?>? onboardedAt,
     Value<bool>? voiceGuide,
+    Value<String>? themeMode,
     Value<DateTime>? createdAt,
     Value<DateTime>? updatedAt,
     Value<DateTime?>? deletedAt,
@@ -3959,6 +4002,7 @@ class ProfilesCompanion extends UpdateCompanion<Profile> {
       weightKg: weightKg ?? this.weightKg,
       onboardedAt: onboardedAt ?? this.onboardedAt,
       voiceGuide: voiceGuide ?? this.voiceGuide,
+      themeMode: themeMode ?? this.themeMode,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       deletedAt: deletedAt ?? this.deletedAt,
@@ -3980,6 +4024,9 @@ class ProfilesCompanion extends UpdateCompanion<Profile> {
     }
     if (voiceGuide.present) {
       map['voice_guide'] = Variable<bool>(voiceGuide.value);
+    }
+    if (themeMode.present) {
+      map['theme_mode'] = Variable<String>(themeMode.value);
     }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
@@ -4003,6 +4050,7 @@ class ProfilesCompanion extends UpdateCompanion<Profile> {
           ..write('weightKg: $weightKg, ')
           ..write('onboardedAt: $onboardedAt, ')
           ..write('voiceGuide: $voiceGuide, ')
+          ..write('themeMode: $themeMode, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('deletedAt: $deletedAt, ')
@@ -7934,6 +7982,7 @@ typedef $$ProfilesTableCreateCompanionBuilder =
       Value<double?> weightKg,
       Value<DateTime?> onboardedAt,
       Value<bool> voiceGuide,
+      Value<String> themeMode,
       required DateTime createdAt,
       required DateTime updatedAt,
       Value<DateTime?> deletedAt,
@@ -7945,6 +7994,7 @@ typedef $$ProfilesTableUpdateCompanionBuilder =
       Value<double?> weightKg,
       Value<DateTime?> onboardedAt,
       Value<bool> voiceGuide,
+      Value<String> themeMode,
       Value<DateTime> createdAt,
       Value<DateTime> updatedAt,
       Value<DateTime?> deletedAt,
@@ -7977,6 +8027,11 @@ class $$ProfilesTableFilterComposer
 
   ColumnFilters<bool> get voiceGuide => $composableBuilder(
     column: $table.voiceGuide,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get themeMode => $composableBuilder(
+    column: $table.themeMode,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -8025,6 +8080,11 @@ class $$ProfilesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get themeMode => $composableBuilder(
+    column: $table.themeMode,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
@@ -8065,6 +8125,9 @@ class $$ProfilesTableAnnotationComposer
     column: $table.voiceGuide,
     builder: (column) => column,
   );
+
+  GeneratedColumn<String> get themeMode =>
+      $composableBuilder(column: $table.themeMode, builder: (column) => column);
 
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
@@ -8108,6 +8171,7 @@ class $$ProfilesTableTableManager
                 Value<double?> weightKg = const Value.absent(),
                 Value<DateTime?> onboardedAt = const Value.absent(),
                 Value<bool> voiceGuide = const Value.absent(),
+                Value<String> themeMode = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<DateTime?> deletedAt = const Value.absent(),
@@ -8117,6 +8181,7 @@ class $$ProfilesTableTableManager
                 weightKg: weightKg,
                 onboardedAt: onboardedAt,
                 voiceGuide: voiceGuide,
+                themeMode: themeMode,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 deletedAt: deletedAt,
@@ -8128,6 +8193,7 @@ class $$ProfilesTableTableManager
                 Value<double?> weightKg = const Value.absent(),
                 Value<DateTime?> onboardedAt = const Value.absent(),
                 Value<bool> voiceGuide = const Value.absent(),
+                Value<String> themeMode = const Value.absent(),
                 required DateTime createdAt,
                 required DateTime updatedAt,
                 Value<DateTime?> deletedAt = const Value.absent(),
@@ -8137,6 +8203,7 @@ class $$ProfilesTableTableManager
                 weightKg: weightKg,
                 onboardedAt: onboardedAt,
                 voiceGuide: voiceGuide,
+                themeMode: themeMode,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 deletedAt: deletedAt,

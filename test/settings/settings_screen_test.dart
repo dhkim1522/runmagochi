@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:runmagochi/app.dart';
 import 'package:runmagochi/avatar/app/providers.dart';
 import 'package:runmagochi/avatar/data/growth_repository.dart';
 import 'package:runmagochi/avatar/domain/avatar_name.dart';
@@ -43,6 +44,14 @@ class _Profile implements ProfileRepository {
     if (voiceFails) throw StateError('저장 실패');
     voice = on;
   }
+
+  ThemeMode theme = ThemeMode.system;
+
+  @override
+  Future<ThemeMode> themeMode() async => theme;
+
+  @override
+  Future<void> setThemeMode(ThemeMode mode) async => theme = mode;
 
   @override
   dynamic noSuchMethod(Invocation invocation) =>
@@ -111,6 +120,11 @@ Future<SettingsEnv> pumpSettings(
   ThemeData? theme,
 }) async {
   final e = env ?? SettingsEnv();
+  // 기본 화면(800x600)에는 설정이 다 들어가지 않으므로, 크기를 안 정한 테스트는 키 큰 화면으로 연다.
+  if (tester.view.physicalSize == const Size(2400, 1800)) {
+    tester.view.physicalSize = const Size(2400, 4200);
+    addTearDown(tester.view.reset);
+  }
   await tester.pumpWidget(
     ProviderScope(
       overrides: [
@@ -575,6 +589,50 @@ void main() {
     await tester.tap(gear);
     await settle(tester);
     expect(find.byType(SettingsScreen), findsOneWidget);
+  });
+
+  group('화면 모드', () {
+    testWidgets('기본은 시스템이고 다크를 고르면 저장된다', (tester) async {
+      final env = await pumpSettings(tester);
+      expect(find.text('화면 모드'), findsOneWidget);
+      expect(find.text('시스템'), findsOneWidget);
+      expect(find.text('라이트'), findsOneWidget);
+      await tester.tap(find.text('다크'));
+      await settle(tester);
+      expect(env.profile.theme, ThemeMode.dark);
+    });
+
+    testWidgets('고르면 앱 테마가 바뀐다', (tester) async {
+      final profile = FakeProfile();
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            runControllerProvider.overrideWith(FakeController.new),
+            runRepositoryProvider.overrideWithValue(FakeRepo((0, 0))),
+            profileRepositoryProvider.overrideWithValue(profile),
+            notificationSchedulerProvider.overrideWithValue(
+              FakeNotificationScheduler(),
+            ),
+            growthServiceProvider.overrideWithValue(
+              FakeGrowthService(growthState()),
+            ),
+            growthRepositoryProvider.overrideWithValue(
+              _GrowthRepo(FakeGrowthService(growthState())),
+            ),
+          ],
+          child: const RunmagochiApp(),
+        ),
+      );
+      await tester.pump();
+      await tester.pump();
+      MaterialApp app() => tester.widget<MaterialApp>(find.byType(MaterialApp));
+      expect(app().themeMode, ThemeMode.system);
+      await tester.tap(find.byKey(const ValueKey('home-settings')));
+      await settle(tester);
+      await tester.tap(find.text('다크'));
+      await settle(tester);
+      expect(app().themeMode, ThemeMode.dark);
+    });
   });
 
   group('음성 안내', () {

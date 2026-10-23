@@ -101,6 +101,9 @@ class Profiles extends Table {
 
   /// 러닝 중 음성 안내. 기본으로 켜져 있다.
   BoolColumn get voiceGuide => boolean().withDefault(const Constant(true))();
+
+  /// 화면 모드: `system`·`light`·`dark`. 기본은 시스템 설정을 따른다.
+  TextColumn get themeMode => text().withDefault(const Constant('system'))();
   DateTimeColumn get createdAt => dateTime()();
   DateTimeColumn get updatedAt => dateTime()();
   DateTimeColumn get deletedAt => dateTime().nullable()();
@@ -203,7 +206,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.production() : super(driftDatabase(name: 'runmagochi'));
 
   @override
-  int get schemaVersion => 6;
+  int get schemaVersion => 7;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -230,6 +233,10 @@ class AppDatabase extends _$AppDatabase {
         await m.addColumn(runs, runs.goalSec);
         if (from >= 3) await m.addColumn(profiles, profiles.voiceGuide);
         await m.createTable(badges);
+      }
+      if (from < 7) {
+        // from < 3 은 위에서 최신 모양의 profiles 를 막 만들었으므로 열이 이미 있다.
+        if (from >= 3) await m.addColumn(profiles, profiles.themeMode);
       }
     },
   );

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/material.dart' show ThemeMode;
 
 import 'package:runmagochi/avatar/app/growth_service.dart';
 import 'package:runmagochi/run/domain/run_goal.dart';
@@ -353,6 +354,14 @@ class FakeProfile implements ProfileRepository {
 
   @override
   Future<void> setVoiceGuide(bool on) async => voice = on;
+
+  ThemeMode theme = ThemeMode.system;
+
+  @override
+  Future<ThemeMode> themeMode() async => theme;
+
+  @override
+  Future<void> setThemeMode(ThemeMode mode) async => theme = mode;
 
   @override
   Future<bool> isOnboarded() async => onboarded;

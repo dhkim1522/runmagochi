@@ -77,6 +77,15 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     if (mounted) ref.invalidate(_voiceProvider);
   }
 
+  Future<void> _setThemeMode(ThemeMode mode) async {
+    try {
+      await ref.read(profileRepositoryProvider).setThemeMode(mode);
+    } catch (_) {
+      _toast('화면 모드를 바꾸지 못했어요');
+    }
+    if (mounted) ref.invalidate(themeModeProvider);
+  }
+
   Future<void> _editName(String current) async {
     final name = await showDialog<String>(
       context: context,
@@ -110,6 +119,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           refreshAfterImport(ref);
           ref.invalidate(_weightProvider);
           ref.invalidate(_voiceProvider);
+          ref.invalidate(themeModeProvider);
         }
         _toast(doneMessage);
       case BackupCancelled():
@@ -161,6 +171,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final GrowthState? g = ref.watch(growthStateProvider).value;
     final weight = ref.watch(_weightProvider);
     final voice = ref.watch(_voiceProvider);
+    final themeMode = ref.watch(themeModeProvider);
     final weightLabel = switch (weight) {
       AsyncData(:final value) =>
         value == null ? '입력 안 함' : '${_kgLabel(value)}kg',
@@ -215,6 +226,21 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     subtitle: '러닝 중 거리와 시간을 말로 알려줘요',
                     value: voice.value ?? true,
                     onChanged: voice.hasValue ? _setVoice : null,
+                  ),
+                ],
+              ),
+              const _SectionLabel('화면'),
+              _RowsCard(
+                children: [
+                  _ChoiceRow<ThemeMode>(
+                    title: '화면 모드',
+                    options: const [
+                      (ThemeMode.system, '시스템'),
+                      (ThemeMode.light, '라이트'),
+                      (ThemeMode.dark, '다크'),
+                    ],
+                    value: themeMode.value ?? ThemeMode.system,
+                    onChanged: themeMode.hasValue ? _setThemeMode : null,
                   ),
                 ],
               ),
@@ -412,6 +438,47 @@ class _SettingsRow extends StatelessWidget {
 
 /// 켜고 끄는 설정 한 줄. 줄 전체를 누르면 바뀌고 하나의 스위치 노드로 읽힌다.
 /// [onChanged] 가 null 이면 끈 상태(값을 읽는 중)다.
+/// 제목 아래에 칩 줄로 하나를 고르는 설정 한 줄.
+class _ChoiceRow<T> extends StatelessWidget {
+  const _ChoiceRow({
+    required this.title,
+    required this.options,
+    required this.value,
+    required this.onChanged,
+  });
+
+  final String title;
+  final List<(T, String)> options;
+  final T value;
+  final ValueChanged<T>? onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = AppText.of(context);
+    final change = onChanged;
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: Gap.s3, horizontal: Gap.s4),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(title, style: t.bodyStrong),
+          const SizedBox(height: Gap.s3),
+          ChipRow(
+            children: [
+              for (final (v, label) in options)
+                AppChip(
+                  label: label,
+                  selected: v == value,
+                  onTap: change == null ? () {} : () => change(v),
+                ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _SwitchRow extends StatelessWidget {
   const _SwitchRow({
     required this.title,

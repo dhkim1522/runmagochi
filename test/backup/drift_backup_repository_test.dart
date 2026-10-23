@@ -162,7 +162,7 @@ void main() {
     final m = jsonDecode(json) as Map<String, dynamic>;
     expect(m['format'], 'runmagochi-backup');
     expect(m['version'], 1);
-    expect(m['schemaVersion'], 6);
+    expect(m['schemaVersion'], 7);
     expect(m['exportedAt'], '2026-10-18T01:00:00.000Z');
     final tables = m['tables'] as Map<String, dynamic>;
     expect(tables.keys, isNot(contains('runPoints')));
@@ -322,9 +322,12 @@ void main() {
             updatedAt: _t,
           ),
         );
-    await (src.update(
-      src.profiles,
-    )).write(const ProfilesCompanion(voiceGuide: Value(false)));
+    await (src.update(src.profiles)).write(
+      const ProfilesCompanion(
+        voiceGuide: Value(false),
+        themeMode: Value('dark'),
+      ),
+    );
     final json = await DriftBackupRepository(src).exportJson(_now);
     await _seed(dst, suffix: '-old');
     await DriftBackupRepository(dst).importJson(json);
@@ -341,6 +344,7 @@ void main() {
     );
     expect(badges.firstWhere((b) => b.id == 'b1').runId, 'r1');
     expect((await dst.select(dst.profiles).get()).single.voiceGuide, isFalse);
+    expect((await dst.select(dst.profiles).get()).single.themeMode, 'dark');
     expect(await DriftBackupRepository(dst).exportJson(_now), json);
   });
 
@@ -364,6 +368,23 @@ void main() {
     expect(runs.map((r) => r.goalSec), [null, null]);
     expect(await dst.select(dst.badges).get(), isEmpty);
     expect((await dst.select(dst.profiles).get()).single.voiceGuide, isTrue);
+  });
+
+  test('v6 백업 파일(화면 모드 없음)을 가져오면 시스템이다', () async {
+    await _seed(src);
+    await (src.update(
+      src.profiles,
+    )).write(const ProfilesCompanion(themeMode: Value('dark')));
+    final m =
+        jsonDecode(await DriftBackupRepository(src).exportJson(_now))
+            as Map<String, dynamic>;
+    m['schemaVersion'] = 6;
+    for (final r in (m['tables'] as Map)['profiles'] as List) {
+      (r as Map).remove('themeMode');
+    }
+    await _seed(dst, suffix: '-old');
+    await DriftBackupRepository(dst).importJson(jsonEncode(m));
+    expect((await dst.select(dst.profiles).get()).single.themeMode, 'system');
   });
 
   test('가져오면 기존 데이터를 모두 바꾼다 (진행 중 러닝·점 포함)', () async {
@@ -414,7 +435,7 @@ void main() {
       return expectRejected(jsonEncode(parsed()..['version'] = 2));
     });
     test('스키마 버전이 다름', () async {
-      await expectRejected(jsonEncode(parsed()..['schemaVersion'] = 7));
+      await expectRejected(jsonEncode(parsed()..['schemaVersion'] = 8));
       await expectRejected(jsonEncode(parsed()..['schemaVersion'] = 2));
     });
     test('테이블이 없음', () {

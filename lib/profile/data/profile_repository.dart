@@ -1,3 +1,5 @@
+import 'package:flutter/material.dart' show ThemeMode;
+
 /// 프로필 저장소. 행은 하나이고 처음 쓸 때 만든다.
 abstract interface class ProfileRepository {
   /// 체중(kg). 입력하지 않았으면 null.
@@ -11,6 +13,12 @@ abstract interface class ProfileRepository {
 
   /// 음성 안내를 켜거나 끈다.
   Future<void> setVoiceGuide(bool on);
+
+  /// 화면 모드. 행이 없으면 기본값 시스템.
+  Future<ThemeMode> themeMode();
+
+  /// 화면 모드를 바꾼다.
+  Future<void> setThemeMode(ThemeMode mode);
 
   /// 첫 실행 안내를 마쳤는지.
   Future<bool> isOnboarded();

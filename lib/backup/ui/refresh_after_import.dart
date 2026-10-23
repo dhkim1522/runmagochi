@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../achievement/app/providers.dart';
 import '../../avatar/app/providers.dart';
+import '../../profile/app/providers.dart';
 import '../../run/ui/history_screen.dart';
 import '../../run/ui/home_screen.dart';
 import '../../shop/app/providers.dart';
@@ -18,4 +19,5 @@ void refreshAfterImport(WidgetRef ref) {
   ref.invalidate(achievementRunsProvider);
   ref.invalidate(equippedProvider);
   ref.invalidate(ownedItemsProvider);
+  ref.invalidate(themeModeProvider);
 }

@@ -12,16 +12,16 @@ import 'run/ui/history_screen.dart';
 import 'run/ui/home_screen.dart';
 import 'shop/ui/shop_screen.dart';
 
-class RunmagochiApp extends StatelessWidget {
+class RunmagochiApp extends ConsumerWidget {
   const RunmagochiApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return MaterialApp(
       title: '런마고치',
       theme: appLightTheme(),
       darkTheme: appDarkTheme(),
-      themeMode: ThemeMode.system,
+      themeMode: ref.watch(themeModeProvider).value ?? ThemeMode.system,
       home: const _OnboardingGate(),
     );
   }
