@@ -152,13 +152,14 @@ def main():
 body {{ margin: 0; background: var(--background); color: var(--ink); font: 500 16px/1.6 var(--font-sans); }}
 .wrap {{ max-width: 1120px; margin: 0 auto; padding: 0 20px; }}
 header {{ padding-block: 48px 8px; }}
+h1, h2, h3 {{ word-break: keep-all; }}
 h1 {{ font-size: clamp(34px, 5vw, 52px); font-weight: 800; letter-spacing: -.03em; margin: 0; }}
 h2 {{ font-size: 28px; font-weight: 800; letter-spacing: -.02em; margin: 0 0 18px; }}
 h3 {{ font-size: 18px; font-weight: 800; margin: 0; }}
 h4 {{ font-size: 15px; font-weight: 800; color: var(--ink-muted); margin: 18px 0 6px; }}
 p {{ margin: 0 0 8px; }}
 ul {{ margin: 0 0 8px; padding-left: 20px; }}
-code {{ font: 13px ui-monospace, Menlo, monospace; background: var(--surface-soft); padding: 1px 6px; border-radius: 6px; }}
+code {{ font: 13px ui-monospace, Menlo, monospace; background: var(--surface-soft); padding: 1px 6px; border-radius: 6px; overflow-wrap: anywhere; }}
 section {{ padding-block: 48px 0; }}
 .lead {{ max-width: 46em; color: var(--ink); }}
 .lead p:first-child {{ font-size: 19px; font-weight: 700; }}
@@ -185,8 +186,8 @@ table {{ border-collapse: collapse; width: 100%; font-size: 14px; }}
 th, td {{ text-align: left; padding: 9px 14px; border-bottom: 1px solid var(--line); vertical-align: top; }}
 tr:last-child td {{ border-bottom: 0; }}
 td.v {{ font: 13px ui-monospace, Menlo, monospace; white-space: nowrap; }}
-.comps {{ display: grid; gap: 16px; }}
-.comp {{ background: var(--surface); border-radius: 22px; padding: 20px 22px; }}
+.comps {{ display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; }}
+.comp {{ background: var(--surface); border-radius: 22px; padding: 20px 22px; min-width: 0; }}
 .comp-h {{ display: flex; gap: 10px; align-items: baseline; }}
 .grp {{ font-size: 12px; font-weight: 700; color: var(--ink-muted); background: var(--surface-soft); border-radius: 999px; padding: 2px 10px; }}
 .sub {{ color: var(--ink-muted); font-size: 14px; margin-top: 4px; }}

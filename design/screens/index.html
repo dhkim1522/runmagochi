@@ -103,7 +103,7 @@ body::before {
 img { max-width: 100%; display: block; }
 a { color: var(--green); text-underline-offset: 3px; }
 a:focus-visible, button:focus-visible, [tabindex]:focus-visible { outline: 3px solid var(--green); outline-offset: 3px; border-radius: 8px; }
-h1, h2, h3, h4 { text-wrap: balance; margin: 0; }
+h1, h2, h3, h4 { text-wrap: balance; word-break: keep-all; margin: 0; }
 .wrap {
   max-width: 1240px;
   margin: 0 auto;
@@ -412,7 +412,7 @@ dialog.zoom button { min-height: 44px; min-width: 44px; border-radius: 999px; bo
   <div class="wrap">
     <div class="cover-grid">
       <div>
-        <div class="eyebrow"><span class="tag">화면설계서</span><span class="tag">v0.4.0 베타</span><span class="tag">2026-10-24 8판</span></div>
+        <div class="eyebrow"><span class="tag">화면설계서</span><span class="tag">v0.4.0 베타</span><span class="tag">2026-10-24 기준</span></div>
         <h1>런마고치<br>화면설계서</h1>
         <p class="lede">달린 거리만큼 도트 친구가 자라는 러닝 앱. 실제 앱을 에뮬레이터에서 돌려 찍은 화면으로 모든 화면과 상태, 화면 사이 이동, 요소별 규칙을 한 장에 정리했어요.</p>
         <dl class="meta">
@@ -461,7 +461,7 @@ dialog.zoom button { min-height: 44px; min-width: 44px; border-radius: 999px; bo
       <div class="part-head">
         <span class="part-no">1</span>
         <h2>전체 화면 보드</h2>
-        <p>사용자가 만나는 순서로 묶었어요. Android 16(Pixel 7 에뮬레이터, 라이트)에서 찍었고, 그림을 누르면 크게 봐요. 관문 3 고칠 점(공원 산책로 무대·홈 목표 시트·화면 모드·탈것과 신호 끊김 안내)을 반영해 2026-10-24 에 처음부터 다시 찍었어요(버튼 그림자·몸집 고정·경로 세 단계색·알림 작은 아이콘 반영). 아이템 그림은 아직 검토 전이라 캐릭터는 아이템 없이 기본 3종(병아리·젤리·도토리)을 흐름 묶음마다 나눠 찍었어요.</p>
+        <p>사용자가 만나는 순서로 묶었어요. Android 16(Pixel 7 에뮬레이터, 라이트)에서 찍었고, 그림을 누르면 크게 봐요. 2026-10-24 에 마지막 디자인 수정(공원 산책로 무대·홈 목표 시트·화면 모드·탈것과 신호 끊김 안내·버튼 그림자·경로 세 단계색·알림 작은 아이콘)을 반영해 처음부터 다시 찍었어요. 아이템 그림은 아직 다듬는 중이라 캐릭터는 아이템 없이 기본 3종(병아리·젤리·도토리)을 흐름 묶음마다 나눠 찍었어요.</p>
       </div>
       <div class="board" id="board-light"></div>
       <div class="bands">
@@ -627,8 +627,8 @@ dialog.zoom button { min-height: 44px; min-width: 44px; border-radius: 999px; bo
         <article>
           <h3>찍으면서 본 것</h3>
           <ul>
-                        <li><span class="sev">확인 필요</span>위치 서비스를 끈 상태(13c)를 처음 찍을 때 일시정지·길게 눌러 종료 버튼에 진한 회색 테두리가 보인 컷이 한 번 있었어요. 같은 화면을 다시 찍으니 다른 컷처럼 얇은 선뿐이었어요(일시적인 포커스 표시로 보여요). 실기기에서 다시 확인해 보세요.</li>
-            <li><span class="sev">고쳐짐</span>경로색(작업 30)·버튼 그림자(작업 31)·몸집 고정(작업 32)·알림 작은 아이콘(작업 29)이 모두 이번 컷에 들어갔어요. 알림 37·39 도 새 아이콘으로 다시 찍었어요.</li>
+            <li><span class="sev">확인 필요</span>위치 서비스를 끈 상태(13c)를 처음 찍을 때 일시정지·길게 눌러 종료 버튼에 진한 회색 테두리가 보인 컷이 한 번 있었어요. 같은 화면을 다시 찍으니 다른 컷처럼 얇은 선뿐이었어요(일시적인 포커스 표시로 보여요). 실기기 테스트에서 다시 확인할 예정이에요.</li>
+            <li><span class="sev">고쳐짐</span>앞선 검토에서 고친 경로색·버튼 그림자·캐릭터 몸집 고정·알림 작은 아이콘이 모두 이번 컷에 들어갔어요. 알림 37·39 도 새 아이콘으로 다시 찍었어요.</li>
             <li><span class="sev">관찰</span>공유 카드는 시스템 공유 창 미리보기에서 잘라냈어요. 오른쪽 아래 연필은 Android 의 편집 버튼이에요. 알림은 알림창에서 앱 카드만 잘라냈어요.</li>
           </ul>
         </article>
@@ -638,7 +638,7 @@ dialog.zoom button { min-height: 44px; min-width: 44px; border-radius: 999px; bo
 </main>
 
 <footer>
-  <div class="wrap">런마고치 · 페이즈 6 작업 19 · 원본 <code>design/screens/</code> · 연두 무드보드 + 사각 무대(결정 0029)</div>
+  <div class="wrap">런마고치 화면설계서 · 원본 <code>design/screens/</code> · 연두 무드보드 + 사각 무대(결정 0029)</div>
 </footer>
 
 <dialog class="zoom" id="zoom" aria-labelledby="zoom-title">
@@ -695,7 +695,7 @@ dialog.zoom button { min-height: 44px; min-width: 44px; border-radius: 999px; bo
       ['26', '26-avatar', '아바타', '병아리 · 2단계 · Lv.9', '긴 화면'],
       ['27', '27-achievements', '업적', '개인 기록 · 배지 9/12', '긴 화면'],
     ]},
-    { k: 'G', t: '상점·코인', reqs: ['F9', 'F10', 'F11'], note: '상점은 고른 아이템을 위 무대 캐릭터에 입혀 보여 줘요. 아이템 그림은 검토 전이라 아이템 목록 아래만 잘라 실었고, 미리보기·구매 확인·코인 부족 상태는 이번 판에서 뺐어요.', items: [
+    { k: 'G', t: '상점·코인', reqs: ['F9', 'F10', 'F11'], note: '상점은 고른 아이템을 위 무대 캐릭터에 입혀 보여 줘요. 아이템 그림은 다듬는 중이라 아이템 목록 아래만 잘라 실었고, 미리보기·구매 확인·코인 부족 상태는 이번 설계서에서 뺐어요.', items: [
       ['28', '28-shop', '상점 · 아이템 목록', '병아리 · 무대 위는 잘라냄'],
       ['32', '32-coins', '코인 내역', '지급·사용 목록'],
       ['33', '33-coins-empty', '코인 내역 · 빈 상태', '달리면 코인이 쌓여요', '빈 상태'],
@@ -838,7 +838,7 @@ dialog.zoom button { min-height: 44px; min-width: 44px; border-radius: 999px; bo
       pins: [[14, 10], [50, 30], [50, 92.3]],
       els: [['제목', '권한 안내'], ['안내 카드', '왜 필요한지 한 문장. 위치는 기기에만 저장'], ['권한 허용', '시스템 권한 창을 띄움. 거부되면 `설정 열기`']],
       variants: [['04-permission-precise', '정확한 위치'], ['05-permission-battery', '배터리 최적화'], ['05b-permission-denied', '거부 · 설정 열기']],
-      ix: ['대략 위치만 허용하면 "정확한 위치를 허용해야 거리가 기록됩니다" 를 더해 다시 물음', '배터리 최적화는 `설정 열기` 와 `나중에` 글자 버튼', '두 번 거부하면(시스템 창이 더 안 뜸) "설정에서 위치 권한을 허용해 주세요" + `설정 열기`. 앱 설정 화면으로 보낸다(작업 27 뒤 Android 16 확인)', '모두 통과하면 3초 카운트다운 뒤 러닝 시작'] },
+      ix: ['대략 위치만 허용하면 "정확한 위치를 허용해야 거리가 기록됩니다" 를 더해 다시 물음', '배터리 최적화는 `설정 열기` 와 `나중에` 글자 버튼', '두 번 거부하면(시스템 창이 더 안 뜸) "설정에서 위치 권한을 허용해 주세요" + `설정 열기`. 앱 설정 화면으로 보낸다(Android 16 에서 확인)', '모두 통과하면 3초 카운트다운 뒤 러닝 시작'] },
     { id: 'd-home', img: '06-home', route: '탭 › 러닝', title: '홈', reqs: ['F1', 'F6', 'F6-2', 'F7', 'F18'],
       desc: '오늘 목표는 지난번 값이 한 줄에 보여서 시작 한 번으로 달려요. 바꿀 때만 한 줄을 눌러 시트를 열어요. 마스코트가 공원 산책로 무대 위의 주인공.',
       pins: [[13.5, 10], [89, 10], [72, 18.3], [50, 37], [50, 65.4], [50, 68.6], [50, 75], [50, 84], [50, 93]],
@@ -888,11 +888,11 @@ dialog.zoom button { min-height: 44px; min-width: 44px; border-radius: 999px; bo
       variants: [['46-dark-achievements', '다크']],
       ix: ['배지는 러닝을 마친 뒤 동기화에서 판정, 요약에 줄로 알림', '같은 배지는 두 번 받지 않음'] },
     { id: 'd-shop', img: '28-shop', dim: [390, 520], route: '탭 › 상점', title: '상점', reqs: ['F9', 'F10', 'F11'],
-      desc: '아이템을 고르면 위 6배 무대 캐릭터에 바로 입혀 보여 줘요. 아이템 그림은 검토 전이라 이 판에는 아이템 목록 아래만 실었어요. 위에는 제목 + 코인 칩(누르면 코인 내역)과 미리보기 무대가 있어요.',
+      desc: '아이템을 고르면 위 6배 무대 캐릭터에 바로 입혀 보여 줘요. 아이템 그림은 다듬는 중이라 이 설계서에는 아이템 목록 아래만 실었어요. 위에는 제목 + 코인 칩(누르면 코인 내역)과 미리보기 무대가 있어요.',
       pins: [[50, 5.5], [26.7, 30.8], [50, 73.4], [50, 88]],
       els: [['모자 · 소품', '분할 선택'], ['아이템 카드', '작은 무대 + 이름 + 가격·보유·장착 중. 고른 카드는 연두 경계'], ['아래 버튼', '구매하고 장착 / 장착하기 / 벗기, 화면의 유일한 연두 버튼'], ['탭바', '상점 선택']],
       variants: [['47-dark-shop', '다크 · 소품'], ['54-ios-shop', 'iPhone']],
-      ix: ['살 수 있으면 "밀짚모자를 300 코인에 살까요?" 확인 뒤 구매·장착', '모자라면 버튼이 흐려지고 위에 "코인이 N 부족해요"', '미리보기·구매 확인·코인 부족 화면은 아이템 그림 검토(작업 29 후보) 뒤 다시 싣는다'] },
+      ix: ['살 수 있으면 "밀짚모자를 300 코인에 살까요?" 확인 뒤 구매·장착', '모자라면 버튼이 흐려지고 위에 "코인이 N 부족해요"', '미리보기·구매 확인·코인 부족 화면은 아이템 그림을 다듬은 뒤 싣는다'] },
     { id: 'd-coins', img: '32-coins', route: '상점·홈 › 코인 칩', title: '코인 내역', reqs: ['F9'],
       desc: '지급과 사용을 최신순으로 보여 줘요.',
       pins: [[10.7, 10], [40, 18.9], [88, 18.9]],

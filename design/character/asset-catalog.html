@@ -52,6 +52,7 @@ header { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 20px 32
 @media (max-width: 720px) { header { grid-template-columns: minmax(0, 1fr); } }
 .head-text { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
 .eyebrow { font: 600 14px/1.4 var(--font-sans); letter-spacing: .04em; color: var(--ink-muted); }
+h1, h2 { word-break: keep-all; }
 h1 { margin: 0; font: 800 40px/1.15 var(--font-sans); letter-spacing: -0.02em; text-wrap: balance; }
 h2 { margin: 0; font: 800 26px/1.25 var(--font-sans); letter-spacing: -0.01em; text-wrap: balance; }
 h3 { margin: 0; font: 800 17px/1.4 var(--font-sans); }
@@ -129,7 +130,7 @@ code, .mono { font-family: var(--font-mono); font-size: 13px; }
 .adaptive { width: 140px; height: 140px; border-radius: 50%; overflow: hidden; position: relative; }
 .adaptive img { position: absolute; width: 150%; height: 150%; left: -25%; top: -25%; max-width: none; }
 .adaptive.square { border-radius: 30px; }
-.splash-pair { display: flex; gap: 8px; }
+.icon-card .splash-pair { display: flex; gap: 8px; align-items: center; }
 .splash-tile { width: 76px; height: 156px; border-radius: 16px; display: grid; place-items: center; box-shadow: inset 0 0 0 1px var(--line); }
 .splash-tile.light { background: #F3F5EE; }
 .splash-tile.dark { background: #10160D; }
@@ -168,7 +169,7 @@ summary { cursor: pointer; font: 800 17px var(--font-sans); padding: 6px 0; }
 <div class="wrap">
   <header>
     <div class="head-text">
-      <div class="eyebrow">런마고치 · 페이즈 6 최종 그림 · 2026-10-23 몸집 고정</div>
+      <div class="eyebrow">런마고치 · 캐릭터 에셋 · 2026-10-23 기준</div>
       <h1>런마고치 캐릭터 에셋</h1>
       <p class="lede">달린 거리만큼 자라는 도트 친구 세 종류와 상점 아이템, 업적 배지, 앱 아이콘이에요. 주변 투표로 고른 <strong>말랑 클레이</strong> 그림체로 그렸고, 아래 무대는 앱에 들어가는 실제 스프라이트 파일을 앱과 같은 사각 무대 위에 겹쳐 재생해요.</p>
       <ul class="facts">
@@ -204,7 +205,7 @@ summary { cursor: pointer; font: 800 17px var(--font-sans); padding: 6px 0; }
 
   <section aria-labelledby="icon-title">
     <h2 id="icon-title">앱 아이콘 · 스플래시</h2>
-    <p class="section-note">사각 무대(하늘 + 땅 띠) 위에 선 병아리 3단계예요. 도트는 정수 배율로만 키우고, 발끝 한 칸이 땅 윗선 아래로 묻혀요. 병아리 긴 변이 아이콘 한 변의 0.61 에 가깝고 0.8 을 넘지 않는 배율을 골라요(작업 16). 런처 아이콘은 다크 모드에서도 바뀌지 않고, 스플래시 바탕만 테마를 따라요.</p>
+    <p class="section-note">사각 무대(하늘 + 땅 띠) 위에 선 병아리 3단계예요. 도트는 정수 배율로만 키우고, 발끝 한 칸이 땅 윗선 아래로 묻혀요. 병아리 긴 변이 아이콘 한 변의 0.61 에 가깝고 0.8 을 넘지 않는 배율을 골라요. 런처 아이콘은 다크 모드에서도 바뀌지 않고, 스플래시 바탕만 테마를 따라요.</p>
     <div class="icons">
       <div class="icon-card">
         <div class="frame"><img class="ios" src="../../ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-1024x1024@1x.png" alt="iOS 앱 아이콘" width="140" height="140"></div>
@@ -268,7 +269,7 @@ summary { cursor: pointer; font: 800 17px var(--font-sans); padding: 6px 0; }
     </div>
   </details>
 
-  <p class="foot">저장소 <span class="mono">runmagochi</span> 페이즈 6 작업 32 기준(몸집 고정 그림). 모자는 옛 4단계 머리에 맞춘 24칸이라 머리보다 커 보여요. 아이템 에셋 검토 때 함께 고쳐요.</p>
+  <p class="foot">저장소 <span class="mono">runmagochi</span> 2026-10-23 기준(자라도 몸 폭이 그대로인 그림, 결정 0034). 모자는 이전 4단계 머리에 맞춘 24칸이라 지금 머리보다 커 보여요. 아이템 그림을 다듬을 때 함께 고칠 예정이에요.</p>
 </div>
 
 <script>
