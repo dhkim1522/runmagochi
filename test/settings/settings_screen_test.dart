@@ -261,6 +261,14 @@ void task15Tests() {
       addTearDown(tester.view.reset);
       await pumpSettings(tester, theme: theme(), textScale: 1.3);
       expect(tester.takeException(), isNull);
+      await tester.scrollUntilVisible(find.text('화면 모드'), 200);
+      expect(tester.takeException(), isNull);
+      for (final chip in ['시스템', '라이트', '다크']) {
+        expect(find.text(chip).hitTestable(), findsOneWidget, reason: chip);
+      }
+      await tester.tap(find.text('다크'));
+      await settle(tester);
+      expect(tester.takeException(), isNull);
       await tester.scrollUntilVisible(find.text('버전'), 200);
       expect(tester.takeException(), isNull);
     });

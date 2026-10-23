@@ -436,9 +436,8 @@ class _SettingsRow extends StatelessWidget {
   }
 }
 
-/// 켜고 끄는 설정 한 줄. 줄 전체를 누르면 바뀌고 하나의 스위치 노드로 읽힌다.
-/// [onChanged] 가 null 이면 끈 상태(값을 읽는 중)다.
 /// 제목 아래에 칩 줄로 하나를 고르는 설정 한 줄.
+/// [onChanged] 가 null 이면 칩을 눌러도 바뀌지 않는다(값을 읽는 중).
 class _ChoiceRow<T> extends StatelessWidget {
   const _ChoiceRow({
     required this.title,
@@ -479,6 +478,8 @@ class _ChoiceRow<T> extends StatelessWidget {
   }
 }
 
+/// 켜고 끄는 설정 한 줄. 줄 전체를 누르면 바뀌고 하나의 스위치 노드로 읽힌다.
+/// [onChanged] 가 null 이면 끈 상태(값을 읽는 중)다.
 class _SwitchRow extends StatelessWidget {
   const _SwitchRow({
     required this.title,
