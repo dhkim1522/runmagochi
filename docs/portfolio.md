@@ -14,5 +14,5 @@
 | 8 | 시퀀스 다이어그램 | `docs/sequences.md` | 있음 (작업 7 완료: 기록·알림 버튼·자동 정지/종료·백업 4종, 코드 이름 대조) | 7 |
 | 9 | 결정 기록 모음 | `docs/decisions/README.md` | 있음 (작업 8 완료: 색인 35개, 흐름도) | 8 |
 | 10 | 페이즈별 개발 기록 | `docs/dev-log.md` | 있음 (작업 8 완료) | 8 |
-| 11 | README 소개 | `README.md` | 시작하기 위주, 스크린샷·GIF 없음 | 9 |
+| 11 | README 소개 | `README.md`, `design/readme/` | 있음 (작업 9 완료: 스크린샷 6장, GIF 는 도구 없어 보류) | 9 |
 | 12 | 플레이북·스킬 | `docs/playbook.md`, `.claude/skills/playbook/` | 있음 (작업 10 완료) | 10 |
