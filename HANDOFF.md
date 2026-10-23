@@ -4,7 +4,10 @@
 
 ## 현재 상태
 
-- **페이즈 8 진행 중** (`docs/plans/phase-8.md`, 상태 `실행`, 사용자 승인 2026-10-23). 작업 0~2·4 완료(기준값 표, PRD, 유저 시나리오, 디자인 의사결정 기록). 작업 3(화면설계서 재촬영)과 9(README GIF)는 에뮬레이터가 필요해 문서 작업 뒤 묶어서 한다. 작업 5(아키텍처)·6(ERD)·7(시퀀스)·8(결정 색인 `docs/decisions/README.md`, 개발 기록 `docs/dev-log.md`) 완료. 작업 10 플레이북(`docs/playbook.md`, 스킬 `.claude/skills/playbook`)도 완료. 남은 것: 3 화면 재촬영, 9 README(스크린샷·GIF), 11 포트폴리오 아티팩트, 12 정합성 점검. 시퀀스 쓰며 낡은 설명(빠른 이동 30km 자동 종료는 결정 0033 으로 탈것 의심으로 대체)을 user-flows·product 에서 고침. mermaid 검사 도구는 스크래치패드 `mm/check.py`(mermaid-cli, Chrome 사용). 문서 중심 페이즈라 코드는 안 바꾼다. 작업 3 화면설계서 재촬영은 이 페이즈에서 함(승인)
+- **페이즈 8 진행 중** (`docs/plans/phase-8.md`, 상태 `실행`, 사용자 승인 2026-10-23). 문서 작업 완료: 0 기준값, 1 PRD(`docs/product.md`), 2 시나리오·흐름(`docs/user-flows.md`), 4 디자인 의사결정(`docs/design/design-process.md`), 5 아키텍처, 6 ERD(`docs/data-model.md` + `test/docs/data_model_doc_test.dart`), 7 시퀀스(`docs/sequences.md`), 8 결정 색인(`docs/decisions/README.md`)·개발 기록(`docs/dev-log.md`), 10 플레이북(`docs/playbook.md`, 스킬 `.claude/skills/playbook`). 현황표 `docs/portfolio.md`
+  - 남은 것: **3 화면설계서 재촬영**(컷 64개, 에뮬레이터 필요), 9 README 스크린샷·GIF, 11 포트폴리오 아티팩트, 12 정합성 점검·문서 지도. 에뮬레이터 `runmagochi` 는 켜져 있고 디버그 APK 설치됨(기존 데이터: 말랑이 Lv.1)
+  - mermaid 문법 검사: 스크래치패드 `mm/check.py`(mermaid-cli, Chrome 사용). 새 문서의 다이어그램 14개 통과
+  - 시퀀스를 쓰며 낡은 설명(빠른 이동 30km 자동 종료는 결정 0033 으로 탈것 의심으로 대체)을 고침. 문서 숫자는 코드에서 읽어 쓸 것
 - **페이즈 7 완료** (`docs/plans/phase-7.md`, 작업 1~5, 자동 확인 통과). 실기기 사람 확인은 **페이즈 9 실기기 테스트와 개선**으로 분리(결정 0035). 순서 7 → 8 산출물 정리 → 9 실기기 테스트·개선 → 10 출시(1.0). 다음은 `/phase 8`(계획부터). 실측 안내 `docs/field-test.md`. Android 실기기는 가족 폰을 빌려 로드맵 기준 그대로 실측(사용자 결정 2026-10-23)
   - 작업 1: 탈것 의심 뒤 위치 끄기 결함은 재현 안 됨(회귀 테스트만 추가). 작업 4: 버전 0.4.0+4, 베타 안내문 갱신. **회사 Mac 에 릴리스 서명 키가 없어** 지인 베타 APK 는 집 PC 에서 빌드(`docs/beta.md`)
   - iPhone 설치: 2026-10-23 최신 main 릴리스 설치(임시 worktree `~/personal/runmagochi-merge-check` 를 main 에 맞춤). 무료 서명 만료 약 10-30, 재설치는 `docs/ios.md`
