@@ -107,6 +107,9 @@ class _Notifier implements InstantNotifier {
   @override
   Future<void> showGoalReached({required String title, required String body}) =>
       showNow(title: title, body: body);
+
+  @override
+  Future<void> cancelAutoEnd() async {}
 }
 
 void _run(

@@ -223,6 +223,9 @@ class _NoopInstant implements InstantNotifier {
   }) async {}
   @override
   Future<void> cancelGoalReached() async {}
+
+  @override
+  Future<void> cancelAutoEnd() async {}
 }
 
 /// fake_async 시간과 같이 가는 시계로 컨테이너를 만들어 [body] 를 돌린다.

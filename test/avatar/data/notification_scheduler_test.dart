@@ -76,6 +76,14 @@ void main() {
     expect(plugin.cancelledIds, [1002]);
   });
 
+  test('자동 종료 알림만 지울 수 있다', () async {
+    await scheduler.showNow(title: '종료', body: 'b');
+    await scheduler.showGoalReached(title: '달성', body: 'b');
+    await scheduler.cancelAutoEnd();
+
+    expect(plugin.cancelledIds, [1000]);
+  });
+
   test('예약 취소 때 예전 주간 목표 채널을 지운다', () async {
     await scheduler.cancelScheduled();
 

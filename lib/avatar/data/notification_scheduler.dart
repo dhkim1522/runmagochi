@@ -19,6 +19,10 @@ abstract interface class InstantNotifier {
 
   /// 목표 달성 알림을 지운다. 러닝이 끝나면 그 러닝의 알림이 남지 않게 부른다.
   Future<void> cancelGoalReached();
+
+  /// 자동 종료 알림([showNow])을 지운다. 새 러닝을 시작할 때 이전 러닝의 알림이
+  /// 남지 않게 부른다.
+  Future<void> cancelAutoEnd();
 }
 
 /// flutter_local_notifications 구현.
@@ -80,6 +84,17 @@ class LocalNotificationScheduler
       await _plugin.cancel(id: NotificationIds.goalReached);
     } catch (e, st) {
       debugPrint('알림: 목표 달성 알림 취소 실패 $e\n$st');
+      rethrow;
+    }
+  }
+
+  @override
+  Future<void> cancelAutoEnd() async {
+    try {
+      await _ensureInit();
+      await _plugin.cancel(id: NotificationIds.autoEnd);
+    } catch (e, st) {
+      debugPrint('알림: 자동 종료 알림 취소 실패 $e\n$st');
       rethrow;
     }
   }

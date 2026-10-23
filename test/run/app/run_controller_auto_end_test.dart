@@ -133,6 +133,14 @@ class _Notifier implements InstantNotifier {
   @override
   Future<void> cancelGoalReached() async => goalCancelled++;
 
+  var autoEndCancelled = 0;
+  bool cancelFails = false;
+  @override
+  Future<void> cancelAutoEnd() async {
+    autoEndCancelled++;
+    if (cancelFails) throw StateError('취소 실패');
+  }
+
   final shown = <(String, String)>[];
   bool fails = false;
 
@@ -514,6 +522,41 @@ void main() {
       env.async.elapse(const Duration(minutes: 20));
       expect(env.repo.completed, hasLength(1));
       expect(env.view.autoEnded, isTrue);
+    });
+  });
+
+  // 작업 27: 자동 종료 알림이 다음 러닝까지 남지 않게 한다.
+  test('자동 종료 알림은 러닝 사이에는 남기고, 새 러닝을 시작하면 지운다', () {
+    _run((env) {
+      runFiveSamples(env);
+      // 첫 러닝을 시작할 때 한 번 지운다.
+      expect(env.notifier.autoEndCancelled, 1);
+      env.async.elapse(const Duration(minutes: 20));
+      expect(env.view.autoEnded, isTrue);
+      expect(env.notifier.shown, hasLength(1));
+      expect(env.notifier.autoEndCancelled, 1);
+
+      env.async.elapse(const Duration(hours: 2));
+      expect(env.notifier.autoEndCancelled, 1);
+
+      env.controller.start(goal: DistanceGoal(3000));
+      env.async.flushMicrotasks();
+      expect(env.notifier.autoEndCancelled, 2);
+      expect(env.view.snapshot.state, RunState.recording);
+      env.controller.end();
+      env.async.flushMicrotasks();
+    });
+  });
+
+  test('자동 종료 알림을 지우지 못해도 러닝은 시작한다', () {
+    _run((env) {
+      env.notifier.cancelFails = true;
+      env.controller.start(goal: DistanceGoal(3000));
+      env.async.flushMicrotasks();
+      expect(env.notifier.autoEndCancelled, 1);
+      expect(env.view.snapshot.state, RunState.recording);
+      env.controller.end();
+      env.async.flushMicrotasks();
     });
   });
 

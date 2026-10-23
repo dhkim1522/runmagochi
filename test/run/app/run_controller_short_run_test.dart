@@ -110,6 +110,9 @@ class _Instant implements InstantNotifier {
   @override
   Future<void> showGoalReached({required String title, required String body}) =>
       showNow(title: title, body: body);
+
+  @override
+  Future<void> cancelAutoEnd() async {}
 }
 
 class _Env {

@@ -7,7 +7,7 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 /// 앱이 쓰는 알림 번호 모음. 번호가 겹치면 알림이 서로를 덮어쓰거나 지우므로
 /// 새 알림은 여기에 추가한다.
 abstract final class NotificationIds {
-  /// 자동 종료 알림.
+  /// 자동 종료 알림. 러닝 사이에는 남기고 새 러닝을 시작하면 지운다.
   static const autoEnd = 1000;
 
   /// 종료 예고 알림. 러닝 알림과 따로 띄워 진동한다.

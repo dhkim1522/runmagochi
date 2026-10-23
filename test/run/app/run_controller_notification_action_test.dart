@@ -82,6 +82,9 @@ class _Instant implements InstantNotifier {
     required String title,
     required String body,
   }) async {}
+
+  @override
+  Future<void> cancelAutoEnd() async {}
 }
 
 void _run(
