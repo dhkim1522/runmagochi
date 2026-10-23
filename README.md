@@ -32,7 +32,7 @@ Flutter 3(FVM 고정) · Riverpod · Drift/SQLite(스키마 7판, 10개 표) · 
 
 ## 산출물
 
-개발 과정에서 만든 문서와 그림은 [포트폴리오 산출물 모음](docs/portfolio.md)에 모았다.
+개발 과정에서 만든 문서와 그림은 [포트폴리오 산출물 모음](docs/portfolio.md)에 모았고, 한 장으로 보는 [포트폴리오 보드](https://claude.ai/artifact/HmkBwrBFQa5DFWq6mdRrpf)도 있다.
 
 | 문서 | 내용 |
 | --- | --- |

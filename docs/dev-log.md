@@ -9,7 +9,7 @@
 | 기간 | 8일 (2026-10-16 ~ 10-23) | git 첫·마지막 커밋 |
 | 커밋 | 400여 개 (`fix:` 65개) | `git log` |
 | 코드 줄 수 | lib 16,657 / test 25,693 (생성 파일 제외) | 페이즈 8 기준값 표 |
-| 자동 테스트 | 1,369개 통과 | `fvm flutter test` |
+| 자동 테스트 | 1,372개 통과 (앱 1,369 + 문서 대조 3) | `fvm flutter test` |
 | 결정 기록 | 35개 | [색인](decisions/README.md) |
 | 화면 컷 | 64개 (Android 라이트·다크, iPhone, 알림) | `design/screens/` |
 | 플랫폼 | Android, iOS(iPhone 16 Pro 설치) | 페이즈 7 |

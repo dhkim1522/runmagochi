@@ -4,7 +4,7 @@
 
 ## 현재 위치
 
-**페이즈 7 iOS 확장 완료, 다음은 페이즈 8 산출물 정리** ([7 계획](plans/phase-7.md), 결정 0035). 실기기 사람 확인(실측 안내 [field-test](field-test.md))은 산출물 뒤 페이즈 9 에서 한다. 페이즈 6 은 완료([계획](plans/phase-6.md)).
+**페이즈 8 산출물 정리 구현 완료, 사람 확인 대기** ([8 계획](plans/phase-8.md), 결정 0035). 페이즈 7 iOS 확장은 완료([7 계획](plans/phase-7.md)). 실기기 사람 확인(실측 안내 [field-test](field-test.md))은 산출물 뒤 페이즈 9 에서 한다. 페이즈 6 은 완료([계획](plans/phase-6.md)).
 
 페이즈 1~6 의 실기기 확인과 지인 베타는 페이즈 9 에서 Android·iPhone 함께 한다 ([1](plans/phase-1.md), [2](plans/phase-2.md), [2.5](plans/phase-2.5.md), [3](plans/phase-3.md), [3.5](plans/phase-3.5.md), [4](plans/phase-4.md), [5](plans/phase-5.md) 의 "사람 확인", 결정 0017).
 
