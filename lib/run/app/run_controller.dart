@@ -976,9 +976,6 @@ class RunController extends Notifier<RunViewState> {
     }
   }
 
-  /// 러닝이 끝나면 그 러닝의 목표 달성 알림이 알림창에 남지 않게 지운다.
-  /// 종료 예고는 상태 발행(`_syncEndWarning`)이 이미 지웠다. 자동 종료 알림은
-  /// 끝난 뒤에 알리는 것이라 지우지 않는다.
   /// 이전 러닝의 자동 종료 알림을 지운다. 러닝 사이에는 남겨 두고 새 러닝을
   /// 시작할 때만 부른다. 실패해도 러닝은 그대로 시작한다.
   void _cancelAutoEndNotice() {
@@ -994,6 +991,9 @@ class RunController extends Notifier<RunViewState> {
     }
   }
 
+  /// 러닝이 끝나면 그 러닝의 목표 달성 알림이 알림창에 남지 않게 지운다.
+  /// 종료 예고는 상태 발행(`_syncEndWarning`)이 이미 지웠다. 자동 종료 알림은
+  /// 끝난 뒤에 알리는 것이라 지우지 않는다.
   void _cancelRunScopedAlerts() {
     _endWarningDeadline = null;
     try {
