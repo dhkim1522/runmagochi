@@ -68,6 +68,7 @@ class GeolocatorLocationSource implements LocationSource {
         notificationTitle: '러닝 기록 중',
         notificationText: '화면을 꺼도 기록이 이어집니다',
         notificationChannelName: '러닝 기록',
+        notificationIcon: AndroidResource(name: 'ic_stat_chick'),
         enableWakeLock: true,
       ),
     );

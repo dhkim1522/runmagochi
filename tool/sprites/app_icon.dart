@@ -23,6 +23,7 @@ class IconColors {
     required this.groundLine,
     required this.backgroundLight,
     required this.backgroundDark,
+    required this.edge,
   });
 
   final int sky;
@@ -30,6 +31,10 @@ class IconColors {
   final int groundLine;
   final int backgroundLight;
   final int backgroundDark;
+
+  /// 스플래시 타일 테두리(`primary-edge` 라이트). 하늘색 타일이 크림 바탕과 비슷해
+  /// 윤곽이 흐려서 두른다(관문 3, 작업 29). 라이트·다크 같은 그림을 쓴다.
+  final int edge;
 }
 
 IconColors loadIconColors([String path = 'docs/design/tokens.json']) {
@@ -49,6 +54,7 @@ IconColors loadIconColors([String path = 'docs/design/tokens.json']) {
     groundLine: hex('stage-ground-line', 'light'),
     backgroundLight: hex('background', 'light'),
     backgroundDark: hex('background', 'dark'),
+    edge: hex('primary-edge', 'light'),
   );
 }
 
@@ -71,6 +77,9 @@ const int _adaptiveScale = 2;
 const int _splashDp = 144;
 const int _splashScale = 4;
 const double _splashRadius = 28;
+
+/// 스플래시 타일 테두리 두께(dp, `border-edge` 2px 의 두 배로 작은 그림에서도 읽히게).
+const double _splashEdgeDp = 4;
 
 /// 병아리 긴 변이 아이콘 한 변에서 차지하길 바라는 비율과 넘지 않을 비율(적응형과 같은 비율).
 const double _targetFill = 0.61;
@@ -244,6 +253,7 @@ Map<String, img.Image> appIconImages(IconColors c) {
       mascot: false,
     );
     out['$_res/drawable-$d/splash.png'] = _splash(c, k);
+    out['$_res/drawable-$d/ic_stat_chick.png'] = _notificationIcon(k);
   }
 
   const appIcon = '$_xcassets/AppIcon.appiconset';
@@ -268,7 +278,58 @@ Map<String, img.Image> appIconImages(IconColors c) {
   return out;
 }
 
+/// 안드로이드 알림 작은 아이콘(24dp 계열): 병아리 도트의 흰색 실루엣 + 투명 배경.
+/// 작은 아이콘은 알파만 쓰므로 색은 흰색 하나다. 눈은 구멍으로 남겨 병아리로 읽히게 한다.
+/// 도트 1칸 = 1dp 라 mdpi 는 1:1, 그 밖의 밀도는 정수 배율(hdpi 는 평균으로 줄임)이다.
+img.Image _notificationIcon(double k) {
+  final size = (24 * k).round();
+  // 정수 배율 4배로 먼저 그린 뒤 밀도에 맞게 줄인다(1배=24dp 에서 도트 1칸=1dp).
+  const up = 4;
+  final big = img.Image(width: 24 * up, height: 24 * up, numChannels: 4);
+  final ox = (24 - _boxW) ~/ 2 - _box.left;
+  final oy = (24 - _boxH) ~/ 2 - _box.top;
+  final face = faceFrames(chick, 'normal', 'idle').first;
+  for (var y = 0; y < spriteSize; y++) {
+    for (var x = 0; x < spriteSize; x++) {
+      if (_mascot[y][x] == null) continue;
+      final f = pixelAt(face, petPalette, x, y);
+      if (f != null && _luma(f) < 90) continue; // 눈·부리 그림자 같은 어두운 점은 구멍
+      _fill(
+        big,
+        (ox + x) * up,
+        (oy + y) * up,
+        (ox + x + 1) * up,
+        (oy + y + 1) * up,
+        0xFFFFFFFF,
+      );
+    }
+  }
+  if (size == big.width) return big;
+  final out = img.copyResize(
+    big,
+    width: size,
+    height: size,
+    interpolation: img.Interpolation.average,
+  );
+  // 평균으로 흐려진 가장자리의 색을 흰색으로 고정한다(알파만 남김).
+  for (final p in out) {
+    if (p.a == 0) continue;
+    p
+      ..r = 255
+      ..g = 255
+      ..b = 255;
+  }
+  return out;
+}
+
+int _luma(int argb) =>
+    ((argb >> 16 & 0xFF) * 299 +
+        (argb >> 8 & 0xFF) * 587 +
+        (argb & 0xFF) * 114) ~/
+    1000;
+
 /// 스플래시 가운데 그림: 둥근 사각 무대 타일([_splashDp]dp)에 선 병아리.
+/// 타일 가장자리에 [IconColors.edge] 테두리를 둘러 크림·어두운 바탕 모두에서 윤곽이 보인다.
 /// 라이트·다크 모두 같은 그림이고 바탕색만 다르다.
 img.Image _splash(IconColors c, double k) {
   final im = _scene(
@@ -276,8 +337,41 @@ img.Image _splash(IconColors c, double k) {
     size: (_splashDp * k).round(),
     scale: (_splashScale * k).round(),
   );
-  roundCorners(im, _splashRadius * k);
+  final edge = _splashEdgeDp * k;
+  final radius = _splashRadius * k;
+  final er = (c.edge >> 16) & 0xFF,
+      eg = (c.edge >> 8) & 0xFF,
+      eb = c.edge & 0xFF;
+  for (var y = 0; y < im.height; y++) {
+    for (var x = 0; x < im.width; x++) {
+      final outer = _rrectCoverage(x, y, im.width, 0, radius);
+      final inner = _rrectCoverage(x, y, im.width, edge, radius - edge);
+      final p = im.getPixel(x, y);
+      final t = 1 - inner; // 테두리 비율
+      p.r = (p.r * (1 - t) + er * t).round();
+      p.g = (p.g * (1 - t) + eg * t).round();
+      p.b = (p.b * (1 - t) + eb * t).round();
+      p.a = (255 * outer).round();
+    }
+  }
   return im;
+}
+
+/// 한 변 [size] 정사각형을 [inset] 만큼 줄인 둥근 사각형([radius])이 픽셀 (x,y) 를 덮는 비율(4×4 표본).
+double _rrectCoverage(int x, int y, int size, double inset, double radius) {
+  final lo = inset, hi = size - inset;
+  var inside = 0;
+  for (var sy = 0; sy < 4; sy++) {
+    for (var sx = 0; sx < 4; sx++) {
+      final px = x + (sx + 0.5) / 4, py = y + (sy + 0.5) / 4;
+      if (px < lo || px > hi || py < lo || py > hi) continue;
+      final cx = px.clamp(lo + radius, hi - radius);
+      final cy = py.clamp(lo + radius, hi - radius);
+      final dx = px - cx, dy = py - cy;
+      if (dx * dx + dy * dy <= radius * radius) inside++;
+    }
+  }
+  return inside / 16;
 }
 
 /// 저장소 루트 기준 경로 → 글자 파일. 적응형 아이콘 XML, 스플래시 바탕색(Android 라이트·다크,

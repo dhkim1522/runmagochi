@@ -211,6 +211,108 @@ void main() {
     );
   });
 
+  test('스플래시 타일은 primary-edge 테두리로 라이트·다크 바탕 모두에서 윤곽이 보인다', () {
+    double lin(num v) {
+      final x = v / 255;
+      return x <= 0.03928
+          ? x / 12.92
+          : math.pow((x + 0.055) / 1.055, 2.4).toDouble();
+    }
+
+    double lum(int argb) =>
+        0.2126 * lin((argb >> 16) & 0xFF) +
+        0.7152 * lin((argb >> 8) & 0xFF) +
+        0.0722 * lin(argb & 0xFF);
+    double contrast(int a, int b) {
+      final la = lum(a), lb = lum(b);
+      return (math.max(la, lb) + 0.05) / (math.min(la, lb) + 0.05);
+    }
+
+    // 하늘색 타일 자체는 크림 바탕과 비슷하지만(1.2:1 안팎) 테두리는 3:1 이상 떨어진다.
+    expect(
+      contrast(colors.edge, colors.backgroundLight),
+      greaterThanOrEqualTo(3),
+    );
+    expect(
+      contrast(colors.edge, colors.backgroundDark),
+      greaterThanOrEqualTo(3),
+    );
+    for (final MapEntry(key: d, value: k) in densities.entries) {
+      final im = pngs['$res/drawable-$d/splash.png']!;
+      // 왼쪽 가장자리 가운데 줄: 첫 칸부터 테두리 색, 테두리 안쪽은 하늘색.
+      final y = im.height ~/ 2;
+      final p = im.getPixel(0, y);
+      expect(
+        [p.r.toInt(), p.g.toInt(), p.b.toInt(), p.a.toInt()],
+        [
+          (colors.edge >> 16) & 0xFF,
+          (colors.edge >> 8) & 0xFF,
+          colors.edge & 0xFF,
+          255,
+        ],
+        reason: '$d 가장자리',
+      );
+      final inner = im.getPixel((4 * k).round() + 1, y);
+      expect(
+        (inner.r.toInt() << 16) | (inner.g.toInt() << 8) | inner.b.toInt(),
+        colors.sky & 0xFFFFFF,
+        reason: '$d 테두리 안쪽',
+      );
+    }
+  });
+
+  test('알림 작은 아이콘: 24dp 계열 5밀도, 흰색 + 투명, 병아리 모양이고 가운데에 있다', () {
+    for (final MapEntry(key: d, value: k) in densities.entries) {
+      final im = pngs['$res/drawable-$d/ic_stat_chick.png']!;
+      final size = (24 * k).round();
+      expect([im.width, im.height], [size, size], reason: d);
+      var opaqueCount = 0, minX = size, maxX = -1, minY = size, maxY = -1;
+      for (var y = 0; y < size; y++) {
+        for (var x = 0; x < size; x++) {
+          final p = im.getPixel(x, y);
+          if (p.a == 0) continue;
+          expect([p.r, p.g, p.b], [255, 255, 255], reason: '$d 흰색이 아님');
+          if (p.a < 128) continue;
+          opaqueCount++;
+          minX = math.min(minX, x);
+          maxX = math.max(maxX, x);
+          minY = math.min(minY, y);
+          maxY = math.max(maxY, y);
+        }
+      }
+      // 동그라미가 아니라 병아리: 채움 비율이 원(0.785)보다 작거나 크고 눈 구멍이 있다.
+      final w = maxX - minX + 1, h = maxY - minY + 1;
+      expect(w, greaterThanOrEqualTo(size * 0.8), reason: d);
+      expect(w, lessThanOrEqualTo(size), reason: d);
+      expect(h, greaterThanOrEqualTo(size * 0.7), reason: d);
+      expect(
+        (minX + maxX + 1 - size).abs(),
+        lessThanOrEqualTo(2),
+        reason: '$d 좌우 가운데',
+      );
+      expect(
+        (minY + maxY + 1 - size).abs(),
+        lessThanOrEqualTo(2),
+        reason: '$d 상하 가운데',
+      );
+      expect(opaqueCount, lessThan(w * h), reason: '$d 눈 구멍 없음');
+      expect(opaqueCount, greaterThan(w * h * 0.6), reason: '$d 너무 비어 있음');
+    }
+  });
+
+  test('알림 코드가 작은 아이콘 ic_stat_chick 을 가리키고 보존 목록에 있다', () {
+    String read(String p) => File(p).readAsStringSync();
+    expect(
+      read('lib/core/local_notifications.dart'),
+      contains("'@drawable/ic_stat_chick'"),
+    );
+    expect(
+      read('lib/run/data/geolocator_location_source.dart'),
+      contains("name: 'ic_stat_chick'"),
+    );
+    expect(read('$res/raw/keep.xml'), contains('@drawable/ic_stat_chick'));
+  });
+
   test('Android 앱 이름은 런마고치다', () {
     final manifest = File(
       'android/app/src/main/AndroidManifest.xml',

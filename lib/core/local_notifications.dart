@@ -42,7 +42,7 @@ Future<void> ensureLocalNotificationsInitialized(
 Future<void> _initialize(FlutterLocalNotificationsPlugin plugin) async {
   await plugin.initialize(
     settings: InitializationSettings(
-      android: const AndroidInitializationSettings('@mipmap/ic_launcher'),
+      android: const AndroidInitializationSettings('@drawable/ic_stat_chick'),
       // 권한은 PermissionGate 가 묻는다. 초기화에서는 묻지 않는다.
       iOS: DarwinInitializationSettings(
         requestAlertPermission: false,

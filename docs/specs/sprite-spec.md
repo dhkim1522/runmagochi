@@ -102,7 +102,7 @@ face 레이어는 4개 외형 단계가 모두 공유한다. 그래서 어느 �
   - `design/character/items.png` 8배 아이템 미리보기: 줄 = 아이템 없음 + 아이템 6개, 칸 = 종류 3 × 단계 1~4
   - `assets/badges/<배지 id>.png` 배지 12장(그림 데이터는 `tool/sprites/badges.dart`)
   - `design/character/badges.png` 8배 배지 미리보기: 위 두 줄 = 받은 모습, 아래 두 줄 = 못 받은 모습(앱과 같은 흑백·0.45)
-- 앱 아이콘·스플래시: `fvm dart run tool/render_app_icon.dart` — 사각 무대(하늘 + 땅 띠) 위 병아리 3단계 idle 첫 프레임을 정수 배율로 그린다. 그림 로직은 `tool/sprites/app_icon.dart`(병아리 긴 변이 아이콘 한 변의 0.61 에 가깝고 0.8 을 넘지 않는 배율, `fitIconScale`), 색은 `docs/design/tokens.json`. Android 런처·적응형 층·스플래시와 iOS AppIcon·LaunchImage 를 쓴다(목록은 스크립트 맨 위). 동기 검사 `test/tool/app_icon_sync_test.dart`, 규칙 검사 `test/tool/app_icon_test.dart`.
+- 앱 아이콘·스플래시·알림 작은 아이콘(`drawable-<밀도>/ic_stat_chick.png`, 병아리 흰 실루엣): `fvm dart run tool/render_app_icon.dart` — 사각 무대(하늘 + 땅 띠) 위 병아리 3단계 idle 첫 프레임을 정수 배율로 그린다. 그림 로직은 `tool/sprites/app_icon.dart`(병아리 긴 변이 아이콘 한 변의 0.61 에 가깝고 0.8 을 넘지 않는 배율, `fitIconScale`), 색은 `docs/design/tokens.json`. Android 런처·적응형 층·스플래시와 iOS AppIcon·LaunchImage 를 쓴다(목록은 스크립트 맨 위). 동기 검사 `test/tool/app_icon_sync_test.dart`, 규칙 검사 `test/tool/app_icon_test.dart`.
 - 콘셉트 한 장: `fvm dart run tool/render_concepts.dart` — `design/character/concepts.png`(3종 × 1·4단계 idle). 그림은 위 펫 데이터에서 가져온다.
 - 동기 검사: `test/tool/sprite_render_sync_test.dart` — 커밋된 시트·배지 PNG 가 데이터에서 그린 결과와 픽셀까지 같아야 한다. 데이터를 고치면 PNG 를 다시 만든다.
 - 배지 검사: `test/tool/badge_data_test.dart` — `badgeCatalog` 의 모든 id 에 그림(24×24, 투명 귀퉁이)과 PNG 가 있음, 테두리가 12개 같고 문양은 바탕 안, 갈래별 등급이 오름
