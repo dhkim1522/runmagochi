@@ -55,4 +55,4 @@
 - 로컬 우선: 서버 없이 기기에서 동작하게 만든다. 데이터 접근은 저장소 인터페이스를 거친다 (결정 0001).
 - 새 결정은 `docs/decisions/` 에 다음 번호로 파일을 추가한다.
 - Nike Run Club 분석은 구조·UX 참고용이다. Nike 코드·리소스를 이 저장소에 넣지 않는다.
-- 작업을 마칠 때마다 `HANDOFF.md` 를 갱신하고 push한다. 회사 Mac과 집 Windows PC를 오가며 작업한다.
+- 작업을 마칠 때마다 `HANDOFF.md` 를 갱신하고 push한다. Mac과 Windows PC를 오가며 작업한다.

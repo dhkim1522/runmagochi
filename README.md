@@ -11,7 +11,7 @@
   <img src="design/readme/28-shop.png" width="150" alt="상점">
 </p>
 
-화면 64컷 전체는 [화면설계서](https://dhkim1522.github.io/runmagochi/design/screens/)에 있고, 앱 소개는 [포트폴리오](https://dhkim1522.github.io/runmagochi/)에 있다.
+실제 앱 화면 59장 전체는 [화면설계서](https://dhkim1522.github.io/runmagochi/design/screens/)에 있고, 앱 소개는 [포트폴리오](https://dhkim1522.github.io/runmagochi/)에 있다.
 
 ## 기능
 
@@ -36,7 +36,7 @@ Flutter 3(FVM 고정) · Riverpod · Drift/SQLite(스키마 7판, 10개 표) · 
 | --- | --- |
 | [기획서](docs/product.md) | 목표, 요구사항, 범위 밖, 가정과 위험 |
 | [유저 시나리오·흐름](docs/user-flows.md) | 시나리오 S1~S6, 예외 흐름, 화면 이동 |
-| [화면설계서](https://dhkim1522.github.io/runmagochi/design/screens/) (HTML) | 실제 앱 화면 64컷, 화면별 요소·상태·인터랙션 |
+| [화면설계서](https://dhkim1522.github.io/runmagochi/design/screens/) (HTML) | 실제 앱 화면 59장(라이트·다크·iPhone·알림), 화면별 요소·상태·인터랙션 |
 | [화면 목록](docs/screens.md) | 화면 목록, 이동 흐름, UX 원칙 |
 | [와이어프레임](design/wireframes/README.md) | 화면 콘티 |
 | [디자인 시스템](https://dhkim1522.github.io/runmagochi/docs/design/design-system/) (HTML) · [규칙](docs/design/design-system.md) | 색·글꼴·간격 토큰, 컴포넌트 미리보기 |
