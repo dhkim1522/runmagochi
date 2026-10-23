@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/cupertino.dart' show CupertinoPicker;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -35,6 +36,7 @@ Future<void> pumpHome(
   FakeRepo? repo,
   FakeGrowthService? growth,
   double textScale = 1,
+  bool reduceMotion = false,
   int coins = 0,
   FakeShop? shop,
 }) async {
@@ -57,9 +59,10 @@ Future<void> pumpHome(
       child: MaterialApp(
         theme: appLightTheme(),
         builder: (context, child) => MediaQuery(
-          data: MediaQuery.of(
-            context,
-          ).copyWith(textScaler: TextScaler.linear(textScale)),
+          data: MediaQuery.of(context).copyWith(
+            textScaler: TextScaler.linear(textScale),
+            disableAnimations: reduceMotion,
+          ),
           child: child!,
         ),
         home: const Scaffold(body: HomeScreen()),
@@ -567,7 +570,7 @@ void main() {
 
     for (final dark in [false, true]) {
       testWidgets(
-        '360×640 글자 1.3배 ${dark ? '다크' : '라이트'}: 탭바와 함께 넘침 없이 스크롤해 시작까지 닿는다',
+        '360×640 글자 1.3배 ${dark ? '다크' : '라이트'}: 탭바와 함께 넘침 없이 시작까지 한 화면에 들어간다',
         (tester) async {
           await pumpShell(
             tester,
@@ -576,10 +579,15 @@ void main() {
             dark: dark,
           );
           expect(tester.takeException(), isNull);
+          // 목표가 한 줄(작업 21)이 되어 작은 화면·큰 글자에서도 스크롤 없이 들어간다.
           final scroll = tester.state<ScrollableState>(find.byType(Scrollable));
-          expect(scroll.position.maxScrollExtent, greaterThan(0));
-          await tester.scrollUntilVisible(find.text('시작'), 100);
-          await settle(tester);
+          expect(scroll.position.maxScrollExtent, 0);
+          expect(
+            tester
+                .widget<PetStage>(find.byKey(const ValueKey('home-stage')))
+                .scale,
+            greaterThanOrEqualTo(3),
+          );
           expect(
             tester.getRect(find.byType(AppButton)).bottom,
             lessThanOrEqualTo(tester.getRect(find.byType(AppTabBar)).top),
@@ -640,74 +648,96 @@ void main() {
   });
 
   group('오늘 목표 선택', () {
+    /// 홈의 오늘 목표 줄.
+    final row = find.byType(RunGoalPicker);
+
+    /// 홈 줄에 보이는 값.
+    Finder rowText(String text) =>
+        find.descendant(of: row, matching: find.text(text));
+
+    /// 시트 안 값 칩.
+    Finder chip(String label) => find.widgetWithText(AppChip, label);
+
     /// 선택된 칩은 primary 바탕이다.
     Color? chipColor(WidgetTester tester, String label) {
-      final chip = tester.widget<AnimatedContainer>(
-        find
-            .ancestor(
-              of: find.text(label),
-              matching: find.byType(AnimatedContainer),
-            )
-            .first,
+      final box = tester.widget<AnimatedContainer>(
+        find.descendant(
+          of: chip(label),
+          matching: find.byType(AnimatedContainer),
+        ),
       );
-      return (chip.decoration! as BoxDecoration).color;
+      return (box.decoration! as BoxDecoration).color;
+    }
+
+    Color primary(WidgetTester tester) =>
+        AppColors.of(tester.element(find.byType(HomeScreen))).primary;
+
+    FixedExtentScrollController wheel(WidgetTester tester) => tester
+        .widget<CupertinoPicker>(find.byType(CupertinoPicker))
+        .scrollController!;
+
+    int wheelCount(WidgetTester tester) => tester
+        .widget<CupertinoPicker>(find.byType(CupertinoPicker))
+        .childDelegate
+        .estimatedChildCount!;
+
+    Future<void> openSheet(WidgetTester tester) async {
+      await tester.tap(row);
+      await settle(tester);
+    }
+
+    Future<void> confirm(WidgetTester tester) async {
+      await tester.tap(find.widgetWithText(AppButton, '확인'));
+      await settle(tester);
     }
 
     Future<void> startAndWait(WidgetTester tester) async {
-      await tester.tap(find.text('시작'));
+      await tester.tap(find.widgetWithText(AppButton, '시작'));
       await tester.pump();
       await tester.pump(const Duration(seconds: 3));
       await settle(tester);
     }
 
-    testWidgets('러닝이 없으면 3km 가 골라져 있다', (tester) async {
+    testWidgets('러닝이 없으면 한 줄에 "오늘 목표 3km" 가 보이고 홈에는 칩이 없다', (tester) async {
       await pumpHome(tester, FakeController());
       await settle(tester);
-      final primary = AppColors.of(
-        tester.element(find.byType(HomeScreen)),
-      ).primary;
-      expect(chipColor(tester, '3km'), primary);
-      expect(chipColor(tester, '5km'), isNot(primary));
-      expect(find.text('오늘 목표'), findsOneWidget);
-      expect(find.text('직접'), findsOneWidget);
+      expect(rowText('오늘 목표'), findsOneWidget);
+      expect(rowText('3km'), findsOneWidget);
+      expect(find.byType(AppChip), findsNothing);
+      expect(find.byType(CupertinoPicker), findsNothing);
     });
 
-    testWidgets('최근 러닝 목표가 5km 면 5km 가 골라져 있다', (tester) async {
-      await pumpHome(
-        tester,
-        FakeController(),
-        repo: FakeRepo((0, 0))..lastGoalM = 5000,
-      );
-      await settle(tester);
-      final primary = AppColors.of(
-        tester.element(find.byType(HomeScreen)),
-      ).primary;
-      expect(chipColor(tester, '5km'), primary);
-      expect(chipColor(tester, '3km'), isNot(primary));
-    });
+    for (final (goal, label) in [
+      (const DistanceGoal(5000), '5km'),
+      (const DistanceGoal(12000), '12km'),
+      (const TimeGoal(Duration(minutes: 20)), '20분'),
+      (const TimeGoal(Duration(minutes: 45)), '45분'),
+    ]) {
+      testWidgets('지난 목표가 $label 이면 줄에 $label 이 보인다', (tester) async {
+        await pumpHome(
+          tester,
+          FakeController(),
+          repo: FakeRepo((0, 0))..lastRunGoal = goal,
+        );
+        await settle(tester);
+        expect(rowText(label), findsOneWidget);
+      });
+    }
 
-    testWidgets('최근 목표가 12km 면 직접 칩이 12km 를 보인다', (tester) async {
-      await pumpHome(
-        tester,
-        FakeController(),
-        repo: FakeRepo((0, 0))..lastGoalM = 12000,
-      );
-      await settle(tester);
-      expect(find.text('12km'), findsOneWidget);
-      expect(find.text('직접'), findsNothing);
-    });
-
-    testWidgets('10km 를 누르고 시작하면 그 목표로 시작한다', (tester) async {
+    testWidgets('고르지 않고 시작하면 지난 목표로 바로 시작한다', (tester) async {
       final c = FakeController();
-      await pumpHome(tester, c);
+      await pumpHome(
+        tester,
+        c,
+        repo: FakeRepo((0, 0))
+          ..lastRunGoal = const TimeGoal(Duration(minutes: 20)),
+      );
       await settle(tester);
-      await tester.tap(find.text('10km'));
-      await tester.pump();
       await startAndWait(tester);
-      expect(c.startGoals, [DistanceGoal(10000)]);
+      expect(c.startGoals, [const TimeGoal(Duration(minutes: 20))]);
     });
 
-    testWidgets('고르지 않고 시작하면 기본 3km 로 시작한다', (tester) async {
+    testWidgets('러닝이 없고 고르지 않고 시작하면 기본 3km 로 시작한다', (tester) async {
       final c = FakeController();
       await pumpHome(tester, c);
       await settle(tester);
@@ -715,69 +745,130 @@ void main() {
       expect(c.startGoals, [DistanceGoal(3000)]);
     });
 
-    testWidgets('직접 입력 12 → 12km 로 시작한다', (tester) async {
+    testWidgets('줄은 높이 48 이상이고 "오늘 목표 3km" 버튼으로 읽힌다', (tester) async {
+      await pumpHome(tester, FakeController());
+      await settle(tester);
+      final handle = tester.ensureSemantics();
+      final node = find.bySemanticsLabel('오늘 목표 3km');
+      expect(node, findsOneWidget);
+      expect(
+        tester.getSemantics(node),
+        matchesSemantics(
+          label: '오늘 목표 3km',
+          hint: '눌러서 바꾸기',
+          isButton: true,
+          hasTapAction: true,
+        ),
+      );
+      expect(tester.getSize(node).height, greaterThanOrEqualTo(48));
+      handle.dispose();
+    });
+
+    testWidgets('줄을 누르면 시트에 거리·시간, 3·5·10km 칩, 3~42km 휠, 확인이 있다', (
+      tester,
+    ) async {
+      await pumpHome(tester, FakeController());
+      await settle(tester);
+      await openSheet(tester);
+      for (final label in ['거리', '시간', '3km', '5km', '10km']) {
+        expect(chip(label), findsOneWidget, reason: label);
+      }
+      expect(chip('직접'), findsNothing);
+      expect(chipColor(tester, '거리'), primary(tester));
+      expect(chipColor(tester, '3km'), primary(tester));
+      expect(chipColor(tester, '5km'), isNot(primary(tester)));
+      expect(wheelCount(tester), 40);
+      expect(wheel(tester).selectedItem, 0);
+      expect(find.widgetWithText(AppButton, '확인'), findsOneWidget);
+    });
+
+    testWidgets('시트에서 10km 칩 → 확인 → 줄이 10km, 시작하면 10km 목표', (tester) async {
       final c = FakeController();
       await pumpHome(tester, c);
       await settle(tester);
-      await tester.tap(find.text('직접'));
+      await openSheet(tester);
+      await tester.tap(chip('10km'));
       await settle(tester);
-      await tester.enterText(find.byType(TextField), '12');
-      await tester.pump();
-      await tester.tap(find.text('저장'));
-      await settle(tester);
-      expect(find.text('12km'), findsOneWidget);
+      expect(chipColor(tester, '10km'), primary(tester));
+      expect(wheel(tester).selectedItem, 7); // 3,4,…,10
+      await confirm(tester);
+      expect(find.byType(CupertinoPicker), findsNothing);
+      expect(rowText('10km'), findsOneWidget);
       await startAndWait(tester);
-      expect(c.startGoals, [DistanceGoal(12000)]);
+      expect(c.startGoals, [DistanceGoal(10000)]);
     });
 
-    for (final text in ['2', '43', '']) {
-      testWidgets('직접 입력 "$text" 는 저장할 수 없다', (tester) async {
-        await pumpHome(tester, FakeController());
+    testWidgets('휠을 끌어 고른 값이 시작에 쓰인다', (tester) async {
+      final c = FakeController();
+      await pumpHome(tester, c);
+      await settle(tester);
+      await openSheet(tester);
+      final extent = tester
+          .widget<CupertinoPicker>(find.byType(CupertinoPicker))
+          .itemExtent;
+      await tester.drag(find.byType(CupertinoPicker), Offset(0, -extent * 4));
+      await settle(tester);
+      expect(wheel(tester).selectedItem, 4);
+      // 칩에 없는 값이면 칩은 하나도 골라지지 않는다.
+      for (final label in ['3km', '5km', '10km']) {
+        expect(chipColor(tester, label), isNot(primary(tester)));
+      }
+      await confirm(tester);
+      expect(rowText('7km'), findsOneWidget);
+      await startAndWait(tester);
+      expect(c.startGoals, [DistanceGoal(7000)]);
+    });
+
+    for (final (index, km) in [(0, 3), (39, 42), (9, 12)]) {
+      testWidgets('거리 휠 $index번째 → ${km}km 로 시작한다', (tester) async {
+        final c = FakeController();
+        await pumpHome(tester, c, repo: FakeRepo((0, 0))..lastGoalM = 5000);
         await settle(tester);
-        await tester.tap(find.text('직접'));
+        await openSheet(tester);
+        wheel(tester).jumpToItem(index);
         await settle(tester);
-        await tester.enterText(find.byType(TextField), text);
-        await tester.pump();
-        final save = tester.widget<FilledButton>(
-          find.widgetWithText(FilledButton, '저장'),
-        );
-        expect(save.onPressed, isNull);
-        expect(find.textContaining('3~42km'), findsWidgets);
+        await confirm(tester);
+        await startAndWait(tester);
+        expect(c.startGoals, [DistanceGoal(km * 1000.0)]);
       });
     }
 
-    testWidgets('러닝이 끝나 돌아오면 최근 목표를 다시 보인다', (tester) async {
-      final repo = FakeRepo((0, 0))..lastGoalM = 5000;
-      await pumpHome(tester, FakeController(), repo: repo);
-      await settle(tester);
-      await tester.tap(find.text('10km'));
-      await tester.pump();
-      await startAndWait(tester);
-      repo.lastGoalM = 10000;
-      tester.state<NavigatorState>(find.byType(Navigator)).pop();
-      await settle(tester);
-      final primary = AppColors.of(
-        tester.element(find.byType(HomeScreen)),
-      ).primary;
-      expect(chipColor(tester, '10km'), primary);
-    });
+    for (final (index, minutes) in [(0, 15), (33, 180), (6, 45)]) {
+      testWidgets('시간 휠(5분 단위 34칸) $index번째 → $minutes분으로 시작한다', (
+        tester,
+      ) async {
+        final c = FakeController();
+        await pumpHome(tester, c);
+        await settle(tester);
+        await openSheet(tester);
+        await tester.tap(chip('시간'));
+        await settle(tester);
+        expect(wheelCount(tester), 34);
+        wheel(tester).jumpToItem(index);
+        await settle(tester);
+        await confirm(tester);
+        expect(rowText('$minutes분'), findsOneWidget);
+        await startAndWait(tester);
+        expect(c.startGoals, [TimeGoal(Duration(minutes: minutes))]);
+      });
+    }
 
-    testWidgets('시간을 누르면 칩이 20분·30분·60분·직접으로 바뀌고 30분이 골라진다', (tester) async {
+    testWidgets('시간을 누르면 칩이 20·30·60분으로 바뀌고 30분이 골라진다', (tester) async {
       final c = FakeController();
       await pumpHome(tester, c);
       await settle(tester);
-      expect(find.text('20분'), findsNothing);
-      await tester.tap(find.text('시간'));
+      await openSheet(tester);
+      await tester.tap(chip('시간'));
       await settle(tester);
-      for (final label in ['20분', '30분', '60분', '직접']) {
-        expect(find.text(label), findsOneWidget);
+      for (final label in ['20분', '30분', '60분']) {
+        expect(chip(label), findsOneWidget, reason: label);
       }
-      expect(find.text('3km'), findsNothing);
-      final primary = AppColors.of(
-        tester.element(find.byType(HomeScreen)),
-      ).primary;
-      expect(chipColor(tester, '30분'), primary);
-      expect(chipColor(tester, '20분'), isNot(primary));
+      expect(chip('3km'), findsNothing);
+      expect(chipColor(tester, '시간'), primary(tester));
+      expect(chipColor(tester, '30분'), primary(tester));
+      expect(chipColor(tester, '20분'), isNot(primary(tester)));
+      expect(wheel(tester).selectedItem, 3); // 15,20,25,30
+      await confirm(tester);
       await startAndWait(tester);
       expect(c.startGoals, [const TimeGoal(Duration(minutes: 30))]);
     });
@@ -785,46 +876,36 @@ void main() {
     testWidgets('거리로 되돌리면 3km 가 골라진다', (tester) async {
       await pumpHome(tester, FakeController());
       await settle(tester);
-      await tester.tap(find.text('시간'));
+      await openSheet(tester);
+      await tester.tap(chip('시간'));
       await settle(tester);
-      await tester.tap(find.text('거리'));
+      await tester.tap(chip('거리'));
       await settle(tester);
-      final primary = AppColors.of(
-        tester.element(find.byType(HomeScreen)),
-      ).primary;
-      expect(chipColor(tester, '3km'), primary);
-      expect(find.text('20분'), findsNothing);
+      expect(chipColor(tester, '3km'), primary(tester));
+      expect(chip('20분'), findsNothing);
+      expect(wheelCount(tester), 40);
+      expect(wheel(tester).selectedItem, 0);
     });
 
-    testWidgets('60분을 누르고 시작하면 시간 목표 60분으로 시작한다', (tester) async {
+    testWidgets('확인 없이 시트를 닫으면 목표가 그대로다', (tester) async {
       final c = FakeController();
-      await pumpHome(tester, c);
+      await pumpHome(tester, c, repo: FakeRepo((0, 0))..lastGoalM = 5000);
       await settle(tester);
-      await tester.tap(find.text('시간'));
+      await openSheet(tester);
+      await tester.tap(chip('시간'));
       await settle(tester);
-      await tester.tap(find.text('60분'));
-      await tester.pump();
+      await tester.tap(chip('60분'));
+      await settle(tester);
+      // 시트 밖(위쪽 어두운 막)을 눌러 닫는다.
+      await tester.tapAt(const Offset(10, 10));
+      await settle(tester);
+      expect(find.byType(CupertinoPicker), findsNothing);
+      expect(rowText('5km'), findsOneWidget);
       await startAndWait(tester);
-      expect(c.startGoals, [const TimeGoal(Duration(minutes: 60))]);
+      expect(c.startGoals, [DistanceGoal(5000)]);
     });
 
-    testWidgets('지난번 목표가 시간 20분이면 시간 선택과 20분 칩이 골라져 있다', (tester) async {
-      await pumpHome(
-        tester,
-        FakeController(),
-        repo: FakeRepo((0, 0))
-          ..lastRunGoal = const TimeGoal(Duration(minutes: 20)),
-      );
-      await settle(tester);
-      final primary = AppColors.of(
-        tester.element(find.byType(HomeScreen)),
-      ).primary;
-      expect(chipColor(tester, '20분'), primary);
-      expect(chipColor(tester, '시간'), primary);
-      expect(chipColor(tester, '거리'), isNot(primary));
-    });
-
-    testWidgets('지난번 시간 목표가 45분이면 직접 칩이 45분을 보인다', (tester) async {
+    testWidgets('지난 목표 45분이면 시트가 시간·45분으로 열린다', (tester) async {
       await pumpHome(
         tester,
         FakeController(),
@@ -832,81 +913,58 @@ void main() {
           ..lastRunGoal = const TimeGoal(Duration(minutes: 45)),
       );
       await settle(tester);
-      expect(find.text('45분'), findsOneWidget);
-      expect(find.text('직접'), findsNothing);
+      await openSheet(tester);
+      expect(chipColor(tester, '시간'), primary(tester));
+      expect(chipColor(tester, '거리'), isNot(primary(tester)));
+      for (final label in ['20분', '30분', '60분']) {
+        expect(chipColor(tester, label), isNot(primary(tester)));
+      }
+      expect(wheel(tester).selectedItem, 6);
     });
 
-    testWidgets('시간 직접 입력 45 → 45분으로 시작한다', (tester) async {
+    testWidgets('5분 단위가 아닌 지난 목표(47분)도 휠에 있어 확인하면 그대로다', (tester) async {
       final c = FakeController();
-      await pumpHome(tester, c);
+      await pumpHome(
+        tester,
+        c,
+        repo: FakeRepo((0, 0))
+          ..lastRunGoal = const TimeGoal(Duration(minutes: 47)),
+      );
       await settle(tester);
-      await tester.tap(find.text('시간'));
-      await settle(tester);
-      await tester.tap(find.text('직접'));
-      await settle(tester);
-      await tester.enterText(find.byType(TextField), '45');
-      await tester.pump();
-      await tester.tap(find.text('저장'));
-      await settle(tester);
-      expect(find.text('45분'), findsOneWidget);
+      expect(rowText('47분'), findsOneWidget);
+      await openSheet(tester);
+      expect(wheelCount(tester), 35);
+      expect(wheel(tester).selectedItem, 7); // 15…45, 47
+      await confirm(tester);
       await startAndWait(tester);
-      expect(c.startGoals, [const TimeGoal(Duration(minutes: 45))]);
+      expect(c.startGoals, [const TimeGoal(Duration(minutes: 47))]);
     });
 
-    for (final (text, ok) in [
-      ('14', false),
-      ('181', false),
-      ('', false),
-      ('15', true),
-      ('180', true),
-    ]) {
-      testWidgets('시간 직접 입력 "$text" ${ok ? '는 저장할 수 있다' : '는 저장할 수 없다'}', (
-        tester,
-      ) async {
-        await pumpHome(tester, FakeController());
-        await settle(tester);
-        await tester.tap(find.text('시간'));
-        await settle(tester);
-        await tester.tap(find.text('직접'));
-        await settle(tester);
-        await tester.enterText(find.byType(TextField), text);
-        await tester.pump();
-        final save = tester.widget<FilledButton>(
-          find.widgetWithText(FilledButton, '저장'),
-        );
-        expect(save.onPressed == null, !ok);
-        expect(
-          find.text('15~180분 사이 정수로 입력해 주세요'),
-          ok ? findsNothing : findsWidgets,
-        );
-      });
-    }
-
-    testWidgets('러닝이 끝나 돌아오면 지난번 시간 목표를 다시 보인다', (tester) async {
+    testWidgets('러닝이 끝나 돌아오면 최근 목표를 다시 보인다', (tester) async {
       final repo = FakeRepo((0, 0))..lastGoalM = 5000;
       await pumpHome(tester, FakeController(), repo: repo);
       await settle(tester);
-      await tester.tap(find.text('시간'));
+      await openSheet(tester);
+      await tester.tap(chip('시간'));
       await settle(tester);
-      await tester.tap(find.text('20분'));
-      await tester.pump();
+      await tester.tap(chip('20분'));
+      await settle(tester);
+      await confirm(tester);
       await startAndWait(tester);
       repo.lastRunGoal = const TimeGoal(Duration(minutes: 20));
       tester.state<NavigatorState>(find.byType(Navigator)).pop();
       await settle(tester);
-      final primary = AppColors.of(
-        tester.element(find.byType(HomeScreen)),
-      ).primary;
-      expect(chipColor(tester, '20분'), primary);
+      expect(rowText('20분'), findsOneWidget);
     });
 
-    testWidgets('거리·시간 선택과 시간 칩도 높이 48 이상이다', (tester) async {
+    testWidgets('시트의 칩은 높이 48 이상이고 버튼·선택 상태로 읽힌다', (tester) async {
       await pumpHome(tester, FakeController());
       await settle(tester);
-      await tester.tap(find.text('시간'));
-      await settle(tester);
+      await openSheet(tester);
       final handle = tester.ensureSemantics();
-      for (final label in ['목표 종류 거리', '목표 종류 시간', '목표 20분', '목표 직접 입력']) {
+      final node = tester.getSemantics(find.bySemanticsLabel('목표 3km'));
+      expect(node.flagsCollection.isSelected, isNotNull);
+      for (final label in ['목표 종류 거리', '목표 종류 시간', '목표 5km', '목표 10km']) {
         expect(
           tester.getSize(find.bySemanticsLabel(label)).height,
           greaterThanOrEqualTo(48),
@@ -916,17 +974,14 @@ void main() {
       handle.dispose();
     });
 
-    testWidgets('칩은 높이 48 이상이고 버튼·선택 상태로 읽힌다', (tester) async {
-      await pumpHome(tester, FakeController());
+    testWidgets('애니메이션 줄이기면 칩을 누르는 즉시 휠이 그 값에 선다', (tester) async {
+      await pumpHome(tester, FakeController(), reduceMotion: true);
       await settle(tester);
-      final handle = tester.ensureSemantics();
-      final node = tester.getSemantics(find.bySemanticsLabel('목표 3km'));
-      expect(node.flagsCollection.isSelected, isNotNull);
-      expect(
-        tester.getSize(find.bySemanticsLabel('목표 5km')).height,
-        greaterThanOrEqualTo(48),
-      );
-      handle.dispose();
+      await openSheet(tester);
+      await tester.tap(chip('10km'));
+      await tester.pump();
+      expect(wheel(tester).selectedItem, 7);
+      expect(chipColor(tester, '10km'), primary(tester));
     });
 
     testWidgets('읽는 동안에도 선택 영역과 시작 버튼 자리가 같다', (tester) async {
@@ -935,94 +990,125 @@ void main() {
         ..holdLastGoal = Completer<void>();
       await pumpHome(tester, FakeController(), repo: repo);
       await settle(tester);
-      final picker = tester.getRect(find.byType(RunGoalPicker));
+      final picker = tester.getRect(row);
       final button = tester.getRect(find.byType(AppButton));
       repo.holdLastGoal!.complete();
       await settle(tester);
-      expect(tester.getRect(find.byType(RunGoalPicker)), picker);
+      expect(tester.getRect(row), picker);
       expect(tester.getRect(find.byType(AppButton)), button);
     });
 
+    /// 360×640 글자 1.3배 화면에 [goal] 이 지난 목표인 홈을 그린다.
+    Future<void> pumpSmall(
+      WidgetTester tester, {
+      required RunGoal goal,
+      required bool dark,
+    }) async {
+      tester.view.physicalSize = const Size(360, 640);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            runControllerProvider.overrideWith(() => FakeController()),
+            permissionGateProvider.overrideWithValue(
+              FakeGate(GateResult.ready),
+            ),
+            runRepositoryProvider.overrideWithValue(
+              FakeRepo((0, 0))..lastRunGoal = goal,
+            ),
+            growthServiceProvider.overrideWithValue(
+              FakeGrowthService(growthState()),
+            ),
+            clockProvider.overrideWithValue(() => DateTime(2026, 10, 17)),
+          ],
+          child: MaterialApp(
+            theme: dark ? appDarkTheme() : appLightTheme(),
+            builder: (context, child) => MediaQuery(
+              data: MediaQuery.of(
+                context,
+              ).copyWith(textScaler: const TextScaler.linear(1.3)),
+              child: child!,
+            ),
+            home: const Scaffold(body: HomeScreen()),
+          ),
+        ),
+      );
+      await settle(tester);
+    }
+
     for (final dark in [false, true]) {
-      testWidgets('360×640 글자 1.3배 ${dark ? '다크' : '라이트'} 에서 넘침 없이 그려진다', (
+      final name = dark ? '다크' : '라이트';
+      for (final (goal, label) in [
+        (const DistanceGoal(42000), '42km'),
+        (const TimeGoal(Duration(minutes: 180)), '180분'),
+      ]) {
+        testWidgets('$label 줄이 360×640 글자 1.3배 $name 에서 넘침 없이 그려진다', (
+          tester,
+        ) async {
+          await pumpSmall(tester, goal: goal, dark: dark);
+          expect(tester.takeException(), isNull);
+          expect(rowText(label), findsOneWidget);
+          expect(find.text('시작'), findsOneWidget);
+        });
+      }
+
+      testWidgets('시트가 360×640 글자 1.3배 $name 에서 넘침 없이 열리고 확인을 누를 수 있다', (
         tester,
       ) async {
-        tester.view.physicalSize = const Size(360, 640);
-        tester.view.devicePixelRatio = 1;
-        addTearDown(tester.view.reset);
-        await tester.pumpWidget(
-          ProviderScope(
-            overrides: [
-              runControllerProvider.overrideWith(() => FakeController()),
-              permissionGateProvider.overrideWithValue(
-                FakeGate(GateResult.ready),
-              ),
-              runRepositoryProvider.overrideWithValue(
-                FakeRepo((0, 0))..lastGoalM = 12000,
-              ),
-              growthServiceProvider.overrideWithValue(
-                FakeGrowthService(growthState()),
-              ),
-              clockProvider.overrideWithValue(() => DateTime(2026, 10, 17)),
-            ],
-            child: MaterialApp(
-              theme: dark ? appDarkTheme() : appLightTheme(),
-              builder: (context, child) => MediaQuery(
-                data: MediaQuery.of(
-                  context,
-                ).copyWith(textScaler: const TextScaler.linear(1.3)),
-                child: child!,
-              ),
-              home: const Scaffold(body: HomeScreen()),
-            ),
-          ),
+        await pumpSmall(
+          tester,
+          goal: const TimeGoal(Duration(minutes: 45)),
+          dark: dark,
         );
+        await tester.ensureVisible(row);
+        await settle(tester);
+        await openSheet(tester);
+        expect(tester.takeException(), isNull);
+        for (final label in ['거리', '시간', '20분', '30분', '60분']) {
+          expect(chip(label), findsOneWidget, reason: label);
+        }
+        final ok = find.widgetWithText(AppButton, '확인');
+        await tester.ensureVisible(ok);
+        await settle(tester);
+        expect(tester.getRect(ok).bottom, lessThanOrEqualTo(640));
+        await tester.tap(chip('60분'));
+        await settle(tester);
+        await tester.ensureVisible(ok);
+        await settle(tester);
+        await tester.tap(ok);
         await settle(tester);
         expect(tester.takeException(), isNull);
-        expect(find.text('12km'), findsOneWidget);
-        expect(find.text('시작'), findsOneWidget);
+        expect(find.byType(CupertinoPicker), findsNothing);
+        expect(rowText('60분'), findsOneWidget);
       });
-
-      testWidgets(
-        '시간 목표도 360×640 글자 1.3배 ${dark ? '다크' : '라이트'} 에서 넘침 없이 그려진다',
-        (tester) async {
-          tester.view.physicalSize = const Size(360, 640);
-          tester.view.devicePixelRatio = 1;
-          addTearDown(tester.view.reset);
-          await tester.pumpWidget(
-            ProviderScope(
-              overrides: [
-                runControllerProvider.overrideWith(() => FakeController()),
-                permissionGateProvider.overrideWithValue(
-                  FakeGate(GateResult.ready),
-                ),
-                runRepositoryProvider.overrideWithValue(
-                  FakeRepo((0, 0))
-                    ..lastRunGoal = const TimeGoal(Duration(minutes: 45)),
-                ),
-                growthServiceProvider.overrideWithValue(
-                  FakeGrowthService(growthState()),
-                ),
-                clockProvider.overrideWithValue(() => DateTime(2026, 10, 17)),
-              ],
-              child: MaterialApp(
-                theme: dark ? appDarkTheme() : appLightTheme(),
-                builder: (context, child) => MediaQuery(
-                  data: MediaQuery.of(
-                    context,
-                  ).copyWith(textScaler: const TextScaler.linear(1.3)),
-                  child: child!,
-                ),
-                home: const Scaffold(body: HomeScreen()),
-              ),
-            ),
-          );
-          await settle(tester);
-          expect(tester.takeException(), isNull);
-          expect(find.text('45분'), findsOneWidget);
-          expect(find.text('시작'), findsOneWidget);
-        },
-      );
     }
+  });
+
+  group('goalWheelValues', () {
+    test('거리는 3~42km 1km 단위 40칸', () {
+      final values = goalWheelValues(const DistanceGoal(5000));
+      expect(values.length, 40);
+      expect(values.first, const DistanceGoal(3000));
+      expect(values.last, const DistanceGoal(42000));
+      expect(values[1], const DistanceGoal(4000));
+    });
+
+    test('시간은 15~180분 5분 단위 34칸', () {
+      final values = goalWheelValues(const TimeGoal(Duration(minutes: 30)));
+      expect(values.length, 34);
+      expect(values.first, const TimeGoal(Duration(minutes: 15)));
+      expect(values.last, const TimeGoal(Duration(minutes: 180)));
+      expect(values[1], const TimeGoal(Duration(minutes: 20)));
+    });
+
+    test('칸에 없는 지금 값은 순서에 맞게 끼워 넣는다', () {
+      final time = goalWheelValues(const TimeGoal(Duration(minutes: 47)));
+      expect(time.length, 35);
+      expect(time.indexOf(const TimeGoal(Duration(minutes: 47))), 7);
+      final km = goalWheelValues(const DistanceGoal(3500));
+      expect(km.length, 41);
+      expect(km.indexOf(const DistanceGoal(3500)), 1);
+    });
   });
 }

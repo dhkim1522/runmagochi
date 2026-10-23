@@ -1,5 +1,7 @@
+import 'dart:math' as math;
+
+import 'package:flutter/cupertino.dart' show CupertinoPicker;
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
 import '../../core/theme.dart';
 import '../../core/ui/components.dart';
@@ -8,84 +10,187 @@ import '../domain/run_goal.dart';
 /// 바로 고르는 목표 거리(km).
 const List<int> _presetKm = [3, 5, 10];
 
-/// 직접 입력할 수 있는 목표 거리 범위(km).
+/// 휠로 고르는 목표 거리 범위(km, 1km 단위).
 const int minGoalKm = 3;
 const int maxGoalKm = 42;
 
 /// 바로 고르는 목표 시간(분).
 const List<int> _presetMinutes = [20, 30, 60];
 
-/// 직접 입력할 수 있는 목표 시간 범위(분).
+/// 휠로 고르는 목표 시간 범위(분)와 단위.
 const int minGoalMinutes = 15;
 const int maxGoalMinutes = 180;
+const int goalMinutesStep = 5;
 
 /// 종류를 바꿀 때 처음 골라지는 목표.
 const RunGoal _defaultDistanceGoal = DistanceGoal(3000);
 const RunGoal _defaultTimeGoal = TimeGoal(Duration(minutes: 30));
 
-/// 홈의 "오늘 목표" 흰 카드. 위쪽 칩 줄(분할 선택)에서 거리·시간을 고르고,
-/// 아래 칩 줄에서 값을 고른다. 카드 안 여백 20, 줄 사이 12(시안 c 홈).
-///
-/// [goal] 은 지금 고른 목표. 바로 고르는 값이 아니면 "직접" 칩이 그 값을 보인다.
+/// [goal] 과 같은 종류의 휠 칸. 거리 3~42km 1km 단위, 시간 15~180분 5분 단위.
+/// [goal] 이 칸에 없으면(예전에 직접 입력한 47분 등) 순서에 맞게 끼워 넣어,
+/// 시트를 열고 그대로 확인해도 목표가 바뀌지 않는다.
+List<RunGoal> goalWheelValues(RunGoal goal) {
+  final List<RunGoal> grid = switch (goal) {
+    DistanceGoal() => [
+      for (var km = minGoalKm; km <= maxGoalKm; km++) DistanceGoal(km * 1000.0),
+    ],
+    TimeGoal() => [
+      for (var m = minGoalMinutes; m <= maxGoalMinutes; m += goalMinutesStep)
+        TimeGoal(Duration(minutes: m)),
+    ],
+  };
+  if (grid.contains(goal)) return grid;
+  double size(RunGoal g) => switch (g) {
+    DistanceGoal(:final meters) => meters,
+    TimeGoal(:final time) => time.inSeconds.toDouble(),
+  };
+  final at = grid.indexWhere((g) => size(g) > size(goal));
+  return grid..insert(at < 0 ? grid.length : at, goal);
+}
+
+/// 홈의 "오늘 목표" 한 줄 카드: `오늘 목표` · `5km` · `›`. 누르면 [showRunGoalSheet] 로
+/// 고른다. 지난 목표가 골라져 있어 고르지 않으면 시작 버튼 한 번으로 달린다.
 class RunGoalPicker extends StatelessWidget {
   const RunGoalPicker({super.key, required this.goal, required this.onChanged});
 
   final RunGoal goal;
   final ValueChanged<RunGoal> onChanged;
 
-  bool get _isTime => goal is TimeGoal;
+  /// 줄 높이(누를 수 있는 것 48 이상).
+  static const double rowHeight = 48;
 
-  /// 직접 입력 칩에 보일 값. 바로 고르는 값이면 null.
-  int? get _customValue => switch (goal) {
-    DistanceGoal(:final meters) =>
-      _presetKm.any((km) => km * 1000 == meters)
-          ? null
-          : (meters / 1000).round(),
-    TimeGoal(:final time) =>
-      _presetMinutes.any((m) => m == time.inMinutes) ? null : time.inMinutes,
-  };
-
-  Future<void> _pickCustom(BuildContext context) async {
-    final custom = _customValue;
-    final initial = custom == null ? '' : '$custom';
-    final value = await showDialog<int>(
-      context: context,
-      builder: (_) => _isTime
-          ? _GoalDialog(
-              initial: initial,
-              min: minGoalMinutes,
-              max: maxGoalMinutes,
-              unit: '분',
-            )
-          : _GoalDialog(
-              initial: initial,
-              min: minGoalKm,
-              max: maxGoalKm,
-              unit: 'km',
-            ),
-    );
-    if (value == null) return;
-    onChanged(
-      _isTime
-          ? TimeGoal(Duration(minutes: value))
-          : DistanceGoal(value * 1000.0),
-    );
+  Future<void> _open(BuildContext context) async {
+    final picked = await showRunGoalSheet(context, goal);
+    if (picked != null && picked != goal) onChanged(picked);
   }
 
   @override
   Widget build(BuildContext context) {
     final c = AppColors.of(context);
     final t = AppText.of(context);
-    final custom = _customValue;
-    final unit = _isTime ? '분' : 'km';
-    return AppCard(
-      padding: const EdgeInsets.all(Gap.s5),
+    return Semantics(
+      button: true,
+      label: '오늘 목표 ${goal.label}',
+      hint: '눌러서 바꾸기',
+      excludeSemantics: true,
+      onTap: () => _open(context),
+      child: Pressable(
+        onTap: () => _open(context),
+        child: AppCard(
+          padding: const EdgeInsets.fromLTRB(Gap.s5, Gap.s3, Gap.s4, Gap.s3),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(minHeight: rowHeight),
+            child: Row(
+              children: [
+                Text('오늘 목표', style: t.bodyStrong.copyWith(color: c.inkMuted)),
+                const SizedBox(width: Gap.s3),
+                Expanded(
+                  child: Align(
+                    alignment: Alignment.centerRight,
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(
+                        goal.label,
+                        maxLines: 1,
+                        style: t.titleS.copyWith(color: c.ink),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: Gap.s1),
+                Icon(Icons.chevron_right_rounded, color: c.inkMuted),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// 오늘 목표 시트를 연다. 확인하면 고른 목표, 닫으면 null.
+Future<RunGoal?> showRunGoalSheet(BuildContext context, RunGoal goal) {
+  return showModalBottomSheet<RunGoal>(
+    context: context,
+    isScrollControlled: true,
+    useSafeArea: true,
+    backgroundColor: AppColors.of(context).background,
+    builder: (_) => RunGoalSheet(initial: goal),
+  );
+}
+
+/// 오늘 목표 시트: 거리·시간 분할 → 자주 쓰는 값 칩 3개 → 휠(전체 범위) → `확인`.
+/// 칩을 누르면 휠이 그 값으로 돈다(애니메이션 줄이기면 바로 선다).
+class RunGoalSheet extends StatefulWidget {
+  const RunGoalSheet({super.key, required this.initial});
+
+  final RunGoal initial;
+
+  @override
+  State<RunGoalSheet> createState() => _RunGoalSheetState();
+}
+
+class _RunGoalSheetState extends State<RunGoalSheet> {
+  late RunGoal _goal = widget.initial;
+  late List<RunGoal> _values = goalWheelValues(_goal);
+  late FixedExtentScrollController _wheel = FixedExtentScrollController(
+    initialItem: _values.indexOf(_goal),
+  );
+
+  /// 칩을 눌러 휠이 도는 동안은 지나가는 칸으로 목표를 바꾸지 않는다.
+  bool _spinning = false;
+
+  bool get _isTime => _goal is TimeGoal;
+
+  @override
+  void dispose() {
+    _wheel.dispose();
+    super.dispose();
+  }
+
+  void _switchKind(RunGoal goal) {
+    final old = _wheel;
+    setState(() {
+      _goal = goal;
+      _values = goalWheelValues(goal);
+      _wheel = FixedExtentScrollController(initialItem: _values.indexOf(goal));
+    });
+    WidgetsBinding.instance.addPostFrameCallback((_) => old.dispose());
+  }
+
+  Future<void> _pickPreset(RunGoal goal) async {
+    setState(() => _goal = goal);
+    final index = _values.indexOf(goal);
+    if (!_wheel.hasClients || _wheel.selectedItem == index) return;
+    final duration = Motion.of(context, Motion.enter);
+    if (duration == Duration.zero) {
+      _wheel.jumpToItem(index);
+      return;
+    }
+    _spinning = true;
+    await _wheel.animateToItem(
+      index,
+      duration: duration,
+      curve: Motion.standard,
+    );
+    _spinning = false;
+    // 도는 중에 사용자가 휠을 잡았으면 멈춘 칸을 따른다.
+    if (mounted && _wheel.hasClients) {
+      setState(() => _goal = _values[_wheel.selectedItem]);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final t = AppText.of(context);
+    return SingleChildScrollView(
+      padding: const EdgeInsets.fromLTRB(Gap.s5, Gap.s5, Gap.s5, Gap.s4),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text('오늘 목표', style: t.label.copyWith(color: c.inkMuted)),
-          const SizedBox(height: Gap.s3),
+          Semantics(header: true, child: Text('오늘 목표', style: t.titleS)),
+          const SizedBox(height: Gap.s4),
           ChipRow(
             children: [
               AppChip(
@@ -93,7 +198,7 @@ class RunGoalPicker extends StatelessWidget {
                 semanticLabel: '목표 종류 거리',
                 selected: !_isTime,
                 onTap: () {
-                  if (_isTime) onChanged(_defaultDistanceGoal);
+                  if (_isTime) _switchKind(_defaultDistanceGoal);
                 },
               ),
               AppChip(
@@ -101,7 +206,7 @@ class RunGoalPicker extends StatelessWidget {
                 semanticLabel: '목표 종류 시간',
                 selected: _isTime,
                 onTap: () {
-                  if (!_isTime) onChanged(_defaultTimeGoal);
+                  if (!_isTime) _switchKind(_defaultTimeGoal);
                 },
               ),
             ],
@@ -109,31 +214,35 @@ class RunGoalPicker extends StatelessWidget {
           const SizedBox(height: Gap.s3),
           ChipRow(
             children: [
-              if (_isTime)
-                for (final m in _presetMinutes)
-                  AppChip(
-                    label: '$m분',
-                    semanticLabel: '목표 $m분',
-                    selected: goal == TimeGoal(Duration(minutes: m)),
-                    onTap: () => onChanged(TimeGoal(Duration(minutes: m))),
-                  )
-              else
-                for (final km in _presetKm)
-                  AppChip(
-                    label: '${km}km',
-                    semanticLabel: '목표 ${km}km',
-                    selected: goal == DistanceGoal(km * 1000.0),
-                    onTap: () => onChanged(DistanceGoal(km * 1000.0)),
-                  ),
-              AppChip(
-                label: custom == null ? '직접' : '$custom$unit',
-                semanticLabel: custom == null
-                    ? '목표 직접 입력'
-                    : '목표 $custom$unit 직접 입력',
-                selected: custom != null,
-                onTap: () => _pickCustom(context),
-              ),
+              for (final g in [
+                if (_isTime)
+                  for (final m in _presetMinutes) TimeGoal(Duration(minutes: m))
+                else
+                  for (final km in _presetKm) DistanceGoal(km * 1000.0),
+              ])
+                AppChip(
+                  label: g.label,
+                  semanticLabel: '목표 ${g.label}',
+                  selected: _goal == g,
+                  onTap: () => _pickPreset(g),
+                ),
             ],
+          ),
+          const SizedBox(height: Gap.s4),
+          _GoalWheel(
+            key: ValueKey(_isTime),
+            controller: _wheel,
+            values: _values,
+            selected: _goal,
+            onChanged: (i) {
+              if (_spinning) return;
+              setState(() => _goal = _values[i]);
+            },
+          ),
+          const SizedBox(height: Gap.s5),
+          AppButton(
+            label: '확인',
+            onPressed: () => Navigator.of(context).pop(_goal),
           ),
         ],
       ),
@@ -141,74 +250,73 @@ class RunGoalPicker extends StatelessWidget {
   }
 }
 
-/// 직접 입력 창. [min]~[max] 사이 정수만 저장할 수 있다.
-class _GoalDialog extends StatefulWidget {
-  const _GoalDialog({
-    required this.initial,
-    required this.min,
-    required this.max,
-    required this.unit,
+/// 목표 값 휠. 가운데 칸은 연두 면 + primaryEdge 경계(선택 표시 하나)다.
+class _GoalWheel extends StatelessWidget {
+  const _GoalWheel({
+    super.key,
+    required this.controller,
+    required this.values,
+    required this.selected,
+    required this.onChanged,
   });
-  final String initial;
-  final int min;
-  final int max;
-  final String unit;
 
-  @override
-  State<_GoalDialog> createState() => _GoalDialogState();
-}
+  final FixedExtentScrollController controller;
+  final List<RunGoal> values;
+  final RunGoal selected;
+  final ValueChanged<int> onChanged;
 
-class _GoalDialogState extends State<_GoalDialog> {
-  late final TextEditingController _controller = TextEditingController(
-    text: widget.initial,
-  );
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  /// 범위 안 정수면 그 값, 비었거나 밖이면 null(저장 불가).
-  int? get _value {
-    final v = int.tryParse(_controller.text.trim());
-    if (v == null || v < widget.min || v > widget.max) return null;
-    return v;
-  }
+  /// 휠에 보이는 칸 수.
+  static const int _visibleRows = 5;
 
   @override
   Widget build(BuildContext context) {
-    final value = _value;
-    final rangeText =
-        '${widget.min}~${widget.max}${widget.unit} 사이 정수로 입력해 주세요';
-    return AlertDialog(
-      title: const Text('오늘 목표'),
-      content: TextField(
-        controller: _controller,
-        autofocus: true,
-        keyboardType: TextInputType.number,
-        inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-        decoration: InputDecoration(
-          suffixText: widget.unit,
-          helperText: _controller.text.isEmpty ? rangeText : null,
-          errorText: value == null && _controller.text.isNotEmpty
-              ? rangeText
-              : null,
+    final c = AppColors.of(context);
+    final t = AppText.of(context);
+    final style = t.titleS;
+    // 글자를 키워도 칸 안에 들어가게 칸 높이를 글자 줄 높이에 맞춘다(48 이상).
+    final extent = math.max(
+      AppChip.height,
+      MediaQuery.textScalerOf(context).scale(style.fontSize! * style.height!) +
+          Gap.s3,
+    );
+    return Semantics(
+      label: '목표 값',
+      child: SizedBox(
+        height: extent * _visibleRows,
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            Container(
+              height: extent,
+              decoration: BoxDecoration(
+                color: c.primary,
+                borderRadius: BorderRadius.circular(Radii.pill),
+                border: Border.all(color: c.primaryEdge, width: Borders.edge),
+              ),
+            ),
+            CupertinoPicker(
+              scrollController: controller,
+              itemExtent: extent,
+              selectionOverlay: null,
+              diameterRatio: 1.6,
+              squeeze: 1,
+              onSelectedItemChanged: onChanged,
+              children: [
+                for (final v in values)
+                  Center(
+                    child: Text(
+                      v.label,
+                      maxLines: 1,
+                      style: v == selected
+                          ? style.copyWith(color: c.onPrimary)
+                          : style.copyWith(color: c.inkMuted),
+                    ),
+                  ),
+              ],
+            ),
+          ],
         ),
-        onChanged: (_) => setState(() {}),
       ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: const Text('취소'),
-        ),
-        FilledButton(
-          onPressed: value == null
-              ? null
-              : () => Navigator.of(context).pop(value),
-          child: const Text('저장'),
-        ),
-      ],
     );
   }
 }
