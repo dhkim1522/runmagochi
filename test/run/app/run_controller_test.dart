@@ -863,6 +863,32 @@ void main() {
       });
     });
 
+    test('탈것 의심 중 위치를 끄면 신호 끊김이 돼도 꺼짐 문구가 남아 말풍선을 숨긴다', () {
+      _run((async, controller, container, repository, location) {
+        controller.start(goal: DistanceGoal(3000));
+        async.flushMicrotasks();
+        stepTo(async, location, 3);
+        // 초속 10m 로 40초: 평균이 시속 22km 를 넘어 탈것 의심이 된다.
+        for (var i = 1; i <= 40; i++) {
+          stepTo(async, location, 3 + i * 10.0);
+        }
+        expect(
+          container.read(runControllerProvider).snapshot.state,
+          RunState.vehicle,
+        );
+
+        location.serviceEnabled = false;
+        location.controller.addError(const LocationServiceOffException());
+        async.flushMicrotasks();
+        async.elapse(const Duration(seconds: 31));
+
+        final state = container.read(runControllerProvider);
+        expect(state.snapshot.state, RunState.signalLost);
+        expect(state.lastError, _locationOffError);
+        expect(state.locationServiceOff, isTrue);
+      });
+    });
+
     test('신호 끊김이 되면 러닝 알림·음성도 꺼짐 문구를 쓰고, 음성은 60초에 한 번이다', () {
       _run((async, controller, container, repository, location) {
         final progress =

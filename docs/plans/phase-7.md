@@ -12,10 +12,11 @@ iOS 빌드, `Info.plist` 권한 문구, 백그라운드 위치(`AppleSettings`, 
 
 ## 작업
 
-- [ ] 1. 앱 결함 후보: 탈것 의심 뒤 위치를 끄면 신호 끊김 말풍선이 뜨는 문제
+- [x] 1. 앱 결함 후보: 탈것 의심 뒤 위치를 끄면 신호 끊김 말풍선이 뜨는 문제
   - 파일: `lib/run/domain/run_engine.dart` 또는 러닝 화면 상태 계산부(원인 확인 후 정함), 해당 테스트
   - 테스트: 탈것 의심 상태에서 위치 서비스가 꺼지면 GPS 꺼짐 카드가 뜨고 신호 끊김 말풍선은 뜨지 않는 케이스를 먼저 쓰고 실패 확인. 재현되지 않으면 결함이 아님을 테스트로 남기고 닫는다
   - 확인: `fvm flutter test`, `fvm dart analyze`
+  - 결과: 재현되지 않음. 컨트롤러는 탈것 의심 중 위치를 꺼도 신호 끊김 뒤 꺼짐 문구(`lastError`)를 유지하고, 화면은 그때 말풍선을 숨긴다. 회귀 테스트만 추가(전체 1369개 통과). 기기에서 다르게 보이면 Android 실측 때 다시 연다
 - [ ] 2. 실측용 앱 상태 점검과 최신 main 빌드
   - 파일: 코드 변경 없음(빌드만). 필요하면 `docs/ios.md`
   - 확인: `fvm flutter test`, `fvm dart analyze`, `fvm flutter build apk --debug`, `fvm flutter build apk --release`, `fvm flutter build ios --no-codesign --release` 모두 통과
