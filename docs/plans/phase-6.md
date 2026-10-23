@@ -218,6 +218,11 @@
 - [x] 31. 버튼 진한 테두리 제거, 옅은 플로팅 그림자 (관문 3 이후 의견, 비교 C)
   - 비교 페이지 https://claude.ai/artifact/Cpm6JZRHtx4z1sqzL2x12p (`design/mockups/phase-6/button-compare.html`). 연두 버튼·칩의 `primary-edge` 2px, 흰 보조 버튼의 `line-strong` 2px 를 없애고 `elevation-float`(라이트 `0 3 8 -3 ink14%` + `0 1 2 ink8%`, 다크 `0 2 4 -1 #000 20%`)로. 선택 칩은 체크 아이콘 추가, 보조 버튼은 `line` 1px 머리카락 선. 테스트 1365 통과
 
+- [x] 32. 단계별 몸집 폭 고정(성장 모양) (관문 3 이후 의견, 결정 0034)
+  - 사용자 의견(2026-10-23): 단계가 오를수록 가로로 두꺼워져 살찌는 느낌 → 2단계 이후 폭 고정, 키·외관·장비로 성장. 비교 페이지 https://claude.ai/artifact/MSpfvYySwKaH7YXt3AuHiG 3판(`design/mockups/phase-6/growth-compare.html`)
+  - 몸 폭 1~4단계 병아리 14·16·18·18, 젤리 16·18·18·18, 도토리 모자 16·18·18·18. 키 19·20·21(2~4단계), 3·4단계 폭÷키 0.90·0.86. 아이템 그림·기준점·모자 폭 24칸 그대로
+  - `tool/sprites/{chick,jelly,acorn}.dart` 2~4단계 그림, 시트·미리보기·콘셉트 다시 만듦(앱 아이콘은 병아리 3단계라 그대로). 테스트 "몸집 고정(결정 0034)" 3개 추가
+
 ## 완료 기준
 
 ### 자동 확인

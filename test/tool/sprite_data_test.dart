@@ -109,6 +109,88 @@ void main() {
       }
     });
 
+    // 몸집 고정(결정 0034): 단계가 올라도 옆으로 넓어지지 않는다. 2단계 이후 폭은
+    // 거의 그대로이고, 키는 머리 장식 줄만큼만 자란다(눈 줄 y=20~22·발끝 y=29 고정).
+    group('몸집 고정(결정 0034)', () {
+      // 기본 그림(팔·발 뺌)에서 가장 넓은 줄의 칸 수. 도토리는 모자 줄(몸통은 2칸 좁다).
+      const bodyWidths = {
+        'chick': [14, 16, 18, 18],
+        'jelly': [16, 18, 18, 18],
+        'acorn': [16, 18, 18, 18],
+      };
+      // idle 첫 프레임의 팔(날개) 포함 폭.
+      const armWidths = {
+        'chick': [14, 20, 22, 22],
+        'jelly': [20, 22, 22, 22],
+        'acorn': [18, 20, 20, 20],
+      };
+
+      int span(String row) {
+        final l = row.indexOf(RegExp(r'[^.]'));
+        if (l < 0) return 0;
+        return row.lastIndexOf(RegExp(r'[^.]')) - l + 1;
+      }
+
+      int bodyWidth(StageArt s) =>
+          s.body.rows.map(span).reduce((a, b) => a > b ? a : b);
+
+      SpriteFrame idle(StageArt s) => bodyFrames(s, 'idle').first;
+
+      int frameWidth(SpriteFrame f) {
+        var l = spriteSize, r = -1;
+        for (var y = 0; y < spriteSize; y++) {
+          for (var x = 0; x < spriteSize; x++) {
+            if (!opaque(f, x, y)) continue;
+            if (x < l) l = x;
+            if (x > r) r = x;
+          }
+        }
+        return r - l + 1;
+      }
+
+      int height(SpriteFrame f) => bottomY(f) - topY(f) + 1;
+
+      test('단계별 몸 폭과 팔 포함 폭이 정한 값이다', () {
+        expect(bodyWidths.keys, [for (final p in pets) p.name]);
+        for (final pet in pets) {
+          expect(
+            [for (final s in pet.stages) bodyWidth(s)],
+            bodyWidths[pet.name],
+            reason: '${pet.name} 몸 폭',
+          );
+          expect(
+            [for (final s in pet.stages) frameWidth(idle(s))],
+            armWidths[pet.name],
+            reason: '${pet.name} 팔 포함 폭',
+          );
+        }
+      });
+
+      test('2단계 이후 폭은 2칸 넘게 늘지 않고 3·4단계는 같은 폭이다', () {
+        for (final pet in pets) {
+          final w = [for (final s in pet.stages) bodyWidth(s)];
+          expect(w[2] - w[1], lessThanOrEqualTo(2), reason: pet.name);
+          expect(w[3], w[2], reason: pet.name);
+        }
+      });
+
+      test('키는 2→3→4단계로 자라고, 3·4단계 폭÷키는 0.9 이하다', () {
+        for (final pet in pets) {
+          final h = [for (final s in pet.stages) height(idle(s))];
+          expect(h[2], greaterThan(h[1]), reason: '${pet.name} $h');
+          expect(h[3], greaterThan(h[2]), reason: '${pet.name} $h');
+          for (final s in [2, 3]) {
+            final ratio = bodyWidth(pet.stages[s]) / h[s];
+            expect(
+              ratio,
+              lessThanOrEqualTo(0.9),
+              reason: '${pet.name} s${s + 1} 폭÷키 $ratio',
+            );
+          }
+        }
+      });
+    });
+
     for (final pet in pets) {
       test('${pet.name} 4단계 메달 끈은 목 아래 가로줄 y=25 에만 있고 메달은 그 아래다', () {
         // 입 바로 아래 세로 끈은 입처럼 보여서 쓰지 않는다.

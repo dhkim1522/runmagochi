@@ -2,6 +2,7 @@
 // 그림체는 말랑 클레이(페이즈 6 후보 a, 후보 코드는 작업 18 에서 지움): 3단 명암
 // (하이라이트 l·기본 m·그림자 M, 알은 q·y·Y), 빛은 왼쪽 위.
 // 눈은 모든 단계에서 x=12·13, 18·19, y=20·21 (face 공용). 부리는 body 에 있다.
+// 몸집(결정 0034): 2단계 16칸, 3·4단계 18칸으로 폭을 고정하고 성장은 볏·명암·볼터치·장비로 보인다.
 import 'pet_art.dart';
 
 // 눈: 2×2 에 왼쪽 위 반짝임. 졸린 눈은 바깥으로 처진 눈꺼풀이 윗줄을 덮고
@@ -48,7 +49,8 @@ final chick = PetKind(
       hops: true,
       tiltRows: 3,
     ),
-    // 2 껍데기를 쓴 아기 병아리 + 러닝화
+    // 2 아기 병아리: 3단계보다 2칸 좁은 몸(16칸), 알 껍데기 모자, 큰 볼터치(y=23 까지 2줄),
+    // 밝은 배 + 러닝화.
     StageArt(
       body: const Art(11, [
         '.....oooooo.....',
@@ -58,21 +60,21 @@ final chick = PetKind(
         '.oyyyyyyyyyyyYo.',
         'oyyyoyyyoyyyoyYo',
         'ooyoloyomoyomoYo',
-        'ololmmommmommmoo',
-        'olmmmmmmmmmmmmMo',
-        'olmmmmmmmmmmmmMo',
-        'ommmmmmmmmmmmmMo',
+        'ololllollmommmoo',
+        'ollllmmmmmmmmmMo',
+        'olllmmmmmmmmmmMo',
+        'ollmmmmmmmmmmmMo',
         'ommmmmbbbbmmmmMo',
-        'ommmmmmBBmmmmMMo',
-        'oMmmmmmmmmmmmMMo',
-        '.oMMmmmmmmmmMMo.',
+        'omppmmmBBmmmppMo',
+        'oMmmmmllllmmmMMo',
+        '.oMMmmmllmmmMMo.',
         '..oooooooooooo..',
       ]),
       squashRow: 24,
       arm: Limb(6, 21, clayArmRows('l', 'm', 'M')),
       foot: const Limb(9, 0, clayShoeFoot),
     ),
-    // 3 병아리 + 러닝화 + 손목 밴드
+    // 3 병아리(18칸) + 러닝화 + 손목 밴드
     StageArt(
       body: const Art(10, [
         '.........oo.......',
@@ -97,34 +99,34 @@ final chick = PetKind(
       arm: Limb(5, 21, clayArmRows('l', 'm', 'M', band: true)),
       foot: const Limb(9, 0, clayShoeFoot),
     ),
-    // 4 마라토너 병아리: + 헤어밴드 + 완주 메달.
-    // 메달은 목 아래 가로 끈(y=25)에 매단다. 부리 바로 아래 세로 끈은 입처럼 보인다.
+    // 4 마라토너 병아리: 3단계와 같은 몸집(18칸). 볏이 세 줄로 자라고(y=9~11),
+    // + 헤어밴드(y=17·18) + 완주 메달(끈 y=25). 그림자가 짙어 단단해 보인다.
     StageArt(
       body: const Art(9, [
-        '..........oo........',
-        '.........olo........',
-        '......oooolooo......',
-        '....oollllmmmmoo....',
-        '...olllmmmmmmmmMo...',
-        '..ollmmmmmmmmmmmMo..',
-        '.ollmmmmmmmmmmmmmMo.',
-        '.olmmmmmmmmmmmmmmMo.',
-        'oAAAAAAAaaaaaaaaaaao',
-        'oaaaaaaaaaaaaaaaaaao',
-        'ommmmmmmmmmmmmmmmmMo',
-        'ommmmmmmmmmmmmmmmmMo',
-        'ommmmmmmmmmmmmmmmmMo',
-        'ommmmmmmbbbbmmmmmmMo',
-        'ommmmmmmmBBmmmmmmMMo',
-        'oMmmmmmmmmmmmmmmmMMo',
-        '.oddddddddddddddDDo.',
-        '..ooooooEweEoooooo..',
-        '........EeeE........',
-        '.........EE.........',
+        '.........oo.......',
+        '........olo.......',
+        '......oolloo......',
+        '.....oollmlmoo....',
+        '...oollllmmmmoo...',
+        '..olllmmmmmmmmMo..',
+        '.ollmmmmmmmmmmmMo.',
+        '.olmmmmmmmmmmmMMo.',
+        'oAAAAAAAaaaaaaaaao',
+        'oaaaaaaaaaaaaaaaao',
+        'ommmmmmmmmmmmmmMMo',
+        'ommmmmmmmmmmmmmMMo',
+        'ommmmmmmmmmmmmmMMo',
+        'ommmmmmbbbbmmmmMMo',
+        'oMmmmmmmBBmmmmmMMo',
+        'oMMmmmmmmmmmmmMMMo',
+        '.oddddddddddddDDo.',
+        '..oooooEweEooooo..',
+        '.......EeeE.......',
+        '........EE........',
       ]),
       squashRow: 24,
-      arm: Limb(4, 21, clayArmRows('l', 'm', 'M', band: true)),
-      foot: const Limb(8, 0, clayShoeFoot),
+      arm: Limb(5, 21, clayArmRows('l', 'm', 'M', band: true)),
+      foot: const Limb(9, 0, clayShoeFoot),
     ),
   ],
 );
