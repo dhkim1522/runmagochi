@@ -1,0 +1,232 @@
+<title>다크 무대 테두리 비교</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+/* 레이아웃: 위 설명 → 고르기 칩 → 4안 카드 격자(넓으면 2열, 폰 1열). 무대는 앱 다크 무대 색으로 고정 */
+@font-face { font-family: "RunmagochiSans"; src: url("../../screens/fonts/RunmagochiSans.ttf") format("truetype"); font-weight: 100 900; font-display: swap; }
+:root {
+  --bg: #F3F5EE; --surface: #FFFFFF; --soft: #E8ECE1; --ink: #16200F; --muted: #5B6357;
+  --lime: #B8F04A; --lime-edge: #8FCB2A; --deep: #1E7B45; --line: #D5DBCC;
+  /* 앱 다크 무대(theme.dart dark): 라이트 페이지에서도 그대로 */
+  --night-bg: #10160D; --night-surface: #1A2316; --night-sky: #1D2C15; --night-ground: #2A3F1D;
+  --night-line: #3E5C2A; --night-ink: #EEF4E6; --night-muted: #A3AE99;
+  --font: "RunmagochiSans", "Pretendard", "Apple SD Gothic Neo", "Noto Sans KR", system-ui, sans-serif;
+  --r-card: 24px; --r-stage: 20px;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #10160D; --surface: #1A2316; --soft: #243020; --ink: #EEF4E6; --muted: #A3AE99;
+  --deep: #5DD08A; --line: #2F3D29; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #10160D; --surface: #1A2316; --soft: #243020; --ink: #EEF4E6; --muted: #A3AE99;
+  --deep: #5DD08A; --line: #2F3D29; color-scheme: dark }
+* { box-sizing: border-box }
+body { background: var(--bg); color: var(--ink); font-family: var(--font); font-size: 15px; line-height: 1.55; }
+.wrap { max-width: 1080px; margin: 0 auto; padding-block: 32px 56px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: grid; gap: 28px; }
+header { display: grid; gap: 10px; max-width: 68ch }
+.eyebrow { font-size: 12px; letter-spacing: .06em; color: var(--muted); font-weight: 600 }
+h1 { margin: 0; font-size: clamp(26px, 5vw, 34px); line-height: 1.2; font-weight: 800; text-wrap: balance }
+header p { margin: 0; color: var(--muted) }
+header b { color: var(--ink) }
+.controls { display: grid; gap: 12px; background: var(--surface); border-radius: var(--r-card); padding: 18px }
+.row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px }
+.row > span { width: 44px; font-size: 13px; color: var(--muted); font-weight: 600 }
+.chip { font: inherit; font-size: 14px; font-weight: 600; color: var(--ink); background: var(--soft); border: 2px solid transparent;
+  border-radius: 999px; padding: 6px 14px; min-height: 40px; cursor: pointer }
+.chip[aria-pressed="true"] { background: var(--lime); border-color: var(--lime-edge); color: #16200F }
+.chip:focus-visible { outline: 3px solid var(--deep); outline-offset: 2px }
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 440px), 1fr)); gap: 16px }
+.card { background: var(--night-surface); color: var(--night-ink); border-radius: var(--r-card); padding: 18px; display: grid; gap: 14px; align-content: start; min-width: 0 }
+.card h2 { margin: 0; font-size: 18px; font-weight: 700; display: flex; gap: 10px; align-items: baseline }
+.tag { font-size: 13px; font-weight: 800; color: #16200F; background: var(--lime); border-radius: 8px; padding: 1px 8px }
+.card p { margin: 0; color: var(--night-muted); font-size: 14px }
+canvas { display: block; width: 100%; height: auto; border-radius: var(--r-stage); image-rendering: pixelated; image-rendering: crisp-edges }
+.trio { max-width: 100% }
+.meta { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 13px; color: var(--night-muted); font-variant-numeric: tabular-nums }
+.meta b { color: var(--night-ink); font-weight: 700 }
+.pro, .con { font-size: 13.5px; margin: 0; padding-left: 18px }
+.pro li::marker { content: "+  "; color: #5DD08A }
+.con li::marker { content: "−  "; color: #F2A65A }
+.pro, .con { color: var(--night-ink) }
+.foot { background: var(--surface); border-radius: var(--r-card); padding: 18px; display: grid; gap: 8px; max-width: 100% }
+.foot h3 { margin: 0; font-size: 16px }
+.foot p, .foot li { margin: 0; color: var(--muted); font-size: 14px }
+.foot ul { margin: 0; padding-left: 18px; display: grid; gap: 4px }
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">런마고치 · 다크 모드 · 페이즈 6 관문 3 고칠 점</div>
+    <h1>다크 무대에서 캐릭터 테두리를 어떻게 그릴까</h1>
+    <p>캐릭터 외곽선은 진한 갈색(#431407)이라 어두운 초록 무대(#1D2C15) 위에서 묻힙니다. 그래서 지금은 다크 모드에서만 <b>거의 흰색 테두리를 도트 1칸</b> 덧그립니다. 홈 무대는 8배라 화면에서 8px 두께가 되어 튑니다. 아래 네 안은 앱의 실제 그림 파일로 같은 크기(8배)에 그렸습니다.</p>
+  </header>
+
+  <section class="controls" aria-label="보기 고르기">
+    <div class="row" role="group" aria-label="종류"><span>종류</span>
+      <button class="chip" data-k="kind" data-v="chick">병아리</button>
+      <button class="chip" data-k="kind" data-v="jelly">젤리</button>
+      <button class="chip" data-k="kind" data-v="acorn">도토리</button>
+    </div>
+    <div class="row" role="group" aria-label="단계"><span>단계</span>
+      <button class="chip" data-k="stage" data-v="1">1 알</button>
+      <button class="chip" data-k="stage" data-v="2">2</button>
+      <button class="chip" data-k="stage" data-v="3">3</button>
+      <button class="chip" data-k="stage" data-v="4">4</button>
+    </div>
+    <div class="row" role="group" aria-label="모자"><span>모자</span>
+      <button class="chip" data-k="hat" data-v="none">없음</button>
+      <button class="chip" data-k="hat" data-v="cap">러닝 캡</button>
+      <button class="chip" data-k="hat" data-v="straw_hat">밀짚모자</button>
+      <button class="chip" data-k="hat" data-v="beanie">비니</button>
+    </div>
+    <div class="row" role="group" aria-label="움직임"><span>움직임</span>
+      <button class="chip" data-k="anim" data-v="on">숨쉬기</button>
+      <button class="chip" data-k="anim" data-v="off">멈춤</button>
+    </div>
+  </section>
+
+  <section class="grid" id="grid"></section>
+
+  <section class="foot">
+    <h3>보는 법</h3>
+    <ul>
+      <li>대비는 테두리(또는 바깥 외곽선) 칸 색과 무대 하늘색의 명암비 평균입니다. 3:1 을 넘으면 실루엣이 또렷합니다.</li>
+      <li>"세 종류 한눈에"는 같은 방식을 병아리·젤리·도토리에 함께 적용한 모습입니다(3배).</li>
+      <li>라이트 모드는 네 안 모두 지금과 같습니다(테두리 없음).</li>
+    </ul>
+    <p>마음에 드는 안의 글자(A~D)를 말씀해 주세요. 섞은 안(예: C 를 얇게)도 됩니다.</p>
+  </section>
+</div>
+
+<script>
+const SPR = {"chick": {"body1": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAAAgCAYAAACinX6EAAABI0lEQVR4nO2XvQ3CMBSEjRSJio4VqBiBggIGSNbJAKwDA0BBwQiIggFoUBoqqiADlgAZ8Fnv6ZTEX5cf5T5dnLwkMx0nYwuwSQWwBdikAtgCbFIBbAE2qQC2AJtUAFuATSqALcCmkQXMhv3at39zvvbQa0UVICkQk70+VY+N6vB2bD6e1KgDXIC0gFS2ZblamCIvIQeoAA0BONuT6xiMprBDcAFaAhA/smPBHgEFgRDu5e93QeeiNyGoAE0BNo0cg5K0roDLcQudL14AKsCmdSsAJbgAe2ftC46FVj60Av5JaC9/jfygAuw4s2PNjjcX8inyGl7kpeh/gWZ+8ApwEub5yetr2wYbpZ8irXzoEXAXdiLfjmuhkR81BdhfeJL5nR+DN31Ny8nnqridAAAAAElFTkSuQmCC", "body2": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAAAgCAYAAACinX6EAAACDklEQVR4nO2YP0sDMRjG30JRHLQOQudCxaGbi2AHByuok34C9851OXAQoYud3f0EOqlgHRwquHQpRcSCowhSrILiHzh5e6TNtZfcm9hcKva3pLncvc/Dc7lcrnH458RtG7DNKADbBmwzCsC2AduMArBtwDajAGwbsM2fDGB5ZtwNOn7x9BFTraUVwCAN6OiWH5regeaNbzyXybqqPpQCMGFARVukyyjXK/B6dwmbG45L9UAOwJQBJW2BLs/k7BIcHRfJHkgBmDRAhqCtA/0RMGQgjHb49Uqnn8tkgdKn3oTQAEwboMBqYnve2INcuts/PZvyjbM+6lMgzQCTBigwTWy/G/sdDWyRoP7aqkOqTQrApAEqWBO1+X7vOM9B0YW8Ez75yGuAKQO2GeqdINt38MHr1JCtQ9IAojAgu449ckHEruZ8fXfxtu8cnJXx9DaspHeEHoQBRGVABmrfV1uQmk/0jaHec+m9/Xu6MOEbw2tYmwL5zZPOgCgMyPDVCfDQqyuuIc5eGkAUBkTgjMk73iOIC6oObBHWWgN4A54JL4ygIHhYaPwbQHczxK5DHzr6v/4W4At0w3gJKRmeuir+mzFYffLH0MlWAsZKj/BZSML6YatPIOCcgX0MmdRX2gdg4evqm3AcxxYKSZWSSpjQJweAqYexW/sCqIWfp4MpfVIAlKlk8u8wk/pDvRWOgh+z2L6eYom/nAAAAABJRU5ErkJggg==", "body3": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAAAgCAYAAACinX6EAAAB/ElEQVR4nO2XPUvDUBSGT6Ao4kcchC6lUCg4uLkIulkE9U+4d3GpgwUHEepgZzv7E7qoII4KLl0KglBw6FRwMEUUP6ByqtHY3pOcm+TeWzDvkqT343365ib3JAX/XCnTAKaVBGAawLSSAEwDmFYSgGkA00oCMA0QVYW58R4eLx9erTDjIwcQFSCq90XrANbye6HniBRAHABhPIN+l7kZ0gHEDSDri4F79dE6grPzmZ/rjfVuvy+XgR2AKgCut9cXPSkhy33DgWKZx8AKQCWAjLefr1e5RRuOKzyGwABUA3DF9ZYV+xFQBeAnN/ww3tyb4BuADgDTGvlCSPXKCwzAxNLXqZFdAVS9EXYu6jEkA9AFQPUPevdY1/N/rnvLd8J+uC2n8jtYrQoZhAHoBKCE3lhP4MtUJPR7rL70z2dLE0PtONY95oD+H+QK0AVAaaF2CyurNuw2pkgGke+gDief4KrmQBYywnYyAF0AIuFKKdQzvXYdACrsYUK1t6ch6/N9IgzAC1AEq7+fw/feHiT3zqOKZfT0B6Dk9sc6Iop/6FLYOxAhvs66DPRfvzgKIJxDpT97GzzdsmGs2oG3Uho2T5yhyfHFOdgnTqnyl6oDcOKbxjPZjm1LpbTMlFJS4c8OgJPofvMdoBnvnVftzwqA8yyp/OBR6T+ypbAufQJWtmfjqlw0egAAAABJRU5ErkJggg==", "body4": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAAAgCAYAAACinX6EAAACWElEQVR4nGNhGOGAZaAdMNBgNAAG2gEDDUYDYKAdMNBgNAAG2gEDDYZ8ADiLsP8H0Xvf/GQkRz/FAUCpAyi1e/edZgZXlVqyzaAoAKjhAHLsxCdOakSQHADUdgCp9oICHBn8udPNsH0HH5zv6fGJJHcQHQC0cgCxdiPbC7ITFwC55f65jwxZVez/iXEDUQFASweQYjc+e5GBohE/w7Q24txAMABo7QBq202qG/AGAD0cQAwg1W5SAFFZgJYOwAVAgS878TND0lYQrwBD/ui+j8QZ5M/A4LxRBmck4AwAejkAHyDaDgoA3hRADwfgA1cztSg2A1wgb8Qd9ngDgB4OGGgwKPsCuBpblJqJLRtiDQB6OgCbOlDNQ6jgZTymjsL/b3UTp1pQ24RFpRTUZMdwA0YA0NsB2ADIblDWAVWluADIvg8938FsgRJOrGpAZsBoRQbs/sGaAujpAGxAe/o1BmsnfobKczx43YDLXnTQzv2F4ej0jwxyDDIYclgDgJ4OQAegFAKqNh9vZGBgaCPKeILgcT4vgxyO/glGACA7IIuBkWGmkCBZlu79+pWBgUGUYdXPNwwMDLgdgFUvVB2oFUkN+0luCiNrSGd4iLVAjPNjYIib+4Ph30MPhiVNBxgWbcLhEAqawSC9tLafqGpwWzw/A1vPS4ZfJeIMXgs/gg2NY2D/D7Ic2SJQAYqulhqAlvYT3Q4AGXjy3Dc4P34eKGQP/EewIQCkxrxEnDQfDqD9RAUArpBEthgGGi//ZmC4TN0mNC3tJxgApORhWgyH0dr+QdkUpicAALkatCPRfYHDAAAAAElFTkSuQmCC", "face": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAAAgCAYAAACinX6EAAAAp0lEQVR4nO2UsQmAMBBFFS1cwI1cwN7x7J3AjVzAQk5S2IiQO4g8xP+awBFyj1ekrX5OSwvQKAAtQKMAtACNAtACNApAC9AoAC1AowC0AI0C0AI0CkAL0CgALRDFzGzou2rd9tozzxEOUFogStoRmecIBygt4OWYF0tnM42Pga/wuXt33AHeEvDifS+61x3gLQGaz32CpVEAWoBGAWgBGgWgBWh+H+AE6xM2D4TBInAAAAAASUVORK5CYII=", "cap": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAAAgCAYAAACinX6EAAABUUlEQVR4nO2XPwrCMByFIwhewEVwdBOcPIBQvIKTiy6ewskruLjo4iEEURwdXBSc/DOIUBAvIA5KlIi2adL2Z/MQ8y2Fpsn7eE1bTbM/J40WQGMLQAugsQWgBdDYAtACaH6+ACebufHj5HxJxZlPLoAqQM0ebzusWmjHXoNUwDcEomTJzots73jYGxK6gKQEwubWDrvXue5+o5zjHl3m1Buhdqa2gKQFdNkiV5f5Ti6fY8vh4LlGvXFTOSgLMCFAyV4VK49jaT2TOnC4h8ohsABTAjpUxctyo6J9BJIWkMHLP81GkXZdEGI3Bt0EaQEmBWTZj8fn6JKzBdfpnC2aLeb0ez4HXwGmBbzwcfEC5fB5FMr93sfa3nFfAaYFZLxfx0uj5Mf6DJoUSHq+Du1LEPET1yQ//2eIii0ALYDGFoAWQGMLQAugsQWgBdDYAtACaO6IGdldQaET9QAAAABJRU5ErkJggg==", "straw_hat": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAAAgCAYAAACinX6EAAABOklEQVR4nO2XMQrCMBiFKxS8gJuri4MnEFxsT+IBCt2dnFwKPYZnSF0E8Qa6iJubjh2cKikkRGmTmLR9FPOWH2vt+/iSoPren8dHA6DjBKAB0HEC0ADoOAFoAHR6L2A5GhZ07h+vgcnnrQXYAth2k+vGCydr42dYCWgC4Jeuquus+/t93QXRFtAWgG4vuWf8WvE81d5/yQ7ljGKitTOVAtoGUHWzXlmnmGmwKGeaeJxDxiAV0AWAqlu3t4qDLkaahFKGWgFdAchym62MulmOea68R7oDugAQIx43Kp4KZCJN5lyYdBNHMSl7xMXw0QBiN+s977b8KDUV+ryqY8kFoABY6OtwHAjfJKSlWbMDUABiED+mPo4AAgCd3v8XsI0TgAZAxwlAA6DjBKAB0HEC0ADoOAFoAHT+XsAbMWIQEmScuaQAAAAASUVORK5CYII=", "beanie": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAAAgCAYAAACinX6EAAABHUlEQVR4nO2WMQrCMBSGIwhFt4p4CU/g7NITCE4eT/AAksVRXFzFSwgdpYuRV20RadPw2uYP9H1LK5S8jy8JOFYDZ4wWQCMB0AJoJABaAI0EQAtwWc8j8/v79MhGnHXYAboS4M4+3J5qtviMPB9fSu2mhuPACtClQBvyuUqpyz5jr9HqCnQh4Mr/idssJ9ZvXDfDOUBfAq5z6cQR96uxfl9uho6Ni0djgL4Fmma7zi1YbaPvW1p62BysAXwINM12nWv1sDjUBvAlgCbI/wEUP0nSPD5dKYrJfRK0Vt0mVAbwKYAmyBNAaB0rrYv3dk8btQF8CVTh86RUBgjxqPZFsFfAFxIALYBGAqAF0EgAtAAaCYAWQCMB0AJoBh/gDU826DVqZFdGAAAAAElFTkSuQmCC"}, "jelly": {"body1": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAAAgCAYAAACinX6EAAABxElEQVR4nO2YwUoDMRCGx1LYs9CH8FQE6SK9FqSvUG+evOgDePHgpQ/gvoL1FYq0V5H1Ip58CMHzorgyq5Ft2Uwm2SSDuN+luyGZ+ftnkizpwz+nLy1Ams4AaQHSdAZIC5CmM0BagDSdAdICpOkMkBZgy2SQlPi7fi12OO0mrA3wLcA2d5JffD+n81Ll0rVzsDIghAAbMC7Gx1zPZylMsrwyHZ9HAFCk87AVEEKAC5hnWHsfZjkUWe4Uy2kP8CmAi1pid4vzjfbPl4eN9+nVo9VSZBsQSgA3dz1v7+AEPm5OG/suL0fwdv8EsxWwliLLgJACbKFyu2C9BHwLMFE3H6ttu+Ka2B3vwy3wJsFoQGgBXDh5XWBXQCgBFGrfaRuDmgTSgBgCqHFYedyqawL3o97eIRwdX2s1aA2IJYAC8+KGikvKhWqsoQ9ZATEEmMa3HWeKQRoQQ4AOrBjcRPF5OXYKAbPV+28sXR+tAXUBuKO7VAFHAEX16T1IyjZV2OoYVIPRCDQBfo44CjXj+Od9HIFqIkLlZx2D29VA0XbWY+dnfwfUq4HTzzeh8jvfCOkuRGLhK7+1ATqHY9wDhMj/5+4EffMFkQBvJ034jWYAAAAASUVORK5CYII=", "body2": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAAAgCAYAAACinX6EAAACDUlEQVR4nO2YQUsCQRTHX2J5jKDwK3SSILToakT0DexQdOpiNy9dgrp06ZZfIKH8BhGh16gVIvTSVwiC6BKYkfFWZ1nXmfHN6ttB2t/F3Z2Z9//vf2eGXZPwz0naNmCbOADbBmwTB2DbgG3iAGwbsE0cgG0DtpmqAPKLqS7+1t/bM2HaZRgFwGHARDvlHPeOc+fdoMaodhXkALgMmNKo1AGKOciXHU8DtZvFHEClDtm9vFE94yUwaQNUUAuDzfTPUW8JwJ1xTQDIlB33ervs8CwBLgMmuB76y0zoyfqY1DSaARwGqAjd+5ujgeu/r48D59tnDaN9yGgP4DBA1fbrJlYP4Of6UNr37iQLHw8vUKgBaR8iBcBpwEQbdRGVtmBhYwWqQPMwMgBuA1R0oY8DeQlwGdAhwsdlFlxqo6A+BG0AURjQaZuO0dVSeVAGEJUBVf+wwQfBPSmxvA5bu5dSD9IAojSgAnVxM8WZNA5uDU27cgZEZUA3zhsfwoMYHzwOogwgKgMycKbg3oHH1c1ZY20/hVrHqylrlwbgN+CagN4NUIMQNyzEdQZUiP7oYxz90O8B/oFeGLUG0f5wjbAMPAwGffJ7wO3+PMxdvMF3KQ07V59DxXHjDPaZJFz6Rh9DWPjp+UvZjm1rpbRJSSM49MkBUBI9bXUAWpN98tz6pAAoa4nrM5hbf6r+FOXgDxwrsA5xdNcMAAAAAElFTkSuQmCC", "body3": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAAAgCAYAAACinX6EAAACMUlEQVR4nO2YzysEYRzGH8KeJFrtRc5ykNIucVxJyh+wDuTkQi5SLoqLkpv9B2zhKClJu27EbsmPi7uTErkoVkbfsaNp5x3vj5133mQ+l5md9533eeaZ9/3O7DTgn9Ng2oBpogBMGzBNFIBpA6aJAjBtwDRRAKYNyJCOxyzaFh7f6lTaWUgFoMOAjHasuPS9n1qzqjV47X4IB6DLgCylXAGYTSGdLf5okPbNbArIFZCcTEuNJ70EgjYgCmlRsD2V36TXDtgz7gZAT7ZoH3/LFvUsAV0GVHH0akW5CAZlQASnthzvzHnaPu/OPcdGV0vCtUgoAJ0GRLTduvV90/b2Y3vG95yj5SSez66QyYNbi7gB6DYgqi2i66Z1sBe74Hv4NYAwDIhA2qK6sggtAZ0G/HCHr6otchN8AwjLAA9WjQkS7gzQbYCFU3SDHpN1E5gBhGmA1Y9mHgUfVPhUlOu7BjAysenx4AkgbAMsSJeeIrSEgsAey6eNOQPCNMCi+3oPQ+MtWD9oq8kD6RKL4084PXlBJzo8fZgBhGmgGvuVe7/Dut8HMNyorO3mfr4ZnT4vZp4A3AYygF3FUanoMjgXn8mXgby/ARZOP3p6BKEv/SLkPoFM2Dv5kpQB1lgq5+rW5z4G7RkRj1mHUy1o2njA+0ICY1svnoFF+qhegE59qX+DNPDF5atvO7X1LyRkhpRCh75wAJQoj5XbMnDL76eCLn2hAESmks6PIDr1/9RXYR18AatLssYgkiZVAAAAAElFTkSuQmCC", "body4": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAAAgCAYAAACinX6EAAAChElEQVR4nO1YP0gbURj/KdoMRYKtxSU6i4MIxVTsmCJS0I7FDhFxcLF0kUKXQl1KxaU0SwcLBnXoUqJQQjHiUtEI4p/FVZxspUWKpWmLV76niZe795J3l3vvKc1vudz77r7f735877vvUof/HHWmBZhG1QDTAkyjaoBpAaZRNcC0ANO4UgbEmkIWHTNHuRo/cR48GaBCgBfuUPbZ2e/oS8vJUS4ugrQBqgR4xUYyA4xFEUtkCxzEvTMWBZIZdMVjnvJ53gJBC5AFcZGxHefnxHcLYBW3A6AjkWXruURWzRZQJcAv8nyVwncTDEqADPK95dP8Y1fsdG/NtdY3sSHdi6QMUCnAK2/t7WF2/Ds3Krwv/bwL31e3MLiEsjpKGqBDQCluJy9x8gznobGnE+keFHSINAgN0CVAxN3y+gdGvtoW0wBuLhdOPy8fyyW7DuABEEtFuBq4BugUIIJ0/gohrABdAkTYe/hKutrKgVWhICY0QJcA07h03wL5xhuU+c7czm3oMkC3AGecGq8Kbnoz1bZ1o/fRmyINRQaYEOAEcdOWobdIkGA5OeuuCtAtwIn27Q+42x/G5OKNQDQQL+Fp/zfW2FsRKYq7DNAtwA72vZGKWAcpAPfqK+a24+BJA1o5Q1mRAXYB1LXfbn6piDRzcgIgjPe5I2CJL8B1z3mchqcg+aUnQfuFo9i3RMnjA0B8+hdO9/swO7GC5EIJIT5GYbpHB3/J1yCriKaQ9XEojGtTh/g93oz7M8dsPY6QReQy10o8rzF+6TmAEq5v/iycD72jxCvWxe8z0DV3xpt9PK4ZfikDyEke7MR5vNj9A+wGO0ar5C9rgJcSVvFPkGr+SzcK68Y/JCvy6HCGHOYAAAAASUVORK5CYII=", "face": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAAAgCAYAAACinX6EAAAAtElEQVR4nO2UQQqDMBBFFQN6AHui9gLde7zue4LeyAu4KFNSqKtQZyDyEP/bBIaQPB4hqTk5iRagUQBagEYBaAEaBaAFaBSAFqBRAFqARgFoARoFoAVoFIAWoFEAWiCKmdntMjSveWk98y3CAWoLRMl3ROZbhAPUFvDyfjwtr910XwNfx/47y9F/4Uv7/uEOsJeAl9J5pdcWvdcdYC8BmsN9grVRAFqARgFoARoFoAVoTh/gA9qMQ1X8Zl9NAAAAAElFTkSuQmCC", "cap": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAAAgCAYAAACinX6EAAABgUlEQVR4nO2XQWrCQBSGX0HwAt0IvYGQVZt1Ye7QlRTsxo0X6Am8QDZuLEgP0U2KyxK7UehK2kURAqUXkC4sz3QkTSYzeaYzj+J8m1Enk//jdyZiC46cFrcAN74AbgFufAHcAtz4ArgFKIjT9hbH+HNzcsi8ClIBNgQo2e3kNnsdjrbFDNN8FbULsCVAZT6NAYYhiCjZZ2D2chgCTGO4uBak+5GPwF8LUNiEIwhy7+WOQ4Ioya75GetCKsCGgAmZcfX+uv8seltp16TrFESvX+s4GguwLWDKlrmmzDydsw4s7u+ye/T62uOoLcCFQJPsZfdyNwYvM6UDgh46h8oCXAmY0BWvyqViPAK2BVRg+R+zB9Kuq0LuxqovQVmASwFV9u74rNPG2ZKvxyd4vhmAmIxLDqUCXAsUwXn5AEVwXRPOJ+Nf9y7OlwpwLaAifx2W1iT/oJ9BlwK215swPgRtC3Dzr/4N2sAXwC3AjS+AW4AbXwC3ADe+AG4BbnwB3ALcfAOQSBHCi3Pk+AAAAABJRU5ErkJggg==", "straw_hat": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAAAgCAYAAACinX6EAAABcElEQVR4nO2XP2vCQBjG30LAL9Ctn6CDbs1ScIl+jS6uguDWTyBdBMFP4NbPELMUSiFuDu3m5taODk4pb+ydpyR3ueDloXi/5TV/yPPjyR2YgK6cAC2AxheAFkDjC0ALoPEFoAVsiG5bGc/ke39T53oRVgW4ELDJbqXPh9/hJDvPMF0vo3IBrgRsWS0SomFI0TyVGZy9HoZEi4QeniKr51lvgUsL2LAPJ9RRjsWKYzrz9HDP36yKVQEuBEyIjHi7lOeyn4/S+7+Wb/kcjeNK29FYgGsBU7bI1WWq3Pe6+ZxNSXroHLQFNCFgyq6aW+TBL2M27WsdSgtoSkDHpj2olS143+2M92hXQBMCKup24+K5QFFknfmoTF7Eo3Gc56gvI0ALqNki9/P1RW6lS8HPK9qWsgCUgICP+3e97HgmdjRLVgBKQMXVnycdJ1sAIYDmX30MucAXgBZA4wtAC6DxBaAF0PgC0AJofAFoATRXX8AvOZFIaMqwLogAAAAASUVORK5CYII=", "beanie": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAAAgCAYAAACinX6EAAABTUlEQVR4nO2WQWrCQBSGX0EI7U4RLyG4q9C1G09QcFPP4Qm8gCdwI3gAmY3LUkjdipcouCzZGHmJEyxNJvNsZ/6A823mkQnzPv7Mg7TozmmhBdCEANACaEIAaAE0IQC0gIRRN0p53X4lD7rWXD/j2vZMUQAuBCS9o3iW18N5ut5/U6eXt3nfnIimTz/2bR2sA3AlIOVzuaXBpc76EtHHKin2nt9GovPEI/DfAhKS4bzo/dp//LU/WMSULGLRmaIAXAjUoceKbxxz2KXG9/XHINW2GsfaAFwL1PW27at5mUSX6lh4mByMAfgQqOtt29foYXCoDMCXAJpG/gdw+OPxMQufR4rDvHVl+Kyqj1AagE8BNI28AYxSbVJK139bTVQG4EugDJ83pTSAJl5VVzR2BHwRAkALoAkBoAXQhADQAmhCAGgBNCEAtACauw/gDJ5mEOyVvlP6AAAAAElFTkSuQmCC"}, "acorn": {"body1": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAAAgCAYAAACinX6EAAABsklEQVR4nO2YMU7DQBBFBxFIejhAFIkGUdDkBFRUUNNCRZOOQ1Ag0VCFO0CFUnCAKA1FRBMUcQA4QKAwGkuLzNramVnveBTh39iWd/e//PWux+nAP1fHGsBabQDWANZqA7AGsFYbgDWAtdoArAGs1QZgDVBHR7vdDI/PH6uN2DFqBZACoI733XkGk2kPYA5ZLEN0AKkApJ7F68t7tFyV7klYRAFoAEi8MXCnxdtmZbvl55ZoQtgBaAFIvZ0v+gx2vkvnqJODLpuBFYAmAMcbx5tMy/fysCvOJQxkANoAlPL+c8ieHq7ha/nC6vP+uoDReMZaimQA2gDWWps6gBu+VOwAtAAo+W8ead8ke4AmANVfsvSKerw5g+3BIRyfXgUZggE0AUAJvXFPQfX398j2ri0e+4zxySdAG4A7Hm6qtxdhhr9th7/XIZEBaAOEhE/OaDyLWoLIAIyqNBhAFUA+sxUh+D+WC0DJ9Xd7Edc/WSlcHAjDoGZW6/3vJiO1v6gOKD4RCOIbg/KnsYa/uBByBv7SaKrqS+0fVQn6f4Tgdd13vpV/VAC+UdM1f0r/tfkW0NIPb5R4a4bNLCEAAAAASUVORK5CYII=", "body2": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAAAgCAYAAACinX6EAAAB6UlEQVR4nO2XMUvDQBTHn1hbNweFrqXgIg4u4gdw0kVnFwedXLoUd1cRwcWpDn4DXRQHP0AJiNDiUimugg4uQtsh8iIn17R3790llyOYP5RcyL37//Lv5XIpwT9XyTeAbxUB+AbwrSIA3wC+VQTgG8C3igB8A/hWrgPYXKqEeHz8GMzYjpEogDQAknhfHoTw0J4H6EJoy2AdQFoApp7y+dEVWg4mrpmwGAXgAsDEFwMX6r3OTu3b/5yL/hAuBysAlwAcb+ErPNGjvjhStndWK7/FjJlJBuAagOMd98Uf1cZjxEEwaAPIAoBStMZIimaYQZsSOQNcA+gUBdeF8P7mFIb9Z6Pat5ceNFoB+RhqA8gCwLdysREyDd9ErABcAugUf+3ajpFoEXQNoKuzefRk3Z7vQbm+Blu7x0oGZQBZAeiE3riWoGory+w6UYPHGtFXOwOyAOCMg4vpxSGPYbxm/e9cJW0AWQCohDOm0QoSPYLIAMSOVBmADCDaGIJQPAz5RsXrT663uQG5zsaf40HvA6T2+D8SkHVp7gFs/Dlifwzd7S9A+ewdhs0qbF9/TZjE+oTT+tjKpb/RRgjN20/fyut4baNZNRnSSC782QFgopROOiOADt3PRq78WQFwppLLPb9L/1x8C7jUD55dwRMR/Pt9AAAAAElFTkSuQmCC", "body3": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAAAgCAYAAACinX6EAAACFUlEQVR4nO2YP0gCURzHf5VlizgUuJSI0BINNTU0BDnVUnNLQ00tRyDtrRKBS5MNLc25FA0FDQ0iRKC0GBI4BTVIEKjDxe/o1aH3/t3de0/oviA+eb973899fT5+Zwz+uWKmAUwrCsA0gGlFAZgGMK0oANMAphUFYBogiHLTcRvfb987I37XCBRAGABBvE93bbipTALUwfbL4DuAsABkPd2f98/QsjMwJ8MiFYAKABlfDJyo8TLmWdv8GHe+EFEOoQBUAoh4E1/iiR7ZqR51fLA6+svBY+AGoBpAxLvfF1+8MWpzIc5lYAagA0DWW3RMxGOgBqALgCXngHXJ2VUSYxExd4AOAJqcwOpgX18WoNt88rXG63MDrFKVeRZRA9AFYFpD3wn6DV9U3ABUA9DU33MEXcvXIagDgFYf5KfnVvlkGyayi7C+dejJ4BmATgCa0BvPEFRmfk7al1yL7xlGHXUH6AKgaem+ACtrSWhZCSjuyTEQbzyAZ4uf8HDXhjRceNZSA9AF4CXcKbnyjN0qC19CFfKnGW25ZwBuABxbpaqNIRDRwiA3Dj8376xjJWwWAE3u+iD+PB92H+AaI8TfbFX4BsLoAYL48yT8NHi1k4SJ4zfo5lOwcd4eMPCoCe0/ApX+Uo0QLlx5/KLO49xyPiWzpJRU+AsHgKnzdFTrAdT4dX6kyl8oAJGtpLLfV+k/9M8CqvUNnTPuB3fEJY0AAAAASUVORK5CYII=", "body4": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAAAgCAYAAACinX6EAAACVElEQVR4nO2YTygEURzHf/6uixTKhU3KRRQHOTgoLjjg7LASpVw2tblzlJSLUiiSg5N1IAdaB4dNSS0uJHIiDhJZytNvGKad92bem5n3XrLf2vZN85vf97Pffft23uTDP1e+bgDdygagG0C3sgHoBtCtbAC6AXTrTwfQUR4i+L57n87x2sNXAEEA+PGeGyKwkywCOAHilcFzAEEBiHpaj0cX0TJtOyfCIhSADAARXwzc1PlFHrX28qHA+EJ4ObgCkAnA4236mp7oUVP2zhyPteX+cLgxuAYgG4DHO9MXX25jVG99yJXBMQAVAKLevGNTbgzMAFQByPA2x8YsdGGgBqASgCXj38Uis5eXsZOYM0AVAE1GUCdAqmafmDUHe4/c/cLxSuaCTA1AJYCTRDy8ynERVAHgpNPBNXi7PPbV4+rsHKIO5x0DUAFAk3nf4dc7s6fQIqgKgFa3vTEVqHd8ph8Kaxqhq2/cxmALQDUATeiNM6e6rjYQf6MX4xx1BqgEoKlpfwpa20sglmr3xYC+qOmGPWM9C8OarYYagEqATOEM6YhXkps4AAw3e/a26iZaDGHG3sQWgBUAF6/50jtPprvPz8b7evoeANgA1Gu/66ILhyQIf+G9gPWCEbgmtJpID0Bk8RU+rjthdTIBK5sMEB+bIbxWtj/XdnhroAQKp2/hLVYB3cuPRtMIhAiaW41wAc2sDUIy/bkfiGDD5NHLz/HAEiabIL/jL2FNS6xC7BNq9OcKgJWk1djUROodIBXsHaRMf9cARH7DMp4Lyvb/04/Fg9AnKE87hjwl6TMAAAAASUVORK5CYII=", "face": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAAAgCAYAAACinX6EAAAAtElEQVR4nO2UQQqDMBBFFQN6AHui9gLde7zue4LeyAu4KFNSqKtQZyDyEP/bBIaQPB4hqTk5iRagUQBagEYBaAEaBaAFaBSAFqBRAFqARgFoARoFoAVoFIAWoFEAWiCKmdntMjSveWk98y3CAWoLRMl3ROZbhAPUFvDyfjwtr910XwNfx/47y9F/4Uv7/uEOsJeAl9J5pdcWvdcdYC8BmsN9grVRAFqARgFoARoFoAVoTh/gA9qMQ1X8Zl9NAAAAAElFTkSuQmCC", "cap": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAAAgCAYAAACinX6EAAABXElEQVR4nGNhGOGAZaAdMNBgNAAG2gEDDUYDYKAdMNBgNAAG2gGUAGcR9v8geu+bn4zkmkFRAFDDAZTYPS35P8POkxwMDFcY/pPrBrIDgFoOIMU+dLGsuSArf2KVJ9Y9RAcArRxArL1hj+7Cxabcu41Xz/MnzxmcYxKJSp0EA4DWDiBkN8xeQnYiA0kZSYaLS+ZDzIhJxJs68QYAPRxAid2XtB3AtN7VA1jdAAIgd+BzA84AoJcDCAF8AY/NXlIBwSxAawdgA6DAf3VgB0mpDheApUZckYA1AOjpAGx2g7PPk+cU2w0Dv/edYDiTlM7gPG8mhhswAoDeDkAHIHlYAQoCIH2UAJN5M1HMRpfHCAB6OwAbQFYHCjRK7CerGqSnA2itnxAgWAgORDOXnmBId4aoAUYDYKAdMNBgNAAG2gEDDUYDYKAdMNBgNAAG2gEDDUYDYKAdMNBgxAcAAJ245YNCsKMVAAAAAElFTkSuQmCC", "straw_hat": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAAAgCAYAAACinX6EAAABQklEQVR4nO2XPQrCMBiGIxT0AG6ewMETCC7qSdxcBG/hUuji5gE8glQXQcRddHNz07FDp0gKCVHaNKY/L+L3LB+2pe/D24Raj/05HloADRWAFkBDBaAF0FABaIEiDNtNLubuETdc71GogDIEimQvJ5xtTi3Gzoy7OjgXUJbAN3mfx6YrERmnnrf1sS6gKgHb3PC+Vcf485h5/XW7T+ZsHlqtztwCqhbIy5a5pkyd7miQzMBnysPkYCygDoG8bNvcNA/xMAJ/bHTILKAuARO33sQpW3KIotxrjCugDgEdfbuJ4kWBskiX2demWMSzeZjk6A/DQwvo2TL3sl6orVQW4n5p21IVgBKQiN/jzkh7k4QVzYwVgBLQQfyhetsCCAE0P/0tUAZUAFoADRWAFkBDBaAF0FABaAE0VABaAA0VgBZA8wIm4Bw4MiZ5ggAAAABJRU5ErkJggg==", "beanie": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAAAgCAYAAACinX6EAAABHUlEQVR4nO2WMQrCMBSGnyAU3SriJTyBs0tPIDh5PMEDSBZHcXEVLyF0lC5GXrVFpE1D2uaP+L6lFUrex5cEHNKfM0QLoJEAaAE0EgAtgOZnAyynkf78fbhlA5d1nAN0JeA6e3e502T2GnncP4g2Y+3i4BSgS4E25HOJ6LTNnNdodQW6ELDl+8St5iPjN7abYR2gLwHbuXzimOtZG78vN0PF2sajMUDfAk2zbecWLNbR+y0tPUwOxgA+BJpm2841ehgcagP4EkAT5P8Ajp8kaR6frxTHdH0yvFbdJlQG8CmAJsgTwCgVk1LFe7unidoAvgSq8HlSKgOEeFT7Itgr4AsJgBZAIwHQAmgkAFoAjQRAC6CRAGgBNBIALYDmCfiC6DVVCPeeAAAAAElFTkSuQmCC"}};
+const SKY = [0x1D,0x2C,0x15], GROUND = '#2A3F1D', GLINE = '#3E5C2A', SKYC = '#1D2C15';
+const INK = [0x43,0x14,0x07];
+const RIM_WHITE = [0xEE,0xF4,0xE6];
+const VARIANTS = [
+  { id:'A', name:'지금 · 흰 테두리 1칸', desc:'실루엣 둘레에 거의 흰색을 도트 1칸 덧그립니다.',
+    pro:['어떤 무대에서도 가장 또렷함'], con:['8배에서 8px 두께, 스티커처럼 튐','모자·캐릭터 구분 없이 같은 흰색'] },
+  { id:'B', name:'흰 테두리를 얇게 (화면 2px)', desc:'같은 흰색을 도트 1칸 대신 화면 2px 로 둘러 그립니다.',
+    pro:['덜 튀고 여전히 또렷함'], con:['도트 1칸보다 얇은 선이 섞여 격자감이 깨짐'] },
+  { id:'C', name:'캐릭터 색에서 밝은 테두리 1칸', desc:'테두리 칸마다 바로 안쪽 몸 색(모자면 모자 색)을 밝게 한 색으로 칠합니다.',
+    pro:['캐릭터와 한 몸처럼 자연스러움','도트 격자 유지'], con:['노란 병아리는 대비가 높고 갈색 도토리 모자는 낮아 종류마다 차이'] },
+  { id:'D', name:'외곽선 자체를 밝게 (덧그림 없음)', desc:'바깥 외곽선 칸의 진한 갈색을 그 부위 색의 진한 톤으로 바꿉니다. 눈·입과 안쪽 선은 그대로입니다.',
+    pro:['실루엣 크기가 라이트와 같음','도트 그림의 다크 배경 표준 방식'], con:['흰 테두리보다 대비가 낮음','다크용 그림 한 벌 더 생성'] },
+];
+const state = { kind:'chick', stage:'4', hat:'cap', anim: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'off':'on', frame:0 };
+try { Object.assign(state, JSON.parse(localStorage.getItem('rim-view')||'{}'), {frame:0}); } catch(e) {}
+
+const cache = {};
+function load(src){ return cache[src] ??= new Promise(r=>{ const i=new Image(); i.onload=()=>r(i); i.src=src; }); }
+
+async function compose(kind, stage, hat, frame){
+  const d = SPR[kind];
+  const layers = [d['body'+stage], d.face]; if (hat!=='none') layers.push(d[hat]);
+  const c = document.createElement('canvas'); c.width=32; c.height=32;
+  const x = c.getContext('2d');
+  for (const s of layers){ const im = await load(s); x.drawImage(im, frame*32, 0, 32, 32, 0, 0, 32, 32); }
+  return x.getImageData(0,0,32,32);
+}
+
+const N4 = [[1,0],[-1,0],[0,1],[0,-1]];
+function px(id,x,y){ if(x<0||y<0||x>=32||y>=32) return null; const i=(y*32+x)*4; return id.data[i+3]>0 ? [id.data[i],id.data[i+1],id.data[i+2]] : null; }
+const isInk = c => c && Math.abs(c[0]-INK[0])<6 && Math.abs(c[1]-INK[1])<6 && Math.abs(c[2]-INK[2])<6;
+// 외곽선 칸이면 안쪽(2칸 안)에서 가장 흔한 몸 색, 아니면 자기 색
+function fillOf(id,x,y){
+  const c = px(id,x,y); if(!isInk(c)) return c;
+  const count = new Map();
+  for(let dy=-2;dy<=2;dy++) for(let dx=-2;dx<=2;dx++){ const n=px(id,x+dx,y+dy); if(n && !isInk(n)){ const k=n.join(); count.set(k,(count.get(k)||0)+1/(1+Math.abs(dx)+Math.abs(dy))); } }
+  let best=null, bw=0; for(const [k,w] of count) if(w>bw){bw=w;best=k;}
+  return best ? best.split(',').map(Number) : c;
+}
+const mix = (a,b,t) => a.map((v,i)=>Math.round(v+(b[i]-v)*t));
+function lum(c){ const f=v=>{v/=255;return v<=0.03928?v/12.92:Math.pow((v+0.055)/1.055,2.4)}; return 0.2126*f(c[0])+0.7152*f(c[1])+0.0722*f(c[2]); }
+const ratio = (a,b)=>{ const A=lum(a),B=lum(b); return (Math.max(A,B)+0.05)/(Math.min(A,B)+0.05); };
+
+// 1배 결과(32x32 + 둘레 1칸 여유 = 34x34)를 만든다. edge 는 대비 측정용 [색] 목록
+function variantImage(id, v){
+  const out = new ImageData(34,34), edge=[];
+  const put=(x,y,c)=>{ const i=((y+1)*34+(x+1))*4; out.data[i]=c[0];out.data[i+1]=c[1];out.data[i+2]=c[2];out.data[i+3]=255; };
+  if (v==='A' || v==='C'){
+    for(let y=-1;y<=32;y++) for(let x=-1;x<=32;x++){
+      if(px(id,x,y)) continue;
+      const nb = N4.map(([dx,dy])=>[x+dx,y+dy]).filter(([a,b])=>px(id,a,b));
+      if(!nb.length) continue;
+      const c = v==='A' ? RIM_WHITE : mix(fillOf(id,nb[0][0],nb[0][1]), [255,255,255], 0.42);
+      put(x,y,c); edge.push(c);
+    }
+  }
+  for(let y=0;y<32;y++) for(let x=0;x<32;x++){
+    let c = px(id,x,y); if(!c) continue;
+    if (v==='D' && isInk(c) && N4.some(([dx,dy])=>!px(id,x+dx,y+dy))){ c = mix(fillOf(id,x,y), INK, 0.38); edge.push(c); }
+    put(x,y,c);
+  }
+  return {img:out, edge};
+}
+
+function drawStage(ctx, w, h, groundTop){
+  ctx.fillStyle=SKYC; ctx.fillRect(0,0,w,h);
+  ctx.fillStyle=GROUND; ctx.fillRect(0,groundTop,w,h-groundTop);
+  ctx.fillStyle=GLINE; ctx.fillRect(0,groundTop,w,Math.max(2,Math.round(h/68)));
+}
+// 스프라이트(34x34 1배)를 scale 배로 (cx 가운데, 발끝 y=29 → footY) 그린다. thin>0 이면 흰 실루엣을 thin px 밀어 먼저 그림(B)
+function drawSprite(ctx, id, v, scale, cx, footBottom){
+  const {img, edge} = variantImage(id, v);
+  const t = document.createElement('canvas'); t.width=34; t.height=34; t.getContext('2d').putImageData(img,0,0);
+  const left = Math.round(cx - 17*scale), top = Math.round(footBottom - 31*scale);
+  ctx.imageSmoothingEnabled=false;
+  if (v==='B'){
+    const s = document.createElement('canvas'); s.width=34; s.height=34; const sx=s.getContext('2d');
+    sx.putImageData(img,0,0); sx.globalCompositeOperation='source-in'; sx.fillStyle='rgb('+RIM_WHITE+')'; sx.fillRect(0,0,34,34);
+    const th = Math.max(1, Math.round(scale/4));
+    for (const [dx,dy] of N4) ctx.drawImage(s, left+dx*th, top+dy*th, 34*scale, 34*scale);
+    edge.push(RIM_WHITE);
+  }
+  ctx.drawImage(t, left, top, 34*scale, 34*scale);
+  return edge;
+}
+
+function avgRatio(edge){ if(!edge.length) return 0; return edge.reduce((s,c)=>s+ratio(c,SKY),0)/edge.length; }
+
+const grid = document.getElementById('grid');
+const cards = VARIANTS.map(v=>{
+  const el = document.createElement('article'); el.className='card';
+  el.innerHTML = `<h2><span class="tag">${v.id}</span>${v.name}</h2><p>${v.desc}</p>
+    <canvas class="big" width="320" height="272" aria-label="${v.id}안 8배 무대"></canvas>
+    <div class="meta"><span>대비 <b class="cr">–</b> : 1</span><span>홈 무대 8배</span></div>
+    <canvas class="trio" width="330" height="128" aria-label="${v.id}안 세 종류"></canvas>
+    <div class="meta"><span>세 종류 한눈에 · 3배</span><span class="tri">–</span></div>
+    <ul class="pro">${v.pro.map(x=>`<li>${x}</li>`).join('')}</ul>
+    <ul class="con">${v.con.map(x=>`<li>${x}</li>`).join('')}</ul>`;
+  grid.appendChild(el); return {v, el};
+});
+
+let busy=false;
+async function render(){
+  if (busy) return; busy=true;
+  const main = await compose(state.kind, state.stage, state.hat, state.frame);
+  const all = {}; for (const k of ['chick','jelly','acorn']) all[k] = await compose(k, state.stage, state.hat, state.frame);
+  for (const {v, el} of cards){
+    const big = el.querySelector('.big'), b = big.getContext('2d');
+    drawStage(b, 320, 272, 232);
+    const edge = drawSprite(b, main, v.id, 8, 160, 240);
+    el.querySelector('.cr').textContent = avgRatio(edge).toFixed(1);
+    const tr = el.querySelector('.trio'), t = tr.getContext('2d');
+    drawStage(t, 330, 128, 110);
+    const names = {chick:'병아리', jelly:'젤리', acorn:'도토리'}, parts=[];
+    ['chick','jelly','acorn'].forEach((k,i)=>{ const e = drawSprite(t, all[k], v.id, 3, 55+i*110, 113); parts.push(names[k]+' '+avgRatio(e).toFixed(1)); });
+    el.querySelector('.tri').textContent = parts.join(' · ');
+  }
+  busy=false;
+}
+
+function syncChips(){
+  document.querySelectorAll('.chip').forEach(b=> b.setAttribute('aria-pressed', String(state[b.dataset.k]===b.dataset.v)));
+}
+document.querySelectorAll('.chip').forEach(b=> b.addEventListener('click', ()=>{
+  state[b.dataset.k]=b.dataset.v; syncChips(); render();
+  try { const {frame, ...keep} = state; localStorage.setItem('rim-view', JSON.stringify(keep)); } catch(e) {}
+}));
+syncChips(); render();
+setInterval(()=>{ if(state.anim==='on'){ state.frame = 1-state.frame; render(); } }, 600);
+</script>
