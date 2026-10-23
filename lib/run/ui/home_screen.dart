@@ -186,16 +186,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   Future<void> _onStart() async {
     if (_starting) return;
     setState(() => _starting = true);
+    // 화면이 중간에 사라져도 탭바가 숨은 채로 남지 않게 미리 잡아 둔다.
+    final countdown = ref.read(runCountdownProvider.notifier);
     try {
       if (!await _ensurePermission() || !mounted) return;
-      ref.read(runCountdownProvider.notifier).set(true);
+      countdown.set(true);
       for (var n = 3; n >= 1; n--) {
         setState(() => _countdown = n);
         await Future<void>.delayed(const Duration(seconds: 1));
         if (!mounted) return;
       }
       setState(() => _countdown = null);
-      ref.read(runCountdownProvider.notifier).set(false);
+      countdown.set(false);
       try {
         await ref.read(runControllerProvider.notifier).start(goal: _shownGoal);
       } catch (_) {
@@ -204,8 +206,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       }
       if (mounted) await _openInRun();
     } finally {
+      countdown.set(false);
       if (mounted) {
-        ref.read(runCountdownProvider.notifier).set(false);
         setState(() {
           _starting = false;
           _countdown = null;

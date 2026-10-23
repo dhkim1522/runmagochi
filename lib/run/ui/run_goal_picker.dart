@@ -168,8 +168,12 @@ class _RunGoalSheetState extends State<RunGoalSheet> {
   Future<void> _pickPreset(RunGoal goal) async {
     setState(() => _goal = goal);
     final index = _values.indexOf(goal);
-    if (!_wheel.hasClients || _wheel.selectedItem == index) return;
+    // 앞선 돌림이 아직 돌고 있으면 그것이 끝나며 값을 덮지 않게 먼저 번호를 올린다.
     final spin = ++_spin;
+    if (!_wheel.hasClients || _wheel.selectedItem == index) {
+      _spinning = false;
+      return;
+    }
     final duration = Motion.of(context, Motion.enter);
     if (duration == Duration.zero) {
       _spinning = false;
