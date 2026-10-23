@@ -13,7 +13,7 @@
   <img src="design/readme/40-dark-home.png" width="150" alt="다크 홈">
 </p>
 
-화면 64컷 전체는 [화면설계서](design/screens/index.html)([아티팩트](https://claude.ai/artifact/456dWcNyLn1vbUsjV9FLVc))에 있다.
+화면 64컷 전체는 [화면설계서](design/screens/index.html)에 있다.
 
 ## 기능
 
@@ -32,7 +32,7 @@ Flutter 3(FVM 고정) · Riverpod · Drift/SQLite(스키마 7판, 10개 표) · 
 
 ## 산출물
 
-개발 과정에서 만든 문서와 그림은 [포트폴리오 산출물 모음](docs/portfolio.md)에 모았고, 한 장으로 보는 [포트폴리오 보드](https://claude.ai/artifact/HmkBwrBFQa5DFWq6mdRrpf)도 있다.
+개발 과정에서 만든 문서와 그림은 [포트폴리오 산출물 모음](docs/portfolio.md)에 모았고, 한 장으로 보는 정적 페이지 [포트폴리오](design/portfolio/index.html)도 있다.
 
 | 문서 | 내용 |
 | --- | --- |

@@ -7,7 +7,7 @@
 - **페이즈 8 산출물 정리 구현 완료, 사람 확인 대기** (`docs/plans/phase-8.md`, 상태 `실측 대기`, 2026-10-24).
 - 산출물 12종이 모두 있다: [현황표](docs/portfolio.md). 화면 64컷 전체 재촬영, README 스크린샷 6장, 문서 지도 갱신 완료.
 - 자동 검증: `fvm flutter test` 1,372개 통과, `fvm dart analyze` 문제 없음, 디버그 APK 빌드 통과(`build/app/outputs/flutter-apk/app-debug.apk`), mermaid 문법 검사 전부 통과, 문서 상대 링크 끊김 0.
-- 아티팩트: [포트폴리오 보드](https://claude.ai/artifact/HmkBwrBFQa5DFWq6mdRrpf), [화면설계서 8판](https://claude.ai/artifact/456dWcNyLn1vbUsjV9FLVc). 둘 다 비공개라 공유하려면 페이지의 공유 메뉴에서 연다.
+- 포트폴리오 페이지: `design/portfolio/index.html`(정적 HTML, 웹 호스팅용). 화면설계서 `design/screens/index.html` 도 정적. 아티팩트는 임시 미리보기라 산출물에 쓰지 않는다.
 - 에뮬레이터 `runmagochi` 는 켜져 있고 디버그 APK 설치됨(예시 데이터 젤리 Lv.9).
 
 ## 사람 확인 (다음 `/phase 8` 이 완료 판정)

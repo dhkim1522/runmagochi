@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>런마고치 포트폴리오</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DotGothic16&family=Noto+Sans+KR:wght@400;500;700;800&display=swap">
+<style>
+/* 레이아웃: 연두 무드보드(앱 토큰)를 그대로 쓴 작업 보드. 표지 → 숫자 → 산출물 12개 → 개발 과정 → 결함 → 링크 */
+:root {
+  --bg: #F3F5EE; --surface: #FFFFFF; --soft: #E8ECE2; --line: #DDE3D4; --line-strong: #737D6A;
+  --ink: #16200F; --muted: #5B6357; --lime: #B8F04A; --on-lime: #14210A; --lime-edge: #4F8A16;
+  --green: #1E7B45; --sky: #E3F6C8; --shot-edge: rgba(22,32,15,.14);
+  --font-sans: "Noto Sans KR", "Pretendard", "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
+  --font-dot: "DotGothic16", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #10160D; --surface: #1A2316; --soft: #28331F; --line: #2E3A28; --line-strong: #7F8B74; --ink: #EEF4E6; --muted: #A3AE99;
+    --green: #5DD08A; --sky: #1D2C15; --shot-edge: rgba(238,244,230,.16); color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #10160D; --surface: #1A2316; --soft: #28331F; --line: #2E3A28; --line-strong: #7F8B74; --ink: #EEF4E6; --muted: #A3AE99;
+  --green: #5DD08A; --sky: #1D2C15; --shot-edge: rgba(238,244,230,.16); color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font: 500 16px/1.6 var(--font-sans); margin: 0; }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bg); }
+img { max-width: 100%; display: block; }
+a { color: var(--green); text-underline-offset: 3px; }
+a:focus-visible { outline: 3px solid var(--green); outline-offset: 3px; border-radius: 6px; }
+h1, h2, h3 { text-wrap: balance; margin: 0; }
+.wrap { max-width: 1120px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.dot { font-family: var(--font-dot); }
+.num { font-variant-numeric: tabular-nums; }
+
+.cover { padding-block: 44px 16px; }
+.cover-grid { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 40px; align-items: center; }
+.tags { display: flex; flex-wrap: wrap; gap: 8px; font-size: 13px; font-weight: 700; color: var(--muted); }
+.tags span { background: var(--surface); border-radius: 999px; padding: 4px 12px; }
+.cover h1 { font-size: clamp(40px, 6.4vw, 70px); line-height: 1.05; font-weight: 800; letter-spacing: -.03em; margin-top: 18px; }
+.hl { background: linear-gradient(transparent 58%, var(--lime) 58%, var(--lime) 92%, transparent 92%); padding: 0 .06em; }
+.lede { font-size: 18px; max-width: 32em; margin: 18px 0 0; }
+.shots { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; align-items: start; }
+.shots figure { margin: 0; }
+.shots figure:nth-child(2) { margin-top: 40px; }
+.shots figure:nth-child(3) { margin-top: 16px; }
+.shot { border-radius: 16px; box-shadow: 0 0 0 1px var(--shot-edge), 0 18px 36px -22px rgba(22,32,15,.45); background: var(--surface); width: 100%; height: auto; }
+.shots figcaption { font-size: 13px; font-weight: 700; color: var(--muted); text-align: center; margin-top: 8px; }
+
+.kpis { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); background: var(--surface); border-radius: 24px; overflow: hidden; margin-top: 36px; }
+.kpis div { padding: 18px; border-left: 1px solid var(--line); min-width: 0; }
+.kpis div:first-child { border-left: 0; }
+.kpis dt { font-size: 13px; font-weight: 700; color: var(--muted); }
+.kpis dd { margin: 2px 0 0; font-size: 28px; font-weight: 800; letter-spacing: -.02em; }
+.kpis small { font-size: 13px; font-weight: 700; color: var(--muted); margin-left: 2px; }
+
+section { padding-block: 52px 0; }
+.head { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 2px 16px; margin-bottom: 22px; }
+.head .no { font-family: var(--font-dot); font-size: 42px; line-height: .9; color: var(--green); grid-row: span 2; }
+.head h2 { font-size: clamp(24px, 3.2vw, 32px); font-weight: 800; letter-spacing: -.02em; }
+.head p { margin: 0; color: var(--muted); max-width: 46em; }
+
+.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 12px; }
+.card { background: var(--surface); border-radius: 20px; padding: 18px 20px; display: grid; gap: 6px; align-content: start; min-width: 0; }
+.card .top { display: flex; gap: 10px; align-items: baseline; }
+.card .n { font-family: var(--font-dot); color: var(--green); font-size: 15px; }
+.card h3 { font-size: 18px; font-weight: 800; }
+.card p { margin: 0; color: var(--muted); font-size: 15px; }
+.card code { font: 12.5px ui-monospace, Menlo, monospace; background: var(--soft); border-radius: 6px; padding: 1px 6px; color: var(--ink); overflow-wrap: anywhere; }
+.card .paths { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+.pill { display: inline-flex; align-items: center; gap: 4px; font-size: 13px; font-weight: 700; border-radius: 999px; padding: 2px 10px; background: var(--surface); color: var(--ink); box-shadow: inset 0 0 0 1.5px var(--line-strong, #737D6A); width: fit-content; }
+.pill .ext { width: 13px; height: 13px; }
+.card a.pill { text-decoration: none; transition: background-color .15s; }
+.card a.pill:hover { background: var(--lime); color: var(--on-lime); box-shadow: inset 0 0 0 1.5px var(--lime-edge); }
+
+.gallery { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 12px; }
+.gallery figure { margin: 0; }
+.gallery figcaption { font-size: 13px; font-weight: 700; color: var(--muted); margin-top: 6px; }
+
+.panel { background: var(--surface); border-radius: 24px; padding: 22px clamp(16px, 3vw, 28px); }
+.bars { display: grid; gap: 10px; }
+.bar { display: grid; grid-template-columns: 124px minmax(0, 1fr) 56px; gap: 12px; align-items: center; font-size: 14px; font-weight: 700; }
+.bar .t { height: 14px; border-radius: 999px; background: var(--soft); overflow: hidden; }
+.bar .t i { display: block; height: 100%; background: var(--green); border-radius: 999px; }
+.bar .v { text-align: right; color: var(--muted); }
+.note { color: var(--muted); font-size: 14px; margin: 14px 0 0; }
+
+.wrapx { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; min-width: 640px; font-size: 15px; }
+th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-size: 13px; color: var(--muted); font-weight: 700; }
+td:first-child { font-weight: 800; white-space: nowrap; }
+
+.two { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.two .panel h3 { font-size: 18px; font-weight: 800; margin-bottom: 8px; }
+.two ul { margin: 0; padding-left: 18px; display: grid; gap: 6px; font-size: 15px; }
+.links { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 4px; }
+.btn { display: inline-flex; align-items: center; gap: 8px; min-height: 48px; padding: 8px 20px; border-radius: 999px; font-weight: 700; text-decoration: none; color: var(--ink); background: var(--surface); border: 2px solid var(--line-strong); }
+.btn { transition: background-color .15s, transform .15s; }
+.btn:hover { background: var(--lime); color: var(--on-lime); border-color: var(--lime-edge); transform: translateY(-1px); }
+.ext { width: 16px; height: 16px; flex: none; opacity: .7; }
+:is(.btn, .pill):hover .ext { opacity: 1; transform: translate(1px,-1px); }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+footer { padding-block: 40px 56px; color: var(--muted); font-size: 14px; }
+
+@media (max-width: 980px) {
+  .cover-grid { grid-template-columns: minmax(0, 1fr); }
+  .shots { max-width: 520px; }
+  .kpis { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .kpis div:nth-child(4) { border-left: 0; }
+  .kpis div:nth-child(n+4) { border-top: 1px solid var(--line); }
+  .gallery { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .two { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 560px) {
+  .bar { grid-template-columns: 96px minmax(0, 1fr) 48px; }
+  .gallery { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .cards { grid-template-columns: minmax(0, 1fr); }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head><body>
+
+<header class="cover"><div class="wrap">
+  <div class="cover-grid">
+    <div>
+      <div class="tags"><span>포트폴리오</span><span>Flutter · Android · iOS</span></div>
+      <h1><span class="hl">런마고치</span></h1>
+      <p class="lede">실제 러닝 기록에 도트 친구 키우기를 더한 러닝 앱. 기획서, 화면설계서, 설계 문서 같은 산출물을 한 장에 모았어요.</p>
+      <div class="links">
+        <a class="btn" href="../screens/index.html" target="_blank" rel="noopener">화면설계서<svg class="ext" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M9 7h8v8"/></svg><span class="sr-only"> (새 탭에서 열림)</span></a>
+        <a class="btn" href="../character/asset-catalog.html" target="_blank" rel="noopener">캐릭터 에셋 카탈로그<svg class="ext" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M9 7h8v8"/></svg><span class="sr-only"> (새 탭에서 열림)</span></a>
+      </div>
+    </div>
+    <div class="shots" aria-label="앱 대표 화면 세 장">
+      <figure><img class="shot" src="img/06-home.png" alt="홈 화면: 아바타와 오늘 목표, 시작 버튼" width="390" height="867"><figcaption>홈</figcaption></figure>
+      <figure><img class="shot" src="img/11-run.png" alt="러닝 중 화면: 큰 거리 숫자와 평균 페이스" width="390" height="867"><figcaption>러닝 중</figcaption></figure>
+      <figure><img class="shot" src="img/16-summary-levelup.png" alt="러닝 요약: 레벨 업" width="390" height="867"><figcaption>러닝 요약</figcaption></figure>
+    </div>
+  </div>
+</div></header>
+
+<main>
+<section><div class="wrap">
+  <div class="head"><span class="no">1</span><h2>산출물 12개</h2><p>앱 코드와 같은 저장소에 두었어요. 경로는 저장소 기준이에요.</p></div>
+  <div class="cards">
+    <article class="card"><div class="top"><span class="n">01</span><h3>요구사항 정의서(PRD)</h3></div><p>목표, 요구사항 F1~F25의 상태·페이즈·결정, 범위 밖, 가정과 위험.</p><div class="paths"><code>docs/product.md</code></div></article>
+    <article class="card"><div class="top"><span class="n">02</span><h3>유저 시나리오·사용자 흐름</h3></div><p>시나리오 S1~S6과 예외 흐름, 화면 이동까지 흐름도 7개.</p><div class="paths"><code>docs/user-flows.md</code></div></article>
+    <article class="card"><div class="top"><span class="n">03</span><h3>화면설계서</h3></div><p>실제 앱을 에뮬레이터와 시뮬레이터에서 돌려 찍은 64컷. 화면별 요소·상태·인터랙션 표.</p><div class="paths"><a class="pill" href="../screens/index.html" target="_blank" rel="noopener">화면설계서<svg class="ext" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M9 7h8v8"/></svg><span class="sr-only"> (새 탭에서 열림)</span></a><code>design/screens/</code></div></article>
+    <article class="card"><div class="top"><span class="n">04</span><h3>와이어프레임</h3></div><p>회색 블록 콘티 10장. 최종 컷과 짝을 맞춘 대응표.</p><div class="paths"><code>design/wireframes/</code></div></article>
+    <article class="card"><div class="top"><span class="n">05</span><h3>UI 시안·디자인 시스템</h3></div><p>시안 6안 비교에서 연두 방향을 고른 과정, 색·글꼴·간격 토큰. 토큰은 테스트가 코드와 대조.</p><div class="paths"><code>docs/design/</code></div></article>
+    <article class="card"><div class="top"><span class="n">06</span><h3>시스템 아키텍처</h3></div><p>기능 폴더마다 ui → app → domain ← data. 모듈 지도, 플랫폼 경계, 의존성 주입, 서버 이전 경로.</p><div class="paths"><code>docs/architecture.md</code></div></article>
+    <article class="card"><div class="top"><span class="n">07</span><h3>데이터 모델 ERD</h3></div><p>10개 표와 관계, 스키마 7판 이력. 테스트가 ERD의 표·열을 실제 DB와 맞춰 봐요.</p><div class="paths"><code>docs/data-model.md</code></div></article>
+    <article class="card"><div class="top"><span class="n">08</span><h3>시퀀스 다이어그램</h3></div><p>러닝 기록~보상, 알림 버튼, 자동 일시정지·종료, 백업 4종. 이름은 코드에서 확인.</p><div class="paths"><code>docs/sequences.md</code></div></article>
+    <article class="card"><div class="top"><span class="n">09</span><h3>결정 기록</h3></div><p>번호를 붙인 결정과 색인, 흐름도. 바뀐 결정은 대체 관계로 이어요.</p><div class="paths"><code>docs/decisions/</code></div></article>
+    <article class="card"><div class="top"><span class="n">10</span><h3>페이즈별 개발 기록</h3></div><p>페이즈마다 범위, 검증에서 잡은 결함, 바뀐 규칙.</p><div class="paths"><code>docs/dev-log.md</code></div></article>
+    <article class="card"><div class="top"><span class="n">11</span><h3>README 소개</h3></div><p>스크린샷, 기능, 기술, 산출물 표, 개발 방법, 빌드·실행.</p><div class="paths"><code>README.md</code></div></article>
+    <article class="card"><div class="top"><span class="n">12</span><h3>플레이북·스킬</h3></div><p>다음 프로젝트용 진행 순서와 겪은 실수. 같은 내용이 Claude Code 스킬로도 있어요.</p><div class="paths"><code>docs/playbook.md</code><code>.claude/skills/playbook/</code></div></article>
+  </div>
+</div></section>
+
+<section><div class="wrap">
+  <div class="head"><span class="no">2</span><h2>앱 화면</h2><p>Android 라이트·다크, iPhone, 알림까지 실제 앱 화면이에요.</p></div>
+  <div class="gallery">
+    <figure><img class="shot" src="img/06-home.png" alt="홈" width="390" height="867" loading="lazy"><figcaption>홈</figcaption></figure>
+    <figure><img class="shot" src="img/11-run.png" alt="러닝 중" width="390" height="867" loading="lazy"><figcaption>러닝 중</figcaption></figure>
+    <figure><img class="shot" src="img/16-summary-levelup.png" alt="러닝 요약" width="390" height="867" loading="lazy"><figcaption>요약 · 레벨 업</figcaption></figure>
+    <figure><img class="shot" src="img/26-avatar.png" alt="아바타" width="390" height="867" loading="lazy"><figcaption>아바타</figcaption></figure>
+    <figure><img class="shot" src="img/28-shop.png" alt="상점" width="390" height="520" loading="lazy"><figcaption>상점</figcaption></figure>
+    <figure><img class="shot" src="img/40-dark-home.png" alt="다크 홈" width="390" height="867" loading="lazy"><figcaption>다크 홈</figcaption></figure>
+  </div>
+</div></section>
+</main>
+
+<footer><div class="wrap">런마고치 · <span class="dot">runmagochi</span></div></footer>
+</body></html>
