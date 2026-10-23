@@ -417,7 +417,70 @@ void main() {
     test('요청 결과가 거부(영구 아님)면 check() 결과를 돌려준다', () async {
       final g = gate(PermissionStatus.denied, []);
       expect(await g.requestLocation(), GateResult.needsLocation);
+      expect(await g.check(), GateResult.needsLocation);
     });
+
+    // 작업 27: Android 는 상태 조회가 영구 거부를 알려주지 않아 denied 만 준다.
+    // 요청 창이 닫히며 앱이 다시 활성화될 때 부르는 check() 가 영구 거부를 덮어쓰면 안 된다.
+    test('요청이 영구 거부를 알린 뒤에는 check() 도 locationDeniedForever', () async {
+      final g = gate(PermissionStatus.permanentlyDenied, []);
+      expect(await g.requestLocation(), GateResult.locationDeniedForever);
+      expect(await g.check(), GateResult.locationDeniedForever);
+    });
+
+    test('영구 거부 뒤 설정에서 허용하면 check() 는 다시 상태를 따른다', () async {
+      var status = PermissionStatus.denied;
+      var accuracy = LocationAccuracyStatus.precise;
+      final g = PermissionHandlerGate(
+        locationStatus: () async => status,
+        locationAccuracy: () async => accuracy,
+        requestLocationPermission: () async =>
+            PermissionStatus.permanentlyDenied,
+        requestNotificationPermission: () async => PermissionStatus.granted,
+      );
+      expect(await g.requestLocation(), GateResult.locationDeniedForever);
+      // 설정에서 대략적인 위치만 허용.
+      accuracy = LocationAccuracyStatus.reduced;
+      expect(await g.check(), GateResult.needsPreciseLocation);
+      // 설정에서 정확한 위치까지 허용.
+      status = PermissionStatus.granted;
+      accuracy = LocationAccuracyStatus.precise;
+      expect(await g.check(), GateResult.ready);
+    });
+  });
+
+  testWidgets('권한 요청이 영구 거부를 알린 직후 앱이 다시 활성화돼도 설정 열기를 유지한다', (
+    tester,
+  ) async {
+    // 에뮬레이터(API 36)에서 본 순서: 요청 결과 permanentlyDenied → 화면 갱신 →
+    // resumed → check() 의 상태 조회 denied.
+    final gate = PermissionHandlerGate(
+      locationStatus: () async => PermissionStatus.denied,
+      locationAccuracy: () async =>
+          throw PlatformException(code: 'PERMISSION_DENIED'),
+      requestLocationPermission: () async => PermissionStatus.permanentlyDenied,
+      requestNotificationPermission: () async => PermissionStatus.granted,
+    );
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [permissionGateProvider.overrideWithValue(gate)],
+        child: MaterialApp(
+          theme: appLightTheme(),
+          home: PermissionScreen(onReady: () {}),
+        ),
+      ),
+    );
+    await tester.pump();
+    expect(find.text('권한 허용'), findsOneWidget);
+
+    await tester.tap(find.text('권한 허용'));
+    await tester.pump();
+    expect(find.text('설정 열기'), findsOneWidget);
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    await tester.pump();
+    await tester.pump();
+    expect(find.text('설정 열기'), findsOneWidget);
+    expect(find.text('권한 허용'), findsNothing);
   });
 
   group('PermissionHandlerGate 배터리 확인', () {

@@ -51,12 +51,24 @@ class PermissionHandlerGate implements PermissionGate {
   final Future<ph.PermissionStatus> Function() _requestNotification;
   bool _batteryGuideDismissed = false;
 
+  /// 요청 결과가 영구 거부였다. Android 는 상태 조회([_locationStatus])가 영구
+  /// 거부를 알려주지 않고 denied 만 준다. 요청 창이 닫히며 앱이 다시 활성화될 때
+  /// 화면이 부르는 [check] 가 영구 거부를 덮어쓰지 않게 기억한다. 허용되면 잊는다.
+  bool _deniedForever = false;
+
   @override
   Future<GateResult> check() async {
     final location = await _locationStatus();
     if (location.isPermanentlyDenied) return GateResult.locationDeniedForever;
+    // 설정에서 대략적인 위치만 허용했으면 영구 거부가 아니다.
     if (await _isReducedAccuracy()) return GateResult.needsPreciseLocation;
-    if (!location.isGranted) return GateResult.needsLocation;
+    if (location.isGranted) {
+      _deniedForever = false;
+    } else {
+      return _deniedForever
+          ? GateResult.locationDeniedForever
+          : GateResult.needsLocation;
+    }
     if (!_batteryGuideDismissed &&
         await _battery.invokeMethod<bool>('isIgnoringBatteryOptimizations') !=
             true) {
@@ -80,7 +92,10 @@ class PermissionHandlerGate implements PermissionGate {
     final location = await _requestLocation();
     await _requestNotification();
     // Android 는 status 가 영구 거부를 알려주지 않아, 요청 결과로만 알 수 있다.
-    if (location.isPermanentlyDenied) return GateResult.locationDeniedForever;
+    if (location.isPermanentlyDenied) {
+      _deniedForever = true;
+      return GateResult.locationDeniedForever;
+    }
     return check();
   }
 
