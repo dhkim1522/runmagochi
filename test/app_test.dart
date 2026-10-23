@@ -6,6 +6,8 @@ import 'package:runmagochi/app.dart';
 import 'package:runmagochi/avatar/app/providers.dart';
 import 'package:runmagochi/avatar/domain/growth_rules.dart';
 import 'package:runmagochi/core/korean.dart';
+import 'package:runmagochi/core/ui/components.dart' show AppTabBar;
+import 'package:runmagochi/run/ui/in_run_screen.dart';
 import 'package:runmagochi/onboarding/ui/onboarding_screen.dart';
 import 'package:runmagochi/profile/app/providers.dart';
 import 'package:runmagochi/shop/app/providers.dart';
@@ -155,6 +157,43 @@ void main() {
     await tester.sendKeyEvent(LogicalKeyboardKey.space);
     await tester.pump();
     expect(find.text('최근 러닝'), findsNothing);
+  });
+
+  testWidgets('러닝 시작 카운트다운 중에는 하단 탭이 숨고 끝나면 러닝 중 화면이다', (tester) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          runControllerProvider.overrideWith(FakeController.new),
+          runRepositoryProvider.overrideWithValue(FakeRepo((0, 0))),
+          permissionGateProvider.overrideWithValue(FakeGate(GateResult.ready)),
+          profileRepositoryProvider.overrideWithValue(FakeProfile()),
+          notificationSchedulerProvider.overrideWithValue(
+            FakeNotificationScheduler(),
+          ),
+          shopRepositoryProvider.overrideWithValue(FakeShop()),
+          growthServiceProvider.overrideWithValue(
+            FakeGrowthService(growthState()),
+          ),
+        ],
+        child: const RunmagochiApp(),
+      ),
+    );
+    await tester.pump();
+    await tester.pump();
+    expect(find.byType(AppTabBar), findsOneWidget);
+
+    await tester.tap(find.text('시작'));
+    await tester.pump();
+    expect(find.text('3'), findsOneWidget);
+    expect(find.byType(AppTabBar), findsNothing);
+    await tester.pump(const Duration(seconds: 1));
+    expect(find.byType(AppTabBar), findsNothing);
+    await tester.pump(const Duration(seconds: 1));
+    await tester.pump(const Duration(seconds: 1));
+    for (var i = 0; i < 10; i++) {
+      await tester.pump(const Duration(milliseconds: 100));
+    }
+    expect(find.byType(InRunScreen), findsOneWidget);
   });
 
   group('첫 실행', () {

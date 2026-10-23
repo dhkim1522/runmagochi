@@ -84,6 +84,7 @@ class _HomeShell extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final index = ref.watch(homeTabProvider);
+    final countingDown = ref.watch(runCountdownProvider);
     return Scaffold(
       body: IndexedStack(
         index: index,
@@ -98,11 +99,14 @@ class _HomeShell extends ConsumerWidget {
             TickerMode(enabled: i == index, child: screen),
         ],
       ),
-      bottomNavigationBar: AppTabBar(
-        tabs: _tabs,
-        index: index,
-        onSelected: ref.read(homeTabProvider.notifier).select,
-      ),
+      // 카운트다운 중에는 러닝 중 화면처럼 탭을 숨긴다.
+      bottomNavigationBar: countingDown
+          ? null
+          : AppTabBar(
+              tabs: _tabs,
+              index: index,
+              onSelected: ref.read(homeTabProvider.notifier).select,
+            ),
     );
   }
 }

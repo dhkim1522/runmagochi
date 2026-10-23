@@ -12,3 +12,15 @@ class HomeTab extends Notifier<int> {
 
   void select(int index) => state = index;
 }
+
+/// 러닝 시작 카운트다운이 도는 중인지. 켜져 있으면 하단 탭을 숨긴다(러닝 중 화면과 같게).
+final runCountdownProvider = NotifierProvider<RunCountdown, bool>(
+  RunCountdown.new,
+);
+
+class RunCountdown extends Notifier<bool> {
+  @override
+  bool build() => false;
+
+  void set(bool active) => state = active;
+}

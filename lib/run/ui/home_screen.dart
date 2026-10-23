@@ -188,12 +188,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     setState(() => _starting = true);
     try {
       if (!await _ensurePermission() || !mounted) return;
+      ref.read(runCountdownProvider.notifier).set(true);
       for (var n = 3; n >= 1; n--) {
         setState(() => _countdown = n);
         await Future<void>.delayed(const Duration(seconds: 1));
         if (!mounted) return;
       }
       setState(() => _countdown = null);
+      ref.read(runCountdownProvider.notifier).set(false);
       try {
         await ref.read(runControllerProvider.notifier).start(goal: _shownGoal);
       } catch (_) {
@@ -203,6 +205,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       if (mounted) await _openInRun();
     } finally {
       if (mounted) {
+        ref.read(runCountdownProvider.notifier).set(false);
         setState(() {
           _starting = false;
           _countdown = null;
