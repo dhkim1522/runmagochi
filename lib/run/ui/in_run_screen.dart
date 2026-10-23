@@ -77,9 +77,10 @@ class _InRunScreenState extends ConsumerState<InRunScreen> {
     final autoStopped = autoStoppedStates.contains(snap.state);
     final paused = snap.state == RunState.paused || autoStopped || ended;
     // 탈것 의심·신호 끊김은 펫이 말풍선으로 까닭을 알린다 (결정 0033).
+    // 위치 서비스가 꺼져 끊겼으면 빨간 카드가 까닭을 알리므로 말풍선은 숨긴다.
     final bubble = switch (snap.state) {
       RunState.vehicle => vehicleNoticeText,
-      RunState.signalLost => signalLostNotice,
+      RunState.signalLost when !view.locationServiceOff => signalLostNotice,
       _ => null,
     };
     final c = AppColors.of(context);

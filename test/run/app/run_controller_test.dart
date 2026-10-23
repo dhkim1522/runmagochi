@@ -27,6 +27,7 @@ const _runId = 'run-1';
 const _saveError = '기록 저장에 실패했어요. 자동으로 다시 시도해요';
 const _endError = '러닝 저장에 실패했어요. 다시 종료해 주세요';
 const _locationError = '위치 신호를 받지 못하고 있어요';
+const _locationOffError = '위치 서비스가 꺼져 있어요. 켜면 이어서 기록해요';
 final _t0 = DateTime(2026, 10, 17, 7);
 
 /// 자오선을 따라 [meters] 만큼 북쪽으로 간 위도.
@@ -181,6 +182,17 @@ class _FakeLocationSource implements LocationSource {
   Stream<LocationSample> watch() {
     listenCount++;
     return controller.stream;
+  }
+
+  bool serviceEnabled = true;
+  Object? serviceError;
+  int serviceChecks = 0;
+
+  @override
+  Future<bool> isServiceEnabled() async {
+    serviceChecks++;
+    if (serviceError case final e?) throw e;
+    return serviceEnabled;
   }
 }
 
@@ -788,6 +800,115 @@ void main() {
       final state = container.read(runControllerProvider);
       expect(state.lastError, isNull);
       expect(state.snapshot.distanceM, closeTo(3, 0.01));
+    });
+  });
+
+  // 작업 27: 위치 서비스가 꺼진 채 다시 구독하면 geolocator 가 위치를 켜라는
+  // 시스템 창을 띄울 수 있다. 켜질 때까지 확인만 하고 구독하지 않는다.
+  group('위치 서비스(GPS) 꺼짐', () {
+    test('꺼짐 문구를 남기고, 켜질 때까지 5초마다 확인만 하다 켜지면 다시 구독한다', () {
+      _run((async, controller, container, repository, location) {
+        controller.start(goal: DistanceGoal(3000));
+        async.flushMicrotasks();
+        stepTo(async, location, 3);
+
+        location.serviceEnabled = false;
+        location.controller.addError(const LocationServiceOffException());
+        async.flushMicrotasks();
+        expect(
+          container.read(runControllerProvider).lastError,
+          _locationOffError,
+        );
+        expect(container.read(runControllerProvider).locationServiceOff, isTrue);
+
+        async.elapse(const Duration(seconds: 60));
+        expect(location.listenCount, 1);
+        expect(location.serviceChecks, greaterThanOrEqualTo(10));
+        // 시간·거리는 멈추고 신호 끊김 규칙은 그대로 돈다(결정 0033).
+        expect(
+          container.read(runControllerProvider).snapshot.state,
+          RunState.signalLost,
+        );
+
+        location.serviceEnabled = true;
+        async.elapse(const Duration(seconds: 5));
+        expect(location.listenCount, 2);
+        expect(location.isListened, isTrue);
+
+        stepTo(async, location, 6);
+        final state = container.read(runControllerProvider);
+        expect(state.lastError, isNull);
+        expect(state.locationServiceOff, isFalse);
+        expect(state.snapshot.state, RunState.recording);
+      });
+    });
+
+    test('꺼진 동안 화면으로 돌아와도 구독하지 않는다', () {
+      _run((async, controller, container, repository, location) {
+        controller.start(goal: DistanceGoal(3000));
+        async.flushMicrotasks();
+        location.serviceEnabled = false;
+        location.controller.addError(const LocationServiceOffException());
+        async.flushMicrotasks();
+
+        _lifecycle.set(AppLifecycleState.paused);
+        _lifecycle.set(AppLifecycleState.resumed);
+        async.flushMicrotasks();
+        expect(location.listenCount, 1);
+
+        location.serviceEnabled = true;
+        _lifecycle.set(AppLifecycleState.paused);
+        _lifecycle.set(AppLifecycleState.resumed);
+        async.flushMicrotasks();
+        expect(location.listenCount, 2);
+      });
+    });
+
+    test('꺼진 동안 재개를 눌러도 구독하지 않고, 켜지면 구독한다', () {
+      _run((async, controller, container, repository, location) {
+        controller.start(goal: DistanceGoal(3000));
+        async.flushMicrotasks();
+        location.serviceEnabled = false;
+        location.controller.addError(const LocationServiceOffException());
+        async.flushMicrotasks();
+
+        controller.pause();
+        controller.resume();
+        async.flushMicrotasks();
+        expect(location.listenCount, 1);
+
+        location.serviceEnabled = true;
+        async.elapse(const Duration(seconds: 5));
+        expect(location.listenCount, 2);
+      });
+    });
+
+    test('켜짐 확인이 실패하면 예전처럼 다시 구독한다', () {
+      _run((async, controller, container, repository, location) {
+        controller.start(goal: DistanceGoal(3000));
+        async.flushMicrotasks();
+        location.serviceError = StateError('channel');
+        location.controller.addError(const LocationServiceOffException());
+        async.flushMicrotasks();
+
+        async.elapse(const Duration(seconds: 5));
+        expect(location.listenCount, 2);
+      });
+    });
+
+    test('다른 위치 오류는 예전 문구와 재시도를 쓴다', () {
+      _run((async, controller, container, repository, location) {
+        controller.start(goal: DistanceGoal(3000));
+        async.flushMicrotasks();
+        location.controller.addError(Exception('gps'));
+        async.flushMicrotasks();
+        final state = container.read(runControllerProvider);
+        expect(state.lastError, _locationError);
+        expect(state.locationServiceOff, isFalse);
+        async.elapse(const Duration(seconds: 5));
+        expect(location.listenCount, 2);
+        expect(location.serviceChecks, 0);
+      });
     });
   });
 

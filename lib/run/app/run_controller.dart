@@ -8,6 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../avatar/domain/growth_rules.dart' show distanceReachesGoal;
 import '../../core/format.dart';
 import '../../profile/app/providers.dart';
+import '../data/location_source.dart' show LocationServiceOffException;
 import '../data/run_progress_notifier.dart';
 import '../data/run_repository.dart';
 import '../domain/location_sample.dart';
@@ -34,6 +35,10 @@ const int _progressTimeStepSeconds = 15;
 const Duration _resubscribeInterval = Duration(seconds: 5);
 
 const String _locationErrorMessage = '위치 신호를 받지 못하고 있어요';
+
+/// 기기의 위치 서비스(GPS)가 꺼져 위치 스트림이 끊겼을 때의 문구. 러닝 화면은 이
+/// 카드 하나만 보이고 신호 끊김 말풍선은 숨긴다.
+const String locationServiceOffMessage = '위치 서비스가 꺼져 있어요. 켜면 이어서 기록해요';
 const String _saveErrorMessage = '기록 저장에 실패했어요. 자동으로 다시 시도해요';
 const String _endErrorMessage = '러닝 저장에 실패했어요. 다시 종료해 주세요';
 const String _autoEndTitle = '러닝을 자동으로 마쳤어요';
@@ -75,6 +80,9 @@ class RunViewState {
   /// 화면에 보일 마지막 오류 문구.
   final String? lastError;
 
+  /// 기기의 위치 서비스(GPS)가 꺼져 위치를 받지 못하고 있다.
+  bool get locationServiceOff => lastError == locationServiceOffMessage;
+
   /// 진행 중 칼로리 표시에 쓰는 체중(kg). 시작·복구 때 읽고 종료 때 다시 읽는다.
   final double weightKg;
 
@@ -107,6 +115,10 @@ class RunController extends Notifier<RunViewState> {
 
   /// 끊긴 구독을 앱이 화면에 있을 때 다시 해야 한다.
   bool _resubscribePending = false;
+
+  /// 위치 서비스(GPS)가 꺼져 구독이 끊겼다. 켜진 것을 확인한 뒤에만 다시
+  /// 구독한다. 꺼진 채 구독하면 geolocator 가 위치를 켜라는 시스템 창을 띄운다.
+  bool _locationOff = false;
 
   /// 아직 저장하지 않은 채택 점과 그 구간 번호.
   final List<(int, LocationSample)> _buffer = [];
@@ -226,6 +238,7 @@ class RunController extends Notifier<RunViewState> {
       _runId = runId;
       _goal = goal;
       _goalReached = false;
+      _locationOff = false;
       _resetNotices();
       _listenVoice(engine, spokenSplits: 0);
       _speak(const VoiceStart());
@@ -260,7 +273,7 @@ class RunController extends Notifier<RunViewState> {
     _resubscribeTimer?.cancel();
     _resubscribeTimer = null;
     _resubscribePending = false;
-    _subscribe();
+    _resubscribe();
     _startFlushTimer();
     _startTick();
     _publish();
@@ -413,6 +426,7 @@ class RunController extends Notifier<RunViewState> {
     );
     _runId = active.id;
     _goal = active.goal;
+    _locationOff = false;
     _resetNotices();
     // 이미 넘긴 목표는 알리지 않는다(사용자가 이미 알았거나 앱이 죽어 있었다).
     final goal = active.goal;
@@ -587,8 +601,13 @@ class RunController extends Notifier<RunViewState> {
         .watch()
         .listen(
           _onSample,
-          onError: (Object _) {
-            state = _copyState(lastError: _locationErrorMessage);
+          onError: (Object e) {
+            _locationOff = e is LocationServiceOffException;
+            state = _copyState(
+              lastError: _locationOff
+                  ? locationServiceOffMessage
+                  : _locationErrorMessage,
+            );
             _dropSubscription();
           },
           onDone: _dropSubscription,
@@ -625,9 +644,49 @@ class RunController extends Notifier<RunViewState> {
       // 구독하지 않고 대기 표시만 남겨 화면으로 돌아올 때 구독한다.
       if (_isForeground) {
         _resubscribePending = false;
-        _subscribe();
+        _resubscribe();
       }
     });
+  }
+
+  /// 끊긴 구독을 다시 한다. 위치 서비스가 꺼져 끊겼으면 켜진 것을 확인한
+  /// 뒤에만 구독하고, 아직 꺼져 있으면 [_resubscribeInterval] 뒤 다시 확인한다.
+  /// 확인이 실패하면 켜진 것으로 보고 구독한다.
+  void _resubscribe() {
+    if (!_locationOff) {
+      _subscribe();
+      return;
+    }
+    unawaited(_resubscribeWhenServiceOn());
+  }
+
+  Future<void> _resubscribeWhenServiceOn() async {
+    final engine = _engine;
+    bool on;
+    try {
+      on = await ref.read(locationSourceProvider).isServiceEnabled();
+    } catch (_) {
+      on = true;
+    }
+    // 기다리는 동안 일시정지·종료했거나 이미 구독했으면 할 일이 없다.
+    if (!ref.mounted ||
+        _engine != engine ||
+        _ending ||
+        _subscription != null ||
+        !_needsLocation) {
+      return;
+    }
+    if (!_isForeground) {
+      _resubscribePending = true;
+      return;
+    }
+    if (on) {
+      _locationOff = false;
+      _subscribe();
+    } else {
+      _resubscribePending = true;
+      if (_resubscribeTimer == null) _scheduleResubscribe();
+    }
   }
 
   void _onLifecycleChanged(AppLifecycleState lifecycleState) {
@@ -638,7 +697,7 @@ class RunController extends Notifier<RunViewState> {
     _resubscribeTimer?.cancel();
     _resubscribeTimer = null;
     _resubscribePending = false;
-    _subscribe();
+    _resubscribe();
   }
 
   void _onSample(LocationSample sample) {
@@ -755,7 +814,9 @@ class RunController extends Notifier<RunViewState> {
     final engine = _engine;
     if (engine == null) return;
     final clear =
-        clearLocationError && state.lastError == _locationErrorMessage;
+        clearLocationError &&
+        (state.lastError == _locationErrorMessage ||
+            state.lastError == locationServiceOffMessage);
     final snapshot = engine.snapshot;
     final goal = _goal;
     final reachedNow =

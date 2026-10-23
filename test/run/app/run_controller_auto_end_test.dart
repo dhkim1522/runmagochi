@@ -111,6 +111,9 @@ class _Location implements LocationSource {
   bool get isListened => controller.hasListener;
   @override
   Stream<LocationSample> watch() => controller.stream;
+
+  @override
+  Future<bool> isServiceEnabled() async => true;
 }
 
 class _Lifecycle implements AppLifecycle {

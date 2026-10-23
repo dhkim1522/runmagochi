@@ -58,6 +58,9 @@ class _Profile implements ProfileRepository {
 class _Location implements LocationSource {
   @override
   Stream<LocationSample> watch() => const Stream.empty();
+
+  @override
+  Future<bool> isServiceEnabled() async => true;
 }
 
 class _Lifecycle implements AppLifecycle {

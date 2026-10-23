@@ -13,6 +13,8 @@ import 'package:runmagochi/avatar/ui/avatar_view.dart';
 import 'package:runmagochi/core/theme.dart';
 import 'package:runmagochi/core/ui/components.dart';
 import 'package:runmagochi/run/app/providers.dart';
+import 'package:runmagochi/run/app/run_controller.dart'
+    show locationServiceOffMessage;
 import 'package:runmagochi/run/domain/run_engine.dart';
 import 'package:runmagochi/run/domain/run_goal.dart';
 import 'package:runmagochi/run/ui/in_run_screen.dart';
@@ -156,6 +158,34 @@ void main() {
         expect(c.calls, ['resume']);
       });
     }
+
+    // 작업 27: 위치 서비스가 꺼지면 빨간 카드 하나만 보인다.
+    testWidgets('위치 서비스가 꺼져 신호 끊김이면 말풍선 없이 꺼짐 카드만 보인다', (tester) async {
+      await open(
+        tester,
+        initial: snap(RunState.signalLost),
+        error: locationServiceOffMessage,
+      );
+      expect(find.byType(SpeechBubble), findsNothing);
+      expect(find.text('신호가 끊겼어요. 밖으로 나오면 다시 찾을게요'), findsNothing);
+      expect(
+        find.widgetWithText(NoticeCard, '위치 서비스가 꺼져 있어요. 켜면 이어서 기록해요'),
+        findsOneWidget,
+      );
+      expect(find.text('재개'), findsOneWidget);
+    });
+
+    testWidgets('다른 위치 오류면 신호 끊김 말풍선은 그대로 보인다', (tester) async {
+      await open(
+        tester,
+        initial: snap(RunState.signalLost),
+        error: '위치 신호를 받지 못하고 있어요',
+      );
+      expect(
+        find.widgetWithText(SpeechBubble, '신호가 끊겼어요. 밖으로 나오면 다시 찾을게요'),
+        findsOneWidget,
+      );
+    });
 
     for (final state in [
       RunState.recording,

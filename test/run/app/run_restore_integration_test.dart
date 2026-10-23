@@ -28,6 +28,9 @@ class _FakeLocationSource implements LocationSource {
 
   @override
   Stream<LocationSample> watch() => controller.stream;
+
+  @override
+  Future<bool> isServiceEnabled() async => true;
 }
 
 /// 실제 DB 위에서 러닝을 하다 앱이 죽고, 새 컨트롤러로 복원한다.

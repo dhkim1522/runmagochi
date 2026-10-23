@@ -34,6 +34,9 @@ class _FakeLocationSource implements LocationSource {
 
   @override
   Stream<LocationSample> watch() => controller.stream;
+
+  @override
+  Future<bool> isServiceEnabled() async => true;
 }
 
 class _AlwaysResumed implements AppLifecycle {

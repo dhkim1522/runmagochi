@@ -4,19 +4,34 @@ import 'package:geolocator/geolocator.dart';
 import '../domain/location_sample.dart';
 import 'location_source.dart';
 
+/// geolocator 오류를 [LocationSource] 오류로 바꾼다. 위치 서비스 꺼짐만 따로 알린다.
+Object locationErrorFrom(Object error) => error is LocationServiceDisabledException
+    ? const LocationServiceOffException()
+    : error;
+
 class GeolocatorLocationSource implements LocationSource {
   @override
   Stream<LocationSample> watch() {
-    return Geolocator.getPositionStream(locationSettings: _settings()).map(
-      (p) => LocationSample(
-        time: p.timestamp,
-        latitude: p.latitude,
-        longitude: p.longitude,
-        accuracy: p.accuracy,
-        speed: p.speed,
-      ),
-    );
+    return Geolocator.getPositionStream(locationSettings: _settings())
+        .map(
+          (p) => LocationSample(
+            time: p.timestamp,
+            latitude: p.latitude,
+            longitude: p.longitude,
+            accuracy: p.accuracy,
+            speed: p.speed,
+          ),
+        )
+        .handleError(
+          (Object e, StackTrace st) =>
+              Error.throwWithStackTrace(locationErrorFrom(e), st),
+        );
   }
+
+  /// Android 는 위치 설정 확인만 하고, 위치를 켜라는 시스템 창은 띄우지 않는다.
+  /// 시스템 창은 위치 서비스가 꺼진 채 [watch] 를 구독할 때 geolocator 가 띄운다.
+  @override
+  Future<bool> isServiceEnabled() => Geolocator.isLocationServiceEnabled();
 
   /// 거리 거름은 두지 않는다(0). 멈춰 서도 1초마다 점이 와야 신호 끊김(점 30초
   /// 없음)과 멈춤을 구별한다. 최소 이동 3m 는 기록 엔진이 거른다 (결정 0033).
