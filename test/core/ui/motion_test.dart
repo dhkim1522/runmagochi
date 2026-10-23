@@ -2,6 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:runmagochi/core/theme.dart';
 import 'package:runmagochi/core/ui/components.dart';
+import 'package:runmagochi/run/domain/run_goal.dart';
+import 'package:runmagochi/run/domain/run_summary.dart';
+import 'package:runmagochi/run/ui/run_goal_picker.dart';
+import 'package:runmagochi/run/ui/trim_sheet.dart';
 
 /// [reduce] 면 시스템 "애니메이션 줄이기" 를 켠 앱으로 [home] 을 그린다.
 Future<void> _pump(
@@ -101,6 +105,86 @@ void main() {
       );
       expect(d, Motion.quick);
     });
+  });
+
+  group('시트', () {
+    test('Motion.sheet 는 enter·exit 시간과 곡선을 쓴다', () {
+      // BuildContext 없이 쓰는 값은 sheetStyle 로 확인한다.
+      final s = Motion.sheetStyle(reduced: false);
+      expect(s.duration, Motion.enter);
+      expect(s.reverseDuration, Motion.exit);
+      expect(s.curve, Motion.enterCurve);
+      expect(s.reverseCurve, Motion.exitCurve);
+      final r = Motion.sheetStyle(reduced: true);
+      expect(r.duration, Duration.zero);
+      expect(r.reverseDuration, Duration.zero);
+    });
+
+    final summary = RunSummary(
+      startedAt: DateTime(2026, 10, 16, 17, 51),
+      endedAt: DateTime(2026, 10, 16, 17, 52),
+      distanceM: 0,
+      movingTime: const Duration(minutes: 1),
+      avgPaceSecPerKm: null,
+      calories: 0,
+      name: '테스트 러닝',
+      splits: const [],
+      points: const [],
+    );
+
+    for (final (name, title, open) in [
+      (
+        '오늘 목표 시트',
+        '확인',
+        (BuildContext c) => showRunGoalSheet(c, const DistanceGoal(5000)),
+      ),
+      ('끝부분 잘라내기 시트', '잘라내기', (BuildContext c) => showTrimSheet(c, summary)),
+    ]) {
+      Widget opener() => Builder(
+        builder: (context) => Scaffold(
+          body: Center(
+            child: TextButton(
+              onPressed: () => open(context),
+              child: const Text('열기'),
+            ),
+          ),
+        ),
+      );
+
+      double progress(WidgetTester tester) =>
+          ModalRoute.of(tester.element(find.text(title)))!.animation!.value;
+
+      testWidgets('$name 은 Motion.enter 동안 올라오고 Motion.exit 안에 내려간다', (
+        tester,
+      ) async {
+        await _pump(tester, opener());
+        await tester.tap(find.text('열기'));
+        await tester.pump();
+        await tester.pump(Motion.enter ~/ 2);
+        expect(progress(tester), inExclusiveRange(0, 1));
+        await tester.pump(Motion.enter ~/ 2 + const Duration(milliseconds: 1));
+        expect(progress(tester), 1);
+        tester.state<NavigatorState>(find.byType(Navigator)).pop();
+        await tester.pump();
+        await tester.pump(Motion.exit ~/ 2);
+        expect(progress(tester), inExclusiveRange(0, 1));
+        await tester.pump(Motion.exit ~/ 2 + const Duration(milliseconds: 1));
+        await tester.pump();
+        expect(find.text(title), findsNothing);
+      });
+
+      testWidgets('$name 은 애니메이션 줄이기면 바로 열리고 바로 닫힌다', (tester) async {
+        await _pump(tester, opener(), reduce: true);
+        await tester.tap(find.text('열기'));
+        await tester.pump();
+        await tester.pump();
+        expect(progress(tester), 1);
+        tester.state<NavigatorState>(find.byType(Navigator)).pop();
+        await tester.pump();
+        await tester.pump();
+        expect(find.text(title), findsNothing);
+      });
+    }
   });
 
   group('화면 전환', () {

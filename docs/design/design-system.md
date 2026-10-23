@@ -92,6 +92,7 @@ direction-c 이름과 토큰: `lime` = `primary`, `green` = `primary-deep`·`suc
 시스템 "애니메이션 줄이기" 를 켜면 움직임을 빼고 바로 최종 상태를 보인다(작업 15). 화면은 시간을 `Motion.of(context, 토큰)` 으로 읽고(줄이기면 0), 컨트롤러로 돌리는 연출(레벨 업·배지 획득)은 `Motion.reduced(context)` 면 끝 값에 둔다.
 
 - 화면 전환(Android): `AppPageTransitionsBuilder` — 들어오는 화면이 화면 높이 4% 아래에서 올라오며 나타난다(`enter` + `enterCurve`), 나갈 때 거꾸로(`exit` + `exitCurve`). 테마 `pageTransitionsTheme` 이 정해 `MaterialPageRoute` 를 그대로 쓴다. iOS 는 뒤로 밀기 제스처가 있는 기본 전환.
+- 아래 시트(오늘 목표·끝부분 잘라내기): `showModalBottomSheet` 에 `sheetAnimationStyle: Motion.sheet(context)` — `enter` + `enterCurve` 로 올라오고 `exit` + `exitCurve` 로 내려간다. 애니메이션 줄이기면 바로 열리고 닫힌다(작업 21).
 - 누름: 짧게 톡 눌러도 눌린 모양(0.97)이 `press` 동안 남는다(바로 떼면 한 프레임도 안 그려져 반응이 안 보였다). 애니메이션 줄이기면 붙잡지 않고 누른 동안만 눌린 모양이다(작업 18). 탭바 탭도 같은 `Pressable`.
 - 첫 실행 장 넘김: `enter`/`exit` 교차 페이드. 레벨 업 커짐·배지 획득 튀어 오름: `celebrate` + `pop`.
 

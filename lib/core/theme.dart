@@ -118,6 +118,19 @@ class Motion {
   /// [duration] 그대로, 애니메이션 줄이기면 0(바로 최종 상태).
   static Duration of(BuildContext context, Duration duration) =>
       reduced(context) ? Duration.zero : duration;
+
+  /// 아래 시트(`showModalBottomSheet` 의 `sheetAnimationStyle`): [enter]·[enterCurve] 로
+  /// 올라오고 [exit]·[exitCurve] 로 내려간다. 애니메이션 줄이기면 바로 열리고 닫힌다.
+  static AnimationStyle sheet(BuildContext context) =>
+      sheetStyle(reduced: reduced(context));
+
+  /// [sheet] 의 값. [reduced] 면 시간 0.
+  static AnimationStyle sheetStyle({required bool reduced}) => AnimationStyle(
+    duration: reduced ? Duration.zero : enter,
+    reverseDuration: reduced ? Duration.zero : exit,
+    curve: enterCurve,
+    reverseCurve: exitCurve,
+  );
 }
 
 /// 앱 화면 전환(Android): 들어오는 화면이 [Motion.enter] 동안 살짝 아래에서 올라오며

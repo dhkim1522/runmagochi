@@ -114,6 +114,7 @@ Future<RunGoal?> showRunGoalSheet(BuildContext context, RunGoal goal) {
     context: context,
     isScrollControlled: true,
     useSafeArea: true,
+    sheetAnimationStyle: Motion.sheet(context),
     backgroundColor: AppColors.of(context).background,
     builder: (_) => RunGoalSheet(initial: goal),
   );
@@ -140,6 +141,10 @@ class _RunGoalSheetState extends State<RunGoalSheet> {
   /// 칩을 눌러 휠이 도는 동안은 지나가는 칸으로 목표를 바꾸지 않는다.
   bool _spinning = false;
 
+  /// 회전 차례. 칩을 연달아 누르거나 종류를 바꾸면 늘어, 앞선 회전이 끝나도
+  /// 뒤 회전의 [_spinning] 을 끄지 않는다.
+  int _spin = 0;
+
   bool get _isTime => _goal is TimeGoal;
 
   @override
@@ -150,6 +155,8 @@ class _RunGoalSheetState extends State<RunGoalSheet> {
 
   void _switchKind(RunGoal goal) {
     final old = _wheel;
+    _spin++;
+    _spinning = false;
     setState(() {
       _goal = goal;
       _values = goalWheelValues(goal);
@@ -162,8 +169,10 @@ class _RunGoalSheetState extends State<RunGoalSheet> {
     setState(() => _goal = goal);
     final index = _values.indexOf(goal);
     if (!_wheel.hasClients || _wheel.selectedItem == index) return;
+    final spin = ++_spin;
     final duration = Motion.of(context, Motion.enter);
     if (duration == Duration.zero) {
+      _spinning = false;
       _wheel.jumpToItem(index);
       return;
     }
@@ -173,6 +182,7 @@ class _RunGoalSheetState extends State<RunGoalSheet> {
       duration: duration,
       curve: Motion.standard,
     );
+    if (spin != _spin) return; // 뒤 회전이 이어받았다.
     _spinning = false;
     // 도는 중에 사용자가 휠을 잡았으면 멈춘 칸을 따른다.
     if (mounted && _wheel.hasClients) {
@@ -280,8 +290,35 @@ class _GoalWheel extends StatelessWidget {
       MediaQuery.textScalerOf(context).scale(style.fontSize! * style.height!) +
           Gap.s3,
     );
+    final index = values.indexOf(selected);
+    final hasLess = index > 0;
+    final hasMore = index < values.length - 1;
+
+    // 스크린 리더의 늘리기·줄이기로 한 칸씩 돌린다.
+    void step(int by) {
+      if (!controller.hasClients) return;
+      final to = index + by;
+      final duration = Motion.of(context, Motion.quick);
+      if (duration == Duration.zero) {
+        controller.jumpToItem(to);
+      } else {
+        controller.animateToItem(
+          to,
+          duration: duration,
+          curve: Motion.standard,
+        );
+      }
+    }
+
     return Semantics(
+      container: true,
       label: '목표 값',
+      value: selected.label,
+      increasedValue: hasMore ? values[index + 1].label : null,
+      decreasedValue: hasLess ? values[index - 1].label : null,
+      onIncrease: hasMore ? () => step(1) : null,
+      onDecrease: hasLess ? () => step(-1) : null,
+      excludeSemantics: true,
       child: SizedBox(
         height: extent * _visibleRows,
         child: Stack(

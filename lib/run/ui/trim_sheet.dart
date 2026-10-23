@@ -12,6 +12,7 @@ Future<DateTime?> showTrimSheet(BuildContext context, RunSummary summary) {
     context: context,
     isScrollControlled: true,
     useSafeArea: true,
+    sheetAnimationStyle: Motion.sheet(context),
     backgroundColor: AppColors.of(context).background,
     builder: (_) => TrimSheet(summary: summary),
   );

@@ -1013,6 +1013,89 @@ void main() {
       expect(chipColor(tester, '10km'), primary(tester));
     });
 
+    testWidgets('칩을 빠르게 연달아 누르면 도는 동안에도 마지막 칩이 골라져 있다', (tester) async {
+      await pumpHome(tester, FakeController());
+      await settle(tester);
+      await openSheet(tester);
+      await tester.tap(chip('10km'));
+      await tester.pump();
+      await tester.pump(Motion.enter ~/ 2); // 휠이 3km 와 10km 사이
+      expect(wheel(tester).selectedItem, inExclusiveRange(0, 7));
+      await tester.tap(chip('3km'));
+      for (var i = 0; i < 6; i++) {
+        await tester.pump(const Duration(milliseconds: 40));
+        expect(chipColor(tester, '3km'), primary(tester), reason: '$i');
+      }
+      await settle(tester);
+      expect(wheel(tester).selectedItem, 0);
+      expect(chipColor(tester, '3km'), primary(tester));
+      await confirm(tester);
+      expect(rowText('3km'), findsOneWidget);
+    });
+
+    testWidgets('휠은 "목표 값" 으로 지금 값을 읽히고 늘리기·줄이기로 한 칸씩 움직인다', (tester) async {
+      final c = FakeController();
+      await pumpHome(tester, c);
+      await settle(tester);
+      await openSheet(tester);
+      final handle = tester.ensureSemantics();
+      final node = find.bySemanticsLabel('목표 값');
+      expect(
+        tester.getSemantics(node),
+        matchesSemantics(
+          label: '목표 값',
+          value: '3km',
+          increasedValue: '4km',
+          hasIncreaseAction: true,
+        ),
+      );
+      final wheelNode = find.semantics.byLabel('목표 값');
+      tester.semantics.increase(wheelNode);
+      await settle(tester);
+      tester.semantics.increase(wheelNode);
+      await settle(tester);
+      expect(wheel(tester).selectedItem, 2);
+      expect(
+        tester.getSemantics(node),
+        matchesSemantics(
+          label: '목표 값',
+          value: '5km',
+          increasedValue: '6km',
+          decreasedValue: '4km',
+          hasIncreaseAction: true,
+          hasDecreaseAction: true,
+        ),
+      );
+      tester.semantics.decrease(wheelNode);
+      await settle(tester);
+      expect(wheel(tester).selectedItem, 1);
+      handle.dispose();
+      await confirm(tester);
+      await startAndWait(tester);
+      expect(c.startGoals, [DistanceGoal(4000)]);
+    });
+
+    testWidgets('휠 끝 칸에서는 더 늘릴 수 없다(42km)', (tester) async {
+      await pumpHome(
+        tester,
+        FakeController(),
+        repo: FakeRepo((0, 0))..lastGoalM = 42000,
+      );
+      await settle(tester);
+      await openSheet(tester);
+      final handle = tester.ensureSemantics();
+      expect(
+        tester.getSemantics(find.bySemanticsLabel('목표 값')),
+        matchesSemantics(
+          label: '목표 값',
+          value: '42km',
+          decreasedValue: '41km',
+          hasDecreaseAction: true,
+        ),
+      );
+      handle.dispose();
+    });
+
     testWidgets('읽는 동안에도 선택 영역과 시작 버튼 자리가 같다', (tester) async {
       final repo = FakeRepo((0, 0))
         ..lastGoalM = 5000
