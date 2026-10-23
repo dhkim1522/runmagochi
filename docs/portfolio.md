@@ -10,7 +10,7 @@
 | 4 | 와이어프레임 | `design/wireframes/` | 있음, 초기 콘티 표시·대응표 없음 | 3 |
 | 5 | UI 시안·디자인 시스템 | `docs/design/`, `design/mockups/` | 있음 (작업 4 완료: `docs/design/design-process.md`, 토큰은 theme_test 가 코드와 대조) | 4 |
 | 6 | 시스템 아키텍처 | `docs/architecture.md` | 있음 (작업 5 완료: 모듈 지도·플랫폼 경계·주입, 패키지 표 보강) | 5 |
-| 7 | 데이터 모델 ERD | `docs/data-model.md` | 없음(표만 architecture.md) | 6 |
+| 7 | 데이터 모델 ERD | `docs/data-model.md` | 있음 (작업 6 완료, `test/docs/data_model_doc_test.dart` 가 코드와 대조) | 6 |
 | 8 | 시퀀스 다이어그램 | `docs/sequences.md` | 없음 | 7 |
 | 9 | 결정 기록 모음 | `docs/decisions/README.md` | 없음(35개 파일만) | 8 |
 | 10 | 페이즈별 개발 기록 | `docs/dev-log.md` | 없음 | 8 |

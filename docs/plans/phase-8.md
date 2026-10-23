@@ -62,7 +62,7 @@
   - 내용: 지금 구성도(레이어 한 장)에 더한다. (a) 실제 모듈 지도: `lib/` 폴더별 책임·의존 방향 (b) 플랫폼 경계 그림: 포그라운드 서비스·위치 플러그인·알림·TTS·공유·파일 선택·iOS 백그라운드 위치 (c) 상태 관리·저장소 주입 방식 (d) 패키지 표를 `pubspec.yaml` 과 일치시킨다
   - 확인: 표의 패키지·폴더가 `pubspec.yaml`·`ls lib` 와 일치(grep 대조). mermaid 문법 검사
 
-- [ ] 6. 데이터 모델 ERD
+- [x] 6. 데이터 모델 ERD
   - 파일: `docs/data-model.md`(새로), `docs/architecture.md` 데이터 모델 절은 요약과 링크
   - 내용: Drift 테이블(`app_database.dart`)에서 읽은 mermaid `erDiagram` 하나. 관계(Run–RunPoint·Split·XpTxn·CoinTxn·Badge, Avatar–OwnedItem), 공통 필드(id·createdAt·updatedAt·deletedAt), 고유 키, 스키마 판 이력(1~7판 변화)을 표로
   - 테스트: 테이블 이름 일치 검사 — 새 테스트 `test/docs/data_model_doc_test.dart` 가 `docs/data-model.md` 의 엔티티 이름 목록과 `AppDatabase.allTables` 이름 목록이 같은지 본다. 먼저 실패(문서 없음) 확인
