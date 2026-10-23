@@ -27,7 +27,8 @@
 - `docs/research/naming.md` — 앱 이름 대안 후보 6개와 상표·스토어·도메인 검색 결과
 - `docs/beta.md` — 베타 배포: 서명 키, 릴리스 APK 만들기, 테스터 안내문, 의견 질문
 - `docs/ios.md` — iOS 빌드, 무료 Apple ID 로 iPhone 설치(7일 재설치), iOS 설정과 이유
-- `docs/field-test.md` — 실기기 실측 안내: 30분 러닝 3회 기록표, 기기별 확인 항목, 기준값 조정 표(페이즈 7)- `docs/tooling.md` — Claude Code 추천 플러그인 목록, 사용 시점, 기본값
+- `docs/field-test.md` — 실기기 실측 안내: 30분 러닝 3회 기록표, 기기별 확인 항목, 기준값 조정 표(페이즈 7)
+- `docs/tooling.md` — Claude Code 추천 플러그인 목록, 사용 시점, 기본값
 - `design/wireframes/` — 화면 콘티 10개 (MVP 6개 + 후속 범위, HTML 원본·PNG)
 - `design/mockups/` — 화면 시안과 구현 메모. README 가 지금 방향(연두 무드보드, 결정 0029)과 옛 방향(말랑 클레이, 페이즈 2.5)을 나눈다
   - `design/mockups/phase-6/` — 고른 방향 c 규칙(`direction-c.md`), 캔버스 시안(`canvas/c/`), 6안 비교(`critique.md`)
