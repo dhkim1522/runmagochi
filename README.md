@@ -2,8 +2,6 @@
 
 실제 러닝 기록(GPS·페이스)에 도트 아바타 육성을 더한 Android·iOS 러닝 앱. 달릴수록 캐릭터가 자라고, 오래 쉬면 졸린 표정을 짓는다. 서버 없이 기기 안에서 동작한다.
 
-`runmagochi` 는 개발 코드명이다. 상표 확인은 출시 전에 한다(결정 0025).
-
 <p>
   <img src="design/readme/06-home.png" width="150" alt="홈">
   <img src="design/readme/11-run.png" width="150" alt="러닝 중">
