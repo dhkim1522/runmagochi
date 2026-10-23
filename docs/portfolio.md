@@ -1,6 +1,6 @@
 # 포트폴리오 산출물
 
-> 런마고치 개발 산출물 모음 (2026-10-24 기준). 한 장으로 보는 정적 페이지 [포트폴리오](../design/portfolio/index.html)(웹 호스팅용 HTML), 화면 64컷은 [화면설계서](../design/screens/index.html), 캐릭터는 [에셋 카탈로그](../design/character/asset-catalog.html).
+> 런마고치 개발 산출물 모음 (2026-10-24 기준). 웹페이지는 GitHub Pages 로 연다: [포트폴리오](https://dhkim1522.github.io/runmagochi/), [화면설계서](https://dhkim1522.github.io/runmagochi/design/screens/), [디자인 시스템](https://dhkim1522.github.io/runmagochi/docs/design/design-system/), [UI 후보 비교](https://dhkim1522.github.io/runmagochi/design/mockups/phase-6/compare/), [캐릭터 에셋](https://dhkim1522.github.io/runmagochi/design/character/asset-catalog.html). 다이어그램이 있는 문서(ERD·시퀀스·흐름)는 GitHub 이 mermaid 를 그려 주는 md 로 둔다.
 
 ## 숫자
 
