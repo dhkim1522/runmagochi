@@ -1,6 +1,6 @@
 # 디자인 시스템
 
-> 원본: [Claude 디자인 시스템 아티팩트](https://claude.ai/artifact/FPihTBfX2CJserHVwUQ514) (2026-10-22 갱신, 연두 무드보드 + 사각 무대, 결정 0029. 작업 18 에서 토큰을 `tokens.json` 과 맞추고 컴포넌트 견본 13개로 늘림). 아티팩트 파일 사본은 `docs/design/design-system/project/`(글꼴 woff2 는 빼고). 값은 `docs/design/tokens.json` 이 기준이다. 옛 방향 말랑 클레이(2026-10-17 승인)는 아티팩트 버전 기록과 `design/mockups/` 에 남아 있다.
+> 원본: [Claude 디자인 시스템 아티팩트](https://claude.ai/artifact/FPihTBfX2CJserHVwUQ514) (2026-10-22 갱신, 연두 무드보드 + 사각 무대, 결정 0029. 작업 18 에서 토큰을 `tokens.json` 과 맞추고 컴포넌트 견본 13개로 늘림). 아티팩트 파일 사본은 `docs/design/design-system/project/`(글꼴 woff2 는 빼고). 값은 `docs/design/tokens.json` 이 기준이다. 아티팩트 개요(README)는 색·글꼴·간격·모서리·그림자만 짧게 요약한 것이라(궁서체로 보이던 제목은 페이지가 `# 제목`을 세리프로 그려서였고, 제목 줄을 뺐다), 자세한 규칙은 이 문서가 원천이다. 옛 방향 말랑 클레이(2026-10-17 승인)는 아티팩트 버전 기록과 `design/mockups/` 에 남아 있다.
 
 앱은 `lib/core/theme.dart` 에서 이 토큰만 읽는다: `AppColors`(색), `AppText`(글자), `Gap`·`Radii`·`Borders`·`Stage`·`Motion`. 토큰 값은 `test/core/theme_test.dart` 가 `tokens.json` 과 같은지, 대비가 기준을 넘는지 라이트·다크 모두 확인한다.
 
