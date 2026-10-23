@@ -67,6 +67,10 @@ void main() {
       expect(voiceLine(const VoiceVehicle()), '너무 빨라서 이 구간은 기록에서 뺄게요');
       expect(voiceLine(const VoiceSignalLost()), '신호가 끊겼어요. 밖으로 나오면 다시 찾을게요');
       expect(
+        voiceLine(const VoiceSignalLost(locationOff: true)),
+        '위치 서비스가 꺼져 있어요',
+      );
+      expect(
         voiceLine(const VoiceEndWarning(30, signalLost: true)),
         '신호가 오래 끊겨 30초 뒤 러닝을 마쳐요',
       );

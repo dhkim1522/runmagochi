@@ -140,6 +140,20 @@ void main() {
       expect(c.body, '목표 5km까지 2.69km');
     });
 
+    test('신호 끊김인데 위치 서비스가 꺼졌으면 꺼짐 문구', () {
+      final c = runProgressContent(
+        state: RunState.signalLost,
+        distanceM: 2310,
+        movingTime: const Duration(minutes: 12, seconds: 34),
+        goal: const DistanceGoal(5000),
+        goalReached: false,
+        locationOff: true,
+      );
+      expect(c.title, '일시정지 · 2.31km');
+      expect(c.body, '위치 서비스가 꺼져 있어요. 켜면 이어서 기록해요');
+      expect(c.actions, [RunProgressAction.resume, RunProgressAction.pause]);
+    });
+
     test('신호 끊김: 다시 찾는다고 알리고 재개·일시정지 버튼', () {
       final c = _content(RunState.signalLost, reached: true);
       expect(c.title, '일시정지 · 2.31km');

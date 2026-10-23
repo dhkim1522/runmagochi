@@ -863,6 +863,75 @@ void main() {
       });
     });
 
+    test('신호 끊김이 되면 러닝 알림·음성도 꺼짐 문구를 쓰고, 음성은 60초에 한 번이다', () {
+      _run((async, controller, container, repository, location) {
+        final progress =
+            container.read(runProgressNotifierProvider)
+                as FakeRunProgressNotifier;
+        final speaker = container.read(speakerProvider) as FakeSpeaker;
+        const offVoice = '위치 서비스가 꺼져 있어요';
+        const lostVoice = '신호가 끊겼어요. 밖으로 나오면 다시 찾을게요';
+        controller.start(goal: DistanceGoal(3000));
+        async.flushMicrotasks();
+        stepTo(async, location, 3);
+
+        location.serviceEnabled = false;
+        location.controller.addError(const LocationServiceOffException());
+        async.flushMicrotasks();
+        async.elapse(const Duration(seconds: 31));
+        expect(
+          container.read(runControllerProvider).snapshot.state,
+          RunState.signalLost,
+        );
+        expect(progress.shown.last.body, _locationOffError);
+        expect(speaker.spoken.where((l) => l == offVoice), hasLength(1));
+        expect(speaker.spoken, isNot(contains(lostVoice)));
+
+        // 켜서 점이 오면 이어 기록하고, 60초 안에 다시 꺼지면 읽지 않는다.
+        location.serviceEnabled = true;
+        async.elapse(const Duration(seconds: 5));
+        stepTo(async, location, 6);
+        expect(
+          container.read(runControllerProvider).snapshot.state,
+          RunState.recording,
+        );
+        expect(progress.shown.last.body, isNot(_locationOffError));
+        location.serviceEnabled = false;
+        location.controller.addError(const LocationServiceOffException());
+        async.flushMicrotasks();
+        async.elapse(const Duration(seconds: 31));
+        expect(
+          container.read(runControllerProvider).snapshot.state,
+          RunState.signalLost,
+        );
+        expect(progress.shown.last.body, _locationOffError);
+        expect(speaker.spoken.where((l) => l == offVoice), hasLength(1));
+      });
+    });
+
+    test('신호가 끊긴 뒤 위치 서비스를 끄면 러닝 알림 문구를 바꾼다', () {
+      _run((async, controller, container, repository, location) {
+        final progress =
+            container.read(runProgressNotifierProvider)
+                as FakeRunProgressNotifier;
+        controller.start(goal: DistanceGoal(3000));
+        async.flushMicrotasks();
+        stepTo(async, location, 3);
+        async.elapse(const Duration(seconds: 31));
+        expect(
+          container.read(runControllerProvider).snapshot.state,
+          RunState.signalLost,
+        );
+        expect(progress.shown.last.body, '신호가 끊겼어요. 밖으로 나오면 다시 찾을게요');
+
+        location.serviceEnabled = false;
+        location.controller.addError(const LocationServiceOffException());
+        async.flushMicrotasks();
+        async.elapse(const Duration(seconds: 1));
+        expect(progress.shown.last.body, _locationOffError);
+      });
+    });
+
     test('꺼진 동안 화면으로 돌아와도 구독하지 않는다', () {
       _run((async, controller, container, repository, location) {
         controller.start(goal: DistanceGoal(3000));

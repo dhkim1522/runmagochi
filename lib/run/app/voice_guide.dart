@@ -53,9 +53,11 @@ final class VoiceVehicle extends VoiceEvent {
   const VoiceVehicle();
 }
 
-/// 신호 끊김으로 기록을 멈춤 (결정 0033).
+/// 신호 끊김으로 기록을 멈춤 (결정 0033). [locationOff] 면 위치 서비스가 꺼져 끊겼다.
 final class VoiceSignalLost extends VoiceEvent {
-  const VoiceSignalLost();
+  const VoiceSignalLost({this.locationOff = false});
+
+  final bool locationOff;
 }
 
 /// 오래 멈춤으로 러닝이 곧 끝난다는 예고. [secondsLeft] 초 뒤 끝난다.
@@ -86,7 +88,8 @@ String? voiceLine(VoiceEvent e) => switch (e) {
   VoiceAutoPaused() => '일시정지했어요',
   VoiceAutoResumed() => '다시 기록해요',
   VoiceVehicle() => '너무 빨라서 이 구간은 기록에서 뺄게요',
-  VoiceSignalLost() => signalLostNotice,
+  VoiceSignalLost(:final locationOff) =>
+    locationOff ? '위치 서비스가 꺼져 있어요' : signalLostNotice,
   VoiceEndWarning(:final secondsLeft, :final paused, :final signalLost)
       when secondsLeft > 0 =>
     paused

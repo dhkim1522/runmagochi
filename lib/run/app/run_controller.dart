@@ -38,7 +38,7 @@ const String _locationErrorMessage = '위치 신호를 받지 못하고 있어�
 
 /// 기기의 위치 서비스(GPS)가 꺼져 위치 스트림이 끊겼을 때의 문구. 러닝 화면은 이
 /// 카드 하나만 보이고 신호 끊김 말풍선은 숨긴다.
-const String locationServiceOffMessage = '위치 서비스가 꺼져 있어요. 켜면 이어서 기록해요';
+const String locationServiceOffMessage = locationServiceOffNotice;
 const String _saveErrorMessage = '기록 저장에 실패했어요. 자동으로 다시 시도해요';
 const String _endErrorMessage = '러닝 저장에 실패했어요. 다시 종료해 주세요';
 const String _autoEndTitle = '러닝을 자동으로 마쳤어요';
@@ -146,6 +146,7 @@ class RunController extends Notifier<RunViewState> {
   /// 러닝 알림에 마지막으로 띄운 상태·거리 표기·시각.
   RunState? _progressState;
   bool _progressVehicleNotice = false;
+  bool _progressLocationOff = false;
   String? _progressKm;
   int? _progressTimeStep;
   bool _progressReached = false;
@@ -930,9 +931,11 @@ class RunController extends Notifier<RunViewState> {
         ? (goal.time - snapshot.movingTime).inSeconds ~/
               _progressTimeStepSeconds
         : null;
+    final locationOff = state.locationServiceOff;
     final stateChanged =
         snapshot.state != _progressState ||
-        _vehicleNotice != _progressVehicleNotice;
+        _vehicleNotice != _progressVehicleNotice ||
+        locationOff != _progressLocationOff;
     final shownAt = _progressShownAt;
     if (!stateChanged) {
       if (km == _progressKm &&
@@ -946,6 +949,7 @@ class RunController extends Notifier<RunViewState> {
     }
     _progressState = snapshot.state;
     _progressVehicleNotice = _vehicleNotice;
+    _progressLocationOff = locationOff;
     _progressKm = km;
     _progressTimeStep = timeStep;
     _progressReached = _goalReached;
@@ -962,6 +966,7 @@ class RunController extends Notifier<RunViewState> {
                 goal: _goal,
                 goalReached: _goalReached,
                 vehicleNotice: _vehicleNotice,
+                locationOff: locationOff,
               ),
             )
             .catchError((Object e) => debugPrint('알림: 러닝 진행 알림 실패 $e')),
@@ -1006,6 +1011,7 @@ class RunController extends Notifier<RunViewState> {
   void _cancelProgress() {
     _progressState = null;
     _progressVehicleNotice = false;
+    _progressLocationOff = false;
     _progressKm = null;
     _progressTimeStep = null;
     _progressReached = false;
@@ -1043,7 +1049,7 @@ class RunController extends Notifier<RunViewState> {
               spokenAt == null || now.difference(spokenAt) >= noticeDebounce;
           if (_signalAnnounced) {
             _signalSpokenAt = now;
-            _speak(const VoiceSignalLost());
+            _speak(VoiceSignalLost(locationOff: state.locationServiceOff));
           }
         // 탈것 의심 안내는 상태 발행(`_syncVehicleNotice`)이 60초에 한 번 읽는다.
         // 풀림은 그 구간을 안내했을 때만 읽는다.

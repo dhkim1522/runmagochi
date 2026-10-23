@@ -70,6 +70,10 @@ const String vehicleNoticeText = '혹시 뭘 타셨나요? 이 구간은 기록�
 /// 신호 끊김 안내. 러닝 화면 무대 말풍선·러닝 알림·음성 안내가 같이 쓴다 (결정 0033).
 const String signalLostNotice = '신호가 끊겼어요. 밖으로 나오면 다시 찾을게요';
 
+/// 위치 서비스(GPS) 꺼짐 안내. 러닝 화면 빨간 카드와 신호 끊김 중 러닝 알림이 같이
+/// 쓴다. 음성은 앞 문장만 읽는다.
+const String locationServiceOffNotice = '위치 서비스가 꺼져 있어요. 켜면 이어서 기록해요';
+
 /// 신호 끊김 종료 예고 제목. 알림과 음성 안내가 같이 쓴다.
 const String signalLostEndWarningTitle = '신호가 오래 끊겨 러닝을 마쳐요';
 
@@ -95,6 +99,8 @@ int endWarningTimeoutMs(DateTime deadline, DateTime now) {
 /// 자동 일시정지·탈것 의심·신호 끊김은 재개와 함께 사용자 일시정지로 바꾸는 버튼을
 /// 둔다(오래 쉴 때).
 ///
+/// [locationOff] 면 위치 서비스가 꺼져 끊긴 것이라 신호 끊김 본문을 꺼짐 문구로 바꾼다.
+///
 /// [vehicleNotice] 는 탈것 의심일 때 본문에 의심 문구를 보일지다(없으면 보인다).
 /// 컨트롤러는 다시 켜기가 60초에 한 번이 되도록 따로 정해 넘긴다. 다른 상태에는
 /// 쓰지 않아 문구가 제목과 어긋나지 않는다.
@@ -105,6 +111,7 @@ RunProgressContent runProgressContent({
   required RunGoal? goal,
   required bool goalReached,
   bool? vehicleNotice,
+  bool locationOff = false,
 }) {
   final showVehicle = state == RunState.vehicle && (vehicleNotice ?? true);
   final km = '${formatKm(distanceM)}km';
@@ -119,7 +126,7 @@ RunProgressContent runProgressContent({
   if (state == RunState.signalLost) {
     return RunProgressContent(
       title: '일시정지 · $km',
-      body: signalLostNotice,
+      body: locationOff ? locationServiceOffNotice : signalLostNotice,
       elapsed: null,
       actions: [RunProgressAction.resume, RunProgressAction.pause],
     );
