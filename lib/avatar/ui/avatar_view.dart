@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' show max;
 import 'dart:ui' as ui;
 
 import 'package:flutter/foundation.dart';
@@ -187,7 +188,7 @@ class AvatarViewState extends State<AvatarView> with WidgetsBindingObserver {
       width: size,
       height: size,
       child: Stack(
-        // 윤곽이 1픽셀 번지는 만큼 자기 크기 밖으로 나가도 잘리지 않게 한다.
+        // 윤곽이 번지는 만큼 자기 크기 밖으로 나가도 잘리지 않게 한다.
         clipBehavior: Clip.none,
         children: [
           // 윤곽은 같은 프레임 이미지를 색만 바꿔 다시 그린다 (디코딩 없음).
@@ -199,7 +200,7 @@ class AvatarViewState extends State<AvatarView> with WidgetsBindingObserver {
                   images: images,
                   frame: _frame,
                   rim: rim,
-                  rimOffset: widget.scale.toDouble(),
+                  rimOffset: rimOffset.toDouble(),
                 ),
               ),
             ),
@@ -212,6 +213,10 @@ class AvatarViewState extends State<AvatarView> with WidgetsBindingObserver {
       ),
     );
   }
+
+  /// 윤곽 두께(화면 px). 배율의 4분의 1, 최소 1 (8배 2, 6배 2, 3배 1). 관문 3 비교 B.
+  @visibleForTesting
+  int get rimOffset => max(1, (widget.scale / 4).round());
 
   /// 윤곽 색. 테마 토큰이 투명(라이트)이면 null 이라 윤곽 층을 만들지 않는다.
   @visibleForTesting

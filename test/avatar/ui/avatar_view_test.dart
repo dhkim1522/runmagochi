@@ -169,21 +169,33 @@ void main() {
   });
 }
 
-Widget _themed(ThemeData theme) => MaterialApp(
+Widget _themed(ThemeData theme, {int scale = 8}) => MaterialApp(
   theme: theme,
-  home: const Scaffold(
+  home: Scaffold(
     body: Center(
       child: AvatarView(
         kind: AvatarKind.acorn,
         stage: 1,
         mood: AvatarMood.normal,
         action: AvatarAction.idle,
+        scale: scale,
       ),
     ),
   ),
 );
 
 void rimTests() {
+  testWidgets('윤곽 두께는 max(1, round(scale/4)) px: 8배 2, 3배 1', (tester) async {
+    for (final (scale, want) in [(8, 2), (6, 2), (3, 1)]) {
+      await tester.pumpWidget(_themed(appDarkTheme(), scale: scale));
+      await tester.pump();
+      expect(
+        tester.state<AvatarViewState>(find.byType(AvatarView)).rimOffset,
+        want,
+      );
+    }
+  });
+
   testWidgets('다크 테마에서는 테마 토큰 색의 윤곽 층이 뒤에 깔린다', (tester) async {
     await tester.pumpWidget(_themed(appDarkTheme()));
     await tester.pump();

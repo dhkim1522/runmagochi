@@ -102,7 +102,7 @@ direction-c 이름과 토큰: `lime` = `primary`, `green` = `primary-deep`·`suc
 - 바탕은 풀빛 어둠(`background` #10160D), 카드 `surface`·트랙 `surface-soft` 가 한 단계씩 밝아 테두리 없이 떨어진다.
 - 연두 `primary` 와 `on-primary` 는 라이트와 같은 값. 연두 면은 다크 바탕 위에서 13:1 이라 경계선 `primary-edge` 는 덜 진한 연두.
 - 초록·코인·페이스·위험 색은 어두운 바탕에서 읽히도록 밝은 쪽으로 옮겼다. `panel` 은 밝은 판 + 짙은 글자.
-- 무대는 어두운 풀빛 하늘·땅. 스프라이트는 `sprite-rim` 1픽셀 윤곽으로 무대에 묻히지 않게 한다(라이트는 투명).
+- 무대는 어두운 풀빛 하늘·땅. 스프라이트는 `sprite-rim` 얇은 윤곽으로 무대에 묻히지 않게 한다(라이트는 투명). 윤곽 두께는 `max(1, round(배율/4))` 화면 px(8배 2px, 6배 2px, 3배 1px). 도트 1칸 두께는 굵어서 관문 3 에서 비교 B(얇게)를 골랐다(`design/mockups/phase-6/rim-compare.html`).
 
 ## 접근성
 
