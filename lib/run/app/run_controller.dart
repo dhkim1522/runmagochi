@@ -33,7 +33,10 @@ const String _locationErrorMessage = '위치 신호를 받지 못하고 있어�
 const String _saveErrorMessage = '기록 저장에 실패했어요. 자동으로 다시 시도해요';
 const String _endErrorMessage = '러닝 저장에 실패했어요. 다시 종료해 주세요';
 const String _autoEndTitle = '러닝을 자동으로 마쳤어요';
-const String _autoEndFastTitle = '빠른 이동이 감지돼 러닝을 마쳤어요';
+
+/// 탈것 의심·신호 끊김으로 끝낸 러닝의 알림 (결정 0033).
+const String _quitTitle = '한참 못 달려서 러닝을 마쳤어요';
+const String _quitBody = '기록은 안전하게 저장했어요';
 const String _shortRunAutoEndTitle = '러닝을 마쳤어요';
 const String shortRunMessage = '1km 미만은 기록하지 않아요';
 const String _goalReachedTitle = '목표 달성!';
@@ -175,18 +178,19 @@ class RunController extends Notifier<RunViewState> {
     return const RunViewState(snapshot: _idleSnapshot);
   }
 
-  /// 알림 버튼. 기록 중·자동 일시정지면 일시정지, 일시정지·자동 일시정지면
-  /// 재개한다. 러닝이 없거나 상태에 맞지 않는 버튼은 무시하고, 오류는 밖으로
+  /// 알림 버튼. 기록 중·스스로 풀리는 멈춤(자동 일시정지·탈것 의심·신호
+  /// 끊김)이면 일시정지, 일시정지·스스로 풀리는 멈춤이면 재개한다. 러닝이 없거나 상태에 맞지 않는 버튼은 무시하고, 오류는 밖으로
   /// 내지 않는다.
   void _onNotificationAction(String actionId) {
     try {
       if (_engine == null || _ending) return;
       final runState = _engine!.snapshot.state;
+      final autoStopped = autoStoppedStates.contains(runState);
       if (actionId == LocalRunProgressNotifier.pauseActionId &&
-          (runState == RunState.recording || runState == RunState.autoPaused)) {
+          (runState == RunState.recording || autoStopped)) {
         pause();
       } else if (actionId == LocalRunProgressNotifier.resumeActionId &&
-          (runState == RunState.paused || runState == RunState.autoPaused)) {
+          (runState == RunState.paused || autoStopped)) {
         resume();
       }
     } catch (_) {}
@@ -308,9 +312,15 @@ class RunController extends Notifier<RunViewState> {
         // 설정에서 체중을 바꿨을 수 있으므로 종료 때 다시 읽는다.
         _weightKg = await _readWeight();
         final wasRecording = engine.state == RunState.recording;
+        final stoppedAt = engine.pausedAt;
         summary = engine.end(weightKg: _weightKg);
         if (auto != null) {
-          summary = _endAt(summary, auto.endAt, trim: wasRecording);
+          summary = _endAt(
+            summary,
+            auto.endAt,
+            trim: wasRecording,
+            stoppedAt: stoppedAt,
+          );
         }
         _pendingSummary = summary;
         _pendingAutoEnd = auto?.reason;
@@ -420,22 +430,18 @@ class RunController extends Notifier<RunViewState> {
     final engine = _engine;
     if (engine == null || _ending || _pendingSummary != null) return false;
     final runState = engine.state;
-    if (runState != RunState.recording &&
-        runState != RunState.paused &&
-        runState != RunState.autoPaused) {
-      return false;
-    }
+    if (!activeRunStates.contains(runState)) return false;
+    final now = ref.read(clockProvider)();
     final decision = checkAutoEnd(
-      now: ref.read(clockProvider)(),
+      now: now,
       startedAt: engine.startedAt!,
       state: runState,
       pausedAt: engine.pausedAt,
       stateSince: engine.stateSince,
       lastPointAt: engine.lastPointAt,
       recordingSince: engine.recordingSince,
-      fastSince: engine.fastSince,
-      fastLastAt: engine.fastLastAt,
-      beforeFastAt: engine.lastAcceptedBeforeFast,
+      vehicleTime: engine.vehicleTime(now),
+      vehicleEndAt: engine.firstVehicleAt,
       config: ref.read(runGuardConfigProvider),
     );
     if (decision == null) return false;
@@ -459,27 +465,45 @@ class RunController extends Notifier<RunViewState> {
   /// [summary] 의 끝을 [endAt] 으로 당긴다. 기록 중에 끝낸 요약은 잘라내기로
   /// 다시 계산한다.
   ///
-  /// 일시정지·자동 일시정지 중에 끝낸 요약은 움직인 시간이 기록이 멈춘 시각
-  /// 에서 이미 멈춰 있다. [endAt] 뒤에 점이 없으면 끝 시각만 바꾼다(잘라내기
-  /// 는 일시정지 시간까지 움직인 시간에서 뺀다). 멈춘 뒤 제자리에서 받아들인
-  /// 점이 있으면 마지막 구간이 그 점까지 기록된 것으로 보고 잘라내, 점·거리는
-  /// 버리고 움직인 시간은 그대로 둔다.
-  RunSummary _endAt(RunSummary summary, DateTime endAt, {required bool trim}) {
+  /// 일시정지·자동 일시정지·탈것 의심·신호 끊김 중에 끝낸 요약은 움직인 시간이
+  /// 기록이 멈춘 시각([stoppedAt])에서 이미 멈춰 있다. [endAt] 뒤에 점이 없으면
+  /// 끝 시각만 바꾼다(잘라내기는 일시정지 시간까지 움직인 시간에서 뺀다). 있으면
+  /// 마지막 구간이 [stoppedAt] 까지 기록된 것으로 보고 잘라낸다. 멈춘 뒤
+  /// 제자리에서 받아들인 점이 있으면 그 점까지 기록된 것으로 보고, 그 점·거리는
+  /// 버리고 움직인 시간은 그대로 둔다. 탈것 의심 합계로 끝내면 [endAt](첫 의심
+  /// 구간 전 정상 점)이 [stoppedAt] 보다 앞일 수 있고, 그 사이 구간을 잘라낸다.
+  RunSummary _endAt(
+    RunSummary summary,
+    DateTime endAt, {
+    required bool trim,
+    required DateTime? stoppedAt,
+  }) {
     if (!endAt.isBefore(summary.endedAt)) return summary;
     if (trim) return trimRunEnd(summary, endAt, weightKg: _weightKg);
     final last = summary.segments.lastOrNull;
     final lastAt = last?.last.time;
     final afterEnd = lastAt != null && lastAt.isAfter(endAt);
-    final recordedFrom = !afterEnd || last!.first.time.isBefore(endAt)
+    final stopped = stoppedAt == null || stoppedAt.isBefore(endAt)
         ? endAt
-        : last.first.time;
+        : stoppedAt;
+    final DateTime recordedEnd;
+    var extra = Duration.zero;
+    if (afterEnd) {
+      final recordedFrom = last!.first.time.isAfter(stopped)
+          ? last.first.time
+          : stopped;
+      if (lastAt.isAfter(recordedFrom)) {
+        extra = lastAt.difference(recordedFrom);
+      }
+      recordedEnd = lastAt.isAfter(stopped) ? lastAt : stopped;
+    } else {
+      recordedEnd = endAt;
+    }
     final asRecorded = RunSummary(
       startedAt: summary.startedAt,
-      endedAt: afterEnd ? lastAt : endAt,
+      endedAt: recordedEnd,
       distanceM: summary.distanceM,
-      movingTime: afterEnd
-          ? summary.movingTime + lastAt.difference(recordedFrom)
-          : summary.movingTime,
+      movingTime: summary.movingTime + extra,
       avgPaceSecPerKm: summary.avgPaceSecPerKm,
       calories: summary.calories,
       name: summary.name,
@@ -498,6 +522,9 @@ class RunController extends Notifier<RunViewState> {
     AutoEndReason reason, {
     required bool discarded,
   }) {
+    // 탈것 의심·신호 끊김은 한참 달리지 못해 끝낸 것이다 (결정 0033).
+    final quit =
+        reason == AutoEndReason.vehicle || reason == AutoEndReason.signalLost;
     try {
       unawaited(
         ref
@@ -505,11 +532,13 @@ class RunController extends Notifier<RunViewState> {
             .showNow(
               title: discarded
                   ? _shortRunAutoEndTitle
-                  : reason == AutoEndReason.fast
-                  ? _autoEndFastTitle
+                  : quit
+                  ? _quitTitle
                   : _autoEndTitle,
               body: discarded
                   ? shortRunMessage
+                  : quit
+                  ? _quitBody
                   : '${formatKm(summary.distanceM)}km 기록을 저장했어요. '
                         '요약에서 확인하세요.',
             )
@@ -547,10 +576,11 @@ class RunController extends Notifier<RunViewState> {
         );
   }
 
-  /// 위치를 받아야 하는 상태. 자동 일시정지는 움직임을 봐야 풀린다.
+  /// 위치를 받아야 하는 상태. 자동 일시정지·탈것 의심·신호 끊김은 점을 봐야 풀린다.
   bool get _needsLocation {
     final runState = _engine?.state;
-    return runState == RunState.recording || runState == RunState.autoPaused;
+    return runState == RunState.recording ||
+        autoStoppedStates.contains(runState);
   }
 
   /// 오류나 종료로 끊긴 구독을 버린다. 기록·자동 일시정지 중이면 잠시 뒤 다시
@@ -595,11 +625,13 @@ class RunController extends Notifier<RunViewState> {
   void _onSample(LocationSample sample) {
     final engine = _engine;
     if (engine == null) return;
+    final before = engine.state;
     engine.addSample(sample);
     final appended = engine.lastAppended;
     if (appended.isEmpty) {
-      // 자동 일시정지 중 점은 재개 판정 창에 모인다. 위치 신호는 살아 있다.
-      if (engine.state == RunState.autoPaused) {
+      // 자동 일시정지·탈것 의심 중 점은 풀림 판정에 쓰인다. 위치 신호는 살아 있다.
+      // 기록 중 점이 탈것 의심으로 바꿨으면 바뀐 상태를 알린다.
+      if (engine.state != before || autoStoppedStates.contains(before)) {
         _publish(clearLocationError: true);
       }
       return;
@@ -623,7 +655,9 @@ class RunController extends Notifier<RunViewState> {
   void _startTick() {
     _tickTimer ??= Timer.periodic(_tickInterval, (_) {
       if (_checkAutoEnd()) return;
-      _engine?.autoPauseIfStill(ref.read(clockProvider)());
+      final now = ref.read(clockProvider)();
+      _engine?.autoPauseIfStill(now);
+      _engine?.signalLostIfSilent(now);
       _publish();
     });
   }
@@ -750,12 +784,17 @@ class RunController extends Notifier<RunViewState> {
             VoiceEndWarning(
               (left.inMilliseconds / 1000).ceil(),
               paused: engine.state == RunState.paused,
+              signalLost: engine.state == RunState.signalLost,
             ),
           );
         }
         unawaited(
           notifier
-              .showEndWarning(deadline, paused: engine.state == RunState.paused)
+              .showEndWarning(
+                deadline,
+                paused: engine.state == RunState.paused,
+                signalLost: engine.state == RunState.signalLost,
+              )
               .catchError((Object e) => debugPrint('알림: 종료 예고 실패 $e')),
         );
       }
@@ -769,11 +808,7 @@ class RunController extends Notifier<RunViewState> {
   /// 시간 목표는 남은 시간이 15초 단계를 넘거나 달성 여부가 바뀔 때도 같은 간격으로 띄운다.
   /// 알림 실패는 러닝과 상관없으므로 버린다.
   void _updateProgress(RunSnapshot snapshot) {
-    if (snapshot.state != RunState.recording &&
-        snapshot.state != RunState.paused &&
-        snapshot.state != RunState.autoPaused) {
-      return;
-    }
+    if (!activeRunStates.contains(snapshot.state)) return;
     final now = ref.read(clockProvider)();
     final km = formatKm(snapshot.distanceM);
     final goal = _goal;
@@ -864,7 +899,12 @@ class RunController extends Notifier<RunViewState> {
           _speakSplit(engine, split);
         case StateChanged(from: RunState.recording, to: RunState.autoPaused):
           _speak(const VoiceAutoPaused());
-        case StateChanged(from: RunState.autoPaused, to: RunState.recording):
+        case StateChanged(to: RunState.vehicle):
+          _speak(const VoiceVehicle());
+        case StateChanged(to: RunState.signalLost):
+          _speak(const VoiceSignalLost());
+        case StateChanged(:final from, to: RunState.recording)
+            when autoStoppedStates.contains(from):
           _speak(const VoiceAutoResumed());
         case StateChanged() || RunEnded():
           break;

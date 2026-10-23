@@ -117,6 +117,7 @@ class _Progress implements RunProgressNotifier {
   Future<void> showEndWarning(
     DateTime deadline, {
     required bool paused,
+    bool signalLost = false,
   }) async {}
 
   @override

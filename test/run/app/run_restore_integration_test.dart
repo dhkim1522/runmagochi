@@ -64,12 +64,12 @@ class _Harness {
 
   RunSnapshot get snapshot => container.read(runControllerProvider).snapshot;
 
-  /// 1초마다 3m 씩 [count] 번 점을 보낸다. geolocator 처럼 UTC 이고 시계보다
+  /// 1초마다 [meters] 씩 [count] 번 점을 보낸다. geolocator 처럼 UTC 이고 시계보다
   /// 300ms 늦은 시각이다.
-  void step(int count) {
+  void step(int count, {double meters = 3}) {
     for (var i = 0; i < count; i++) {
       async.elapse(const Duration(seconds: 1));
-      _meters += 3;
+      _meters += meters;
       location.controller.add(
         LocationSample(
           time: clock().subtract(const Duration(milliseconds: 300)).toUtc(),
@@ -80,6 +80,12 @@ class _Harness {
       );
       async.flushMicrotasks();
     }
+  }
+
+  /// 점 없이 [count] 초가 지나는 동안 움직인 거리. 기록에 들어가면 안 된다.
+  void silent(int count, double meters) {
+    async.elapse(Duration(seconds: count));
+    _meters += meters;
   }
 
   /// 일시정지 동안 움직인 거리. 기록에 들어가면 안 된다.
@@ -176,6 +182,42 @@ void main() {
       for (var i = 0; i < after.splits.length; i++) {
         expect(after.splits[i].duration, before.splits[i].duration);
       }
+
+      expectResumeAcceptsPoints(h);
+      h.close();
+    });
+  });
+
+  test('탈것 의심·신호 끊김으로 뺀 구간이 있어도 그대로 복원된다 (결정 0033)', () {
+    fakeAsync((async) {
+      final h = _Harness(async);
+      final controller = h.container.read(runControllerProvider.notifier);
+      controller.start(goal: DistanceGoal(3000));
+      async.flushMicrotasks();
+      h.step(200);
+      // 버스(초속 7m) 1분, 내려서 달리기.
+      h.step(60, meters: 7);
+      expect(h.snapshot.state, RunState.vehicle);
+      h.step(100);
+      expect(h.snapshot.state, RunState.recording);
+      // 터널 1분: 점 없이 300m.
+      h.silent(60, 300);
+      expect(h.snapshot.state, RunState.signalLost);
+      h.step(100);
+      expect(h.snapshot.state, RunState.recording);
+      controller.pause();
+      async.flushMicrotasks();
+      final before = h.snapshot;
+      // 뺀 구간을 빼면 달린 거리는 약 200 + 90 + 100 점 × 3m.
+      expect(before.distanceM, lessThan(400 * 3.0));
+
+      h.crash();
+      expect(restore(h), isTrue);
+      final after = h.snapshot;
+      expect(after.state, RunState.paused);
+      expect(after.distanceM, closeTo(before.distanceM, 1e-6));
+      expect(after.movingTime, before.movingTime);
+      expect(after.splits, hasLength(before.splits.length));
 
       expectResumeAcceptsPoints(h);
       h.close();

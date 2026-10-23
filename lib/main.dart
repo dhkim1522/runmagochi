@@ -12,7 +12,7 @@ const _stillEndSec = String.fromEnvironment('RUN_STILL_END_SEC');
 const _pauseEndSec = String.fromEnvironment('RUN_PAUSE_END_SEC');
 const _endWarningSec = String.fromEnvironment('RUN_END_WARNING_SEC');
 const _autoEndMaxSec = String.fromEnvironment('RUN_AUTO_END_MAX_SEC');
-const _autoEndFastSec = String.fromEnvironment('RUN_AUTO_END_FAST_SEC');
+const _autoEndVehicleSec = String.fromEnvironment('RUN_AUTO_END_VEHICLE_SEC');
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -23,7 +23,7 @@ void main() {
           pausedSec: _pauseEndSec,
           warningSec: _endWarningSec,
           maxSec: _autoEndMaxSec,
-          fastSec: _autoEndFastSec,
+          vehicleSec: _autoEndVehicleSec,
         )
       : null;
   runApp(

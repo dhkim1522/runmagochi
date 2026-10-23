@@ -829,8 +829,8 @@ void main() {
       stepTo(async, location, 6);
       final state = container.read(runControllerProvider);
       expect(state.lastError, isNull);
-      // 끊긴 사이 자동 일시정지됐고, 받은 점은 재개 판정 창에 모인다.
-      expect(state.snapshot.state, RunState.autoPaused);
+      // 끊긴 사이 신호 끊김이 됐고(결정 0033), 점이 오면 그 점부터 이어 기록한다.
+      expect(state.snapshot.state, RunState.recording);
     });
   });
 

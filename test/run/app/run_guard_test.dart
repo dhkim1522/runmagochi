@@ -8,109 +8,86 @@ DateTime _at(Duration d) => _start.add(d);
 
 void main() {
   parseTests();
-  test('기본값은 자동 일시정지 5분·사용자 일시정지 1시간·예고 30초·6시간·빠른 이동 30초', () {
+  test('기본값은 자동 일시정지 5분·사용자 일시정지 1시간·예고 30초·6시간·탈것 의심 합계 2분', () {
     expect(autoEndStill, const Duration(minutes: 5));
     expect(autoEndPaused, const Duration(hours: 1));
     expect(autoEndWarning, const Duration(seconds: 30));
     expect(autoEndMax, const Duration(hours: 6));
-    expect(autoEndFast, const Duration(seconds: 30));
+    expect(autoEndVehicle, const Duration(minutes: 2));
     const config = RunGuardConfig();
     expect(config.still, autoEndStill);
     expect(config.paused, autoEndPaused);
     expect(config.warning, autoEndWarning);
     expect(config.max, autoEndMax);
-    expect(config.fast, autoEndFast);
+    expect(config.vehicle, autoEndVehicle);
   });
 
-  group('빠른 이동 규칙', () {
-    final fastSince = _at(const Duration(minutes: 5));
-    final before = _at(const Duration(minutes: 4, seconds: 50));
+  group('탈것 의심 규칙 (결정 0033)', () {
+    final firstStop = _at(const Duration(minutes: 3));
+    final since = _at(const Duration(minutes: 10));
 
     AutoEndDecision? check(
-      Duration afterFast, {
-      RunState state = RunState.recording,
-      DateTime? beforeFastAt,
-      DateTime? lastPointAt,
+      Duration total, {
+      RunState state = RunState.vehicle,
+      DateTime? vehicleEndAt,
+      RunGuardConfig config = const RunGuardConfig(),
     }) => checkAutoEnd(
-      now: fastSince.add(afterFast),
+      now: since.add(const Duration(seconds: 40)),
       startedAt: _start,
       state: state,
-      pausedAt: state == RunState.recording ? null : before,
-      stateSince: state == RunState.recording ? _start : fastSince,
-      lastPointAt: lastPointAt ?? before,
-      recordingSince: state == RunState.recording ? _start : null,
-      fastSince: fastSince,
-      fastLastAt: fastSince.add(afterFast),
-      beforeFastAt: beforeFastAt,
+      pausedAt: since,
+      stateSince: since,
+      lastPointAt: since,
+      recordingSince: state == RunState.recording ? since : null,
+      vehicleTime: total,
+      vehicleEndAt: vehicleEndAt,
+      config: config,
     );
 
-    test('29초면 계속, 30초면 종료하고 끝 시각은 빨라지기 전 점', () {
-      expect(check(const Duration(seconds: 29), beforeFastAt: before), isNull);
-      final d = check(const Duration(seconds: 30), beforeFastAt: before);
-      expect(d?.reason, AutoEndReason.fast);
-      expect(d?.endAt, before);
-    });
-
-    test('빨라지기 전 점이 없으면 기록 구간 시작 시각', () {
-      final d = check(const Duration(seconds: 30), lastPointAt: null);
-      expect(d?.endAt, _start);
-    });
-
-    test('기록 구간 시작 시각도 없으면 시작 시각', () {
-      final d = checkAutoEnd(
-        now: fastSince.add(const Duration(seconds: 30)),
-        startedAt: _start,
-        state: RunState.recording,
-        pausedAt: null,
-        stateSince: _start,
-        lastPointAt: null,
-        recordingSince: null,
-        fastSince: fastSince,
-        fastLastAt: fastSince.add(const Duration(seconds: 30)),
+    test('합계 1분 59초면 계속, 2분이면 첫 의심 구간 전 마지막 정상 점에 끝낸다', () {
+      expect(
+        check(const Duration(minutes: 1, seconds: 59), vehicleEndAt: firstStop),
+        isNull,
       );
-      expect(d?.endAt, _start);
+      final d = check(const Duration(minutes: 2), vehicleEndAt: firstStop);
+      expect(d?.reason, AutoEndReason.vehicle);
+      expect(d?.endAt, firstStop);
     });
 
-    test('now 가 한참 지나도 점 시각 차이가 짧으면 계속', () {
-      final d = checkAutoEnd(
-        now: fastSince.add(const Duration(minutes: 5)),
-        startedAt: _start,
-        state: RunState.recording,
-        pausedAt: null,
-        stateSince: _start,
-        lastPointAt: before,
-        recordingSince: _start,
-        fastSince: fastSince,
-        fastLastAt: fastSince.add(const Duration(seconds: 1)),
-        beforeFastAt: before,
-      );
-      expect(d, isNull);
+    test('첫 정상 점을 모르면 기록이 멈춘 시각', () {
+      expect(check(const Duration(minutes: 2))?.endAt, since);
     });
 
-    test('일시정지·자동 일시정지 중에는 적용하지 않는다', () {
-      for (final state in [RunState.paused, RunState.autoPaused]) {
+    test('탈것 의심 중일 때만 적용한다', () {
+      for (final state in [
+        RunState.recording,
+        RunState.paused,
+        RunState.autoPaused,
+      ]) {
         expect(
-          check(const Duration(minutes: 1), state: state, beforeFastAt: before),
-          isNull,
+          check(const Duration(minutes: 5), state: state)?.reason,
+          isNot(AutoEndReason.vehicle),
         );
       }
     });
 
-    test('config.fast 로 줄인다', () {
-      final d = checkAutoEnd(
-        now: fastSince.add(const Duration(seconds: 5)),
-        startedAt: _start,
-        state: RunState.recording,
-        pausedAt: null,
-        stateSince: _start,
-        lastPointAt: before,
-        recordingSince: _start,
-        fastSince: fastSince,
-        fastLastAt: fastSince.add(const Duration(seconds: 5)),
-        beforeFastAt: before,
-        config: const RunGuardConfig(fast: Duration(seconds: 5)),
+    test('탈것 의심은 예고하지 않는다', () {
+      expect(
+        autoEndWarningDeadline(
+          now: since.add(const Duration(minutes: 30)),
+          state: RunState.vehicle,
+          stateSince: since,
+        ),
+        isNull,
       );
-      expect(d?.reason, AutoEndReason.fast);
+    });
+
+    test('config.vehicle 로 줄인다', () {
+      final d = check(
+        const Duration(seconds: 20),
+        config: const RunGuardConfig(vehicle: Duration(seconds: 20)),
+      );
+      expect(d?.reason, AutoEndReason.vehicle);
     });
   });
 
@@ -166,6 +143,17 @@ void main() {
       expect(d?.reason, AutoEndReason.still);
       expect(d?.endAt, pausedAt);
       expect(deadline(s, const Duration(minutes: 5, seconds: 30)), isNull);
+    });
+
+    test('신호 끊김도 5분에 예고하고 5분 30초에 pausedAt 으로 끝낸다', () {
+      const s = RunState.signalLost;
+      final end = pausedAt.add(const Duration(minutes: 5, seconds: 30));
+      expect(deadline(s, const Duration(minutes: 4, seconds: 59)), isNull);
+      expect(deadline(s, const Duration(minutes: 5)), end);
+      expect(check(s, const Duration(minutes: 5, seconds: 29)), isNull);
+      final d = check(s, const Duration(minutes: 5, seconds: 30));
+      expect(d?.reason, AutoEndReason.signalLost);
+      expect(d?.endAt, pausedAt);
     });
 
     test('사용자 일시정지 1시간에 예고, 1시간 30초에 pausedAt 으로 종료', () {
@@ -334,15 +322,15 @@ void parseTests() {
       expect(c?.max, const Duration(minutes: 2));
       expect(c?.paused, autoEndPaused);
       expect(c?.warning, autoEndWarning);
-      expect(c?.fast, autoEndFast);
+      expect(c?.vehicle, autoEndVehicle);
       final d = runGuardConfigFromSeconds(
         pausedSec: '60',
         warningSec: '10',
-        fastSec: '10',
+        vehicleSec: '10',
       );
       expect(d?.paused, const Duration(minutes: 1));
       expect(d?.warning, const Duration(seconds: 10));
-      expect(d?.fast, const Duration(seconds: 10));
+      expect(d?.vehicle, const Duration(seconds: 10));
       expect(d?.still, autoEndStill);
       expect(d?.max, autoEndMax);
     });
@@ -353,13 +341,13 @@ void parseTests() {
         pausedSec: '0',
         warningSec: '-3',
         maxSec: '0',
-        fastSec: '-3',
+        vehicleSec: '-3',
       );
       expect(c?.still, autoEndStill);
       expect(c?.paused, autoEndPaused);
       expect(c?.warning, autoEndWarning);
       expect(c?.max, autoEndMax);
-      expect(c?.fast, autoEndFast);
+      expect(c?.vehicle, autoEndVehicle);
     });
   });
 }

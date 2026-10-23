@@ -62,6 +62,15 @@ void main() {
       );
       expect(voiceLine(const VoiceEndWarning(0)), isNull);
     });
+
+    test('탈것 의심·신호 끊김과 그 종료 예고 (결정 0033)', () {
+      expect(voiceLine(const VoiceVehicle()), '너무 빨라서 이 구간은 기록에서 뺄게요');
+      expect(voiceLine(const VoiceSignalLost()), '신호가 끊겼어요. 밖으로 나오면 다시 찾을게요');
+      expect(
+        voiceLine(const VoiceEndWarning(30, signalLost: true)),
+        '신호가 오래 끊겨 30초 뒤 러닝을 마쳐요',
+      );
+    });
   });
 
   group('VoiceGuide', () {

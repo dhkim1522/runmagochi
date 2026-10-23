@@ -229,7 +229,7 @@ void main() {
     });
   });
 
-  test('자동 일시정지 안내 다음 종료 예고도 끊기지 않는다', () {
+  test('자동 일시정지·신호 끊김 안내 다음 종료 예고도 끊기지 않는다', () {
     _run((async, container, speaker, profile, sampleAt) {
       speaker.speakTime = const Duration(seconds: 2);
       container
@@ -239,7 +239,13 @@ void main() {
       sampleAt(const Duration(seconds: 1), 0);
       sampleAt(const Duration(seconds: 11), 30);
       async.elapse(const Duration(minutes: 5, seconds: 30));
-      expect(speaker.spoken, ['러닝을 시작해요', '일시정지했어요', '움직이지 않으면 30초 뒤 러닝을 마쳐요']);
+      // 점이 끊겼으므로 30초에 신호 끊김이 되고, 5분 뒤 신호 끊김 예고를 읽는다.
+      expect(speaker.spoken, [
+        '러닝을 시작해요',
+        '일시정지했어요',
+        '신호가 끊겼어요. 밖으로 나오면 다시 찾을게요',
+        '신호가 오래 끊겨 30초 뒤 러닝을 마쳐요',
+      ]);
       expect(speaker.cutOff, isEmpty);
     });
   });
@@ -284,15 +290,33 @@ void main() {
       async.flushMicrotasks();
       sampleAt(const Duration(seconds: 1), 0);
       sampleAt(const Duration(seconds: 11), 30);
-      async.elapse(const Duration(seconds: 30));
+      // 제자리 점이 5초마다 와서 신호는 살아 있다.
+      sampleAt(const Duration(seconds: 305), 30);
       expect(speaker.spoken.last, '일시정지했어요');
 
       // 5분 멈춤 뒤 종료 예고(30초 전)는 한 번만.
-      async.elapse(const Duration(minutes: 5, seconds: 5));
+      sampleAt(const Duration(seconds: 320), 30);
       expect(speaker.spoken.last, '움직이지 않으면 30초 뒤 러닝을 마쳐요');
       final count = speaker.spoken.length;
       async.elapse(const Duration(seconds: 10));
       expect(speaker.spoken.length, count);
+    });
+  });
+
+  test('탈것 의심과 풀림을 읽는다 (결정 0033)', () {
+    _run((async, container, speaker, profile, sampleAt) {
+      container
+          .read(runControllerProvider.notifier)
+          .start(goal: const DistanceGoal(5000));
+      async.flushMicrotasks();
+      sampleAt(const Duration(seconds: 1), 0);
+      sampleAt(const Duration(seconds: 61), 180);
+      // 초속 7m 로 1분.
+      sampleAt(const Duration(seconds: 121), 600);
+      expect(speaker.spoken, ['러닝을 시작해요', '너무 빨라서 이 구간은 기록에서 뺄게요']);
+      // 내려서 초속 3m 로 달리면 풀린다.
+      sampleAt(const Duration(seconds: 201), 840);
+      expect(speaker.spoken, ['러닝을 시작해요', '너무 빨라서 이 구간은 기록에서 뺄게요', '다시 기록해요']);
     });
   });
 

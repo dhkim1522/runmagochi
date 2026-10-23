@@ -1,4 +1,4 @@
-// 러닝 자동 종료 규칙 (결정 0016·0018·0020).
+// 러닝 자동 종료 규칙 (결정 0016·0020·0033).
 
 import '../domain/run_engine.dart';
 
@@ -11,8 +11,8 @@ const Duration autoEndPaused = Duration(hours: 1);
 /// 예고한 뒤 이 시간이 지나도 그대로면 끝낸다 (결정 0020).
 const Duration autoEndWarning = Duration(seconds: 30);
 
-/// 시속 30km 를 넘는 빠른 이동이 이 시간 이어지면 끝낸다 (결정 0018).
-const Duration autoEndFast = Duration(seconds: 30);
+/// 이번 러닝의 탈것 의심 시간이 모두 합해 이만큼이면 끝낸다 (결정 0033).
+const Duration autoEndVehicle = Duration(minutes: 2);
 
 /// 시작부터 이 시간이 지나면 어느 상태든 끝낸다.
 const Duration autoEndMax = Duration(hours: 6);
@@ -24,17 +24,19 @@ class RunGuardConfig {
     this.paused = autoEndPaused,
     this.warning = autoEndWarning,
     this.max = autoEndMax,
-    this.fast = autoEndFast,
+    this.vehicle = autoEndVehicle,
   });
 
   final Duration still;
   final Duration paused;
   final Duration warning;
   final Duration max;
-  final Duration fast;
+  final Duration vehicle;
 }
 
-enum AutoEndReason { still, paused, maxDuration, fast }
+/// [still] 자동 일시정지, [paused] 사용자 일시정지, [signalLost] 신호 끊김이
+/// 오래 이어짐, [vehicle] 탈것 의심 합계, [maxDuration] 시작부터 상한.
+enum AutoEndReason { still, paused, maxDuration, vehicle, signalLost }
 
 class AutoEndDecision {
   const AutoEndDecision(this.reason, this.endAt);
@@ -46,20 +48,22 @@ class AutoEndDecision {
 }
 
 /// [state] 에서 예고를 시작하기까지의 시간. 오래 멈춤 규칙이 없는 상태면 null.
+/// 신호 끊김은 자동 일시정지와 같은 시간이다 (결정 0033).
 Duration? _stillLimit(RunState state, RunGuardConfig config) => switch (state) {
-  RunState.autoPaused => config.still,
+  RunState.autoPaused || RunState.signalLost => config.still,
   RunState.paused => config.paused,
   _ => null,
 };
 
 /// 계속하면 null, 끝내야 하면 끝 시각을 담은 결정. 위에서부터 본다.
 ///
-/// - 기록 중이고 `fastLastAt − fastSince ≥ fast` 면(점 시각으로 잰다. 벽시계로
-///   재면 점이 끊겼을 때 튀는 값 하나로 끝난다) [beforeFastAt] ??
-///   [recordingSince] ?? [startedAt] 에 끝낸다.
-/// - 자동 일시정지이고 `now − stateSince ≥ still + warning` 이면
-///   [AutoEndReason.still], 사용자 일시정지이고 `≥ paused + warning` 이면
-///   [AutoEndReason.paused] 로 [pausedAt](기록이 멈춘 시각)에 끝낸다.
+/// - 탈것 의심 중이고 이번 러닝의 의심 시간 합 [vehicleTime] 이 `vehicle` 이상이면
+///   [AutoEndReason.vehicle] 로 첫 의심 구간 전 마지막 정상 점 [vehicleEndAt]
+///   (없으면 [pausedAt]) 에 끝낸다.
+/// - 자동 일시정지·신호 끊김이고 `now − stateSince ≥ still + warning` 이면
+///   [AutoEndReason.still]·[AutoEndReason.signalLost], 사용자 일시정지이고
+///   `≥ paused + warning` 이면 [AutoEndReason.paused] 로 [pausedAt](기록이 멈춘
+///   시각)에 끝낸다.
 /// - `now − startedAt ≥ max` 면 끝낸다. 점이 있으면 마지막 활동 시각
 ///   ([lastPointAt] 과 [recordingSince] 중 늦은 쪽), 없으면 [now] 에 끝낸다.
 AutoEndDecision? checkAutoEnd({
@@ -70,28 +74,25 @@ AutoEndDecision? checkAutoEnd({
   required DateTime? stateSince,
   required DateTime? lastPointAt,
   required DateTime? recordingSince,
-  DateTime? fastSince,
-  DateTime? fastLastAt,
-  DateTime? beforeFastAt,
+  Duration vehicleTime = Duration.zero,
+  DateTime? vehicleEndAt,
   RunGuardConfig config = const RunGuardConfig(),
 }) {
-  if (state == RunState.recording &&
-      fastSince != null &&
-      fastLastAt != null &&
-      fastLastAt.difference(fastSince) >= config.fast) {
+  if (state == RunState.vehicle && vehicleTime >= config.vehicle) {
     return AutoEndDecision(
-      AutoEndReason.fast,
-      beforeFastAt ?? recordingSince ?? startedAt,
+      AutoEndReason.vehicle,
+      vehicleEndAt ?? pausedAt ?? stateSince ?? startedAt,
     );
   }
   final limit = _stillLimit(state, config);
   if (limit != null &&
       stateSince != null &&
       now.difference(stateSince) >= limit + config.warning) {
-    return AutoEndDecision(
-      state == RunState.autoPaused ? AutoEndReason.still : AutoEndReason.paused,
-      pausedAt ?? stateSince,
-    );
+    return AutoEndDecision(switch (state) {
+      RunState.autoPaused => AutoEndReason.still,
+      RunState.signalLost => AutoEndReason.signalLost,
+      _ => AutoEndReason.paused,
+    }, pausedAt ?? stateSince);
   }
   if (now.difference(startedAt) >= config.max) {
     final activity = _latest(lastPointAt, recordingSince) ?? startedAt;
@@ -131,14 +132,14 @@ RunGuardConfig? runGuardConfigFromSeconds({
   String pausedSec = '',
   String warningSec = '',
   String maxSec = '',
-  String fastSec = '',
+  String vehicleSec = '',
 }) {
   if ([
     stillSec,
     pausedSec,
     warningSec,
     maxSec,
-    fastSec,
+    vehicleSec,
   ].every((s) => s.isEmpty)) {
     return null;
   }
@@ -152,6 +153,6 @@ RunGuardConfig? runGuardConfigFromSeconds({
     paused: parse(pausedSec, autoEndPaused),
     warning: parse(warningSec, autoEndWarning),
     max: parse(maxSec, autoEndMax),
-    fast: parse(fastSec, autoEndFast),
+    vehicle: parse(vehicleSec, autoEndVehicle),
   );
 }

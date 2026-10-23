@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show HapticFeedback;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -11,6 +13,8 @@ import '../../core/format.dart';
 import '../../core/theme.dart';
 import '../../core/ui/components.dart';
 import '../app/providers.dart';
+import '../data/run_progress_notifier.dart'
+    show signalLostNotice, vehicleNotice;
 import '../domain/run_engine.dart';
 import '../domain/run_goal.dart';
 import '../domain/run_summary.dart';
@@ -69,7 +73,15 @@ class _InRunScreenState extends ConsumerState<InRunScreen> {
     // ended 는 러닝 저장이 실패해 종료만 다시 할 수 있는 상태다.
     final ended = snap.state == RunState.ended;
     final autoPaused = snap.state == RunState.autoPaused;
-    final paused = snap.state == RunState.paused || autoPaused || ended;
+    // 자동 일시정지·탈것 의심·신호 끊김은 스스로 풀리고, 재개·일시정지를 고를 수 있다.
+    final autoStopped = autoStoppedStates.contains(snap.state);
+    final paused = snap.state == RunState.paused || autoStopped || ended;
+    // 탈것 의심·신호 끊김은 펫이 말풍선으로 까닭을 알린다 (결정 0033).
+    final bubble = switch (snap.state) {
+      RunState.vehicle => vehicleNotice,
+      RunState.signalLost => signalLostNotice,
+      _ => null,
+    };
     final c = AppColors.of(context);
     final t = AppText.of(context);
     // 종류를 읽기 전(또는 실패)에는 같은 크기의 빈자리만 둔다.
@@ -78,6 +90,7 @@ class _InRunScreenState extends ConsumerState<InRunScreen> {
 
     // 무대 높이에 맞춰 펫 배율을 고른다. 종류를 읽기 전(또는 실패)에는 같은 크기의 빈자리만 둔다.
     final stage = _RunStage(
+      bubble: bubble,
       pet: (scale) => growth == null
           ? AvatarSlot(scale: scale)
           : AvatarView(
@@ -174,7 +187,7 @@ class _InRunScreenState extends ConsumerState<InRunScreen> {
                 if (!paused)
                   AppButton.panel(label: '일시정지', onPressed: controller.pause)
                 else ...[
-                  if (autoPaused) ...[
+                  if (autoStopped) ...[
                     // 오래 쉴 때는 사용자 일시정지로 바꿔 5분 자동 종료를 피한다.
                     Row(
                       children: [
@@ -294,37 +307,55 @@ class _GoalRow extends StatelessWidget {
 /// 러닝 중 사각 무대(폭 전체, 땅 띠 [Stage.groundHeightCompact]). 펫은 시안대로 6배이고,
 /// 무대가 낮으면(작은 화면·큰 글자) 들어가는 가장 큰 정수 배율로 줄인다.
 /// 1배도 안 들어가면(아주 작은 화면 + 큰 글자) 빈 무대 띠 대신 무대를 비워 둔다.
+/// [bubble] 이 있으면 오른쪽 위 말풍선이 펫 그림을 가리지 않게(프레임 위 빈 줄
+/// [spriteTopGapRows] 까지만 겹치게) 배율을 고른다.
 class _RunStage extends StatelessWidget {
-  const _RunStage({required this.pet});
+  const _RunStage({required this.pet, this.bubble});
 
   /// 배율을 받아 펫(32 × 배율 정사각형)을 만든다.
   final Widget Function(int scale) pet;
 
+  /// 말풍선 문구. null 이면 말풍선을 두지 않는다.
+  final String? bubble;
+
   static const int _maxScale = 6;
   static const int _minScale = 1;
 
-  /// [scale] 배 펫이 땅 위에 서는 데 필요한 무대 높이.
-  static double _needed(int scale) =>
-      spriteFramePx * scale +
-      Stage.groundHeightCompact -
-      Stage.footSink -
-      spriteFootGapRows * scale;
+  /// [scale] 배 펫이 땅 위에 서는 데 필요한 무대 높이. 말풍선 높이 [bubbleHeight]
+  /// 가 있으면 말풍선 아래 끝이 펫 상자 위 빈 줄 아래로 내려오는 만큼 더한다.
+  static double _needed(int scale, double? bubbleHeight) {
+    final pet =
+        spriteFramePx * scale +
+        Stage.groundHeightCompact -
+        Stage.footSink -
+        spriteFootGapRows * scale;
+    if (bubbleHeight == null) return pet;
+    final overlap = Gap.s4 + bubbleHeight - spriteTopGapRows * scale;
+    return pet + math.max(0, overlap);
+  }
 
   @override
   Widget build(BuildContext context) {
+    final text = bubble;
+    final bubbleHeight = text == null
+        ? null
+        : SpeechBubble.heightFor(MediaQuery.textScalerOf(context));
     return LayoutBuilder(
       builder: (context, box) {
-        final scale = PetStage.largestScale(
+        int? largest(double? bubbleHeight) => PetStage.largestScale(
           max: _maxScale,
           min: _minScale,
-          fits: (s) => _needed(s) <= box.maxHeight,
+          fits: (s) => _needed(s, bubbleHeight) <= box.maxHeight,
         );
+        // 말풍선 자리까지 안 들어가면 펫을 조금 가리더라도 말풍선을 남긴다.
+        final scale = largest(bubbleHeight) ?? largest(null);
         if (scale == null) return const SizedBox.shrink();
         return PetStage(
           height: box.maxHeight,
           scale: scale,
           groundHeight: Stage.groundHeightCompact,
           pet: pet(scale),
+          bubble: text == null ? null : SpeechBubble(text),
         );
       },
     );

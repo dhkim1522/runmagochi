@@ -8,8 +8,15 @@ import 'run_summary.dart';
 const double _maxAccuracyM = 20;
 const double _maxSpeedMps = 7;
 
-/// 빠른 이동으로 보는 속도: 시속 30km (초속 8.33m).
-const double fastSpeedMps = 30 / 3.6;
+/// 탈것으로 의심하는 평균 속도: 시속 22km (초속 6.1m, 1km 2분 44초, 결정 0033).
+const double vehicleSpeedMps = 22 / 3.6;
+
+/// 탈것 의심을 판정하는 창. 창 첫 점과 마지막 점 사이 직선 거리 ÷ 시간이
+/// [vehicleSpeedMps] 를 넘으면 탈것 의심이다.
+const Duration vehicleWindow = Duration(seconds: 30);
+
+/// 정확도 거름을 통과한 점이 이만큼 없으면 신호 끊김이다 (결정 0033).
+const Duration signalLostAfter = Duration(seconds: 30);
 const Duration _currentPaceWindow = Duration(seconds: 30);
 const double _minPaceDistanceM = 10;
 const Duration _staleSampleTolerance = Duration(seconds: 2);
@@ -32,7 +39,31 @@ const double autoResumeMoveM = 10;
 const int autoResumeMinPoints = 3;
 
 /// [paused] 는 사용자 일시정지, [autoPaused] 는 멈춰서 된 자동 일시정지다.
-enum RunState { idle, recording, paused, autoPaused, ended }
+/// [vehicle] 은 탈것 의심, [signalLost] 는 신호 끊김이다(결정 0033). 둘 다
+/// 자동 일시정지처럼 시간·거리를 멈추고 스스로 풀린다.
+enum RunState {
+  idle,
+  recording,
+  paused,
+  autoPaused,
+  vehicle,
+  signalLost,
+  ended,
+}
+
+/// 위치를 받으며 스스로 풀리는 멈춤 상태. 사용자가 재개·일시정지할 수 있다.
+const Set<RunState> autoStoppedStates = {
+  RunState.autoPaused,
+  RunState.vehicle,
+  RunState.signalLost,
+};
+
+/// 끝나지 않은 러닝 상태(시작 뒤, 종료 전).
+const Set<RunState> activeRunStates = {
+  RunState.recording,
+  RunState.paused,
+  ...autoStoppedStates,
+};
 
 sealed class RunEvent {}
 
@@ -121,12 +152,23 @@ class RunEngine {
   double _distanceM = 0;
   LocationSample? _lastAccepted;
 
-  /// 정확도 거름을 통과한 직전 원시 점. 빠른 이동 속도를 잰다.
-  /// 사용자 일시정지·재개하면 비우고, 멈춤·움직임 전이에는 남긴다.
-  LocationSample? _lastRaw;
-  DateTime? _fastSince;
-  DateTime? _fastLastAt;
-  DateTime? _lastAcceptedBeforeFast;
+  /// 정확도 거름을 통과한 최근 원시 점. 탈것 의심 평균 속도를 잰다. 맨 앞 점은
+  /// 창 시작([vehicleWindow] 전) 이전의 가장 늦은 점이다. 사용자 일시정지·재개와
+  /// 신호 끊김에 비우고, 멈춤·움직임·탈것 의심 전이에는 남긴다.
+  final List<LocationSample> _speedWindow = [];
+
+  /// 마지막 받아들인 점에서 [vehicleSpeedMps] 보다 빨리 멀어지고 있는 점.
+  /// 탈것 의심이 되면 버리고, 다시 느린 점이 오면 그 점과 함께 받아들인다.
+  final List<LocationSample> _held = [];
+
+  /// 정확도 거름을 통과한 마지막 점의 시각. 없으면 위치를 받기 시작한 시각.
+  DateTime? _lastSignalAt;
+
+  /// 끝난 탈것 의심 구간 시간의 합.
+  Duration _vehicleBase = Duration.zero;
+
+  /// 첫 탈것 의심 구간이 시작되기 전 마지막 정상 점의 시각.
+  DateTime? _firstVehicleAt;
 
   Duration _movingBase = Duration.zero;
   DateTime? _recordingSince;
@@ -179,16 +221,24 @@ class RunEngine {
   /// 마지막으로 받아들인 점(복원한 점 포함)의 시각. 없으면 null.
   DateTime? get lastPointAt => _lastAccepted?.time;
 
-  /// 빠른 이동(시속 30km 초과)이 이어지기 시작한 시각, 곧 그 연속의 첫 빠른
-  /// 점의 시각. 빠른 이동 중이 아니면 null.
-  DateTime? get fastSince => _fastSince;
+  /// 정확도 거름을 통과한 마지막 점의 시각. 위치를 받기 시작한 뒤 점이 없으면
+  /// 그 시각(시작·재개). 복원한 뒤 재개 전이면 null.
+  DateTime? get lastSignalAt => _lastSignalAt;
 
-  /// 이 연속의 가장 최근 빠른 점의 시각. 빠른 이동 시간은 [fastSince] 부터
-  /// 이 시각까지로 재며 벽시계는 쓰지 않는다. 빠른 이동 중이 아니면 null.
-  DateTime? get fastLastAt => _fastLastAt;
+  /// 이번 러닝에서 탈것 의심 상태였던 시간의 합. 지금 의심 중이면 [now] 까지 센다.
+  Duration vehicleTime(DateTime now) {
+    if (_state != RunState.vehicle) return _vehicleBase;
+    final since = _stateSince!;
+    return _vehicleBase +
+        (now.isAfter(since) ? now.difference(since) : Duration.zero);
+  }
 
-  /// [fastSince] 를 잡은 순간 마지막으로 받아들인 점의 시각. 없으면 null.
-  DateTime? get lastAcceptedBeforeFast => _lastAcceptedBeforeFast;
+  /// 첫 탈것 의심 구간이 시작되기 전 마지막 정상 점의 시각(받아들인 점이 없었으면
+  /// 그 기록 구간을 시작·재개한 시각). 의심한 적이 없으면 null.
+  DateTime? get firstVehicleAt => _firstVehicleAt;
+
+  /// 받아들이기를 미룬 빠른 점([vehicleSpeedMps] 초과로 멀어지는 점)의 수.
+  int get heldCount => _held.length;
 
   List<List<LocationSample>> get segments => List.unmodifiable([
     for (final segment in _segments) List<LocationSample>.unmodifiable(segment),
@@ -223,34 +273,34 @@ class RunEngine {
     _startedAt = _transition(RunState.idle, RunState.recording);
   }
 
-  /// 기록 중이나 자동 일시정지 중에 사용자 일시정지한다.
+  /// 기록 중이나 자동 일시정지·탈것 의심·신호 끊김 중에 사용자 일시정지한다.
+  /// 받아들이기를 미룬 점은 버린다.
   void pause() {
     _transition(
-      _state == RunState.autoPaused ? RunState.autoPaused : RunState.recording,
+      autoStoppedStates.contains(_state) ? _state : RunState.recording,
       RunState.paused,
     );
   }
 
-  /// 사용자 일시정지나 자동 일시정지에서 재개한다.
+  /// 사용자 일시정지나 자동 일시정지·탈것 의심·신호 끊김에서 재개한다.
   void resume() {
     _transition(
-      _state == RunState.autoPaused ? RunState.autoPaused : RunState.paused,
+      autoStoppedStates.contains(_state) ? _state : RunState.paused,
       RunState.recording,
     );
   }
 
   /// 기록 중이고 마지막 움직인 점(없으면 기록 구간 시작) 뒤 [autoPauseStill]
-  /// 이 지났으면 그 시각으로 자동 일시정지하고 true. 마지막 빠른 점 뒤
-  /// [autoPauseStill] 이 지나기 전에는 멈춘 것이 아니므로 하지 않는다(빠른
-  /// 이동 자동 종료가 맡는다).
+  /// 이 지났으면 그 시각으로 자동 일시정지하고 true. 받아들이기를 미룬 빠른 점이
+  /// [autoPauseStill] 안에 왔으면 움직이는 중이므로 하지 않는다(탈것 의심이 맡는다).
+  /// 미룬 점은 버린다.
   bool autoPauseIfStill(DateTime now) {
     if (_state != RunState.recording) return false;
-    final fastLastAt = _fastLastAt;
-    if (fastLastAt != null && now.difference(fastLastAt) < autoPauseStill) {
+    final heldAt = _held.lastOrNull?.time;
+    if (heldAt != null && now.difference(heldAt) < autoPauseStill) {
       return false;
     }
-    final since = _recordingSince!;
-    final movedAt = _movedAt!.isBefore(since) ? since : _movedAt!;
+    final movedAt = _stillSince();
     if (now.difference(movedAt) < autoPauseStill) return false;
     _transition(
       RunState.recording,
@@ -261,13 +311,47 @@ class RunEngine {
     return true;
   }
 
-  /// 기록 중이나 일시정지·자동 일시정지 중에 끝낸다. 남은 거리가 1m
+  /// 기록 중·자동 일시정지·탈것 의심 중 정확도 거름을 통과한 점이
+  /// [signalLostAfter] 동안 없으면 신호 끊김으로 바꾸고 true (결정 0033).
+  ///
+  /// 점이 끊겨도 [autoPauseStill] 에 먼저 자동 일시정지한다(거리 거름 때문에
+  /// 멈춰 서도 점이 오지 않을 수 있다). 그 뒤에도 점이 없으면 이것이 자동
+  /// 일시정지를 바꾼다. 기록 중이면 마지막 움직인 점, 아니면 마지막 점(지금 상태에
+  /// 들어온 시각보다 앞이면 그 시각)으로 바꾼다. 기록이 멈춘 시각([pausedAt])은
+  /// 처음 멈춘 시각을 그대로 둔다.
+  bool signalLostIfSilent(DateTime now) {
+    final from = _state;
+    if (from != RunState.recording &&
+        from != RunState.autoPaused &&
+        from != RunState.vehicle) {
+      return false;
+    }
+    final lastSignal = _lastSignalAt ?? _stateSince!;
+    if (now.difference(lastSignal) < signalLostAfter) return false;
+    final DateTime at;
+    if (from == RunState.recording) {
+      at = _stillSince();
+    } else {
+      final since = _stateSince!;
+      at = lastSignal.isAfter(since) ? lastSignal : since;
+    }
+    _transition(from, RunState.signalLost, at: at, auto: true);
+    return true;
+  }
+
+  /// 기록 중 마지막 움직인 시각. 이번 기록 구간 시작보다 앞이면 시작 시각.
+  DateTime _stillSince() {
+    final since = _recordingSince!;
+    final movedAt = _movedAt!;
+    return movedAt.isBefore(since) ? since : movedAt;
+  }
+
+  /// 끝나지 않은 러닝([activeRunStates])을 끝낸다. 남은 거리가 1m
   /// 이상이면 마지막 구간으로 넣고 `RunEnded` 를 낸 뒤 `ended` 로 바꾸고
-  /// 이벤트 스트림을 닫는다. `clock()` 은 한 번만 읽는다.
+  /// 이벤트 스트림을 닫는다. `clock()` 은 한 번만 읽는다. 받아들이기를 미룬 점은
+  /// 넣지 않는다.
   RunSummary end({double weightKg = defaultWeightKg}) {
-    if (_state != RunState.recording &&
-        _state != RunState.paused &&
-        _state != RunState.autoPaused) {
+    if (!activeRunStates.contains(_state)) {
       throw StateError('Cannot go from $_state to ${RunState.ended}');
     }
     final remainingM = _distanceM - _splits.length * _splitM;
@@ -301,24 +385,145 @@ class RunEngine {
     return summary;
   }
 
-  /// 채택하면 true. 자동 일시정지 중에는 점을 창에 모으고, 움직임이면 창의
-  /// 첫 점 시각으로 재개해 창의 점을 새 구간에 넣는다. 넣은 점은 [lastAppended].
-  /// 빠른 이동은 자동 일시정지 중에도 잰다.
+  /// 채택하면 true. 넣은 점은 [lastAppended] 이고 여러 개일 수 있다.
+  ///
+  /// - 기록 중: 최근 [vehicleWindow] 평균 속도가 [vehicleSpeedMps] 를 넘으면
+  ///   마지막 받아들인 점(정상 점) 시각으로 탈것 의심으로 바꾼다. 마지막 받아들인
+  ///   점에서 그보다 빨리 멀어지는 점은 받아들이기를 미루고, 느린 점이 오면 함께
+  ///   받아들인다(의심이 되면 버린다).
+  /// - 자동 일시정지: 점을 창에 모으고, 움직임이면 창의 첫 점 시각으로 재개해
+  ///   창의 점을 새 구간에 넣는다.
+  /// - 탈것 의심: 평균 속도가 [vehicleSpeedMps] 이하로 내려오면 그 점 시각으로
+  ///   재개하고 그 점부터 새 구간에 넣는다.
+  /// - 신호 끊김: 점이 오면 그 점 시각으로 재개하고 그 점부터 새 구간에 넣는다.
+  ///   끊기기 전 마지막 점과의 거리는 더하지 않는다.
   bool addSample(LocationSample s) {
     _lastAppended = const [];
     if (s.accuracy > _maxAccuracyM) return false;
-    if (_state == RunState.autoPaused) {
-      _trackFast(s);
-      return _collectWhileStill(s);
+    switch (_state) {
+      case RunState.autoPaused:
+        _track(s);
+        return _collectWhileStill(s);
+      case RunState.vehicle:
+        _track(s);
+        return _leaveVehicleIfSlow(s);
+      case RunState.signalLost:
+        return _recoverSignal(s);
+      case RunState.recording:
+        if (s.time.isBefore(_recordingSince!.subtract(_staleSampleTolerance))) {
+          return false;
+        }
+        _track(s);
+        if (_enterVehicleIfFast()) return false;
+        _lastAppended = _offer(s);
+        return _lastAppended.isNotEmpty;
+      case RunState.idle || RunState.paused || RunState.ended:
+        return false;
     }
-    if (_state != RunState.recording) return false;
-    if (s.time.isBefore(_recordingSince!.subtract(_staleSampleTolerance))) {
+  }
+
+  /// 최근 평균 속도가 [vehicleSpeedMps] 를 넘으면 탈것 의심으로 바꾸고 true.
+  /// 바꾸는 시각은 마지막 받아들인 점이고, 이번 기록 구간에 받아들인 점이 없으면
+  /// 구간을 시작·재개한 시각이다. 미룬 점은 버린다.
+  bool _enterVehicleIfFast() {
+    final speed = _windowSpeed();
+    if (speed == null || speed <= vehicleSpeedMps) return false;
+    final since = _recordingSince!;
+    final last = _lastAccepted?.time;
+    final at = last == null || last.isBefore(since) ? since : last;
+    _transition(RunState.recording, RunState.vehicle, at: at, auto: true);
+    _firstVehicleAt ??= at;
+    return true;
+  }
+
+  /// 탈것 의심 중 평균 속도가 [vehicleSpeedMps] 이하로 내려오면 [s] 시각으로
+  /// 재개하고 [s] 를 새 구간 첫 점으로 받아들인다.
+  bool _leaveVehicleIfSlow(LocationSample s) {
+    if (!s.time.isAfter(_stateSince!)) return false;
+    final speed = _windowSpeed();
+    if (speed == null || speed > vehicleSpeedMps) return false;
+    _transition(RunState.vehicle, RunState.recording, at: s.time, auto: true);
+    _lastAppended = _offer(s);
+    return _lastAppended.isNotEmpty;
+  }
+
+  /// 신호 끊김 중 점이 오면 그 시각으로 재개하고 새 구간 첫 점으로 받아들인다.
+  bool _recoverSignal(LocationSample s) {
+    final last = _lastAccepted?.time;
+    if (!s.time.isAfter(_stateSince!) ||
+        (last != null && !s.time.isAfter(last))) {
       return false;
     }
-    _trackFast(s);
-    if (!_accept(s)) return false;
-    _lastAppended = [s];
-    return true;
+    _transition(
+      RunState.signalLost,
+      RunState.recording,
+      at: s.time,
+      auto: true,
+    );
+    _track(s);
+    _lastAppended = _offer(s);
+    return _lastAppended.isNotEmpty;
+  }
+
+  /// 정확도 거름을 통과한 점을 신호와 평균 속도 창에 넣는다. 거리와는 무관하다.
+  void _track(LocationSample s) {
+    final lastSignal = _lastSignalAt;
+    if (lastSignal == null || s.time.isAfter(lastSignal)) {
+      _lastSignalAt = s.time;
+    }
+    final window = _speedWindow;
+    if (window.isNotEmpty && !s.time.isAfter(window.last.time)) return;
+    window.add(s);
+    final boundary = s.time.subtract(vehicleWindow);
+    while (window.length >= 2 && !window[1].time.isAfter(boundary)) {
+      window.removeAt(0);
+    }
+  }
+
+  /// 창이 [vehicleWindow] 이상이면 창 첫 점과 마지막 점 사이 직선 거리 ÷ 시간
+  /// (m/s). 창이 짧으면 null. 제자리 흔들림이나 굽은 길에 부풀지 않게 직선 거리를 쓴다.
+  double? _windowSpeed() {
+    final window = _speedWindow;
+    if (window.length < 2) return null;
+    final span = window.last.time.difference(window.first.time);
+    if (span < vehicleWindow) return null;
+    return _distance(window.first, window.last) /
+        (span.inMicroseconds / Duration.microsecondsPerSecond);
+  }
+
+  /// 기록 중 점 [s] 를 받아들이거나 미룬다. 받아들인 점(미뤘던 점 포함)을 돌려준다.
+  ///
+  /// 이번 구간에 점이 있고 마지막 받아들인 점에서 [s] 까지 평균 속도가
+  /// [vehicleSpeedMps] 를 넘으면 미룬다. 아니면 미룬 점과 [s] 를 차례로 튀는 값
+  /// 거름에 걸러 받아들인다. 미룬 지 [vehicleWindow] 가 지나도 탈것 의심이 아니면
+  /// 의심할 근거가 없으므로 받아들인다.
+  List<LocationSample> _offer(LocationSample s) {
+    final ref = _lastAccepted;
+    final held = _held;
+    if (!_segmentPending && ref != null) {
+      final dt = s.time.difference(ref.time);
+      if (dt > Duration.zero &&
+          _distance(ref, s) /
+                  (dt.inMicroseconds / Duration.microsecondsPerSecond) >
+              vehicleSpeedMps) {
+        if (held.isEmpty || s.time.isAfter(held.last.time)) held.add(s);
+        if (s.time.difference(held.first.time) < vehicleWindow) {
+          return const [];
+        }
+        final points = List.of(held);
+        held.clear();
+        return [
+          for (final p in points)
+            if (_accept(p)) p,
+        ];
+      }
+    }
+    final points = [...held, s];
+    held.clear();
+    return [
+      for (final p in points)
+        if (_accept(p)) p,
+    ];
   }
 
   /// 움직임이면 재개하고 창의 점을 차례로 받아들인다. 하나라도 넣으면 true.
@@ -343,10 +548,7 @@ class RunEngine {
       at: points.first.time,
       auto: true,
     );
-    _lastAppended = [
-      for (final p in points)
-        if (_accept(p)) p,
-    ];
+    _lastAppended = [for (final p in points) ..._offer(p)];
     return _lastAppended.isNotEmpty;
   }
 
@@ -371,32 +573,6 @@ class RunEngine {
       _movedAt = s.time;
     }
     return true;
-  }
-
-  /// 직전 원시 점과의 속도로 빠른 이동 연속을 갱신한다. 거리 계산과 무관하다.
-  void _trackFast(LocationSample s) {
-    final prev = _lastRaw;
-    if (prev != null) {
-      final dt = s.time.difference(prev.time);
-      if (dt <= Duration.zero) return;
-      final seconds = dt.inMicroseconds / Duration.microsecondsPerSecond;
-      if (_distance(prev, s) / seconds > fastSpeedMps) {
-        _fastLastAt = s.time;
-        if (_fastSince == null) {
-          _fastSince = s.time;
-          _lastAcceptedBeforeFast = _lastAccepted?.time;
-        }
-      } else {
-        _resetFast();
-      }
-    }
-    _lastRaw = s;
-  }
-
-  void _resetFast() {
-    _fastSince = null;
-    _fastLastAt = null;
-    _lastAcceptedBeforeFast = null;
   }
 
   void _append(LocationSample s) {
@@ -439,8 +615,10 @@ class RunEngine {
     return d;
   }
 
-  /// 전이 시각([at], 없으면 `clock()`)을 돌려준다. [auto] 는 멈춤·움직임으로
-  /// 바뀐 전이다. 위치를 계속 받으므로 빠른 이동 연속을 비우지 않는다.
+  /// 전이 시각([at], 없으면 `clock()`)을 돌려준다. [auto] 는 멈춤·움직임·
+  /// 탈것 의심·신호 끊김으로 바뀐 전이다. 위치를 계속 받으므로 평균 속도 창을
+  /// 비우지 않는다(신호 끊김은 끊긴 사이가 평균에 들어가지 않게 비운다).
+  /// 기록 중을 벗어나면 받아들이기를 미룬 점을 버린다.
   DateTime _transition(
     RunState from,
     RunState to, {
@@ -451,9 +629,12 @@ class RunEngine {
       throw StateError('Cannot go from $_state to $to');
     }
     final now = at ?? _clock();
-    if (!auto) {
-      _lastRaw = null;
-      _resetFast();
+    if (!auto || to == RunState.signalLost) _speedWindow.clear();
+    if (!auto && to == RunState.recording) _lastSignalAt = now;
+    _held.clear();
+    if (from == RunState.vehicle) {
+      final since = _stateSince!;
+      if (now.isAfter(since)) _vehicleBase += now.difference(since);
     }
     _resumeWindow.clear();
     if (from == RunState.recording) {

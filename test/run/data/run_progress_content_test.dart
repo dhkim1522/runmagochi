@@ -90,6 +90,24 @@ void main() {
       expect(_content(RunState.autoPaused, goal: null).body, '움직이면 이어져요');
     });
   });
+
+  group('탈것 의심·신호 끊김 (결정 0033)', () {
+    test('탈것 의심: 뺀다고 알리고 재개·일시정지 버튼', () {
+      final c = _content(RunState.vehicle);
+      expect(c.title, '일시정지 · 2.31km');
+      expect(c.body, '혹시 뭘 타셨나요? 이 구간은 기록에서 뺄게요');
+      expect(c.elapsed, isNull);
+      expect(c.actions, [RunProgressAction.resume, RunProgressAction.pause]);
+    });
+
+    test('신호 끊김: 다시 찾는다고 알리고 재개·일시정지 버튼', () {
+      final c = _content(RunState.signalLost, reached: true);
+      expect(c.title, '일시정지 · 2.31km');
+      expect(c.body, '신호가 끊겼어요. 밖으로 나오면 다시 찾을게요');
+      expect(c.elapsed, isNull);
+      expect(c.actions, [RunProgressAction.resume, RunProgressAction.pause]);
+    });
+  });
 }
 
 void endWarningTests() {
@@ -104,6 +122,12 @@ void endWarningTests() {
       final c = endWarningContent(paused: true);
       expect(c.title, '일시정지가 길어 러닝을 마쳐요');
       expect(c.body, '30초 안에 재개를 누르세요');
+    });
+
+    test('신호 끊김이면 밖으로 나오거나 재개하라고 알린다', () {
+      final c = endWarningContent(paused: false, signalLost: true);
+      expect(c.title, '신호가 오래 끊겨 러닝을 마쳐요');
+      expect(c.body, '30초 안에 밖으로 나오거나 재개를 누르세요');
     });
 
     test('남은 시간에 여유 5초를 더해 알림을 스스로 거둔다', () {

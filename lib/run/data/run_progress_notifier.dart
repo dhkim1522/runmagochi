@@ -51,7 +51,12 @@ abstract interface class RunProgressNotifier {
 
   /// [deadline] 에 러닝을 끝낸다고 진동과 카운트다운으로 알린다 (결정 0020).
   /// [paused] 가 true 면 사용자 일시정지라 움직여도 풀리지 않으므로 재개만 안내한다.
-  Future<void> showEndWarning(DateTime deadline, {required bool paused});
+  /// [signalLost] 가 true 면 신호 끊김이 오래 이어진 경우다 (결정 0033).
+  Future<void> showEndWarning(
+    DateTime deadline, {
+    required bool paused,
+    bool signalLost = false,
+  });
   Future<void> cancelEndWarning();
 }
 
@@ -59,10 +64,24 @@ abstract interface class RunProgressNotifier {
 const String pausedEndWarningTitle = '일시정지가 길어 러닝을 마쳐요';
 const String pausedEndWarningBody = '30초 안에 재개를 누르세요';
 
-/// 종료 예고 알림 문구. 자동 일시정지는 움직여도 풀리지만 사용자 일시정지는 재개만 푼다.
-({String title, String body}) endWarningContent({required bool paused}) =>
-    paused
+/// 탈것 의심 안내. 러닝 화면 무대 말풍선과 러닝 알림이 같이 쓴다 (결정 0033).
+const String vehicleNotice = '혹시 뭘 타셨나요? 이 구간은 기록에서 뺄게요';
+
+/// 신호 끊김 안내. 러닝 화면 무대 말풍선·러닝 알림·음성 안내가 같이 쓴다 (결정 0033).
+const String signalLostNotice = '신호가 끊겼어요. 밖으로 나오면 다시 찾을게요';
+
+/// 신호 끊김 종료 예고 제목. 알림과 음성 안내가 같이 쓴다.
+const String signalLostEndWarningTitle = '신호가 오래 끊겨 러닝을 마쳐요';
+
+/// 종료 예고 알림 문구. 자동 일시정지는 움직여도 풀리지만 사용자 일시정지는 재개만
+/// 푼다. 신호 끊김은 위치 점이 다시 오거나 재개하면 풀린다.
+({String title, String body}) endWarningContent({
+  required bool paused,
+  bool signalLost = false,
+}) => paused
     ? (title: pausedEndWarningTitle, body: pausedEndWarningBody)
+    : signalLost
+    ? (title: signalLostEndWarningTitle, body: '30초 안에 밖으로 나오거나 재개를 누르세요')
     : (title: '움직이지 않으면 러닝을 마쳐요', body: '30초 안에 움직이거나 재개를 누르세요');
 
 /// 종료 예고 알림이 스스로 사라질 때까지의 밀리초. 끝날 시각까지 남은 시간에
@@ -72,8 +91,9 @@ int endWarningTimeoutMs(DateTime deadline, DateTime now) {
   return (left.isNegative ? Duration.zero : left).inMilliseconds + 5000;
 }
 
-/// 상태·거리·목표로 알림 문구를 만든다. 기록 중과 일시정지·자동 일시정지 중만 다룬다.
-/// 자동 일시정지는 재개와 함께 사용자 일시정지로 바꾸는 버튼을 둔다(오래 쉴 때).
+/// 상태·거리·목표로 알림 문구를 만든다. 끝나지 않은 러닝 상태만 다룬다.
+/// 자동 일시정지·탈것 의심·신호 끊김은 재개와 함께 사용자 일시정지로 바꾸는 버튼을
+/// 둔다(오래 쉴 때).
 RunProgressContent runProgressContent({
   required RunState state,
   required double distanceM,
@@ -86,6 +106,14 @@ RunProgressContent runProgressContent({
     return RunProgressContent(
       title: '멈춰서 일시정지했어요 · $km',
       body: '움직이면 이어져요',
+      elapsed: null,
+      actions: [RunProgressAction.resume, RunProgressAction.pause],
+    );
+  }
+  if (state == RunState.vehicle || state == RunState.signalLost) {
+    return RunProgressContent(
+      title: '일시정지 · $km',
+      body: state == RunState.vehicle ? vehicleNotice : signalLostNotice,
       elapsed: null,
       actions: [RunProgressAction.resume, RunProgressAction.pause],
     );
@@ -221,10 +249,14 @@ class LocalRunProgressNotifier implements RunProgressNotifier {
   }
 
   @override
-  Future<void> showEndWarning(DateTime deadline, {required bool paused}) async {
+  Future<void> showEndWarning(
+    DateTime deadline, {
+    required bool paused,
+    bool signalLost = false,
+  }) async {
     try {
       await ensureLocalNotificationsInitialized(_plugin);
-      final content = endWarningContent(paused: paused);
+      final content = endWarningContent(paused: paused, signalLost: signalLost);
       await _plugin.show(
         id: endWarningId,
         title: content.title,

@@ -128,6 +128,41 @@ void main() {
     expect(find.text('재개'), findsOneWidget);
   });
 
+  group('탈것 의심·신호 끊김 (결정 0033)', () {
+    for (final (state, notice) in [
+      (RunState.vehicle, '혹시 뭘 타셨나요? 이 구간은 기록에서 뺄게요'),
+      (RunState.signalLost, '신호가 끊겼어요. 밖으로 나오면 다시 찾을게요'),
+    ]) {
+      testWidgets('$state 면 무대 말풍선으로 알리고 재개·일시정지·종료 버튼이 보인다', (tester) async {
+        final c = await open(tester, initial: snap(state));
+        final bubble = find.widgetWithText(SpeechBubble, notice);
+        expect(bubble, findsOneWidget);
+        expect(
+          find.descendant(of: find.byType(PetStage), matching: bubble),
+          findsOneWidget,
+        );
+        expect(find.text('일시정지'), findsWidgets);
+        expect(find.widgetWithText(AppButton, '일시정지'), findsOneWidget);
+        expect(find.text('길게 눌러 종료'), findsOneWidget);
+        // 말풍선은 펫 그림 위(프레임 위 빈 줄까지만 겹치게)에 있다.
+        final pet = tester.getRect(find.byType(AvatarView));
+        final scale = tester.widget<PetStage>(find.byType(PetStage)).scale;
+        expect(
+          tester.getRect(bubble).bottom,
+          lessThanOrEqualTo(pet.top + spriteTopGapRows * scale + 0.01),
+        );
+        await tester.tap(find.text('재개'));
+        await tester.pump();
+        expect(c.calls, ['resume']);
+      });
+    }
+
+    testWidgets('기록 중·자동 일시정지에는 말풍선이 없다', (tester) async {
+      await open(tester, initial: snap(RunState.recording));
+      expect(find.byType(SpeechBubble), findsNothing);
+    });
+  });
+
   testWidgets('재개 버튼은 resume 을 부른다', (tester) async {
     final c = await open(tester);
     await tester.tap(find.text('재개'));
@@ -298,6 +333,8 @@ void main() {
       (RunState.recording, false),
       (RunState.paused, false),
       (RunState.autoPaused, false),
+      (RunState.vehicle, false),
+      (RunState.signalLost, true),
       (RunState.recording, true),
       (RunState.paused, true),
     ]) {

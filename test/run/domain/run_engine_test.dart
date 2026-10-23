@@ -320,71 +320,6 @@ void main() {
     expect(restored.segmentIndex, 0);
   });
 
-  group('빠른 이동 연속', () {
-    // 초속 10m: 1초에 위도 10m.
-    LocationSample fast(int sec, double meters, {double accuracy = 5}) =>
-        at(sec, _northOf(meters), _lng0, accuracy: accuracy);
-
-    test('시속 30km 초과 점에서 시작하고 시작 순간의 마지막 받아들인 점을 담는다', () {
-      engine.start();
-      engine.addSample(fast(0, 0));
-      engine.addSample(fast(1, 3));
-      expect(engine.fastSince, isNull);
-      // 7m/s 초과라 거리에는 들어가지 않는다.
-      expect(engine.addSample(fast(2, 13)), isFalse);
-      expect(engine.fastSince, t0.add(const Duration(seconds: 2)));
-      expect(engine.lastAcceptedBeforeFast, t0.add(const Duration(seconds: 1)));
-      engine.addSample(fast(3, 23));
-      expect(engine.fastSince, t0.add(const Duration(seconds: 2)));
-      expect(engine.fastLastAt, t0.add(const Duration(seconds: 3)));
-      expect(engine.snapshot.distanceM, closeTo(3, 0.01));
-    });
-
-    test('속도는 받아들인 점이 아니라 직전 원시 점과 잰다', () {
-      engine.start();
-      engine.addSample(fast(0, 0));
-      engine.addSample(fast(1, 10));
-      expect(engine.fastSince, t0.add(const Duration(seconds: 1)));
-      // 받아들인 점(0m) 기준이면 13m/2초 = 6.5m/s 로 거름 안이지만, 직전 원시
-      // 점(10m)과는 3m/s 라 연속이 끊긴다.
-      engine.addSample(fast(2, 13));
-      expect(engine.fastSince, isNull);
-      expect(engine.lastAcceptedBeforeFast, isNull);
-    });
-
-    test('정확도 거름에 걸린 점은 세지 않는다', () {
-      engine.start();
-      engine.addSample(fast(0, 0));
-      engine.addSample(fast(1, 10, accuracy: 25));
-      expect(engine.fastSince, isNull);
-    });
-
-    test('일시정지·재개하면 비운다', () {
-      engine.start();
-      engine.addSample(fast(0, 0));
-      engine.addSample(fast(1, 10));
-      expect(engine.fastSince, isNotNull);
-      now = t0.add(const Duration(seconds: 2));
-      engine.pause();
-      expect(engine.fastSince, isNull);
-      expect(engine.lastAcceptedBeforeFast, isNull);
-      engine.resume();
-      // 재개 뒤 첫 점은 비교 대상이 없다.
-      engine.addSample(fast(3, 100));
-      expect(engine.fastSince, isNull);
-    });
-
-    test('빠른 점이 이어져도 정확도 거름에 걸린 점은 빠른 이동 시간을 늘리지 않는다', () {
-      engine.start();
-      engine.addSample(fast(0, 0));
-      engine.addSample(fast(1, 10));
-      engine.addSample(fast(40, 400, accuracy: 25));
-      expect(engine.fastSince, t0.add(const Duration(seconds: 1)));
-      expect(engine.fastLastAt, t0.add(const Duration(seconds: 1)));
-      expect(engine.lastAcceptedBeforeFast, t0);
-    });
-  });
-
   test('startedAt 없이 restoredSegments 를 주면 ArgumentError', () {
     expect(
       () => RunEngine(
@@ -544,44 +479,6 @@ void main() {
       final summary = engine.end();
       expect(engine.state, RunState.ended);
       expect(summary.movingTime, Duration.zero);
-    });
-
-    test('빠른 이동 중에는 자동 일시정지하지 않고, 자동 일시정지 중에도 빠른 이동을 잰다', () {
-      engine.start();
-      engine.addSample(north(0, 0));
-      // 초속 10m 점은 튀는 값으로 버려지지만 빠른 이동 연속은 이어진다.
-      for (var s = 1; s <= 20; s++) {
-        now = sec(s);
-        engine.addSample(north(s, s * 10.0));
-        expect(engine.autoPauseIfStill(now), isFalse, reason: '$s초');
-      }
-      expect(engine.fastSince, sec(1));
-
-      // 느린 점으로 연속이 끊기면 멈춤 판정을 한다.
-      now = sec(22);
-      engine.addSample(north(22, 201));
-      expect(engine.fastSince, isNull);
-      expect(engine.autoPauseIfStill(now), isTrue);
-      for (var s = 23; s <= 24; s++) {
-        now = sec(s);
-        engine.addSample(north(s, 201 + (s - 22) * 10.0));
-      }
-      expect(engine.fastSince, sec(23));
-    });
-
-    test('빠른 점이 끊기면 마지막 빠른 점 뒤 10초에 자동 일시정지한다', () {
-      engine.start();
-      engine.addSample(north(0, 0));
-      for (var s = 1; s <= 5; s++) {
-        now = sec(s);
-        engine.addSample(north(s, s * 10.0));
-      }
-      expect(engine.fastSince, sec(1));
-      expect(engine.autoPauseIfStill(sec(14)), isFalse);
-      now = sec(15);
-      expect(engine.autoPauseIfStill(now), isTrue);
-      expect(engine.state, RunState.autoPaused);
-      expect(engine.pausedAt, t0);
     });
 
     test('사용자 일시정지에서 재개하면 pausedAt 은 null', () {

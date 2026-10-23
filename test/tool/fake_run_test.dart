@@ -42,4 +42,24 @@ void main() {
     expect(stopped.sublist(3, 6), everyElement(path[2]));
     expect(stopped.skip(6), path.skip(3));
   });
+
+  test('버스트 구간은 그 속도로 가고 앞뒤는 기본 속도다', () {
+    final path = buildPath(
+      seconds: 100,
+      speedMps: 3.0,
+      lat: 37.5,
+      lng: 127.0,
+      burstAt: 30,
+      burstFor: 40,
+      burstSpeedMps: 7.0,
+    );
+    double step(int i) =>
+        haversineMeters(path[i - 1].$1, path[i - 1].$2, path[i].$1, path[i].$2);
+
+    expect(path, hasLength(101));
+    expect(step(30), closeTo(3.0, 0.01));
+    expect(step(31), closeTo(7.0, 0.01));
+    expect(step(70), closeTo(7.0, 0.01));
+    expect(step(71), closeTo(3.0, 0.01));
+  });
 }

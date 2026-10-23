@@ -25,7 +25,8 @@ const _lat0 = 37.5;
 const _lng0 = 127.0;
 const _runId = 'run-1';
 const _title = '러닝을 자동으로 마쳤어요';
-const _fastTitle = '빠른 이동이 감지돼 러닝을 마쳤어요';
+const _quitTitle = '한참 못 달려서 러닝을 마쳤어요';
+const _quitBody = '기록은 안전하게 저장했어요';
 final _t0 = DateTime(2026, 10, 18, 7);
 
 /// 1km 미만은 저장하지 않으므로(결정 0027) 저장을 확인하는 러닝은 먼저 330초를
@@ -220,35 +221,40 @@ void main() {
   void elapseTo(_Env env, Duration at) =>
       env.async.elapse(at - env.async.elapsed);
 
+  /// 마지막 점 자리에 선 채 [at] 까지 흐르게 한다. 자동 일시정지(마지막 점 뒤
+  /// 10초) 뒤부터 15초마다 같은 자리 점이 와서 신호 끊김(30초)이 되지 않는다.
+  void stillTo(_Env env, Duration at) {
+    for (
+      var t = lastPointOffset + const Duration(seconds: 15);
+      t <= at;
+      t += const Duration(seconds: 15)
+    ) {
+      if (t > env.async.elapsed) env.sampleAt(t, 1005);
+    }
+    elapseTo(env, at);
+  }
+
   // 5초 점 뒤 10초(15초 틱)에 자동 일시정지하고, 멈춘 시각은 5초 점이다.
   group('자동 일시정지 5분', () {
     test('4분 59초엔 예고 없음, 5분에 예고 1회, 5분 29초 계속, 5분 30초에 멈춘 시각으로 끝낸다', () {
       _run((env) {
         runFiveSamples(env);
-        elapseTo(
-          env,
-          lastPointOffset + const Duration(minutes: 4, seconds: 59),
-        );
+        stillTo(env, lastPointOffset + const Duration(minutes: 4, seconds: 59));
         expect(env.view.snapshot.state, RunState.autoPaused);
         expect(env.progress.warnings, isEmpty);
 
-        elapseTo(env, lastPointOffset + const Duration(minutes: 5));
+        stillTo(env, lastPointOffset + const Duration(minutes: 5));
         final deadline = lastPoint.add(const Duration(minutes: 5, seconds: 30));
         expect(env.progress.warnings, [deadline]);
         expect(env.progress.warningPaused, [false]);
 
-        elapseTo(
-          env,
-          lastPointOffset + const Duration(minutes: 5, seconds: 29),
-        );
+        stillTo(env, lastPointOffset + const Duration(minutes: 5, seconds: 29));
         expect(env.progress.warnings, hasLength(1));
         expect(env.repo.completed, isEmpty);
         expect(env.view.snapshot.state, RunState.autoPaused);
 
-        elapseTo(
-          env,
-          lastPointOffset + const Duration(minutes: 5, seconds: 30),
-        );
+        stillTo(env, lastPointOffset + const Duration(minutes: 5, seconds: 30));
+
         final summary = env.repo.completed.single.$2;
         expect(summary.endedAt, lastPoint);
         expect(summary.distanceM, closeTo(fiveDistance, 1e-9));
@@ -265,7 +271,7 @@ void main() {
     test('예고 중 움직이면 예고를 지우고 이어 간다', () {
       _run((env) {
         runFiveSamples(env);
-        elapseTo(env, lastPointOffset + const Duration(minutes: 5, seconds: 5));
+        stillTo(env, lastPointOffset + const Duration(minutes: 5, seconds: 5));
         expect(env.progress.warnings, hasLength(1));
 
         // 10m 넘게 움직인 점 3개로 자동 재개한다.
@@ -290,7 +296,7 @@ void main() {
     test('예고 중 재개를 누르면 예고를 지우고 이어 간다', () {
       _run((env) {
         runFiveSamples(env);
-        elapseTo(env, lastPointOffset + const Duration(minutes: 5, seconds: 5));
+        stillTo(env, lastPointOffset + const Duration(minutes: 5, seconds: 5));
         expect(env.progress.warnings, hasLength(1));
 
         env.controller.resume();
@@ -311,10 +317,7 @@ void main() {
         for (var i = 6; i <= 14; i++) {
           env.tailAt(Duration(seconds: i), i.isEven ? 16.0 : 15.0);
         }
-        elapseTo(
-          env,
-          lastPointOffset + const Duration(minutes: 5, seconds: 30),
-        );
+        stillTo(env, lastPointOffset + const Duration(minutes: 5, seconds: 30));
         final summary = env.repo.completed.single.$2;
         expect(summary.endedAt, lastPoint);
         expect(summary.points, hasLength(335));
@@ -328,20 +331,20 @@ void main() {
       _run((env) {
         runFiveSamples(env);
         final switchAt = lastPointOffset + const Duration(minutes: 3);
-        elapseTo(env, switchAt);
+        stillTo(env, switchAt);
         env.controller.pause();
         expect(env.view.snapshot.state, RunState.paused);
 
-        elapseTo(env, switchAt + const Duration(minutes: 59, seconds: 59));
+        stillTo(env, switchAt + const Duration(minutes: 59, seconds: 59));
         expect(env.repo.completed, isEmpty);
         expect(env.progress.warnings, isEmpty);
 
-        elapseTo(env, switchAt + const Duration(hours: 1));
+        stillTo(env, switchAt + const Duration(hours: 1));
         expect(env.progress.warnings, [
           _t0.add(switchAt + const Duration(hours: 1, seconds: 30)),
         ]);
         expect(env.progress.warningPaused, [true]);
-        elapseTo(env, switchAt + const Duration(hours: 1, seconds: 30));
+        stillTo(env, switchAt + const Duration(hours: 1, seconds: 30));
         final summary = env.repo.completed.single.$2;
         expect(summary.endedAt, lastPoint);
         expect(summary.movingTime, lastPointOffset);
@@ -353,7 +356,7 @@ void main() {
     test('예고 중 사용자 일시정지로 바꾸면 예고를 지우고 1시간을 다시 센다', () {
       _run((env) {
         runFiveSamples(env);
-        elapseTo(env, lastPointOffset + const Duration(minutes: 5, seconds: 5));
+        stillTo(env, lastPointOffset + const Duration(minutes: 5, seconds: 5));
         expect(env.progress.warnings, hasLength(1));
 
         env.controller.pause();
@@ -521,118 +524,200 @@ void main() {
     });
   });
 
-  group('빠른 이동', () {
-    /// 시작 뒤 1~5초 3m/s, 6초부터 [fastUntil]초까지 10m/s 점. 5초 점이 15m.
-    void feedFast(_Env env, int fastUntil) {
-      runFiveSamples(env);
-      for (var i = 6; i <= fastUntil; i++) {
-        env.tailAt(Duration(seconds: i), 15.0 + (i - 5) * 10);
+  group('탈것 의심 (결정 0033)', () {
+    /// 앞 달리기 뒤 지금 위치(_warmM 기준 m). runFiveSamples 의 마지막 점은
+    /// 뒤 5초, 15m 다.
+    late double pos;
+
+    /// 뒤 [from]~[until]초(포함)에 매초 초속 [speed] 로 간 점을 보낸다.
+    void feed(_Env env, int from, int until, double speed) {
+      for (var i = from; i <= until; i++) {
+        pos += speed;
+        env.tailAt(Duration(seconds: i), pos);
       }
     }
 
-    test('초속 10m 점이 30초 이어지면 끝내고 끝 시각은 빨라지기 전 마지막 점', () {
+    void startRun(_Env env) {
+      runFiveSamples(env);
+      pos = 15;
+    }
+
+    test('시속 18km 로 이어 달리면 끝내지 않고 모두 기록한다', () {
       _run((env) {
-        // 6초 점부터 시작해 35초 점이 29초째.
-        feedFast(env, 35);
+        startRun(env);
+        feed(env, 6, 300, 5);
         expect(env.repo.completed, isEmpty);
         expect(env.view.snapshot.state, RunState.recording);
+        expect(env.view.snapshot.distanceM, closeTo(fiveDistance + 295 * 5, 1));
+        env.controller.end();
+        env.async.flushMicrotasks();
+      });
+    });
 
-        // 36초 점이 오면 점 시각 차이가 30초.
-        env.tailAt(const Duration(seconds: 36), 15.0 + 31 * 10);
-        env.async.elapse(const Duration(seconds: 1));
+    test('의심 합계 2분이면 끝내고 끝 시각은 의심 전 마지막 정상 점', () {
+      _run((env) {
+        startRun(env);
+        // 초속 7m: 뒤 29초 점에서 최근 30초 평균이 시속 22km 를 넘는다.
+        feed(env, 6, 28, 7);
+        expect(env.view.snapshot.state, RunState.recording);
+        feed(env, 29, 29, 7);
+        expect(env.view.snapshot.state, RunState.vehicle);
+        // 의심은 마지막 정상 점(뒤 5초)부터 센다. 뒤 124초까지 1분 59초.
+        feed(env, 30, 124, 7);
+        expect(env.repo.completed, isEmpty);
+        feed(env, 125, 126, 7);
         final summary = env.repo.completed.single.$2;
         expect(summary.endedAt, lastPoint);
-        // 빠른 구간은 거리에 들어가지 않는다.
         expect(summary.distanceM, closeTo(fiveDistance, 1e-9));
         expect(summary.points, hasLength(335));
+        expect(summary.movingTime, lastPointOffset);
         expect(env.view.autoEnded, isTrue);
-        expect(env.notifier.shown, [
-          (_fastTitle, '1.00km 기록을 저장했어요. 요약에서 확인하세요.'),
-        ]);
+        expect(env.notifier.shown, [(_quitTitle, _quitBody)]);
       });
     });
 
-    test('튀는 값 하나 뒤 점이 60초 없어도 끝내지 않는다', () {
+    test('의심 구간은 합해서 세고, 사이에 달린 기록도 첫 의심 전에서 끊는다', () {
       _run((env) {
-        feedFast(env, 6);
-        env.async.elapse(const Duration(seconds: 60));
-        expect(env.repo.completed, isEmpty);
-        // 빠른 점이 끊긴 뒤 10초에 자동 일시정지했다.
-        expect(env.view.snapshot.state, RunState.autoPaused);
-        env.controller.end();
-        env.async.flushMicrotasks();
-      });
-    });
-
-    test('튀는 값 두 개 뒤 정확도 거름에 걸린 점만 60초 와도 끝내지 않는다', () {
-      _run((env) {
-        feedFast(env, 7);
-        for (var i = 8; i <= 67; i++) {
-          final at = Duration(seconds: i) + _warm;
-          env.async.elapse(at - env.async.elapsed);
-          env.location.controller.add(
-            LocationSample(
-              time: _t0.add(at),
-              latitude: _northOf(_warmM + 500.0 + i * 10),
-              longitude: _lng0,
-              accuracy: 50,
-            ),
-          );
-          env.async.flushMicrotasks();
-        }
-        expect(env.repo.completed, isEmpty);
-        // 빠른 점이 끊긴 뒤 10초에 자동 일시정지했다.
-        expect(env.view.snapshot.state, RunState.autoPaused);
-        env.controller.end();
-        env.async.flushMicrotasks();
-      });
-    });
-
-    test('빠른 점 2개 뒤 초속 3m 점이 오면 다시 0부터 센다', () {
-      _run((env) {
-        feedFast(env, 7);
-        // 7초 점은 35m. 3m/s 점으로 연속이 끊긴다.
-        env.tailAt(const Duration(seconds: 8), 38);
-        for (var i = 9; i <= 70; i++) {
-          env.tailAt(Duration(seconds: i), 38.0 + (i - 8) * 3);
-        }
-        expect(env.repo.completed, isEmpty);
+        startRun(env);
+        feed(env, 6, 65, 7);
+        expect(env.view.snapshot.state, RunState.vehicle);
+        // 내려서 달리면 뒤 72초 점에서 풀린다(의심 67초).
+        feed(env, 66, 125, 3);
         expect(env.view.snapshot.state, RunState.recording);
-        env.controller.end();
-        env.async.flushMicrotasks();
+        expect(env.view.snapshot.distanceM, greaterThan(fiveDistance + 100));
+        // 다시 타면 뒤 125초 점부터 의심하고 합이 2분이 되는 뒤 178초에 끝낸다.
+        feed(env, 126, 176, 7);
+        expect(env.repo.completed, isEmpty);
+        feed(env, 177, 180, 7);
+        final summary = env.repo.completed.single.$2;
+        expect(summary.endedAt, lastPoint);
+        expect(summary.distanceM, closeTo(fiveDistance, 1e-9));
+        expect(summary.movingTime, lastPointOffset);
+        expect(env.notifier.shown.single.$1, _quitTitle);
       });
     });
 
-    test('일시정지 중에는 세지 않고 재개하면 0부터 센다', () {
+    test('1km 미만이면 저장하지 않는다', () {
       _run((env) {
-        feedFast(env, 7);
-        env.controller.pause();
-        env.async.elapse(const Duration(minutes: 2));
-        expect(env.view.snapshot.state, RunState.paused);
-        expect(env.repo.completed, isEmpty);
-
-        env.controller.resume();
-        // 같은 초속 10m 선을 이어 간다. 연속을 비우지 않았다면 6초부터 세어
-        // 바로 끝난다. 재개 뒤 첫 점부터 세면 마지막 점까지 29초.
-        final resumedSec = env.async.elapsed.inSeconds;
-        for (var i = resumedSec + 1; i <= resumedSec + 30; i++) {
-          env.sampleAt(Duration(seconds: i), _warmM + 15.0 + (i - 335) * 10);
+        env.controller.start(goal: DistanceGoal(3000));
+        env.async.flushMicrotasks();
+        pos = 0;
+        for (var i = 1; i <= 100; i++) {
+          pos += 3;
+          env.sampleAt(Duration(seconds: i), pos);
+        }
+        for (var i = 101; i <= 260; i++) {
+          pos += 7;
+          env.sampleAt(Duration(seconds: i), pos);
         }
         expect(env.repo.completed, isEmpty);
-        expect(env.view.snapshot.state, RunState.recording);
-        env.controller.end();
-        env.async.flushMicrotasks();
+        expect(env.repo.discarded, [_runId]);
+        expect(env.notifier.shown, [('러닝을 마쳤어요', '1km 미만은 기록하지 않아요')]);
       });
     });
 
     test('provider 로 줄인 기준을 따른다', () {
-      _run(config: const RunGuardConfig(fast: Duration(seconds: 3)), (env) {
-        feedFast(env, 8);
-        env.async.elapse(const Duration(seconds: 1));
+      _run(config: const RunGuardConfig(vehicle: Duration(seconds: 30)), (env) {
+        startRun(env);
+        feed(env, 6, 34, 7);
         expect(env.repo.completed, isEmpty);
-        env.tailAt(const Duration(seconds: 9), 15.0 + 40);
-        env.async.elapse(const Duration(seconds: 1));
+        feed(env, 35, 37, 7);
         expect(env.repo.completed.single.$2.endedAt, lastPoint);
+      });
+    });
+
+    test('탈것 의심 중 점이 끊기면 신호 끊김으로 5분 30초에 끝낸다', () {
+      _run((env) {
+        startRun(env);
+        feed(env, 6, 40, 7);
+        expect(env.view.snapshot.state, RunState.vehicle);
+        final lastAt = lastPointOffset + const Duration(seconds: 35);
+        elapseTo(env, lastAt + const Duration(seconds: 30));
+        expect(env.view.snapshot.state, RunState.signalLost);
+        elapseTo(env, lastAt + const Duration(minutes: 5, seconds: 29));
+        expect(env.repo.completed, isEmpty);
+        elapseTo(env, lastAt + const Duration(minutes: 5, seconds: 30));
+        final summary = env.repo.completed.single.$2;
+        expect(summary.endedAt, lastPoint);
+        expect(summary.distanceM, closeTo(fiveDistance, 1e-9));
+        expect(env.notifier.shown, [(_quitTitle, _quitBody)]);
+      });
+    });
+  });
+
+  group('신호 끊김 (결정 0033)', () {
+    test('점이 30초 없으면 신호 끊김, 5분에 예고, 5분 30초에 마지막 점으로 끝낸다', () {
+      _run((env) {
+        runFiveSamples(env);
+        elapseTo(env, lastPointOffset + const Duration(seconds: 29));
+        expect(env.view.snapshot.state, RunState.autoPaused);
+        elapseTo(env, lastPointOffset + const Duration(seconds: 30));
+        expect(env.view.snapshot.state, RunState.signalLost);
+
+        elapseTo(
+          env,
+          lastPointOffset + const Duration(minutes: 4, seconds: 59),
+        );
+        expect(env.progress.warnings, isEmpty);
+        elapseTo(env, lastPointOffset + const Duration(minutes: 5));
+        expect(env.progress.warnings, [
+          lastPoint.add(const Duration(minutes: 5, seconds: 30)),
+        ]);
+        expect(env.progress.warningSignalLost, [true]);
+        elapseTo(
+          env,
+          lastPointOffset + const Duration(minutes: 5, seconds: 29),
+        );
+        expect(env.repo.completed, isEmpty);
+
+        elapseTo(
+          env,
+          lastPointOffset + const Duration(minutes: 5, seconds: 30),
+        );
+        final summary = env.repo.completed.single.$2;
+        expect(summary.endedAt, lastPoint);
+        expect(summary.distanceM, closeTo(fiveDistance, 1e-9));
+        expect(summary.movingTime, lastPointOffset);
+        expect(env.view.autoEnded, isTrue);
+        expect(env.progress.warningCancels, 1);
+        expect(env.notifier.shown, [(_quitTitle, _quitBody)]);
+      });
+    });
+
+    test('점이 다시 오면 이어 기록하고 끊긴 사이 거리는 더하지 않는다', () {
+      _run((env) {
+        runFiveSamples(env);
+        elapseTo(env, lastPointOffset + const Duration(minutes: 2));
+        expect(env.view.snapshot.state, RunState.signalLost);
+        // 터널을 지나 300m 앞에서 점이 다시 온다.
+        for (var i = 1; i <= 20; i++) {
+          env.tailAt(
+            const Duration(minutes: 2) + Duration(seconds: 5 + i),
+            15.0 + 300 + i * 3,
+          );
+        }
+        expect(env.view.snapshot.state, RunState.recording);
+        expect(
+          env.view.snapshot.distanceM,
+          closeTo(fiveDistance + _dist(318, 375), 1e-6),
+        );
+        env.controller.end();
+        env.async.flushMicrotasks();
+        final summary = env.repo.completed.single.$2;
+        expect(summary.segments, hasLength(2));
+      });
+    });
+
+    test('신호 끊김 예고 중 점이 오면 예고를 지운다', () {
+      _run((env) {
+        runFiveSamples(env);
+        elapseTo(env, lastPointOffset + const Duration(minutes: 5, seconds: 5));
+        expect(env.progress.warnings, hasLength(1));
+        env.tailAt(const Duration(minutes: 5, seconds: 10), 20);
+        expect(env.view.snapshot.state, RunState.recording);
+        expect(env.progress.warningCancels, 1);
+        env.controller.end();
+        env.async.flushMicrotasks();
       });
     });
   });

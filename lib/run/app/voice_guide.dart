@@ -2,7 +2,7 @@ import 'package:flutter/foundation.dart' show debugPrint;
 
 import '../../core/format.dart';
 import '../data/run_progress_notifier.dart'
-    show pausedEndWarningBody, pausedEndWarningTitle;
+    show pausedEndWarningBody, pausedEndWarningTitle, signalLostNotice;
 import '../data/tts_speaker.dart';
 import '../domain/run_goal.dart';
 
@@ -48,13 +48,29 @@ final class VoiceAutoResumed extends VoiceEvent {
   const VoiceAutoResumed();
 }
 
+/// 탈것 의심으로 기록을 멈춤 (결정 0033).
+final class VoiceVehicle extends VoiceEvent {
+  const VoiceVehicle();
+}
+
+/// 신호 끊김으로 기록을 멈춤 (결정 0033).
+final class VoiceSignalLost extends VoiceEvent {
+  const VoiceSignalLost();
+}
+
 /// 오래 멈춤으로 러닝이 곧 끝난다는 예고. [secondsLeft] 초 뒤 끝난다.
 /// [paused] 는 사용자 일시정지다(움직여도 풀리지 않고 재개만 푼다).
+/// [signalLost] 는 신호 끊김이 오래 이어진 경우다.
 final class VoiceEndWarning extends VoiceEvent {
-  const VoiceEndWarning(this.secondsLeft, {this.paused = false});
+  const VoiceEndWarning(
+    this.secondsLeft, {
+    this.paused = false,
+    this.signalLost = false,
+  });
 
   final int secondsLeft;
   final bool paused;
+  final bool signalLost;
 }
 
 /// 사건의 안내 문구. 읽지 않을 사건이면 null.
@@ -69,9 +85,14 @@ String? voiceLine(VoiceEvent e) => switch (e) {
   },
   VoiceAutoPaused() => '일시정지했어요',
   VoiceAutoResumed() => '다시 기록해요',
-  VoiceEndWarning(:final secondsLeft, :final paused) when secondsLeft > 0 =>
+  VoiceVehicle() => '너무 빨라서 이 구간은 기록에서 뺄게요',
+  VoiceSignalLost() => signalLostNotice,
+  VoiceEndWarning(:final secondsLeft, :final paused, :final signalLost)
+      when secondsLeft > 0 =>
     paused
         ? '$pausedEndWarningTitle. $pausedEndWarningBody'
+        : signalLost
+        ? '신호가 오래 끊겨 $secondsLeft초 뒤 러닝을 마쳐요'
         : '움직이지 않으면 $secondsLeft초 뒤 러닝을 마쳐요',
   VoiceEndWarning() => null,
 };

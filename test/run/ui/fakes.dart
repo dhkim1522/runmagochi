@@ -390,6 +390,9 @@ class FakeRunProgressNotifier implements RunProgressNotifier {
 
   /// [warnings] 와 같은 순서로, 사용자 일시정지 문구로 띄웠는지.
   final warningPaused = <bool>[];
+
+  /// [warnings] 와 같은 순서로, 신호 끊김 문구로 띄웠는지.
+  final warningSignalLost = <bool>[];
   int warningCancels = 0;
   bool fails = false;
 
@@ -406,10 +409,15 @@ class FakeRunProgressNotifier implements RunProgressNotifier {
   }
 
   @override
-  Future<void> showEndWarning(DateTime deadline, {required bool paused}) async {
+  Future<void> showEndWarning(
+    DateTime deadline, {
+    required bool paused,
+    bool signalLost = false,
+  }) async {
     if (fails) throw StateError('알림 실패');
     warnings.add(deadline);
     warningPaused.add(paused);
+    warningSignalLost.add(signalLost);
   }
 
   @override
