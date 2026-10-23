@@ -715,6 +715,11 @@ class RunController extends Notifier<RunViewState> {
       }
       return;
     }
+    // 엔진이 틀린 것으로 보고 뺀 구간 첫 점은 아직 저장 전이면 저장하지 않는다.
+    final replaced = engine.lastReplaced;
+    if (replaced != null) {
+      _buffer.removeWhere((e) => identical(e.$2, replaced));
+    }
     // 한 번에 넣은 점은 모두 같은 구간이다(자동 재개면 새 구간).
     final segmentIndex = engine.segmentIndex;
     for (final s in appended) {

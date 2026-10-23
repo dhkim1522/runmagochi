@@ -5,7 +5,8 @@ import '../domain/location_sample.dart';
 import 'location_source.dart';
 
 /// geolocator 오류를 [LocationSource] 오류로 바꾼다. 위치 서비스 꺼짐만 따로 알린다.
-Object locationErrorFrom(Object error) => error is LocationServiceDisabledException
+Object locationErrorFrom(Object error) =>
+    error is LocationServiceDisabledException
     ? const LocationServiceOffException()
     : error;
 

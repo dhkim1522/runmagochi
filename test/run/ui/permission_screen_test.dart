@@ -449,9 +449,7 @@ void main() {
     });
   });
 
-  testWidgets('권한 요청이 영구 거부를 알린 직후 앱이 다시 활성화돼도 설정 열기를 유지한다', (
-    tester,
-  ) async {
+  testWidgets('권한 요청이 영구 거부를 알린 직후 앱이 다시 활성화돼도 설정 열기를 유지한다', (tester) async {
     // 에뮬레이터(API 36)에서 본 순서: 요청 결과 permanentlyDenied → 화면 갱신 →
     // resumed → check() 의 상태 조회 denied.
     final gate = PermissionHandlerGate(

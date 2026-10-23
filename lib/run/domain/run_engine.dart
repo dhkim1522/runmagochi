@@ -8,6 +8,10 @@ import 'run_summary.dart';
 const double _maxAccuracyM = 20;
 const double _maxSpeedMps = 7;
 
+/// 기록 구간의 첫 점 다음 점이 이 시간 안에 튀는 값 거름([_maxSpeedMps])에 걸리면
+/// 첫 점이 틀린 것으로 보고 버린다. 위치를 막 잡을 때 첫 점이 튀기 쉽다.
+const Duration _firstPointReplaceWithin = Duration(seconds: 10);
+
 /// 탈것으로 의심하는 평균 속도: 시속 22km (초속 6.1m, 1km 2분 44초, 결정 0033).
 const double vehicleSpeedMps = 22 / 3.6;
 
@@ -132,7 +136,11 @@ class RunEngine {
     for (final segment in restoredSegments) {
       if (segment.isEmpty) continue;
       _segmentPending = true;
-      segment.forEach(_append);
+      // 받아들인 점끼리는 튀지 않는다. 둘째 점이 첫 점에서 튀면 기록 중에 첫 점을
+      // 대신한 점이고, 버린 첫 점은 대신하기 전에 저장된 것이다.
+      final jumpy =
+          segment.length >= 2 && _isJumpyFirst(segment[0], segment[1]);
+      (jumpy ? segment.skip(1) : segment).forEach(_append);
     }
     _movingBase = restoredMovingTime ?? _sampleMovingTime;
     _state = RunState.paused;
@@ -194,6 +202,7 @@ class RunEngine {
   /// 자동 일시정지 중 정확도 거름을 통과한 최근 [autoResumeWindow] 의 점.
   final List<LocationSample> _resumeWindow = [];
   List<LocationSample> _lastAppended = const [];
+  LocationSample? _lastReplaced;
 
   /// 구간마다 (마지막 점 − 첫 점 시각) 의 합. 구간 기록 시간의 기준이다.
   Duration _sampleMovingTime = Duration.zero;
@@ -227,6 +236,10 @@ class RunEngine {
 
   /// 마지막 [addSample] 호출이 구간에 넣은 점. 자동 재개면 여러 개다.
   List<LocationSample> get lastAppended => _lastAppended;
+
+  /// 마지막 [addSample] 호출이 틀린 것으로 보고 구간에서 뺀 첫 점. 그 전 호출이
+  /// [lastAppended] 로 알린 점이다. 없으면 null.
+  LocationSample? get lastReplaced => _lastReplaced;
 
   /// 마지막으로 받아들인 점(복원한 점 포함)의 시각. 없으면 null.
   DateTime? get lastPointAt => _lastAccepted?.time;
@@ -409,6 +422,7 @@ class RunEngine {
   ///   끊기기 전 마지막 점과의 거리는 더하지 않는다.
   bool addSample(LocationSample s) {
     _lastAppended = const [];
+    _lastReplaced = null;
     if (s.accuracy > _maxAccuracyM) return false;
     switch (_state) {
       case RunState.autoPaused:
@@ -508,6 +522,7 @@ class RunEngine {
   /// 거름에 걸러 받아들인다. 미룬 지 [vehicleWindow] 가 지나도 탈것 의심이 아니면
   /// 의심할 근거가 없으므로 받아들인다.
   List<LocationSample> _offer(LocationSample s) {
+    if (_replaceJumpyFirst(s)) return [s];
     final ref = _lastAccepted;
     final held = _held;
     if (!_segmentPending && ref != null) {
@@ -538,6 +553,36 @@ class RunEngine {
       for (final p in points)
         if (_accept(p)) p,
     ];
+  }
+
+  /// 이번 기록 구간에 점이 하나뿐이고 [s] 가 그 점에서 [_firstPointReplaceWithin]
+  /// 안에 튀는 값 거름([_maxSpeedMps])에 걸리면, [s] 를 버리는 대신 첫 점을 버리고
+  /// [s] 를 구간 첫 점으로 삼고 true. 위치를 막 잡을 때는 첫 점이 틀렸을 가능성이
+  /// 크다. 남기면 뒤 점들이 모두 걸러지거나 미뤄지고, 요약 경로에 첫 점에서 곧은
+  /// 선이 그어진다. 평균 속도 창([_track])은 건드리지 않아 탈것 의심 판정은 같다.
+  bool _replaceJumpyFirst(LocationSample s) {
+    if (_segmentPending || _held.isNotEmpty) return false;
+    final segment = _segments.last;
+    if (segment.length != 1) return false;
+    final first = segment.single;
+    if (!_isJumpyFirst(first, s)) return false;
+    // 첫 점은 거리·시간을 더하지 않았으므로 바꿔 넣기만 한다. 크게 움직인 점이라
+    // 움직인 시각으로 본다(전에는 이 점을 미뤄 10초 동안 자동 일시정지하지 않았다).
+    segment[0] = s;
+    _lastAccepted = s;
+    _moveAnchor = s;
+    _movedAt = s.time;
+    _lastReplaced = first;
+    return true;
+  }
+
+  /// 구간 첫 점 [first] 다음 점 [next] 가 [_firstPointReplaceWithin] 안에 튀는 값
+  /// 거름([_maxSpeedMps])에 걸리는가.
+  static bool _isJumpyFirst(LocationSample first, LocationSample next) {
+    final dt = next.time.difference(first.time);
+    if (dt <= Duration.zero || dt > _firstPointReplaceWithin) return false;
+    final seconds = dt.inMicroseconds / Duration.microsecondsPerSecond;
+    return _distance(first, next) / seconds > _maxSpeedMps;
   }
 
   /// 움직임이면 재개하고 창의 점을 차례로 받아들인다. 하나라도 넣으면 true.

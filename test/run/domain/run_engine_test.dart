@@ -53,8 +53,124 @@ void main() {
   test('1초 만에 10m 이동한 점은 버린다', () {
     engine.start();
     engine.addSample(at(0, _lat0, _lng0));
-    expect(engine.addSample(at(1, _northOf(10), _lng0)), isFalse);
-    expect(engine.snapshot.distanceM, 0);
+    expect(engine.addSample(at(1, _northOf(3), _lng0)), isTrue);
+    expect(engine.addSample(at(2, _northOf(13), _lng0)), isFalse);
+    expect(engine.snapshot.distanceM, closeTo(3, 1e-6));
+    expect(engine.segments.single, hasLength(2));
+  });
+
+  // 작업 27: 첫 위치가 튀면 요약 경로에 시작점에서 곧은 선이 그어졌다.
+  group('구간 첫 점 다음 점이 튀면 첫 점을 버린다', () {
+    test('10초 안에 초속 7m 넘게 떨어진 둘째 점은 첫 점을 대신한다', () {
+      engine.start();
+      final wrong = at(0, _northOf(-300), _lng0);
+      final first = at(2, _lat0, _lng0);
+      expect(engine.addSample(wrong), isTrue);
+      expect(engine.addSample(first), isTrue);
+      expect(engine.lastAppended, [first]);
+      expect(engine.lastReplaced, wrong);
+      expect(engine.segments.single, [first]);
+      expect(engine.snapshot.distanceM, 0);
+      expect(engine.lastPointAt, first.time);
+
+      // 새 점을 기준으로 이어 간다.
+      expect(engine.addSample(at(3, _northOf(3), _lng0)), isTrue);
+      expect(engine.lastReplaced, isNull);
+      expect(engine.snapshot.distanceM, closeTo(3, 1e-6));
+      final summary = engine.end(weightKg: 65);
+      expect(summary.points.first, first);
+      expect(summary.segments.single, hasLength(2));
+    });
+
+    test('대신한 점을 움직인 시각으로 보고 그 뒤 10초에 자동 일시정지한다', () {
+      engine.start();
+      engine.addSample(at(0, _northOf(-300), _lng0));
+      engine.addSample(at(5, _lat0, _lng0));
+      expect(
+        engine.autoPauseIfStill(t0.add(const Duration(seconds: 14))),
+        isFalse,
+      );
+      expect(
+        engine.autoPauseIfStill(t0.add(const Duration(seconds: 15))),
+        isTrue,
+      );
+      expect(engine.pausedAt, t0.add(const Duration(seconds: 5)));
+    });
+
+    test('복원한 구간의 둘째 점이 첫 점에서 튀면 첫 점을 뺀다(대신하기 전에 저장된 첫 점)', () {
+      final wrong = at(0, _northOf(-300), _lng0);
+      final first = at(2, _lat0, _lng0);
+      final next = at(3, _northOf(3), _lng0);
+      final restored = RunEngine(
+        clock: () => now,
+        startedAt: t0,
+        restoredSegments: [
+          [wrong, first, next],
+          [at(20, _northOf(10), _lng0), at(21, _northOf(13), _lng0)],
+        ],
+      );
+      expect(restored.segments.first, [first, next]);
+      expect(restored.segments.last, hasLength(2));
+      expect(restored.snapshot.distanceM, closeTo(6, 1e-6));
+    });
+
+    test('두 점 사이가 10초를 넘으면 첫 점을 그대로 둔다', () {
+      engine.start();
+      final p0 = at(0, _lat0, _lng0);
+      engine.addSample(p0);
+      expect(engine.addSample(at(11, _northOf(300), _lng0)), isFalse);
+      expect(engine.lastReplaced, isNull);
+      expect(engine.segments.single, [p0]);
+    });
+
+    test('초속 7m 이하면 첫 점을 그대로 둔다(빠른 점 미룸 규칙을 따른다)', () {
+      engine.start();
+      final p0 = at(0, _lat0, _lng0);
+      engine.addSample(p0);
+      // 초속 6.5m: 빠른 점 미룸(시속 22km)에는 걸리고 튀는 값 거름에는 안 걸린다.
+      expect(engine.addSample(at(2, _northOf(13), _lng0)), isFalse);
+      expect(engine.lastReplaced, isNull);
+      expect(engine.segments.single, [p0]);
+    });
+
+    test('셋째 점부터는 튀는 점을 버린다', () {
+      engine.start();
+      final p0 = at(0, _lat0, _lng0);
+      final p1 = at(1, _northOf(3), _lng0);
+      engine.addSample(p0);
+      engine.addSample(p1);
+      expect(engine.addSample(at(2, _northOf(300), _lng0)), isFalse);
+      expect(engine.lastReplaced, isNull);
+      expect(engine.segments.single, [p0, p1]);
+    });
+
+    test('재개한 구간의 첫 점에도 같다', () {
+      engine.start();
+      engine.addSample(at(0, _lat0, _lng0));
+      engine.addSample(at(1, _northOf(3), _lng0));
+      now = t0.add(const Duration(seconds: 2));
+      engine.pause();
+      now = t0.add(const Duration(seconds: 10));
+      engine.resume();
+      final wrong = at(11, _northOf(500), _lng0);
+      final first = at(12, _northOf(6), _lng0);
+      engine.addSample(wrong);
+      expect(engine.addSample(first), isTrue);
+      expect(engine.lastReplaced, wrong);
+      expect(engine.segments, hasLength(2));
+      expect(engine.segments.last, [first]);
+      expect(engine.snapshot.distanceM, closeTo(3, 1e-6));
+    });
+
+    test('탈것 의심 판정은 그대로다', () {
+      engine.start();
+      // 처음부터 초속 8m 로 달리면 둘째 점이 첫 점을 대신하고, 30초 평균으로 탈것 의심이 된다.
+      for (var i = 0; i <= 31; i++) {
+        now = t0.add(Duration(seconds: i));
+        engine.addSample(at(i, _northOf(i * 8.0), _lng0));
+      }
+      expect(engine.state, RunState.vehicle);
+    });
   });
 
   test('시각이 역행한 점은 버린다', () {

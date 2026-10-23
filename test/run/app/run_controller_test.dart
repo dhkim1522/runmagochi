@@ -321,6 +321,20 @@ void main() {
     });
   });
 
+  test('첫 점이 튀어 엔진이 버리면 아직 저장하지 않은 그 점도 저장하지 않는다', () {
+    _run((async, controller, container, repository, location) {
+      controller.start(goal: DistanceGoal(3000));
+      async.flushMicrotasks();
+      stepTo(async, location, -300);
+      stepTo(async, location, 0);
+      stepTo(async, location, 3);
+      async.elapse(const Duration(seconds: 7));
+
+      final call = repository.appendCalls.single;
+      expect(call.points.map((p) => p.latitude), [_northOf(0), _northOf(3)]);
+    });
+  });
+
   test('pause 시 버퍼를 즉시 저장하고 위치 구독은 유지한다', () {
     _run((async, controller, container, repository, location) {
       controller.start(goal: DistanceGoal(3000));
@@ -822,7 +836,10 @@ void main() {
           container.read(runControllerProvider).lastError,
           _locationOffError,
         );
-        expect(container.read(runControllerProvider).locationServiceOff, isTrue);
+        expect(
+          container.read(runControllerProvider).locationServiceOff,
+          isTrue,
+        );
 
         async.elapse(const Duration(seconds: 60));
         expect(location.listenCount, 1);
