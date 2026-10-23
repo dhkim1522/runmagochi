@@ -16,6 +16,8 @@ Flutter로 개발한다. 근거는 [결정 0004](decisions/0004-flutter.md).
 | 음성 안내 | `flutter_tts` | 기기 음성 합성 엔진으로 한국어 안내, 다른 앱 소리 줄이기. `Speaker` 인터페이스 뒤에 둔다 ([결정 0024](decisions/0024-voice-share-packages.md)) |
 | 공유 | `share_plus`, `path_provider` | 요약 카드 이미지를 임시 폴더에 쓰고 시스템 공유 창으로 보낸다. `Sharer` 인터페이스 뒤에 둔다 |
 | 그래프 | `CustomPainter` | 통계 막대·구간 페이스 막대를 패키지 없이 그린다 |
+| 권한 | `permission_handler` | 위치·알림 권한 요청과 배터리 최적화 예외 안내. `PermissionGate` 인터페이스 뒤에 둔다 |
+| 백업 파일 | `file_picker`, `path_provider`, `uuid` | 백업 JSON 을 고르고 쓴다. 모든 행의 ID 는 UUID |
 | 로컬 알림 | `flutter_local_notifications` | 러닝 진행 알림(거리·시간·목표 진행, 일시정지·재개 버튼), 종료 예고 알림, 자동 종료·목표 달성 즉시 알림 |
 
 배경 지도가 필요해지면 `maplibre_gl` 또는 `flutter_map` 에 OpenFreeMap 타일을 쓴다. Google Maps는 API 키와 Google Cloud 프로젝트가 필요해 쓰지 않는다.
@@ -52,6 +54,77 @@ flowchart TB
 - **성장 로직**은 저장된 완료 러닝을 읽어 경험치를 계산한다. 기록 코드와 게임 코드는 서로를 모른다.
 - **업적**은 완료 러닝에서 개인 기록과 배지를 계산한다. 성장 로직의 동기화 안에서 새 배지를 가려 코인과 함께 준다. 음성 안내와 공유 카드는 기록 엔진 이벤트와 요약을 읽기만 한다.
 - **저장소 인터페이스**는 화면·도메인이 저장 방식을 모르게 한다. 현재는 로컬 구현만 있다.
+
+### 모듈 지도
+
+`lib/` 는 기능별 폴더로 나누고, 폴더 안은 같은 네 층으로 나눈다. 의존은 한 방향이다(`ui → app → domain ← data`). `domain` 은 Flutter 에 기대지 않는 순수 Dart 라 단위 테스트로 규칙을 검증한다.
+
+```mermaid
+flowchart TB
+    subgraph Feature["기능 폴더 (run · avatar · shop · achievement · backup · profile · settings · onboarding)"]
+        UI["ui<br/>화면·위젯"] --> App["app<br/>컨트롤러·서비스·Riverpod provider"]
+        App --> Domain["domain<br/>규칙·계산 (순수 Dart)"]
+        Data["data<br/>저장소 구현·플랫폼 어댑터"] --> Domain
+        App --> Data
+    end
+    Core["core<br/>테마 토큰·공용 컴포넌트·무대 그림<br/>시계·포맷·알림 초기화"]
+    UI --> Core
+    App --> Core
+```
+
+| 폴더 | 책임 | 대표 파일 |
+| --- | --- | --- |
+| `run/` | 러닝 기록 전부: 엔진, 컨트롤러, 저장소, 위치 어댑터, 음성, 알림, 홈·러닝 중·요약·기록 화면, 공유 카드 | `domain/run_engine.dart`, `app/run_controller.dart`, `data/drift_run_repository.dart`, `data/app_database.dart` |
+| `avatar/` | 경험치·레벨·외형 단계 규칙, 아바타 화면 | `domain/growth_rules.dart` |
+| `shop/` | 코인·아이템 카탈로그, 구매·장착, 상점·코인 내역 화면 | `domain/catalog.dart` |
+| `achievement/` | 개인 기록, 배지 12개와 지급, 업적 화면 | `domain/badges.dart`, `app/achievement_service.dart` |
+| `backup/` | 백업 JSON 만들기·읽기·교체 | `domain/backup_codec.dart` |
+| `profile/` | 체중·이름·화면 모드·음성 안내 설정과 첫 실행 여부 | `data/drift_profile_repository.dart` |
+| `settings/`, `onboarding/` | 설정 화면, 첫 실행 2장 | |
+| `core/` | 디자인 토큰(`theme.dart`), 공용 컴포넌트, 사각 무대 그림, 시계, 알림 초기화 | `theme.dart`, `ui/components.dart` |
+
+### 플랫폼 경계
+
+OS 기능은 인터페이스 뒤에 두어, 테스트는 가짜로 바꾸고 화면·규칙은 OS 를 모른다.
+
+```mermaid
+flowchart LR
+    subgraph App["앱 (Dart)"]
+        Ctrl["RunController"]
+        Engine["RunEngine"]
+        Repo["RunRepository"]
+        Voice["VoiceGuide"]
+    end
+    Ctrl --> Engine
+    Ctrl --> Repo
+    Ctrl --> Voice
+    LS["LocationSource<br/>(geolocator)"] -- "위치 점 스트림" --> Ctrl
+    Ctrl -- "진행 알림 갱신" --> Notif["RunProgressNotifier<br/>(flutter_local_notifications)"]
+    Notif -- "버튼 눌림: 별도 isolate → 포트" --> Ctrl
+    Voice --> Speaker["Speaker (flutter_tts)"]
+    Repo --> DB[("SQLite · drift")]
+    Perm["PermissionGate<br/>(permission_handler)"] --> Ctrl
+    Share["Sharer (share_plus)"]
+    Backup["BackupFileStore<br/>(file_picker)"]
+    subgraph Android
+        FG["포그라운드 서비스<br/>위치 알림"]
+    end
+    subgraph iOS
+        BG["UIBackgroundModes<br/>location · audio"]
+    end
+    LS --- FG
+    LS --- BG
+```
+
+- **백그라운드 기록**: Android 는 geolocator 의 포그라운드 서비스 알림(위치 서비스 유형), iOS 는 `UIBackgroundModes` 의 `location`·`audio` 로 화면이 꺼져도 위치와 음성이 이어진다. 위치 갱신 간격은 필터 없이(`distanceFilter` 0) 받고 거름은 엔진이 한다 ([ios.md](ios.md), 결정 0031).
+- **알림 버튼**: 버튼 응답은 별도 isolate 에서 오므로, 이름을 붙인 포트(`IsolateNameServer`)로 메인 isolate 에 버튼 id 를 보내고 `runNotificationActionsProvider` 스트림을 컨트롤러가 듣는다 ([시퀀스](sequences.md)).
+- **강제 종료 복구**: 위치 점을 10초마다 DB 에 쓰므로 프로세스가 죽어도 다음 실행에서 복구 안내를 띄운다 (결정 0007).
+
+### 의존성 주입과 상태
+
+- `flutter_riverpod` 의 `Provider` 가 구현을 꽂는다(`lib/*/app/providers.dart`, 30여 개). 위치 원본·시계·저장소·음성·알림을 provider 로 받아, 테스트는 `ProviderScope` 의 override 로 가짜를 넣는다.
+- 러닝 상태는 `RunController`(`NotifierProvider`)가 `RunViewState` 로 내보내고 화면은 읽기만 한다. 시간은 `clockProvider` 로 받아 테스트가 시간을 조작한다.
+- 화면 간 전달은 DB 를 거친다. 러닝이 끝나면 저장 → 성장·업적 동기화가 완료된 러닝을 읽어 경험치·코인·배지를 계산한다.
 
 ## 데이터 모델
 
