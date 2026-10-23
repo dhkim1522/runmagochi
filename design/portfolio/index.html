@@ -58,6 +58,7 @@ a:focus-visible { outline: 3px solid var(--green); outline-offset: 3px; }
 .tagline { font-size: clamp(20px, 2.4vw, 24px); font-weight: 700; margin-top: 14px; }
 .lede { font-size: 17px; color: var(--muted); max-width: 30em; margin-top: 12px; }
 .cover .actions { margin-top: 32px; }
+main { padding-bottom: 72px; }
 .trio { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; align-items: start; }
 .trio .shot:nth-child(2) { margin-top: 44px; }
 .trio .shot:nth-child(3) { margin-top: 18px; }
@@ -99,10 +100,9 @@ section h2 { font-size: clamp(26px, 3.4vw, 34px); font-weight: 800; letter-spaci
 .how h3 { font-size: 17px; font-weight: 800; }
 .how p { color: var(--muted); font-size: 15px; margin-top: 6px; }
 
-.end { padding-block: 80px 72px; }
-.end .box { background: var(--surface); border-radius: 28px; padding: 36px clamp(20px, 4vw, 44px); display: flex; flex-wrap: wrap; gap: 20px 32px; align-items: center; justify-content: space-between; }
-.end h2 { font-size: clamp(22px, 2.8vw, 28px); font-weight: 800; margin: 0; }
-.end p { color: var(--muted); margin-top: 6px; }
+.gh { background: var(--surface); border-radius: 24px; padding: 24px 28px; display: flex; flex-wrap: wrap; gap: 16px 24px; align-items: center; justify-content: space-between; }
+.gh h2 { font-size: 20px; font-weight: 800; }
+.gh p { color: var(--muted); font-size: 15px; margin-top: 4px; }
 footer { padding-block: 0 48px; color: var(--muted); font-size: 14px; }
 .dot { font-family: var(--font-dot); }
 
@@ -117,7 +117,7 @@ footer { padding-block: 0 48px; color: var(--muted); font-size: 14px; }
 @media (max-width: 560px) {
   .cover { padding-block: 40px 16px; }
   .features { grid-template-columns: minmax(0, 1fr); }
-  .actions .btn, .end .btn { width: 100%; justify-content: center; }
+  .actions .btn { width: 100%; justify-content: center; }
 }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 </style>
@@ -130,7 +130,8 @@ footer { padding-block: 0 48px; color: var(--muted); font-size: 14px; }
       <h1>런마고치</h1>
       <p class="tagline">달린 만큼 도트 친구가 자라는 러닝 앱</p>
       <p class="lede">실제 러닝을 GPS로 기록하고, 달린 거리만큼 캐릭터가 레벨 업해요. 기록 숫자만으로는 동기가 약한 입문 러너가 꾸준히 달리게 만드는 것이 목표예요.</p>
-      <div class="actions">
+      <div class="actions gh">
+        <div><h2>코드와 문서는 GitHub에</h2><p>앱 코드, 기획서, 설계 문서, 화면설계서를 볼 수 있어요.</p></div>
         <a class="btn" href="https://github.com/dhkim1522/runmagochi" target="_blank" rel="noopener">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m8 7-5 5 5 5M16 7l5 5-5 5M14 4l-4 16"/></svg>
           GitHub 저장소
@@ -207,16 +208,6 @@ footer { padding-block: 0 48px; color: var(--muted); font-size: 14px; }
   </div>
 </div></section>
 
-<section class="end"><div class="wrap">
-  <div class="box">
-    <div><h2>코드와 문서는 GitHub에</h2><p>앱 코드, 기획서, 설계 문서, 화면설계서를 볼 수 있어요.</p></div>
-    <a class="btn" href="https://github.com/dhkim1522/runmagochi" target="_blank" rel="noopener">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m8 7-5 5 5 5M16 7l5 5-5 5M14 4l-4 16"/></svg>
-      GitHub 저장소
-      <svg class="ext" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M9 7h8v8"/></svg><span class="sr-only"> (새 탭에서 열림)</span>
-    </a>
-  </div>
-</div></section>
 </main>
 
 <footer><div class="wrap">런마고치 · <span class="dot">runmagochi</span></div></footer>
