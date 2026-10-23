@@ -32,16 +32,16 @@ flowchart LR
 | ui-ux-pro-max | 방향 a·c 의 HTML 시안 | a 는 기존 토큰 유지. c 는 추천(어두운 바탕·주황)이 무드보드와 맞지 않아 무드보드에서 뽑은 값을 썼다 |
 | Taste Skill | 방향 b 고르기 | 도트 한 칸 모티프. 점수 1위였으나 선택되지 않음 |
 | Impeccable critique | 6안 비교 | 6개 항목 30점 + 검출기. 접근성 수치(가로 넘침·최소 글자 13px·대비)를 공통으로 잰 표가 [critique](../../design/mockups/phase-6/critique.md)에 있다 |
-| Claude Design 캔버스 | 트랙 2 아트보드 9개 | [캔버스](https://claude.ai/artifact/FxKS7MR2twYmmE3k6SzNhe) |
+| Claude Design 캔버스 | 트랙 2 아트보드 9개 | [캔버스](../../design/mockups/phase-6/compare/index.html) |
 
 ## 산출물 위치
 
 | 산출물 | 위치 |
 | --- | --- |
-| 디자인 시스템 | [아티팩트](https://claude.ai/artifact/FPihTBfX2CJserHVwUQ514), [문서](design-system.md), 값 `tokens.json`, 코드 `lib/core/theme.dart` |
+| 디자인 시스템 | [아티팩트](design-system/index.html), [문서](design-system.md), 값 `tokens.json`, 코드 `lib/core/theme.dart` |
 | 고른 시안·규칙 | `design/mockups/phase-6/` (`direction-c.md`, `canvas/c/`) |
-| 6안 비교 | [critique](../../design/mockups/phase-6/critique.md), [비교 아티팩트](https://claude.ai/artifact/F5MsvhPE9fAXw5YtCwe3Xc) |
-| 캐릭터·아이템·배지 | `design/character/`, [에셋 카탈로그](https://claude.ai/artifact/ECbG2Fh4TXQwcr5fNUWCXA) |
+| 6안 비교 | [critique](../../design/mockups/phase-6/critique.md), [비교 아티팩트](../../design/mockups/phase-6/compare/index.html) |
+| 캐릭터·아이템·배지 | `design/character/`, [에셋 카탈로그](../../design/character/asset-catalog.html) |
 | 구현 화면 | `design/mockups/phase-6-screens/`, 화면설계서 `design/screens/` |
 | 옛 방향(말랑 클레이) | `design/mockups/*.dc.html`, git 기록 |
 

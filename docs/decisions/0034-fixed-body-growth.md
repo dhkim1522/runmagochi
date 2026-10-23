@@ -2,7 +2,7 @@
 
 - 상태: 채택 (2026-10-23, 사용자 승인)
 - 관련: 결정 0013(펫 러너, 단계마다 장비 하나), 0028(코드 도트), `docs/specs/sprite-spec.md`
-- 비교 페이지: [단계별 몸집 비교](https://claude.ai/artifact/MSpfvYySwKaH7YXt3AuHiG) 3판 (`design/mockups/phase-6/growth-compare.html`)
+- 비교 페이지: [단계별 몸집 비교](../../design/mockups/phase-6/growth-compare.html) 3판 (`design/mockups/phase-6/growth-compare.html`)
 
 ## 배경
 

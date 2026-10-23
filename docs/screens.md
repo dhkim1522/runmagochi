@@ -4,7 +4,7 @@
 
 와이어프레임은 화면 구성을 정하는 콘티다. 실제 UI 디자인은 페이즈 6 에서 연두 무드보드 + 사각 무대(결정 0029)로 입혔다. 화면별 모양은 아래 "화면 디자인", 규칙은 [디자인 시스템](design/design-system.md), 구현 스크린샷은 `design/mockups/phase-6-screens/`.
 
-**화면설계서**: [Claude 아티팩트](https://claude.ai/artifact/456dWcNyLn1vbUsjV9FLVc) (2026-10-22 작업 19, 2026-10-24 8판으로 컷 전체를 다시 찍음, 페이즈 8 작업 3). 실제 앱 화면 컷 64장(Android 라이트 51·다크 8, iPhone 5)으로 만든 전체 화면 보드·흐름도·화면별 상세·와이어프레임·부품 모음. 원본은 `design/screens/`(스크린샷 `<번호>-<이름>.png`, 게시용 390px 사본 `web/`, 페이지 `index.html`). 촬영·사본 만들기는 `tool/capture/`([README](../tool/capture/README.md)).
+**화면설계서**: [Claude 아티팩트](../design/screens/index.html) (2026-10-22 작업 19, 2026-10-24 8판으로 컷 전체를 다시 찍음, 페이즈 8 작업 3). 실제 앱 화면 컷 64장(Android 라이트 51·다크 8, iPhone 5)으로 만든 전체 화면 보드·흐름도·화면별 상세·와이어프레임·부품 모음. 원본은 `design/screens/`(스크린샷 `<번호>-<이름>.png`, 게시용 390px 사본 `web/`, 페이지 `index.html`). 촬영·사본 만들기는 `tool/capture/`([README](../tool/capture/README.md)).
 
 ## MVP 화면
 

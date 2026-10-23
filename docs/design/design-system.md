@@ -1,6 +1,6 @@
 # 디자인 시스템
 
-> 원본: [Claude 디자인 시스템 아티팩트](https://claude.ai/artifact/FPihTBfX2CJserHVwUQ514) (2026-10-22 갱신, 연두 무드보드 + 사각 무대, 결정 0029. 작업 18 에서 토큰을 `tokens.json` 과 맞추고 컴포넌트 견본 13개로 늘림). 아티팩트 파일 사본은 `docs/design/design-system/project/`(글꼴 woff2 는 빼고). 값은 `docs/design/tokens.json` 이 기준이다. 아티팩트 개요(README)는 색·글꼴·간격·모서리·그림자만 짧게 요약한 것이라(궁서체로 보이던 제목은 페이지가 `# 제목`을 세리프로 그려서였고, 제목 줄을 뺐다), 자세한 규칙은 이 문서가 원천이다. 옛 방향 말랑 클레이(2026-10-17 승인)는 아티팩트 버전 기록과 `design/mockups/` 에 남아 있다.
+> 원본: [Claude 디자인 시스템 아티팩트](design-system/index.html) (2026-10-22 갱신, 연두 무드보드 + 사각 무대, 결정 0029. 작업 18 에서 토큰을 `tokens.json` 과 맞추고 컴포넌트 견본 13개로 늘림). 아티팩트 파일 사본은 `docs/design/design-system/project/`(글꼴 woff2 는 빼고). 값은 `docs/design/tokens.json` 이 기준이다. 아티팩트 개요(README)는 색·글꼴·간격·모서리·그림자만 짧게 요약한 것이라(궁서체로 보이던 제목은 페이지가 `# 제목`을 세리프로 그려서였고, 제목 줄을 뺐다), 자세한 규칙은 이 문서가 원천이다. 옛 방향 말랑 클레이(2026-10-17 승인)는 아티팩트 버전 기록과 `design/mockups/` 에 남아 있다.
 
 앱은 `lib/core/theme.dart` 에서 이 토큰만 읽는다: `AppColors`(색), `AppText`(글자), `Gap`·`Radii`·`Borders`·`Stage`·`Motion`. 토큰 값은 `test/core/theme_test.dart` 가 `tokens.json` 과 같은지, 대비가 기준을 넘는지 라이트·다크 모두 확인한다.
 
@@ -67,7 +67,7 @@ direction-c 이름과 토큰: `lime` = `primary`, `green` = `primary-deep`·`suc
 ## 사각 무대
 
 - 폭 전체, 모서리 `Stage.radius`(24, 카드 안 `Stage.radiusInCard` 20). 정수 배율, 보간 없음(`FilterQuality.none`).
-- 배경은 **공원 산책로**(작업 25, 관문 3 에서 고른 안 2) 한 점 투시 도트 그림이다. 소실점은 펫 몸 뒤 지평선에 있고, 모래빛 흙길이 소실점으로 좁아진다. 길 위 자갈·풀잎·작은 꽃 점, 길가 둥근 나무(±1.7)·덤불(±1.15), 지평선 위 두 겹 나무 줄. 위쪽 하늘은 말풍선·날씨 자리로 비운다. 연두 `primary` 는 배경에 쓰지 않는다. 그림 원본(투시 식·색·속도)은 `design/mockups/phase-6/stage-background/gen.py`·`notes.md`, 시안은 [캔버스](https://claude.ai/artifact/FxKS7MR2twYmmE3k6SzNhe) "무대 배경 시안 — 작업 25".
+- 배경은 **공원 산책로**(작업 25, 관문 3 에서 고른 안 2) 한 점 투시 도트 그림이다. 소실점은 펫 몸 뒤 지평선에 있고, 모래빛 흙길이 소실점으로 좁아진다. 길 위 자갈·풀잎·작은 꽃 점, 길가 둥근 나무(±1.7)·덤불(±1.15), 지평선 위 두 겹 나무 줄. 위쪽 하늘은 말풍선·날씨 자리로 비운다. 연두 `primary` 는 배경에 쓰지 않는다. 그림 원본(투시 식·색·속도)은 `design/mockups/phase-6/stage-background/gen.py`·`notes.md`, 시안은 [캔버스](../../design/mockups/phase-6/compare/index.html) "무대 배경 시안 — 작업 25".
 - 겹(아래 → 위): 1 하늘(`stage-sky` 단색 + 도트 구름 2~3개 `park-cloud`, 멈춤. 오른쪽 위 96px 는 말풍선 자리라 비우고 먼 풍경 띠 위 2칸까지만, 3배 미만 작은 무대는 구름 없음. 나중에 날씨 겹이 이 겹을 바꾼다) → 2 먼 풍경(지평선 위 12칸 띠, 멈춤) → 3 땅·길(풀밭 `stage-ground`, 풀잎 `stage-ground-line`, 길·점) → 4 앞 장식(길가 물체, 먼 것부터) → 펫(발밑 도트 그림자) → 말풍선. 4 는 이름과 달리 펫 뒤에 그린다(펫보다 가까운 물체는 화면 좌우 끝이라 겹치지 않는다). 겹은 `StageScene`(`lib/core/stage/stage_scene.dart`)으로 묶고, 배경 아이템은 다른 `StageScene` 을 `PetStage.scene` 에 준다. 공원 산책로만의 색은 `ParkPalette`(`lib/core/stage/park_scene.dart`, `tokens.json` 의 `stageScene.park`).
 - 배경 도트 1칸 = 4px(6배 이상, 펫 8배 도트의 절반). 펫이 작으면 `2·배율/3` 내림(최소 1px). 지평선은 발끝 위 13 스프라이트 줄(가슴 높이), 무대가 아주 낮으면 무대 높이의 3/4 를 넘지 않는다. 길가 물체는 3배 이상에서만 그린다(성장 단계 줄 2배 무대는 하늘·먼 풍경·길만).
 - 펫 발끝은 무대 아래에서 `땅 높이 − Stage.footSink` 위에 선다: `Stage.groundHeight` 56(8배) → 48, 러닝 중 `Stage.groundHeightCompact` 40(6배) → 32, 카드 안 `Stage.groundHeightMini` 24(2~3배, 모서리 `radius-sm` 12) → 16. 땅 띠가 없어진 대신 발밑 도트 그림자(폭 20 스프라이트 칸, 배경 도트 3줄, 라이트 `ink` 14%·다크 검정 30%)가 땅에 선 느낌을 준다.

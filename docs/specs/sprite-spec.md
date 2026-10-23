@@ -1,6 +1,6 @@
 # 스프라이트 규격
 
-> 산출물: [런마고치 캐릭터 에셋](https://claude.ai/artifact/ECbG2Fh4TXQwcr5fNUWCXA) — 3종 4단계·표정·아이템·배지·앱 아이콘을 실제 시트로 재생하는 카탈로그(2026-10-22, 페이즈 6, 작업 18 에 최종 그림으로, 작업 32 에 몸집 고정 그림으로 갱신). 페이지 원본은 `design/character/asset-catalog.html`(그림 경로는 아티팩트에 함께 올린 `sprites/`·`badges/`·`preview/`·`icon/` 기준).
+> 산출물: [런마고치 캐릭터 에셋](../../design/character/asset-catalog.html) — 3종 4단계·표정·아이템·배지·앱 아이콘을 실제 시트로 재생하는 카탈로그(2026-10-22, 페이즈 6, 작업 18 에 최종 그림으로, 작업 32 에 몸집 고정 그림으로 갱신). 페이지 원본은 `design/character/asset-catalog.html`(그림 경로는 아티팩트에 함께 올린 `sprites/`·`badges/`·`preview/`·`icon/` 기준).
 
 아바타는 레이어를 겹쳐 그린다. 실제 에셋은 같은 이름의 파일로 교체하면 되고, 코드는 고치지 않는다.
 

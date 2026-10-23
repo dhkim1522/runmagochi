@@ -186,7 +186,7 @@
   - 홈의 목표 카드(분할 + 값 칩 4개)를 한 줄 `오늘 목표 5km ›`(시간이면 `30분`)로 줄이고, 누르면 아래 시트에서 거리·시간 분할 + 휠로 고른다(거리 3~42km 1km 단위, 시간 15~180분 5분 단위, 자주 쓰는 값 칩 유지). 지난 목표가 골라진 채 시작 버튼 한 번으로 달리는 규칙은 그대로
   - `docs/screens.md` 홈 줄과 와이어프레임 설명을 고친다
   - 테스트: 한 줄에 지난 목표, 시트에서 바꾼 값이 시작에 쓰임, 직접 입력 범위
-- [x] 22. 다크 무대 캐릭터 테두리 얇게 (관문 3 비교 B, https://claude.ai/artifact/EjodbX4cdU9oFoXTXCCH24)
+- [x] 22. 다크 무대 캐릭터 테두리 얇게 (관문 3 비교 B, [`rim-compare.html`](../../design/mockups/phase-6/rim-compare.html))
   - `spriteRim` 흰 테두리 두께를 도트 1칸에서 `max(1, round(scale / 4))` 화면 px 로(8배 2px, 6배 2px, 3배 1px). 색은 그대로
   - 비교 페이지 원본을 `design/mockups/phase-6/rim-compare.html` 에 둔다
   - 테스트: 8배에서 테두리 밀기 값 2
@@ -198,7 +198,7 @@
   - `docs/specs/run-engine.md` 상태·자동 종료 표를 고친다
   - 테스트: 시속 18km 이어짐은 기록, 시속 24km 40초는 뺀 구간·말풍선, 의심 합계 2분 종료와 끝 시각, 점 30초 없음 → 끊김 → 점 오면 풀림·거리 안 더함, 끊김 5분 30초 종료, 자동 일시정지와 겹칠 때 우선순위
 - [x] 25. 무대 기본 배경: 달리는 길
-  - Claude Design 캔버스(런마고치 UI 후보 https://claude.ai/artifact/FxKS7MR2twYmmE3k6SzNhe)에 배경 시안 2~3개(라이트·다크)를 그려 사용자가 고른다. 사각 무대 하늘·땅 구조 위에 길(도로·트랙·공원길)을 얹고, 나중에 배경 아이템으로 넓힐 수 있게 레이어로 둔다
+  - Claude Design 캔버스(런마고치 UI 후보 [`compare`](../../design/mockups/phase-6/compare/index.html))에 배경 시안 2~3개(라이트·다크)를 그려 사용자가 고른다. 사각 무대 하늘·땅 구조 위에 길(도로·트랙·공원길)을 얹고, 나중에 배경 아이템으로 넓힐 수 있게 레이어로 둔다
   - 고른 안을 `PetStage` 에 넣는다(홈·러닝 중·요약·아바타·상점·공유 카드). 러닝 중에는 길이 천천히 흐르게(움직임 줄이기면 멈춤)
   - 테스트: 라이트·다크 골든 없이 위젯 테스트로 레이어 존재·발끝 위치 유지
 - [x] 26. 화면설계서·디자인 시스템 다시 맞추기
@@ -216,10 +216,10 @@
   - 라이트 `pace-mid`·`pace-fast` 가 둘 다 어두운 초록이라 구분이 약했다 → `#659325`(연두) · `#066B0E`(초록) · `#003647`(청록). 세 색+ink-muted 색각 이상(적·녹·청) CIEDE2000 15.6 이상, 빠름은 ink 와도 정상 20.5. 다크 값은 그대로. 화면설계서 7판
 
 - [x] 31. 버튼 진한 테두리 제거, 옅은 플로팅 그림자 (관문 3 이후 의견, 비교 C)
-  - 비교 페이지 https://claude.ai/artifact/Cpm6JZRHtx4z1sqzL2x12p (`design/mockups/phase-6/button-compare.html`). 연두 버튼·칩의 `primary-edge` 2px, 흰 보조 버튼의 `line-strong` 2px 를 없애고 `elevation-float`(라이트 `0 3 8 -3 ink14%` + `0 1 2 ink8%`, 다크 `0 2 4 -1 #000 20%`)로. 선택 칩은 체크 아이콘 추가, 보조 버튼은 `line` 1px 머리카락 선. 테스트 1365 통과
+  - 비교 페이지 [`button-compare.html`](../../design/mockups/phase-6/button-compare.html) (`design/mockups/phase-6/button-compare.html`). 연두 버튼·칩의 `primary-edge` 2px, 흰 보조 버튼의 `line-strong` 2px 를 없애고 `elevation-float`(라이트 `0 3 8 -3 ink14%` + `0 1 2 ink8%`, 다크 `0 2 4 -1 #000 20%`)로. 선택 칩은 체크 아이콘 추가, 보조 버튼은 `line` 1px 머리카락 선. 테스트 1365 통과
 
 - [x] 32. 단계별 몸집 폭 고정(성장 모양) (관문 3 이후 의견, 결정 0034)
-  - 사용자 의견(2026-10-23): 단계가 오를수록 가로로 두꺼워져 살찌는 느낌 → 2단계 이후 폭 고정, 키·외관·장비로 성장. 비교 페이지 https://claude.ai/artifact/MSpfvYySwKaH7YXt3AuHiG 3판(`design/mockups/phase-6/growth-compare.html`)
+  - 사용자 의견(2026-10-23): 단계가 오를수록 가로로 두꺼워져 살찌는 느낌 → 2단계 이후 폭 고정, 키·외관·장비로 성장. 비교 페이지 [`growth-compare.html`](../../design/mockups/phase-6/growth-compare.html) 3판(`design/mockups/phase-6/growth-compare.html`)
   - 몸 폭 1~4단계 병아리 14·16·18·18, 젤리 16·18·18·18, 도토리 모자 16·18·18·18. 키 19·20·21(2~4단계), 3·4단계 폭÷키 0.90·0.86. 아이템 그림·기준점·모자 폭 24칸 그대로
   - `tool/sprites/{chick,jelly,acorn}.dart` 2~4단계 그림, 시트·미리보기·콘셉트 다시 만듦(앱 아이콘은 병아리 3단계라 그대로). 테스트 "몸집 고정(결정 0034)" 3개 추가
 
@@ -250,12 +250,12 @@
 - [ ] 실기기(Android·iPhone)에서 아이콘·스플래시·글꼴·화면 확인 (페이즈 7)
 
 ## 관문 기록
-- 관문 2 비교 페이지: https://claude.ai/artifact/F5MsvhPE9fAXw5YtCwe3Xc (critique `design/mockups/phase-6/critique.md`). 추천 b · 캔버스(27/30), 차선 a · 스킬(23). 결과: **c · 캔버스 확정**(2026-10-22 사용자, 결정 0029). 사용자가 c · 캔버스에 관심, 요청으로 c 의 연두 원을 사각 무대(하늘+땅 띠)로 바꿈(배경 아이템 확장 대비, 2026-10-22). 원래 모양은 커밋 206afd5. 함께 고칠 점: `$` 코인 아이콘 → 앱 코인, 선택 표시 하나로(분할 48 높이), 연두 버튼 면 경계, 배지 `코인 +200` 강조, 탭 아이콘 앱 고유, 다크 모드 새 설계, 글꼴 Pretendard
-- UI 후보 캔버스(트랙 2): https://claude.ai/artifact/FxKS7MR2twYmmE3k6SzNhe
+- 관문 2 비교 페이지: [`compare`](../../design/mockups/phase-6/compare/index.html) (critique `design/mockups/phase-6/critique.md`). 추천 b · 캔버스(27/30), 차선 a · 스킬(23). 결과: **c · 캔버스 확정**(2026-10-22 사용자, 결정 0029). 사용자가 c · 캔버스에 관심, 요청으로 c 의 연두 원을 사각 무대(하늘+땅 띠)로 바꿈(배경 아이템 확장 대비, 2026-10-22). 원래 모양은 커밋 206afd5. 함께 고칠 점: `$` 코인 아이콘 → 앱 코인, 선택 표시 하나로(분할 48 높이), 연두 버튼 면 경계, 배지 `코인 +200` 강조, 탭 아이콘 앱 고유, 다크 모드 새 설계, 글꼴 Pretendard
+- UI 후보 캔버스(트랙 2): [`compare`](../../design/mockups/phase-6/compare/index.html)
 - 관문 1 투표 페이지(2026-10-22): https://claude.ai/artifact/SBshrAFUGtLfBbaLHQxMnb . 저장 기능 없음(db 아티팩트는 조직 내부 전용이라 외부 사람이 못 엶). 고르면 `런마고치 캐릭터: A/B/C` 문구가 나오고 사용자가 표를 모은다. 결과: **A 말랑 클레이 확정**(2026-10-22 사용자). 기준점은 지금 값(모자 y=18, 소품 y=20) 유지
 
 ## 자동 결정
-- 작업 19(2026-10-22): 화면설계서 https://claude.ai/artifact/456dWcNyLn1vbUsjV9FLVc (원본 `design/screens/`, 실제 화면 57장: Android 라이트 39·다크 8, iPhone 5). 예시 데이터는 게임 규칙대로 만든 백업을 설정 › 가져오기로 넣었다(iPhone 시뮬레이터는 파일 선택기를 못 다뤄 VM 서비스로 같은 가져오기 경로 호출). 잠금화면 알림은 AVD 에 잠금화면이 없어 못 찍었다. 찍다가 찾은 앱 결함: 목표 달성 알림이 러닝 뒤에도 남음(6fee378, 자동 종료 알림과 id 가 겹쳐 따로 1002), 잘라내기 슬라이더 연두 채움(c1abc26), Android 위치 두 번 거부 뒤 설정 열기로 못 감(최종 리뷰 수정). 권한 거부 상태 화면은 이 결함 때문에 못 찍었다.
+- 작업 19(2026-10-22): 화면설계서 [`screens`](../../design/screens/index.html) (원본 `design/screens/`, 실제 화면 57장: Android 라이트 39·다크 8, iPhone 5). 예시 데이터는 게임 규칙대로 만든 백업을 설정 › 가져오기로 넣었다(iPhone 시뮬레이터는 파일 선택기를 못 다뤄 VM 서비스로 같은 가져오기 경로 호출). 잠금화면 알림은 AVD 에 잠금화면이 없어 못 찍었다. 찍다가 찾은 앱 결함: 목표 달성 알림이 러닝 뒤에도 남음(6fee378, 자동 종료 알림과 id 가 겹쳐 따로 1002), 잘라내기 슬라이더 연두 채움(c1abc26), Android 위치 두 번 거부 뒤 설정 열기로 못 감(최종 리뷰 수정). 권한 거부 상태 화면은 이 결함 때문에 못 찍었다.
 - 최종 리뷰(2026-10-22): Ready with minors. 무대 높이 식 5곳 중복, 시트·대화상자·iOS 화면 전환과 스프라이트 반복이 움직임 줄이기를 따르지 않음, 빈 슬라이더 트랙 대비 낮음은 남김(관문 3 목록).
 - 검증(2026-10-22): 테스트 1223 통과·analyze 0건·HEX 0건·생성 스크립트 재실행 변화 없음, 디버그 APK 173.9MB → 171.3MB(작업 17 측정). E2E 6개 모두 통과(AVD `runmagochi` android-36, 이 Mac 에 있던 이미지로 새로 만듦). 가상 러닝 5분은 3.0m/s 면 0.89km 라 1km 미만 버림 규칙(결정 0027)에 걸려 4.0m/s 로 다시 했다(1.20km). API 36 에서 `adb shell monkey` 로 앱이 안 떠 `am start -n com.dhkim1522.runmagochi/.MainActivity` 를 썼다.
 - 작업 15: 스낵바는 아래 붙은 띠, 화면 전환은 Android 만 앱 전환(iOS 뒤로 밀기 유지), 누름 최소 유지 `Motion.press`, 첫 실행 진행 점 primaryDeep, 설정 묶음 이름 heading ink, 불러오기 실패는 inkMuted 느낌표, 권한 안내 그림은 Material 아이콘, 좁은 화면 기록 기간 문구는 두 줄.

@@ -51,13 +51,13 @@
 
 ## 페이즈 6 사용 기록
 
-UI 후보를 두 트랙(디자인 스킬 · Claude Design 캔버스) × 세 방향(a 말랑 클레이 다듬기 · b 도트 한 칸 · c 연두 무드보드)으로 만들어 비교했다(작업 7·8). 고른 안은 c · 캔버스(결정 0029). 고른 시안·규칙·비교는 `design/mockups/phase-6/`, 지운 나머지 후보는 git 기록과 비교 아티팩트 https://claude.ai/artifact/F5MsvhPE9fAXw5YtCwe3Xc 에 남아 있다.
+UI 후보를 두 트랙(디자인 스킬 · Claude Design 캔버스) × 세 방향(a 말랑 클레이 다듬기 · b 도트 한 칸 · c 연두 무드보드)으로 만들어 비교했다(작업 7·8). 고른 안은 c · 캔버스(결정 0029). 고른 시안·규칙·비교는 `design/mockups/phase-6/`, 지운 나머지 후보는 git 기록과 비교 아티팩트 [`compare`](../design/mockups/phase-6/compare/index.html) 에 남아 있다.
 
 | 도구 | 쓴 곳 | 결과 |
 | --- | --- | --- |
 | ui-ux-pro-max | 트랙 1 의 a·c 방향 HTML 시안 | a 는 기존 클레이 토큰과 같은 추천이라 토큰 유지. c 는 추천(어두운 바탕·주황)이 무드보드와 맞지 않아 무드보드에서 뽑은 `direction-c.md` 값을 썼다 |
 | Taste Skill | 트랙 1 의 b 방향 고르기(`consumer-app`·`playful`, 3개 중 `one-motif`) | 도트 한 칸을 모든 모양에 쓰는 안. 같은 방향의 캔버스 안(b · 캔버스)이 점수 추천(27/30)이었으나 사용자는 c 를 골랐다 |
-| Claude Design 캔버스 | 트랙 2: 같은 세 방향을 캔버스 아트보드 9개로(https://claude.ai/artifact/FxKS7MR2twYmmE3k6SzNhe) | 고른 c · 캔버스. 사본은 `design/mockups/phase-6/canvas/c/`. 고르기 전에 연두 원을 사각 무대로 바꿨다 |
+| Claude Design 캔버스 | 트랙 2: 같은 세 방향을 캔버스 아트보드 9개로(../design/mockups/phase-6/compare/index.html) | 고른 c · 캔버스. 사본은 `design/mockups/phase-6/canvas/c/`. 고르기 전에 연두 원을 사각 무대로 바꿨다 |
 | Impeccable | 작업 8 `critique`(6안 점수·P1~P3)와 `detect`(검출기) | `design/mockups/phase-6/critique.md`. P1·P2(코인 그림, 선택 표시 통일, 연두 면 경계, 탭 아이콘)는 작업 10~13 에서 반영. 서브에이전트 금지 지침 때문에 검토·검출을 한 컨텍스트에서 순서대로 돌렸다 |
 | pixel-plugin | 쓰지 않음 | 그림은 코드 도트(결정 0028) |
 

@@ -22,7 +22,7 @@
 - `docs/specs/run-engine.md` — 기록 엔진 규칙
 - `docs/specs/game-rules.md` — 게임 규칙과 수치
 - `docs/specs/sprite-spec.md` — 스프라이트 규격: 프레임·레이어·파일 이름
-- `docs/design/design-system.md` — 디자인 시스템(색·글꼴·간격·컴포넌트 규칙), 값은 `docs/design/tokens.json`
+- `docs/design/design-system.md` — 디자인 시스템(색·글꼴·간격·컴포넌트 규칙), 값은 `docs/design/tokens.json`. 정적 페이지 `docs/design/design-system/index.html` 은 `python3 tool/export_design_system.py` 로 만든다
 - `docs/design/design-process.md` — 디자인 의사결정 기록(페이즈 2.5~6 비교·선택·근거)
 - `docs/decisions/` — 결정 기록 (번호순). 색인과 흐름도는 `docs/decisions/README.md`
 - `docs/dev-log.md` — 페이즈별 개발 기록(테스트 수 추이, 검증에서 잡은 결함)
@@ -40,7 +40,7 @@
 - `design/mockups/` — 화면 시안과 구현 메모. README 가 지금 방향(연두 무드보드, 결정 0029)과 옛 방향(말랑 클레이, 페이즈 2.5)을 나눈다
   - `design/mockups/phase-6/` — 고른 방향 c 규칙(`direction-c.md`), 캔버스 시안(`canvas/c/`), 6안 비교(`critique.md`)
   - `design/mockups/phase-6-screens/` — 페이즈 6 구현 화면 스크린샷(라이트, 화면마다 1장)
-- `design/screens/` — 화면설계서: 최종 앱 스크린샷(`<번호>-<이름>.png`, 게시용 390px `web/`)과 [아티팩트](https://claude.ai/artifact/456dWcNyLn1vbUsjV9FLVc) 페이지 원본 `index.html`
+- `design/screens/` — 화면설계서: 최종 앱 스크린샷(`<번호>-<이름>.png`, 게시용 390px `web/`)과 [아티팩트](design/screens/index.html) 페이지 원본 `index.html`
 - `design/character/` — 캐릭터 콘셉트·3종·아이템·배지 미리보기와 에셋 카탈로그(`asset-catalog.html`). 그림 데이터는 `tool/sprites/`, PNG 생성은 `fvm dart run tool/render_sprites.dart`, 앱 아이콘·스플래시는 `fvm dart run tool/render_app_icon.dart`
 - `design/references/` — 디자인 참고 이미지(Pinterest 무드보드). 방향 참고용이며 앱 에셋에 넣지 않는다
 

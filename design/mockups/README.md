@@ -4,19 +4,19 @@
 
 ## 지금 방향: 연두 무드보드 (페이즈 6, 결정 0029)
 
-- 디자인 시스템: `docs/design/design-system.md`, 값은 `docs/design/tokens.json`, 아티팩트 https://claude.ai/artifact/FPihTBfX2CJserHVwUQ514
-- 캐릭터·아이템·배지·앱 아이콘: `design/character/`(에셋 카탈로그 https://claude.ai/artifact/ECbG2Fh4TXQwcr5fNUWCXA)
+- 디자인 시스템: `docs/design/design-system.md`, 값은 `docs/design/tokens.json`, 아티팩트 [`design-system`](../../docs/design/design-system/index.html)
+- 캐릭터·아이템·배지·앱 아이콘: `design/character/`(에셋 카탈로그 [`asset-catalog.html`](../character/asset-catalog.html))
 - 구현은 `lib/core/theme.dart` 토큰과 `lib/core/ui/components.dart` 컴포넌트만 쓴다. 시안의 HEX 를 화면에 쓰지 않는다.
 
 | 경로 | 내용 |
 | --- | --- |
 | `phase-6/direction-c.md` | 고른 방향 c 의 규칙 원본(색·글자·모양·컴포넌트). 토큰 이름 대응은 디자인 시스템 문서 "색" 절 |
-| `phase-6/canvas/c/` | 고른 시안(Claude Design 캔버스 트랙, 원본 캔버스 https://claude.ai/artifact/FxKS7MR2twYmmE3k6SzNhe 의 c 줄): 홈·러닝 중·요약. `*.dc.html` 은 캔버스 아트보드 원본, `*.html` 은 브라우저로 여는 사본, `*.png` 는 캡처. 고르기 전에 연두 원을 사각 무대로 바꿨다 |
+| `phase-6/canvas/c/` | 고른 시안(Claude Design 캔버스 트랙, 원본 캔버스 [`compare`](phase-6/compare/index.html) 의 c 줄): 홈·러닝 중·요약. `*.dc.html` 은 캔버스 아트보드 원본, `*.html` 은 브라우저로 여는 사본, `*.png` 는 캡처. 고르기 전에 연두 원을 사각 무대로 바꿨다 |
 | `phase-6/shared/` | 시안이 `../../shared/` 로 읽는 캐릭터·배지 PNG(당시 스프라이트로 만든 1배 그림) |
 | `phase-6/critique.md` | 3방향 × 2트랙 = 6안 비교(Impeccable critique, 작업 8)와 고른 뒤 고칠 점(P1·P2) |
 | `phase-6-screens/` | 구현 화면 스크린샷(라이트, 화면마다 1장). 작업 12~17 확인용 위젯 테스트 스크린샷에서 골랐다. 에뮬레이터 실화면은 화면설계서(작업 19)가 맡는다 |
 
-- 고르지 않은 후보(캐릭터 그림체 a·b·c, UI 6안 중 5안, 비교 페이지 원본, 후보 그림 도구 `tool/sprites/candidates/`·`tool/render_candidates.dart`·`tool/render_ui_candidate_pets.dart`)는 작업 18 에서 `design/candidates/` 와 함께 지웠다. 원본은 git 기록과 이미 게시한 비교 아티팩트 https://claude.ai/artifact/F5MsvhPE9fAXw5YtCwe3Xc 에 남아 있다.
+- 고르지 않은 후보(캐릭터 그림체 a·b·c, UI 6안 중 5안, 비교 페이지 원본, 후보 그림 도구 `tool/sprites/candidates/`·`tool/render_candidates.dart`·`tool/render_ui_candidate_pets.dart`)는 작업 18 에서 `design/candidates/` 와 함께 지웠다. 원본은 git 기록과 이미 게시한 비교 아티팩트 [`compare`](phase-6/compare/index.html) 에 남아 있다.
 - 시안 없는 화면(기록·아바타·업적·상점·코인 내역·설정·첫 실행·권한)은 시안 c 의 짜임새(머리줄 → 흰 카드들)로 구현했다. 화면별 구성은 `docs/screens.md`.
 
 ### `phase-6-screens/`
