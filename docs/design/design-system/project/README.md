@@ -6,7 +6,7 @@
 
 ## 원칙
 
-- **마스코트가 주인공**: 캐릭터는 사각 무대 위에 화면에서 가장 큰 그림으로 선다(홈·요약 8배, 러닝 중 6배). 무대는 하늘·땅 두 겹이고, 뒤에 배경 아이템(공원·트랙 등)이 겹 단위로 바뀐다.
+- **마스코트가 주인공**: 캐릭터는 사각 무대 위에 화면에서 가장 큰 그림으로 선다(홈·요약 8배, 러닝 중 6배). 무대 기본 배경은 공원 산책로(한 점 투시 도트 그림, 네 겹)이고, 배경 아이템·날씨가 겹 단위로 바꾼다.
 - **한눈에**: 러닝 중에는 거리 숫자 하나가 가장 크다(`distance-xl` 128). 야외 햇빛 아래에서도 읽히도록 옅은 풀빛 `background` 에 짙은 `ink` 글자.
 - **연두는 형광펜**: `primary` 연두는 "지금 누를 것" 과 "선택된 것" 에만. 채워지는 막대·강조 글자는 초록 `primary-deep`. 연두는 밝은 바탕 위에서 1.2:1 이라 그림·막대 채움에 쓰지 않는다.
 - **테두리 대신 톤**: 카드는 흰 판과 바탕의 톤 차이로만 떨어진다. 그림자는 없거나 한 겹만.
@@ -27,7 +27,7 @@
 | 어두운 판 | `panel` + `on-panel` | 일시정지, 탭바 선택 알약. 다크에서는 밝은 판 |
 | 초록 | `primary-deep` | 강조 글자, 경험치 +, 레벨 업!, 진행·구간 막대 채움, 글자 버튼 |
 | 코인 | `coin`, 그림 안 별 `on-coin` | 코인 +N, 코인 그림 |
-| 무대 | `stage-sky` · `stage-ground` · `stage-ground-line`, 무대 위 글자 `stage-ink` | 사각 무대 두 겹 |
+| 무대 | `stage-sky` · `stage-ground` · `stage-ground-line`, 무대 위 글자 `stage-ink`, 배경 `park-*`, 발밑 그림자 `stage-shadow` | 하늘·풀밭·풀잎, 공원 산책로 배경 |
 | 말풍선 | `bubble` + `ink` | 무대 위 말풍선 판·꼬리. 라이트는 흰색, 다크는 하늘보다 밝은 판(다크 `surface` 는 하늘에 묻힌다) |
 | 경로 페이스 | `pace-slow` 파랑 · `pace-mid` 자주 · `pace-fast` 주황 | 느림·보통·빠름. 빠른 이동 구간은 `ink-muted` |
 | 문제 알림 | `danger` | 위치 신호 오류·저장 실패(`NoticeCard`)에만 |
@@ -59,11 +59,14 @@
 
 ## 사각 무대
 
-- 폭 전체, 모서리 `radius-lg`(카드 안 `radius-md`). 하늘 `stage-sky` 위에 땅 띠 `stage-ground`, 땅 윗선 `stage-ground-line` 4px.
-- 땅 띠 높이(윗선 포함) `stage-ground-height` 56(8배 캐릭터), 러닝 중 `stage-ground-height-compact` 40(6배), 카드 안 작은 무대 `stage-ground-height-mini` 24(2~3배, 모서리 `radius-sm`, 상점 아이템 카드·성장 단계 줄).
-- 캐릭터 발끝은 땅 윗선 아래로 `stage-foot-sink` 8px 묻힌다. 정수 배율, 보간 없음.
-- 배경 아이템은 하늘·땅 겹 단위로 바꾼다(겹마다 토큰이 따로 있는 까닭).
-- 다크: 스프라이트 둘레를 `sprite-rim` 1픽셀로 둘러 어두운 캐릭터(도토리 등)가 무대에 묻히지 않게 한다. 라이트는 그리지 않는다.
+- 폭 전체, 모서리 `radius-lg`(카드 안 `radius-md`). 정수 배율, 보간 없음.
+- **배경은 공원 산책로**(관문 3 에서 고른 안 2): 소실점이 펫 몸 뒤 지평선에 있는 한 점 투시 도트 그림. 모래빛 흙길(`park-path`, 가장자리 `park-edge`)이 소실점으로 좁아지고, 길 위 자갈(`park-pebble`·`park-pebble-hi`)·풀잎(`stage-ground-line`)·작은 꽃(`park-flower`) 점, 길가 둥근 나무·덤불(`park-canopy`·`park-canopy-hi`, 줄기 `park-trunk`), 지평선 위 두 겹 나무 줄(`park-far`·`park-far2`). 연두 `primary` 는 배경에 쓰지 않는다.
+- **겹**(아래 → 위): 1 하늘 `stage-sky` + 도트 구름 2~3개(`park-cloud`, 멈춤. 오른쪽 위 96px 말풍선 자리와 먼 풍경 띠는 비운다. 3배 미만 작은 무대는 구름 없음) → 2 먼 풍경(지평선 위 12칸 띠) → 3 땅·길(풀밭 `stage-ground`) → 4 앞 장식(길가 물체, 먼 것부터) → 펫과 발밑 도트 그림자(`stage-shadow`, 폭 20 스프라이트 칸) → 말풍선. 배경 아이템은 다른 겹 묶음(`StageScene`)을 준다.
+- **크기**: 배경 도트 1칸 `stage-dot` 4px(6배 이상, 펫 8배 도트의 절반. 작으면 `2·배율/3` 내림, 최소 1px). 지평선은 발끝 위 `stage-horizon` 13 스프라이트 줄. 길가 물체는 3배 이상에서만.
+- **발끝**: 무대 아래에서 `땅 높이 − stage-foot-sink` 위에 선다. `stage-ground-height` 56(8배) → 48, `stage-ground-height-compact` 40(러닝 중 6배) → 32, `stage-ground-height-mini` 24(카드 안 2~3배, 모서리 `radius-sm`) → 16. 옛 땅 띠·윗선은 없어지고 발밑 그림자가 땅에 선 느낌을 준다.
+- **러닝 중 흐름**: 기록 중에만 땅·길 무늬와 길가 물체가 소실점 쪽으로 0.5칸/초 물러난다. 한 장 `duration-stage-frame` 125ms(초당 8장, 도트 느낌·배터리). 하늘·구름·먼 풍경은 멈춤. 일시정지·자동 일시정지면 그 자리에 멈추고, 홈·요약·아바타·상점·첫 실행·공유 카드는 늘 멈춤. 애니메이션 줄이기면 0번 장에 멈춘다.
+- **다크**: 어두운 풀빛 하늘·풀밭에 어두운 흙길·나무(`park-*` 다크 값). 스프라이트 둘레를 `sprite-rim` 으로 얇게 두른다: `max(1, round(배율/4))` 화면 px(8배·6배 2px, 3배 1px). 도트 1칸 두께는 굵어 관문 3 에서 얇은 쪽(비교 B)을 골랐다. 라이트는 그리지 않는다.
+- 말풍선은 SpeechBubble(`bubble` 판), 무대 오른쪽 위. 러닝 중에는 탈것 의심("혹시 뭘 타셨나요? 이 구간은 기록에서 뺄게요")·신호 끊김("신호가 끊겼어요. 밖으로 나오면 다시 찾을게요") 안내도 같은 말풍선에 띄운다.
 
 ## 아이콘
 
@@ -84,13 +87,20 @@
 | --- | --- | --- |
 | `duration-press` | 80ms | 누름 반응 |
 | `duration-quick` | 160ms | 칩·분할·탭 선택 |
-| `duration-enter` / `duration-exit` | 300 / 200ms | 화면·시트 들어오기·나가기 |
+| `duration-enter` / `duration-exit` | 300 / 200ms | 화면·아래 시트(오늘 목표·끝부분 잘라내기) 들어오기·나가기 |
+| `duration-stage-frame` | 125ms | 러닝 중 무대 길 흐름 한 장(초당 8장) |
 | `duration-celebrate` | 600ms | 레벨 업·배지 획득 |
 | `curve-enter` / `curve-exit` | easeOutCubic / easeInCubic | 들어올 때 감속, 나갈 때 가속 |
 | `curve-standard` | easeInOutCubic | 제자리 상태 변화 |
 | `curve-pop` | easeOutBack | 보상 튀어 오름 |
 
-시스템 "애니메이션 줄이기" 가 켜져 있으면 움직임을 빼고 바로 최종 상태를 보인다. 누름도 `duration-press` 만큼 붙잡지 않고 누른 동안만 눌린 모양이다.
+시스템 "애니메이션 줄이기" 가 켜져 있으면 움직임을 빼고 바로 최종 상태를 보인다. 누름도 `duration-press` 만큼 붙잡지 않고 누른 동안만 눌린 모양이다. 아래 시트는 바로 열리고 닫히며, 무대 길은 멈춘다.
+
+아래 시트는 `duration-enter` + `curve-enter` 로 올라오고 `duration-exit` + `curve-exit` 로 내려간다. 오늘 목표 시트는 거리·시간 분할 → 값 칩 3개 → 휠(가운데 칸은 `surface-soft` 조용한 알약) → 연두 `확인` 하나(GoalSheet 견본).
+
+## 화면 모드
+
+설정 › 화면 › 화면 모드에서 `시스템`(기본)·`라이트`·`다크` 를 고른다(칩 3칸, `ChipRow`). 라이트·다크를 고르면 기기 설정과 상관없이 그 테마로 그린다. 값은 프로필에 저장하고 백업에 들어간다(DB·백업 7판).
 
 ## 다크 모드
 
@@ -116,9 +126,10 @@
 | Card · StatsCard | `AppCard`, `StatsCard` + `StatCard.cell` |
 | ProgressBar | `ProgressBar` |
 | Coin | `CoinIcon`, 코인 칩 `CoinChip` |
-| Stage · SpeechBubble | `PetStage`·`StageGround`, `SpeechBubble` |
+| Stage · SpeechBubble | `PetStage`·`StageBackdrop`(배경 `StageScene`·`parkScene`), `SpeechBubble` |
+| GoalSheet | 오늘 목표 시트(홈 `오늘 목표 5km ›` 한 줄에서 연다) |
 | EmptyState · NoticeCard | `EmptyState`(`.error`), `NoticeCard` |
 | RoutePace | `RoutePainter`·`RoutePaceLegend` |
 | TabBar | `AppTabBar`·`TabIcon` |
 
-화면별 구성은 저장소 `docs/screens.md` "화면 디자인", 구현 스크린샷은 `design/mockups/phase-6-screens/`.
+화면별 구성은 저장소 `docs/screens.md` "화면 디자인", 실제 앱 스크린샷은 [화면설계서](https://claude.ai/artifact/456dWcNyLn1vbUsjV9FLVc)(저장소 `design/screens/`).

@@ -264,6 +264,7 @@ section.part { padding-block: 56px 8px; scroll-margin-top: 64px; }
 .wf .stage { border-radius: 14px; background: var(--wf-block); position: relative; overflow: hidden; }
 .wf .stage::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 18%; background: var(--wf-deep); opacity: .55; }
 .wf .stage .sprite { position: absolute; left: 50%; bottom: 12%; transform: translateX(-50%); width: 30%; aspect-ratio: 1; background: var(--wf-deep); border-radius: 6px; z-index: 1; }
+.wf .stage .path { position: absolute; left: 50%; bottom: 0; width: 70%; height: 34%; transform: translateX(-50%); background: var(--wf-screen); opacity: .7; clip-path: polygon(42% 0, 58% 0, 100% 100%, 0 100%); }
 .wf .big { height: 34px; width: 58%; border-radius: 6px; background: var(--wf-deep); }
 .wf .tabs { position: absolute; left: 0; right: 0; bottom: 0; height: 9%; background: var(--surface); box-shadow: 0 -1px 0 var(--wf-line); display: flex; justify-content: space-around; align-items: center; padding: 0 6%; }
 .wf .tabs i { width: 14%; height: 44%; border-radius: 999px; background: var(--wf-block); }
@@ -317,6 +318,10 @@ section.part { padding-block: 56px 8px; scroll-margin-top: 64px; }
 .coin-ic svg { width: 12px; height: 12px; fill: var(--on-coin); }
 .plus { color: var(--coin); font-weight: 800; }
 .xp { color: var(--green); font-weight: 800; }
+.stage-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.stage-pair figure { margin: 0; }
+.stage-pair img { border-radius: 16px; width: 100%; height: auto; }
+.stage-pair figcaption { font-size: 13px; font-weight: 600; color: var(--muted); margin-top: 6px; }
 .mini-stage { height: 120px; border-radius: var(--r-md); background: var(--sky); position: relative; overflow: hidden; }
 .mini-stage::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 30px; background: var(--ground); border-top: 4px solid var(--ground-line); }
 .bubble { position: absolute; top: 14px; right: 14px; background: var(--bubble); color: var(--ink); border-radius: var(--r-md); padding: 6px 12px; font-size: 14px; font-weight: 700; z-index: 1; }
@@ -399,12 +404,12 @@ dialog.zoom button { min-height: 44px; min-width: 44px; border-radius: 999px; bo
   <div class="wrap">
     <div class="cover-grid">
       <div>
-        <div class="eyebrow"><span class="tag">화면설계서</span><span class="tag">v0.3.0 베타</span><span class="tag">2026-10-22 촬영</span></div>
+        <div class="eyebrow"><span class="tag">화면설계서</span><span class="tag">v0.3.0 베타</span><span class="tag">2026-10-23 갱신</span></div>
         <h1>런마고치<br><span class="hl">화면설계서</span></h1>
         <p class="lede">달린 거리만큼 도트 친구가 자라는 러닝 앱. 실제 앱을 에뮬레이터에서 돌려 찍은 화면으로 모든 화면과 상태, 화면 사이 이동, 요소별 규칙을 한 장에 정리했어요.</p>
         <dl class="meta">
           <div><dt>화면</dt><dd class="num">17<small>개</small></dd></div>
-          <div><dt>상태 스크린샷</dt><dd class="num">39<small>장</small></dd></div>
+          <div><dt>상태 스크린샷</dt><dd class="num">48<small>장</small></dd></div>
           <div><dt>다크 · iPhone</dt><dd class="num">8<small>+</small>5</dd></div>
           <div><dt>요구사항</dt><dd class="num">F1–F21</dd></div>
         </dl>
@@ -450,7 +455,7 @@ dialog.zoom button { min-height: 44px; min-width: 44px; border-radius: 999px; bo
       <div class="part-head">
         <span class="part-no">1</span>
         <h2>전체 화면 보드</h2>
-        <p>사용자가 만나는 순서로 묶었어요. Android 16(Pixel 7 에뮬레이터, 라이트)에서 찍었고, 그림을 누르면 크게 봐요.</p>
+        <p>사용자가 만나는 순서로 묶었어요. Android 16(Pixel 7 에뮬레이터, 라이트)에서 찍었고, 그림을 누르면 크게 봐요. 관문 3 고칠 점(공원 산책로 무대·홈 목표 시트·화면 모드·탈것과 신호 끊김 안내)을 반영해 2026-10-23 에 다시 찍었어요.</p>
       </div>
       <div class="board" id="board-light"></div>
       <div class="bands">
@@ -527,10 +532,10 @@ dialog.zoom button { min-height: 44px; min-width: 44px; border-radius: 999px; bo
           <h3>칩·분할 선택 <code>AppChip · ChipRow</code></h3>
           <div class="stack">
             <div class="chips"><span class="chip on">거리</span><span class="chip">시간</span></div>
-            <div class="chips"><span class="chip on">3km</span><span class="chip">5km</span><span class="chip">10km</span><span class="chip">직접</span></div>
+            <div class="chips"><span class="chip">3km</span><span class="chip">5km</span><span class="chip on">10km</span></div>
             <div class="chips"><span class="chip">주</span><span class="chip">월</span><span class="chip on">년</span><span class="chip">전체</span></div>
           </div>
-          <p class="use">선택은 연두 면 + 경계선 하나로 통일. 높이 48. 검은 알약은 탭바에만.</p>
+          <p class="use">선택은 연두 면 + 경계선 하나로 통일. 높이 48. 검은 알약은 탭바에만. 오늘 목표는 시트 안에서 분할·칩·휠로 고르고, 휠 가운데 칸은 연두가 아닌 조용한 알약이다.</p>
         </div>
         <div class="spec">
           <h3>진행 막대 <code>ProgressBar</code></h3>
@@ -555,9 +560,9 @@ dialog.zoom button { min-height: 44px; min-width: 44px; border-radius: 999px; bo
           <p class="use">코인 그림은 파랑 동그라미 + 연두 고리 + 별. <code>$</code> 기호는 쓰지 않는다. 경험치는 초록, 코인은 파랑.</p>
         </div>
         <div class="spec">
-          <h3>무대·말풍선 <code>PetStage · SpeechBubble</code></h3>
-          <div class="mini-stage"><span class="bubble">다음 레벨까지 3.5km</span><img class="pet" src="web/pet-crop.png" alt="" width="64" height="58"></div>
-          <p class="use">하늘 + 땅 띠 두 겹, 땅 윗선 4px. 캐릭터는 정수 배율로 서고 발끝이 8px 묻힌다. 말풍선은 다크에서 하늘보다 밝은 판.</p>
+          <h3>무대·말풍선 <code>PetStage · StageBackdrop</code></h3>
+          <div class="stage-pair"><figure><img src="web/stage-light.png" alt="라이트 무대: 공원 산책로, 구름, 말풍선" width="390" height="454" loading="lazy"><figcaption>라이트</figcaption></figure><figure><img src="web/stage-dark.png" alt="다크 무대: 어두운 흙길, 얇은 흰 윤곽" width="390" height="454" loading="lazy"><figcaption>다크 · 윤곽 2px</figcaption></figure></div>
+          <p class="use">공원 산책로 네 겹(하늘·구름 → 먼 나무 줄 → 풀밭·흙길 → 길가 나무)과 발밑 도트 그림자. 러닝 중에만 길이 소실점 쪽으로 흐른다. 다크는 스프라이트 둘레를 배율/4(8배 2px) 윤곽으로 두르고, 말풍선은 하늘보다 밝은 판.</p>
         </div>
         <div class="spec">
           <h3>빈 상태·오류 <code>EmptyState · NoticeCard</code></h3>
@@ -606,21 +611,20 @@ dialog.zoom button { min-height: 44px; min-width: 44px; border-radius: 999px; bo
           <ul>
             <li>Android: AVD <code>runmagochi</code>(Pixel 7, Android 16 · API 36), 릴리스 빌드 0.3.0 베타. 상태바는 시스템 데모 모드로 9:41 고정. 글꼴은 앱에 번들한 서브셋(Runmagochi Sans)을 이 페이지에도 씀.</li>
             <li>iPhone: iPhone 16 Pro 시뮬레이터(iOS 18.6), 디버그 빌드에서 디버그 띠를 끄고 찍음.</li>
-            <li>예시 데이터: 2025-11 ~ 2026-10 러닝 33회를 백업 6판 형식으로 만들어 설정 › 가져오기로 넣음. 게임 규칙대로 경험치·코인·배지를 맞춰 Lv.9, 배지 9개, 코인 315 에서 시작.</li>
-            <li>러닝 화면·요약·알림은 실제 러닝 2회를 가상 GPS(여의도 둘레 고리 경로)로 돌려 찍음. 3.60km(목표 3km 달성, Lv.10·새 외형 단계, 배지 목표 달성 30번), 1.56km(목표 10km 미달, 5분 넘게 멈춰 종료 예고 알림).</li>
-            <li>빈 상태(기록·코인 내역)·첫날 홈·첫 실행·권한 안내는 새로 설치한 상태에서 찍음.</li>
+            <li>예시 데이터: 2025-11 ~ 2026-10 러닝 33회를 백업 6판 형식으로 만들어 설정 › 가져오기로 넣음(앱은 7판까지 읽음). 게임 규칙대로 경험치·코인·배지를 맞춰 Lv.9, 배지 9개, 코인 315 에서 시작.</li>
+            <li>2026-10-23 다시 찍은 러닝: ① 목표 7km, 초속 3.4m 로 가다 150초에서 초속 7m 40초(탈것 의심) → 다시 3.4m, 뒤에 위치 서비스를 꺼 신호 끊김 → 5분 30초 뒤 자동 종료(1.23km, 탈것 구간 빠짐). ② 목표 3km, 45초 멈춤(자동 일시정지) 뒤 3.39km(Lv.9→10, 배지 목표 달성 30번). 둘 다 가상 GPS(여의도 둘레 고리 경로). 요약 경로 시작의 직선은 가상 GPS 가 앞 러닝 끝 위치에서 고리 시작점으로 옮겨 간 자국이에요.</li>
+            <li>첫 실행·첫날 홈은 앱 데이터를 지운 상태(10-23, 캐릭터는 무작위로 꼬마 도토리), 빈 상태(기록·코인 내역)·권한 안내는 10-22 새로 설치한 상태에서 찍음. 무대가 없는 화면(기록·업적·코인 내역·권한 안내)은 10-22 촬영을 그대로 둠.</li>
           </ul>
         </article>
         <article>
           <h3>찍으면서 본 것</h3>
           <ul>
-            <li><span class="sev">확인 필요</span>첫 러닝의 "목표 달성!" 알림이 러닝이 끝난 뒤에도 남아 12분 뒤 다음 러닝 중에도 보였어요(39 종료 예고 알림 화면).</li>
-            <li><span class="sev">확인 필요</span>위치 권한을 두 번 거부하면 시스템 창이 더 뜨지 않는데, 권한 안내가 "권한 허용" 에 머물러 "설정에서 위치 권한을 허용해 주세요 · 설정 열기" 로 바뀌지 않아요. 앱을 다시 켜도 같아요. 그래서 거부 상태 화면은 찍지 못했어요.</li>
-            <li><span class="sev">확인 필요</span>끝부분 잘라내기 슬라이더의 트랙이 연두로 채워져요. 디자인 시스템은 연두를 막대 채움에 쓰지 않기로 했어요(밝은 바탕 위 1.2:1).</li>
+            <li><span class="sev">확인 필요</span>위치 권한을 두 번 거부하면 시스템 창이 더 뜨지 않는데, 권한 안내가 "권한 허용" 에 머물러 "설정에서 위치 권한을 허용해 주세요 · 설정 열기" 로 바뀌지 않아요. 10-22 고친 뒤(b9ce74e)에도 Android 16 에뮬레이터에서 같아요. 그래서 거부 상태 화면은 찍지 못했어요.</li>
+            <li><span class="sev">확인 필요</span>위치 서비스를 끄면 시스템 창 "No location access" 가 러닝 화면 위에 뜨고, 앱은 빨강 "위치 신호를 받지 못하고 있어요" 카드와 신호 끊김 말풍선을 함께 보여요(13c). 같은 뜻의 안내가 두 겹이에요.</li>
+            <li><span class="sev">관찰</span>탈것·신호 끊김 자동 종료 알림은 다음 러닝 중에도 알림창에 남아요(지우지 않으면). 끝난 사실을 알리는 알림이라 의도일 수 있어요.</li>
             <li><span class="sev">관찰</span>알림 작은 아이콘이 빈 동그라미로 보여요. 앱 아이콘 모양 단색 아이콘을 두면 알림창에서 더 잘 알아봐요.</li>
-            <li><span class="sev">관찰</span>카운트다운 동안 탭바가 보여요. 누르면 다른 탭으로 갈 수 있는지 확인이 필요해요.</li>
             <li><span class="sev">관찰</span>공유 카드는 시스템 공유 창 미리보기에서 잘라냈어요. 오른쪽 아래 연필은 Android 의 편집 버튼이에요. 알림은 알림창에서 앱 카드만 잘라냈어요.</li>
-            <li><span class="sev">관찰</span>iPhone 요약의 직선 경로는 시뮬레이터가 위치 점을 직선으로 이어서 생긴 것이에요.</li>
+            <li><span class="sev">고쳐짐</span>10-22 에 적은 목표 달성 알림 남음, 잘라내기 슬라이더 연두 채움, 카운트다운 중 탭바는 10-23 화면에서 고쳐진 것을 확인했어요.</li>
           </ul>
         </article>
       </div>
@@ -644,33 +648,36 @@ dialog.zoom button { min-height: 44px; min-width: 44px; border-radius: 999px; bo
   // 화면 목록: [번호, 파일, 이름, 상태 설명, 표시]
   const GROUPS = [
     { k: 'A', t: '첫 실행·권한', reqs: ['F17'], items: [
-      ['01', '01-onboarding-intro', '첫 실행 1 · 캐릭터 소개', '무작위로 정해진 젤리 새싹'],
+      ['01', '01-onboarding-intro', '첫 실행 1 · 캐릭터 소개', '무작위로 정해진 꼬마 도토리'],
       ['02', '02-onboarding-name', '첫 실행 2 · 이름 짓기', '1~10자, 말풍선 미리보기'],
       ['03', '03-permission-location', '권한 안내 · 위치', '처음 시작을 누를 때'],
       ['04', '04-permission-precise', '권한 안내 · 정확한 위치', '대략 위치만 허용했을 때'],
       ['05', '05-permission-battery', '권한 안내 · 배터리', '`나중에` 글자 버튼'],
     ]},
     { k: 'B', t: '홈', reqs: ['F1', 'F6', 'F6-2', 'F7', 'F18'], items: [
-      ['06', '06-home', '홈 · 거리 목표', 'Lv.9 · 코인 315 · 3km'],
+      ['06', '06-home', '홈', 'Lv.9 · 코인 321 · 오늘 목표 7km'],
       ['07', '07-home-first-day', '홈 · 첫날', 'Lv.1 · 코인 0', '빈 상태'],
-      ['08', '08-home-time-goal', '홈 · 시간 목표', '20·30·60분 · 직접'],
-      ['09', '09-home-goal-input', '목표 직접 입력', '3~42km 정수'],
-      ['10', '10-countdown', '카운트다운', '3 · 2 · 1'],
+      ['08', '08-goal-sheet-distance', '오늘 목표 시트 · 거리', '3·5·10km 칩 + 휠, 7km'],
+      ['09', '09-goal-sheet-time', '오늘 목표 시트 · 시간', '20·30·60분 칩 + 휠'],
+      ['10', '10-countdown', '카운트다운', '3 · 2 · 1, 탭바 숨김'],
+      ['10b', '10b-short-end', '1km 미만 종료', '"1km 미만은 기록하지 않아요"'],
     ]},
     { k: 'C', t: '러닝 중·일시정지', reqs: ['F1', 'F2', 'F4', 'F6', 'F6-2', 'F8', 'F14'], items: [
-      ['11', '11-run', '러닝 중', '2.03km · 목표 3km 진행'],
-      ['12', '12-run-goal', '러닝 중 · 목표 달성', '진동 + "목표 달성!"'],
+      ['11', '11-run', '러닝 중', '1.16km · 길이 소실점 쪽으로 흐름'],
+      ['12', '12-run-goal', '러닝 중 · 목표 달성', '진동 + "목표 달성!"', '10-22 촬영(이전 무대)'],
       ['13', '13-run-autopause', '자동 일시정지', '재개 · 일시정지 두 버튼'],
-      ['14', '14-paused', '일시정지', '무대는 idle'],
+      ['13b', '13b-run-vehicle', '탈것 의심', '"혹시 뭘 타셨나요?" 이 구간은 뺌'],
+      ['13c', '13c-run-signal-lost', '신호 끊김', '"신호가 끊겼어요" + 위치 오류 카드'],
+      ['14', '14-paused', '일시정지', '목표 달성 뒤, 무대는 멈춤'],
       ['15', '15-paused-hold', '길게 눌러 종료', '누르는 동안 차오름'],
     ]},
     { k: 'D', t: '러닝 요약', reqs: ['F3', 'F6', 'F7', 'F16', 'F19', 'F21'], items: [
       ['16', '16-summary-levelup', '요약 · 레벨 업', 'Lv.9→10 · 목표 달성 · 새 배지', '긴 화면'],
-      ['17', '17-summary-missed', '요약 · 목표 미달', '10km까지 8.44km 남음'],
+      ['17', '17-summary-missed', '요약 · 목표 미달', '신호 끊김 자동 종료 · 7km까지 5.77km'],
       ['18', '18-summary-trim', '끝부분 잘라내기', '끝 시각 당기기 시트'],
       ['19', '19-share-card-crop', '공유 카드', '1080×1350 카드 · 공유 창 미리보기'],
     ]},
-    { k: 'E', t: '기록', reqs: ['F5', 'F5-2', 'F16'], items: [
+    { k: 'E', t: '기록', reqs: ['F5', 'F5-2', 'F16'], note: '기록 화면에는 무대가 없어 10-22 촬영을 그대로 둬요.', items: [
       ['20', '20-history-week', '기록 · 주', '19.86km · 5회'],
       ['21', '21-history-month', '기록 · 월', '10월 일별 막대'],
       ['22', '22-history-year', '기록 · 년', '2026 월별 막대'],
@@ -683,43 +690,49 @@ dialog.zoom button { min-height: 44px; min-width: 44px; border-radius: 999px; bo
       ['27', '27-achievements', '업적', '개인 기록 · 배지 10/12', '긴 화면'],
     ]},
     { k: 'G', t: '상점·코인', reqs: ['F9', 'F10', 'F11'], items: [
-      ['28', '28-shop', '상점 · 모자', '러닝 캡 장착 중'],
+      ['28', '28-shop', '상점 · 모자', '러닝 캡 장착 중 · 코인 321'],
       ['29', '29-shop-preview', '아이템 미리보기', '밀짚모자 · 300'],
       ['30', '30-shop-buy-confirm', '구매 확인', '300 코인에 살까요?'],
-      ['31', '31-shop-short', '코인 부족', '꽃 머리핀 · 35 부족'],
+      ['31', '31-shop-short', '코인 부족', '꽃 머리핀 · 29 부족'],
       ['32', '32-coins', '코인 내역', '지급·사용 목록'],
       ['33', '33-coins-empty', '코인 내역 · 빈 상태', '달리면 코인이 쌓여요', '빈 상태'],
     ]},
     { k: 'H', t: '설정', reqs: ['F12', 'F14'], items: [
-      ['34', '34-settings', '설정', '체중 · 이름 · 음성 · 백업'],
+      ['34', '34-settings', '설정', '체중 · 이름 · 음성 · 화면 모드 · 백업'],
+      ['34b', '34b-settings-theme-dark', '화면 모드 · 다크', '기기는 라이트, 앱은 다크'],
+      ['34c', '34c-settings-theme-light', '화면 모드 · 라이트', '기기는 다크, 앱은 라이트'],
       ['35', '35-settings-import', '백업 가져오기 확인', '되돌릴 수 없어요'],
     ]},
-    { k: 'I', t: '알림', reqs: ['F20', 'F4'], wide: true, note: '알림창에서 앱 알림 카드만 잘라냈어요. 39 아래 카드는 앞 러닝에서 남은 목표 달성 알림이에요(촬영 메모 참고).', items: [
+    { k: 'I', t: '알림', reqs: ['F20', 'F4'], wide: true, note: '알림창에서 앱 알림 카드만 잘라냈어요. 36~39 는 10-22, 39b~39e 는 10-23 촬영이에요.', items: [
       ['36', '36-notif-run', '러닝 알림', '거리 · 목표까지 남은 양 · 일시정지'],
       ['37', '37-notif-goal', '목표 달성 알림', '3km 목표를 채웠어요'],
       ['38', '38-notif-autopause', '자동 일시정지 알림', '재개 · 일시정지'],
       ['39', '39-notif-autoend', '종료 예고 알림', '30초 카운트다운'],
+      ['39b', '39b-notif-vehicle', '탈것 의심 알림', '제목은 "일시정지"'],
+      ['39c', '39c-notif-signal', '신호 끊김 알림', '밖으로 나오면 다시 찾을게요'],
+      ['39d', '39d-notif-signal-warn', '신호 끊김 종료 예고', '30초 안에 밖으로 나오거나 재개'],
+      ['39e', '39e-notif-autoend', '자동 종료 알림', '한참 못 달려서 러닝을 마쳤어요'],
     ]},
   ];
-  const DARK = { k: 'N', t: '다크 모드 · 대표 화면', reqs: [], note: '라이트 보드를 찍은 뒤 실제 러닝 2회를 마친 데이터라 숫자가 달라요(Lv.10 · 코인 555 · 러닝 35회).', items: [
-    ['40', '40-dark-home', '홈', '5km 목표'],
-    ['41', '41-dark-run', '러닝 중', '0.12km'],
+  const DARK = { k: 'N', t: '다크 모드 · 대표 화면', reqs: [], note: '라이트 보드와 같은 날(10-23) 찍었어요. 홈·상점은 레벨 업 러닝 전(Lv.9 · 코인 321), 아바타·요약은 그 뒤(Lv.10)예요. 기록·업적은 무대가 없어 10-22 촬영이에요.', items: [
+    ['40', '40-dark-home', '홈', '오늘 목표 7km'],
+    ['41', '41-dark-run', '러닝 중', '얇은 윤곽 · 어두운 흙길'],
     ['42', '42-dark-autopause', '자동 일시정지', '밝은 판 재개'],
     ['43', '43-dark-summary', '요약(기록에서)', '목표 3km 달성'],
     ['44', '44-dark-history', '기록 · 주', '19.86km'],
-    ['45', '45-dark-avatar', '아바타', '스프라이트 윤곽'],
+    ['45', '45-dark-avatar', '아바타', 'Lv.10 · 얇은 윤곽'],
     ['46', '46-dark-achievements', '업적', '배지 10/12'],
     ['47', '47-dark-shop', '상점 · 소품', '선글라스 장착 중'],
   ]};
   const IOS = { k: 'P', t: 'iPhone 16 Pro · iOS 18.6', reqs: [], items: [
-    ['50', '50-ios-home', '홈', '시간 목표 30분'],
-    ['51', '51-ios-run', '러닝 중', '0.49km'],
-    ['52', '52-ios-summary', '요약 · 목표 미달', '1.39km · 30분까지 22:41'],
+    ['50', '50-ios-home', '홈', '오늘 목표 30분'],
+    ['51', '51-ios-run', '러닝 중', '0.37km'],
+    ['52', '52-ios-summary', '요약 · 목표 미달', '1.34km · 30분까지 22:56'],
     ['53', '53-ios-avatar', '아바타', 'Lv.9 · 다음 단계까지 3.5km'],
     ['54', '54-ios-shop', '상점', '러닝 캡 장착 중'],
   ]};
   const SIZE = { ios: [390, 848], def: [390, 866] };
-  const DIM = { '19-share-card-crop': [390, 489], '36-notif-run': [390, 165], '37-notif-goal': [390, 116], '38-notif-autopause': [390, 165], '39-notif-autoend': [390, 240] };
+  const DIM = { '19-share-card-crop': [390, 489], '36-notif-run': [390, 165], '37-notif-goal': [390, 116], '38-notif-autopause': [390, 165], '39-notif-autoend': [390, 240], '39b-notif-vehicle': [390, 90], '39c-notif-signal': [390, 90], '39d-notif-signal-warn': [390, 120], '39e-notif-autoend': [390, 126] };
   const LONG = { '16-summary-levelup': '16-summary-levelup-full', '25-run-detail': '25-run-detail-full', '26-avatar': '26-avatar-full', '27-achievements': '27-achievements-full' };
   const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const tick = (s) => esc(s).replace(/`([^`]+)`/g, '<code>$1</code>');
@@ -812,9 +825,9 @@ dialog.zoom button { min-height: 44px; min-width: 44px; border-radius: 999px; bo
   // pins: [x%, y%] (이미지 기준). els: [이름, 설명]
   const DETAILS = [
     { id: 'd-onboarding', img: '01-onboarding-intro', route: '앱 첫 실행', title: '첫 실행', reqs: ['결정 0011', '결정 0018'],
-      desc: '캐릭터 종류(병아리·젤리·도토리)는 무작위로 정해지고, 소개와 이름 짓기 두 장을 한 번만 보여요. 마치기 전에는 홈을 만들지 않아요.',
+      desc: '캐릭터 종류(병아리·젤리·도토리)는 무작위로 정해지고(이번 촬영은 꼬마 도토리), 소개와 이름 짓기 두 장을 한 번만 보여요. 마치기 전에는 홈을 만들지 않아요.',
       pins: [[50, 8.7], [50, 37], [50, 66.5], [50, 81.6], [50, 91.5]],
-      els: [['진행 점', '2단계 중 몇 번째인지. 현재는 길쭉한 초록'], ['무대 + 캐릭터', '8배 사각 무대. 1단계 외형(젤리는 "새싹")'], ['소개 문구', '종류마다 다른 제목, 공통 설명'], ['안내 카드', '걷다 뛰다 OK, 움직인 만큼 자란다'], ['다음', '연두 주요 버튼 하나']],
+      els: [['진행 점', '2단계 중 몇 번째인지. 현재는 길쭉한 초록'], ['무대 + 캐릭터', '8배 공원 산책로 무대. 1단계 외형(도토리는 "꼬마 도토리")'], ['소개 문구', '종류마다 다른 제목, 공통 설명'], ['안내 카드', '걷다 뛰다 OK, 움직인 만큼 자란다'], ['다음', '연두 주요 버튼 하나']],
       variants: [['02-onboarding-name', '이름 짓기']],
       ix: ['2장에서 시스템 뒤로 가기는 1장으로', '이름은 1~10자, 입력하는 동안 무대 말풍선이 따라 바뀜', '`시작하기` 를 누르면 홈. 기존 사용자도 한 번 보며, 바꾼 이름은 그대로 둔다'] },
     { id: 'd-permission', img: '03-permission-location', route: '홈 › 시작 (처음 한 번)', title: '권한 안내', reqs: ['F17'],
@@ -822,23 +835,23 @@ dialog.zoom button { min-height: 44px; min-width: 44px; border-radius: 999px; bo
       pins: [[14, 10], [50, 30], [50, 92.3]],
       els: [['제목', '권한 안내'], ['안내 카드', '왜 필요한지 한 문장. 위치는 기기에만 저장'], ['권한 허용', '시스템 권한 창을 띄움. 거부되면 `설정 열기`']],
       variants: [['04-permission-precise', '정확한 위치'], ['05-permission-battery', '배터리 최적화']],
-      ix: ['대략 위치만 허용하면 "정확한 위치를 허용해야 거리가 기록됩니다" 를 더해 다시 물음', '배터리 최적화는 `설정 열기` 와 `나중에` 글자 버튼', '거부 상태("설정에서 위치 권한을 허용해 주세요" + `설정 열기`)는 찍지 못함: Android 에서 두 번 거부해도 이 상태로 바뀌지 않음(촬영 메모)', '모두 통과하면 3초 카운트다운 뒤 러닝 시작'] },
+      ix: ['대략 위치만 허용하면 "정확한 위치를 허용해야 거리가 기록됩니다" 를 더해 다시 물음', '배터리 최적화는 `설정 열기` 와 `나중에` 글자 버튼', '거부 상태("설정에서 위치 권한을 허용해 주세요" + `설정 열기`)는 찍지 못함: 고친 뒤(10-23)에도 Android 16 에서 두 번 거부하면 이 상태로 바뀌지 않음(촬영 메모)', '모두 통과하면 3초 카운트다운 뒤 러닝 시작'] },
     { id: 'd-home', img: '06-home', route: '탭 › 러닝', title: '홈', reqs: ['F1', 'F6', 'F6-2', 'F7', 'F18'],
-      desc: '오늘 목표는 지난번 값이 골라져 있어 시작 한 번으로 달려요. 마스코트가 화면의 주인공.',
-      pins: [[13.5, 10], [89, 10], [72, 18.3], [50, 33], [50, 53.6], [50, 67.6], [50, 74.2], [50, 84], [50, 93]],
-      els: [['코인 칩', '잔액. 누르면 상점'], ['설정', '동그라미 톱니 버튼'], ['말풍선', '다음 레벨까지 남은 거리(km)'], ['무대 + 아바타', '8배. 장착 아이템을 입고, 경과일에 따라 표정이 졸림·잠듦으로'], ['이름 Lv. + 레벨 막대', '레벨 안 진행을 초록 막대로'], ['목표 종류', '거리·시간 분할 선택'], ['목표 값', '3·5·10km 또는 20·30·60분, `직접`'], ['시작', '화면의 유일한 연두 버튼'], ['탭바', '러닝·기록·아바타·상점']],
-      variants: [['07-home-first-day', '첫날'], ['08-home-time-goal', '시간 목표'], ['09-home-goal-input', '직접 입력'], ['10-countdown', '카운트다운']],
-      ix: ['목표 칩을 누르면 바로 바뀌고 다음 러닝의 기본값이 됨', '`직접` 은 다이얼로그: 거리 3~42km, 시간 15~180분 정수', '시작 → (처음이면 권한 안내) → 3·2·1 → 러닝 중'] },
+      desc: '오늘 목표는 지난번 값이 한 줄에 보여서 시작 한 번으로 달려요. 바꿀 때만 한 줄을 눌러 시트를 열어요. 마스코트가 공원 산책로 무대 위의 주인공.',
+      pins: [[13.5, 10], [89, 10], [72, 18.3], [50, 37], [50, 65.4], [50, 68.6], [50, 75], [50, 84], [50, 93]],
+      els: [['코인 칩', '잔액. 누르면 상점'], ['설정', '동그라미 톱니 버튼'], ['말풍선', '다음 레벨까지 남은 거리(km)'], ['무대 + 아바타', '8배. 공원 산책로(한 점 투시, 구름 2~3개, 발밑 그림자). 장착 아이템을 입고, 경과일에 따라 표정이 졸림·잠듦으로'], ['이름 Lv.', '이름과 레벨'], ['레벨 막대', '레벨 안 진행을 초록 막대로'], ['오늘 목표 한 줄', '`오늘 목표 7km ›`. 누르면 아래 시트'], ['시작', '화면의 유일한 연두 버튼'], ['탭바', '러닝·기록·아바타·상점']],
+      variants: [['07-home-first-day', '첫날'], ['08-goal-sheet-distance', '시트 · 거리'], ['09-goal-sheet-time', '시트 · 시간'], ['10-countdown', '카운트다운']],
+      ix: ['시트: 거리·시간 분할 → 값 칩 3개 → 휠(거리 3~42km, 시간 15~180분) → `확인`. 칩을 누르면 휠이 그 값으로 돈다', '고른 목표는 다음 러닝의 기본값이 됨', '시작 → (처음이면 권한 안내) → 3·2·1(탭바 숨김) → 러닝 중'] },
     { id: 'd-run', img: '11-run', route: '홈 › 시작', title: '러닝 중', reqs: ['F1', 'F2', 'F4', 'F6', 'F6-2', 'F8', 'F14', 'F20'],
-      desc: '거리 하나를 화면 1/3 크기로. 페이스는 GPS 로 흔들리는 현재 페이스보다 평균 페이스를 먼저 둬요.',
-      pins: [[14, 10], [50, 21], [50, 32], [50, 41.7], [50, 66], [50, 90.6]],
-      els: [['제목', '러닝 중 → 자동 일시정지면 "멈춰서 일시정지했어요"'], ['거리', '128/800 고정폭 숫자 + km'], ['목표 줄·막대', '거리 목표는 기록 거리, 시간 목표는 움직인 시간으로 진행'], ['지표 카드', '평균 페이스 · 현재 페이스 · 시간'], ['무대(6배)', '9\'00" 보다 빠르면 달리기, 느리면 걷기 동작'], ['일시정지', '어두운 판 버튼']],
-      variants: [['12-run-goal', '목표 달성'], ['13-run-autopause', '자동 일시정지'], ['36-notif-run', '러닝 알림']],
-      ix: ['목표에 처음 닿으면 진동 + "목표 달성!" 한 번, 기록은 이어짐', '멈추면 자동 일시정지(재개·일시정지 두 버튼), 다시 움직이면 스스로 풀림', '자동 일시정지 5분이면 종료 예고 알림, 30초 뒤 자동 종료', '화면을 꺼도 알림창·음성으로 진행을 알려 줌'] },
+      desc: '거리 하나를 화면 1/3 크기로. 기록 중에는 무대의 흙길과 길가 나무가 소실점 쪽으로 천천히 흘러 달리는 느낌을 줘요(결정 0033 안내는 같은 말풍선).',
+      pins: [[14, 10], [50, 20.6], [50, 32.5], [50, 41.9], [50, 66], [50, 90.6]],
+      els: [['제목', '러닝 중 → 멈추면 "멈춰서 일시정지했어요", 탈것·신호 끊김은 "일시정지"'], ['거리', '128/800 고정폭 숫자 + km'], ['목표 줄·막대', '거리 목표는 기록 거리, 시간 목표는 움직인 시간으로 진행'], ['지표 카드', '평균 페이스 · 현재 페이스 · 시간'], ['무대(6배)', '길이 0.5칸/초로 흐름(초당 8장), 9\'00" 보다 빠르면 달리기, 느리면 걷기 동작'], ['일시정지', '어두운 판 버튼']],
+      variants: [['12-run-goal', '목표 달성'], ['13-run-autopause', '자동 일시정지'], ['13b-run-vehicle', '탈것 의심'], ['13c-run-signal-lost', '신호 끊김'], ['41-dark-run', '다크']],
+      ix: ['목표에 처음 닿으면 진동 + "목표 달성!" 한 번, 기록은 이어짐', '최근 30초 평균이 시속 22km 를 넘으면 탈것 의심: 말풍선 "혹시 뭘 타셨나요? 이 구간은 기록에서 뺄게요", 그 구간은 거리·시간에서 뺌. 합 2분을 넘으면 종료', '위치 점이 30초 없으면 신호 끊김: "신호가 끊겼어요. 밖으로 나오면 다시 찾을게요". 5분 이어지면 30초 예고 뒤 종료', '자동 일시정지 5분이면 종료 예고 알림, 30초 뒤 자동 종료. 끝나면 "한참 못 달려서 러닝을 마쳤어요" 알림'] },
     { id: 'd-paused', img: '14-paused', route: '러닝 중 › 일시정지', title: '일시정지', reqs: ['F1', 'F4'],
       desc: '종료는 길게 눌러야만 돼요. 실수로 끝내지 않게.',
       pins: [[50, 17.7], [50, 25], [50, 35], [50, 60], [50, 83.2], [50, 90.6]],
-      els: [['거리', '64/800으로 줄어듦'], ['목표 줄', '진행 막대 유지'], ['지표 카드', '평균 페이스 · 시간 · 칼로리'], ['무대(idle)', '서 있는 동작'], ['재개', '어두운 판 버튼'], ['길게 눌러 종료', '누르는 동안 회색이 차오르고 다 차면 종료']],
+      els: [['거리', '64/800으로 줄어듦'], ['목표 줄', '진행 막대 유지, 달성하면 "목표 달성!"'], ['지표 카드', '평균 페이스 · 시간 · 칼로리'], ['무대(idle)', '서 있는 동작, 길 흐름 멈춤'], ['재개', '어두운 판 버튼'], ['길게 눌러 종료', '누르는 동안 회색이 차오르고 다 차면 종료']],
       variants: [['15-paused-hold', '누르는 중']],
       ix: ['종료 거리가 1km 미만이면 기록하지 않고 홈으로', '1시간 넘게 일시정지면 종료 예고 뒤 자동 종료'] },
     { id: 'd-summary', img: '16-summary-levelup-full', long: true, route: '일시정지 › 길게 눌러 종료', title: '러닝 요약', reqs: ['F3', 'F6', 'F7', 'F16', 'F19', 'F21'],
@@ -884,17 +897,17 @@ dialog.zoom button { min-height: 44px; min-width: 44px; border-radius: 999px; bo
       variants: [['33-coins-empty', '빈 상태']],
       ix: ['비면 "달리면 코인이 쌓여요", 실패면 오류 빈 상태'] },
     { id: 'd-settings', img: '34-settings', route: '홈 › 톱니', title: '설정', reqs: ['F12', 'F14'],
-      desc: '묶음 카드 네 개. 백업 가져오기는 지금 데이터를 모두 바꾸므로 확인을 받아요.',
-      pins: [[50, 23], [50, 40], [50, 66.5], [50, 86.7]],
-      els: [['내 정보', '체중(칼로리 계산에만 씀)'], ['러닝 · 아바타', '아바타 이름, 음성 안내 스위치'], ['백업', '내보내기 · 가져오기, 설명 한 줄'], ['정보', '오픈소스 라이선스 · 버전']],
-      variants: [['35-settings-import', '가져오기 확인']],
-      ix: ['러닝 중에는 내보내기·가져오기를 막음', '가져오면 "백업을 가져왔어요" 스낵바'] },
+      desc: '묶음 카드 다섯 개(아래 정보 카드는 스크롤). 화면 모드는 기기 설정과 상관없이 앱 테마를 정해요. 백업 가져오기는 지금 데이터를 모두 바꾸므로 확인을 받아요.',
+      pins: [[50, 23], [50, 40], [50, 61.7], [50, 83]],
+      els: [['내 정보', '체중(칼로리 계산에만 씀)'], ['러닝 · 아바타', '아바타 이름, 음성 안내 스위치'], ['화면 모드', '`시스템`(기본)·`라이트`·`다크` 칩 3칸. 프로필에 저장, 백업 7판에 들어감'], ['백업', '내보내기 · 가져오기, 설명 한 줄']],
+      variants: [['34b-settings-theme-dark', '다크(기기 라이트)'], ['34c-settings-theme-light', '라이트(기기 다크)'], ['35-settings-import', '가져오기 확인']],
+      ix: ['화면 모드 칩을 누르면 바로 테마가 바뀜. `시스템` 은 기기 설정을 따름', '러닝 중에는 내보내기·가져오기를 막음', '가져오면 "백업을 가져왔어요" 스낵바'] },
     { id: 'd-notif', img: '36-notif-run', route: '알림창', title: '러닝 알림', reqs: ['F20', 'F4'],
       desc: '화면을 켜지 않고 진행을 봐요. 상태에 따라 버튼과 문구가 바뀌어요.',
       pins: [[30, 37], [30, 53], [22, 77]],
       els: [['제목', '러닝 중 · 0.55km (상태 · 거리)'], ['본문', '목표 3km까지 2.45km'], ['버튼', '일시정지 (자동 일시정지면 재개 · 일시정지)']],
-      variants: [['37-notif-goal', '목표 달성'], ['38-notif-autopause', '자동 일시정지'], ['39-notif-autoend', '종료 예고']], dim: [390, 165],
-      ix: ['종료 예고: "움직이지 않으면 러닝을 마쳐요" + 30초 카운트다운, 재개 버튼', '움직이거나 재개를 누르면 예고를 지움'] },
+      variants: [['37-notif-goal', '목표 달성'], ['38-notif-autopause', '자동 일시정지'], ['39-notif-autoend', '종료 예고'], ['39b-notif-vehicle', '탈것 의심'], ['39c-notif-signal', '신호 끊김'], ['39d-notif-signal-warn', '신호 끊김 예고'], ['39e-notif-autoend', '자동 종료']], dim: [390, 165],
+      ix: ['종료 예고: "움직이지 않으면 러닝을 마쳐요" + 30초 카운트다운, 재개 버튼. 신호 끊김이면 "신호가 오래 끊겨 러닝을 마쳐요"', '움직이거나 재개를 누르면 예고를 지움', '탈것·신호 끊김으로 끝나면 "한참 못 달려서 러닝을 마쳤어요 · 기록은 안전하게 저장했어요"'] },
   ];
   function detail(d) {
     const pins = d.pins.map(([x, y], i) => `<span class="pin" style="left:${x}%;top:${y}%">${i + 1}</span>`).join('');
@@ -924,7 +937,8 @@ dialog.zoom button { min-height: 44px; min-width: 44px; border-radius: 999px; bo
     ['02', '첫 실행 · 이름', `<div class="row" style="justify-content:center;gap:4px"><div class="b" style="width:6%;height:6px;flex:none"></div><div class="ln" style="width:12%;flex:none"></div></div><div class="ln m" style="height:12px"></div>${ln('l')}<div class="stage" style="height:40%"><i class="sprite"></i><span class="pill" style="position:absolute;right:8%;top:8%;width:26%;height:16px;background:var(--surface)"></span></div>${ln('s')}<div class="pill" style="height:26px;background:var(--surface);box-shadow:inset 0 0 0 2px var(--wf-deep)"></div><div class="foot"><div class="row"><div class="btn ghost" style="flex:.6"></div><div class="btn"></div></div></div>`],
     ['03', '권한 안내', `${title}${card('<div class="circ" style="align-self:center;width:30px;height:30px"></div>' + ln('l') + ln('m'))}<div class="foot"><div class="btn"></div><div class="ln s" style="align-self:center;width:22%"></div></div>`],
     ['05', '권한 · 배터리', `${title}${card('<div class="circ" style="align-self:center;width:30px;height:30px"></div>' + ln('l') + ln('l') + ln('m'))}<div class="foot"><div class="btn"></div><div class="ln s" style="align-self:center;width:18%;background:var(--wf-block)"></div></div>`],
-    ['06', '홈', `<div class="row"><div class="pill" style="flex:none;width:32%"></div><span style="flex:1"></span><span class="circ" style="width:26px;height:26px"></span></div>${st(30)}<div class="ln m" style="height:10px;align-self:center;width:40%"></div><div class="pill" style="height:8px"></div>${card(ln('s') + '<div class="row"><div class="pill on"></div><div class="pill"></div></div><div class="row" style="gap:4%"><div class="pill on"></div><div class="pill"></div><div class="pill"></div><div class="pill"></div></div>')}<div class="btn"></div>${tabs(0)}`],
+    ['06', '홈', `<div class="row"><div class="pill" style="flex:none;width:32%"></div><span style="flex:1"></span><span class="circ" style="width:26px;height:26px"></span></div><div class="stage" style="height:38%"><i class="sprite"></i><i class="path"></i></div><div class="ln m" style="height:10px;align-self:center;width:40%"></div><div class="pill" style="height:8px"></div>${card('<div class="row">' + ln('s') + '<div class="ln s" style="flex:none;width:18%;height:10px"></div></div>')}<div class="btn"></div>${tabs(0)}`],
+    ['08', '오늘 목표 시트', `<div class="b" style="height:30%;opacity:.5;border-radius:14px"></div><div class="card" style="position:absolute;left:0;right:0;bottom:0;top:42%;border-radius:18px 18px 0 0;padding:7%;gap:8px">${ln('s')}<div class="row"><div class="pill on"></div><div class="pill"></div></div><div class="row" style="gap:4%"><div class="pill"></div><div class="pill"></div><div class="pill"></div></div><div style="display:grid;gap:6px;justify-items:center;margin-top:4px"><div class="ln" style="width:22%;opacity:.5"></div><div class="pill" style="width:100%;height:20px;display:grid;place-items:center"><div class="ln" style="width:26%"></div></div><div class="ln" style="width:22%;opacity:.5"></div></div><div class="btn" style="margin-top:auto"></div></div>`],
     ['11', '러닝 중', `${title}<div class="big" style="height:54px;width:76%"></div>${ln('s')}<div class="pill" style="height:8px"></div>${card('<div class="row"><div class="ln"></div><div class="ln"></div><div class="ln"></div></div><div class="row"><div class="ln" style="height:10px"></div><div class="ln" style="height:10px"></div><div class="ln" style="height:10px"></div></div>')}${st(30)}<div class="foot" style="padding-bottom:9%"><div class="btn"></div></div>`],
     ['14', '일시정지', `${title}<div class="big" style="align-self:center;width:44%"></div>${ln('s')}<div class="pill" style="height:8px"></div>${card('<div class="row"><div class="ln"></div><div class="ln"></div><div class="ln"></div></div><div class="row"><div class="ln" style="height:10px"></div><div class="ln" style="height:10px"></div><div class="ln" style="height:10px"></div></div>')}${st(26)}<div class="foot" style="padding-bottom:9%"><div class="btn"></div><div class="btn ghost"></div></div>`],
     ['16', '러닝 요약', `<div class="row"><div class="ln m" style="height:12px"></div><div class="pill" style="flex:none;width:24%"></div></div>${card('<div class="ln s" style="align-self:center;height:10px"></div>' + ln('m') + '<div class="stage" style="height:70px"><i class="sprite"></i></div>', 0)}${card('<div class="row"><div class="ln m"></div><div class="ln s" style="flex:none;width:22%"></div></div><div class="row"><div class="ln m"></div><div class="ln s" style="flex:none;width:22%"></div></div>')}<div class="big" style="width:40%;height:24px"></div><div class="foot" style="padding-bottom:9%"><div class="btn ghost"></div><div class="btn"></div></div>`],

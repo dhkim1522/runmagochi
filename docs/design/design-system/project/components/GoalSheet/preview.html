@@ -1,0 +1,30 @@
+<!-- @dsCard group="Selection" height=560 subtitle="홈 한 줄 → 아래 시트: 분할 · 칩 · 휠 · 확인" -->
+<style>
+body{margin:0;background:var(--background);color:var(--ink);font-family:var(--font-sans,"Pretendard",system-ui,sans-serif)}
+.wrap{display:flex;flex-wrap:wrap;gap:20px;padding:20px;align-items:flex-start}
+.row1{background:var(--surface);border-radius:24px;padding:18px 20px;display:flex;align-items:center;justify-content:space-between;width:310px;box-sizing:border-box}
+.row1 span{font-size:17px;font-weight:600;color:var(--ink-muted)}
+.row1 b{font-size:22px;font-weight:800;letter-spacing:-.02em}
+.row1 b::after{content:" ›";font-weight:600;color:var(--ink-muted)}
+.cap{font-size:13px;line-height:18px;font-weight:600;color:var(--ink-muted);margin-top:8px}
+.sheet{width:350px;max-width:100%;background:var(--background);border-radius:24px 24px 0 0;box-shadow:0 -1px 0 var(--line),0 -12px 32px rgba(0,0,0,.18);padding:20px;box-sizing:border-box;display:flex;flex-direction:column;gap:12px}
+.sheet h3{margin:0 0 4px;font-size:22px;line-height:28px;font-weight:700}
+.seg{display:grid;grid-template-columns:1fr 1fr;gap:8px}.chips{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.chip{height:48px;border-radius:999px;border:2px solid transparent;background:var(--surface-soft);color:var(--ink);font:700 17px/24px var(--font-sans,"Pretendard",sans-serif)}
+.chip[aria-pressed="true"]{background:var(--primary);color:var(--on-primary);border-color:var(--primary-edge);font-weight:800}
+.wheel{display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 0;font-variant-numeric:tabular-nums}
+.wheel span{font-weight:700;color:var(--ink-muted)}
+.wheel .f2{font-size:14px;opacity:.55}.wheel .f1{font-size:18px;opacity:.8}
+.wheel .on{width:100%;text-align:center;background:var(--surface-soft);border-radius:999px;padding:8px 0;font-size:22px;font-weight:800;color:var(--ink)}
+.ok{height:60px;border-radius:999px;border:2px solid var(--primary-edge);background:var(--primary);color:var(--on-primary);font:700 22px/28px var(--font-sans,"Pretendard",sans-serif)}
+</style>
+<div class="wrap">
+  <div><div class="row1"><span>오늘 목표</span><b>7km</b></div><div class="cap">홈 한 줄 · 누르면 시트</div></div>
+  <section class="sheet" aria-label="오늘 목표 시트">
+    <h3>오늘 목표</h3>
+    <div class="seg"><button class="chip" aria-pressed="true">거리</button><button class="chip" aria-pressed="false">시간</button></div>
+    <div class="chips"><button class="chip" aria-pressed="false">3km</button><button class="chip" aria-pressed="false">5km</button><button class="chip" aria-pressed="false">10km</button></div>
+    <div class="wheel" role="slider" aria-valuenow="7" aria-valuemin="3" aria-valuemax="42" aria-label="7km, 목표 값"><span class="f2">5km</span><span class="f1">6km</span><span class="on">7km</span><span class="f1">8km</span><span class="f2">9km</span></div>
+    <button class="ok">확인</button>
+  </section>
+</div>
