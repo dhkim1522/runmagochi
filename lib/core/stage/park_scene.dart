@@ -13,7 +13,7 @@ import 'stage_scene.dart';
 /// 쓰고, 이 배경만의 색은 [ParkPalette] 에 둔다(`docs/design/tokens.json` 의 `stageScene.park`).
 const StageScene parkScene = StageScene(
   name: 'park',
-  sky: _Sky(),
+  sky: _ParkSky(),
   far: _ParkFar(),
   ground: _ParkGround(),
   roadside: _ParkRoadside(),
@@ -33,6 +33,7 @@ class ParkPalette {
     required this.far,
     required this.far2,
     required this.flower,
+    required this.cloud,
   });
 
   /// 흙길.
@@ -65,6 +66,9 @@ class ParkPalette {
   /// 작은 꽃.
   final Color flower;
 
+  /// 하늘 구름(라이트는 하늘보다 옅게, 다크는 하늘보다 살짝 밝게).
+  final Color cloud;
+
   static const light = ParkPalette(
     path: Color(0xFFEBE0C6),
     edge: Color(0xFFDCCCA8),
@@ -76,6 +80,7 @@ class ParkPalette {
     far: Color(0xFFBFE09A),
     far2: Color(0xFFD1E9B2),
     flower: Color(0xFFFFFFFF),
+    cloud: Color(0xFFF4FBE8),
   );
 
   static const dark = ParkPalette(
@@ -89,6 +94,7 @@ class ParkPalette {
     far: Color(0xFF263E1C),
     far2: Color(0xFF22361A),
     flower: Color(0xFFC9D3BE),
+    cloud: Color(0xFF263620),
   );
 
   static ParkPalette of(Brightness b) => b == Brightness.dark ? dark : light;
@@ -105,15 +111,53 @@ class ParkPalette {
     'far': far,
     'far2': far2,
     'flower': flower,
+    'cloud': cloud,
   };
 }
 
-/// 1 하늘: 단색 `stageSky`.
-class _Sky extends StageLayer {
-  const _Sky();
+/// 1 하늘: 단색 `stageSky` 위 도트 구름 2~3개(멈춤). 오른쪽 위는 말풍선 자리라 비우고,
+/// 먼 풍경 띠 위 2칸까지만 둔다. 작은 무대(길가 물체를 그리지 않는 배율)는 구름도 뺀다.
+/// 나중에 날씨 겹이 이 겹을 통째로 바꾼다.
+class _ParkSky extends StageLayer {
+  const _ParkSky();
+
+  /// 말풍선 자리: 무대 위에서 이 높이(화면 px)까지 가운데 오른쪽은 비운다.
+  /// 말풍선(위 여백 16 + 글자 2배 높이 68)보다 넉넉하다.
+  static const double bubbleClear = 96;
+
+  /// 구름 모양: 줄마다 (왼쪽 칸, 오른쪽 칸), 양끝 포함.
+  static const _big = [(6, 10), (3, 13), (1, 16), (0, 17), (2, 15)];
+  static const _medium = [(4, 7), (2, 11), (0, 13), (1, 12)];
+  static const _small = [(3, 6), (1, 8), (0, 8)];
+
+  /// (가로 위치: 폭 대비, 세로 위치: 하늘 높이 대비, 모양).
+  static const _clouds = [
+    (0.20, 0.30, _big),
+    (0.78, 0.62, _medium),
+    (0.40, 0.52, _small),
+  ];
 
   @override
-  void paintStill(StagePixels px, StageView v) => px.fill(v.colors.stageSky);
+  void paintStill(StagePixels px, StageView v) {
+    px.fill(v.colors.stageSky);
+    if (!v.detail) return;
+    final color = ParkPalette.of(v.brightness).cloud;
+    // 먼 풍경 띠(지평선 위 12칸) 위까지가 구름이 뜰 하늘.
+    final sky = v.yh - _ParkFar.band;
+    final bubbleRows = ((bubbleClear - v.originY) / v.artPx).ceil();
+    for (final (fx, fy, shape) in _clouds) {
+      final w = shape.map((r) => r.$2).reduce(math.max) + 1;
+      final h = shape.length;
+      final x0 = (v.cols * fx - w / 2).round();
+      final y0 = (sky * fy - h / 2).round();
+      if (y0 < 1 || y0 + h > sky - 2) continue;
+      if (x0 + w > v.cx && y0 < bubbleRows) continue;
+      for (var r = 0; r < h; r++) {
+        final (a, b) = shape[r];
+        px.span(x0 + a, x0 + b, y0 + r, color);
+      }
+    }
+  }
 }
 
 /// 2 먼 풍경: 지평선 위 12칸 띠에 두 겹 나무 줄(뒤 far2, 앞 far). 멈춰 있다.

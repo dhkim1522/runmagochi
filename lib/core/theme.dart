@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show listEquals;
 import 'package:flutter/material.dart';
 
 /// 디자인 값(색·글자·간격·모서리·움직임)의 유일한 출처. 기준: docs/design/tokens.json
@@ -311,6 +312,46 @@ class AppColors extends ThemeExtension<AppColors> {
 
   static AppColors of(BuildContext context) =>
       Theme.of(context).extension<AppColors>()!;
+
+  /// 모든 토큰(순서 고정). 값 비교·해시에 쓴다.
+  List<Color> get _values => [
+    background,
+    surface,
+    surfaceSoft,
+    line,
+    lineStrong,
+    ink,
+    inkMuted,
+    primary,
+    onPrimary,
+    primaryEdge,
+    primaryDeep,
+    panel,
+    onPanel,
+    stageInk,
+    coin,
+    onCoin,
+    success,
+    danger,
+    stageSky,
+    stageGround,
+    stageGroundLine,
+    paceSlow,
+    paceMid,
+    paceFast,
+    spriteRim,
+    bubble,
+  ];
+
+  /// 값이 같으면 같다. 테마 lerp·copyWith 로 새로 만든 같은 색 묶음도 같게 본다
+  /// (무대 배경 그림 캐시가 이 값으로 키를 잡는다, 작업 25).
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is AppColors && listEquals(other._values, _values);
+
+  @override
+  int get hashCode => Object.hashAll(_values);
 
   static const light = AppColors(
     background: Color(0xFFF3F5EE),

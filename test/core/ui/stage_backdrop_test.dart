@@ -165,8 +165,8 @@ void main() {
       final p = dark ? ParkPalette.dark : ParkPalette.light;
       final painted = await _colors(tester);
       int v(Color x) => x.toARGB32();
-      // 1 하늘, 2 먼 풍경 두 겹, 3 풀밭·길·가장자리·풀잎·자갈, 4 나무 잎·줄기·덤불.
-      expect(painted, contains(v(c.stageSky)), reason: '하늘');
+      // 1 하늘·구름, 2 먼 풍경 두 겹, 3 풀밭·길·가장자리·풀잎·자갈, 4 나무 잎·줄기·덤불.
+      expect(painted, containsAll([v(c.stageSky), v(p.cloud)]), reason: '하늘');
       expect(painted, containsAll([v(p.far), v(p.far2)]), reason: '먼 풍경');
       expect(
         painted,
@@ -186,7 +186,7 @@ void main() {
     });
   }
 
-  testWidgets('위쪽은 하늘로 비어 있다(말풍선 자리): 무대 위 1/4 은 하늘색뿐', (tester) async {
+  testWidgets('위쪽은 하늘로 비어 있다(말풍선 자리): 무대 위 1/4 은 하늘·구름뿐', (tester) async {
     await _pump(tester, PetStage(height: 300, scale: 8, pet: _pet(8)));
     final boundary = tester.renderObject<RenderRepaintBoundary>(
       find.descendant(
@@ -200,15 +200,22 @@ void main() {
       image.dispose();
       return d!;
     });
-    final sky = AppColors.light.stageSky;
+    List<int> rgb(Color c) => [
+      (c.r * 255).round(),
+      (c.g * 255).round(),
+      (c.b * 255).round(),
+    ];
+    final sky = rgb(AppColors.light.stageSky);
+    final cloud = rgb(ParkPalette.light.cloud);
     for (var y = 0; y < 75; y += 5) {
       for (var x = 0; x < 350; x += 7) {
         final i = (y * 350 + x) * 4;
-        expect(
-          [bytes!.getUint8(i), bytes.getUint8(i + 1), bytes.getUint8(i + 2)],
-          [(sky.r * 255).round(), (sky.g * 255).round(), (sky.b * 255).round()],
-          reason: '($x, $y)',
-        );
+        final got = [
+          bytes!.getUint8(i),
+          bytes.getUint8(i + 1),
+          bytes.getUint8(i + 2),
+        ];
+        expect(got, anyOf(equals(sky), equals(cloud)), reason: '($x, $y)');
       }
     }
   });
@@ -307,6 +314,90 @@ void main() {
     }
   });
 
+  // 구름(작업 25 후속): 하늘 겹에 2~3개, 말풍선 자리(오른쪽 위)와 먼 풍경 띠 밖, 멈춤.
+  for (final dark in [false, true]) {
+    for (final h in [300.0, 500.0]) {
+      final name = '${dark ? '다크' : '라이트'} 350×$h';
+      testWidgets('구름은 하늘에만, 말풍선 자리(오른쪽 위 96)를 비운다($name)', (tester) async {
+        await _pump(
+          tester,
+          PetStage(height: h, scale: 8, pet: _pet(8)),
+          dark: dark,
+        );
+        final p = dark ? ParkPalette.dark : ParkPalette.light;
+        final c = dark ? AppColors.dark : AppColors.light;
+        expect(p.cloud, isNot(c.stageSky));
+        expect(p.cloud, isNot(c.primary));
+        final px = await _colorsImage(tester);
+        final view = StageView.forPet(
+          size: Size(350, h),
+          scale: 8,
+          feetFromBottom: Stage.groundHeight - Stage.footSink,
+          colors: c,
+          brightness: dark ? Brightness.dark : Brightness.light,
+        );
+        final farTop = view.originY + (view.yh - 12) * view.artPx;
+        final cloud = [
+          (p.cloud.r * 255).round(),
+          (p.cloud.g * 255).round(),
+          (p.cloud.b * 255).round(),
+        ];
+        var count = 0;
+        final rightCols = <int>{};
+        for (var y = 0; y < h; y++) {
+          for (var x = 0; x < 350; x++) {
+            final i = (y * 350 + x) * 4;
+            if (px[i] != cloud[0] ||
+                px[i + 1] != cloud[1] ||
+                px[i + 2] != cloud[2]) {
+              continue;
+            }
+            count++;
+            expect(y, lessThan(farTop), reason: '먼 풍경 띠 위($x, $y)');
+            if (x >= 175) {
+              expect(y, greaterThanOrEqualTo(96), reason: '말풍선 자리($x, $y)');
+              rightCols.add(x);
+            }
+          }
+        }
+        expect(count, greaterThan(100), reason: '구름이 있다');
+        // 높은 무대는 오른쪽(말풍선 아래)에도 구름이 하나 있다.
+        if (h == 500) expect(rightCols, isNotEmpty);
+      });
+    }
+  }
+
+  testWidgets('구름은 러닝 중에도 멈춰 있다(흐름은 길만)', (tester) async {
+    await _pump(
+      tester,
+      PetStage(
+        height: 400,
+        scale: 6,
+        groundHeight: Stage.groundHeightCompact,
+        moving: true,
+        pet: _pet(6),
+      ),
+    );
+    final view = StageView.forPet(
+      size: const Size(350, 400),
+      scale: 6,
+      feetFromBottom: Stage.groundHeightCompact - Stage.footSink,
+      colors: AppColors.light,
+      brightness: Brightness.light,
+    );
+    final farTop = (view.originY + (view.yh - 12) * view.artPx).floor();
+    final before = await _colorsImage(tester);
+    await tester.pump(const Duration(milliseconds: 700));
+    await tester.pump(const Duration(milliseconds: 100));
+    expect(_state(tester).step, greaterThan(0));
+    final after = await _colorsImage(tester);
+    expect(after, isNot(before));
+    expect(
+      after.sublist(0, farTop * 350 * 4),
+      before.sublist(0, farTop * 350 * 4),
+    );
+  });
+
   for (final (w, h, scale, ground) in [
     (64.0, 72.0, 2, Stage.groundHeightMini),
     (140.0, 120.0, 3, Stage.groundHeightMini),
@@ -335,6 +426,7 @@ void main() {
       // 2배 카드 무대는 길가 물체를 그리지 않는다(작아서 알아볼 수 없다).
       if (scale < StageView.detailMinScale) {
         expect(painted, isNot(contains(ParkPalette.light.trunk.toARGB32())));
+        expect(painted, isNot(contains(ParkPalette.light.cloud.toARGB32())));
       }
     });
   }

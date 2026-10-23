@@ -445,6 +445,20 @@ void main() {
     expect(a.lerp(b, 1).stageGroundLine, b.stageGroundLine);
   });
 
+  test('AppColors 는 값이 같으면 같다(무대 그림 캐시 키, 작업 25)', () {
+    const a = AppColors.light;
+    final copy = a.copyWith();
+    expect(identical(copy, a), isFalse);
+    expect(copy, a);
+    expect(copy.hashCode, a.hashCode);
+    expect(a.lerp(AppColors.dark, 0), a);
+    expect(a, isNot(AppColors.dark));
+    // 토큰 하나만 달라도 다르다(맨 앞·가운데·맨 끝 토큰).
+    expect(a.copyWith(bubble: const Color(0xFF000001)), isNot(a));
+    expect(a.copyWith(stageSky: const Color(0xFF000001)), isNot(a));
+    expect(a.copyWith(background: const Color(0xFF000001)), isNot(a));
+  });
+
   test('Gap·Radii·Borders 값', () {
     expect(
       [Gap.s1, Gap.s2, Gap.s3, Gap.s4, Gap.s5, Gap.s6, Gap.s7, Gap.s8],
