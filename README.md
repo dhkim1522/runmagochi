@@ -7,8 +7,8 @@
   <img src="design/readme/11-run.png" width="150" alt="러닝 중">
   <img src="design/readme/16-summary-levelup.png" width="150" alt="러닝 요약, 레벨 업">
   <img src="design/readme/26-avatar.png" width="150" alt="아바타">
-  <img src="design/readme/28-shop.png" width="150" alt="상점">
   <img src="design/readme/40-dark-home.png" width="150" alt="다크 홈">
+  <img src="design/readme/28-shop.png" width="150" alt="상점">
 </p>
 
 화면 64컷 전체는 [화면설계서](design/screens/index.html)에 있다.
