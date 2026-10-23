@@ -1,6 +1,6 @@
 # 페이즈 7 구현 계획
 
-- 상태: 실행
+- 상태: 검증
 - 모드: 수동
 - 범위: docs/roadmap.md 페이즈 7 iOS 확장과 실기기 확인 (결정 0017·0026·0030·0031)
 
@@ -29,15 +29,16 @@ iOS 빌드, `Info.plist` 권한 문구, 백그라운드 위치(`AppleSettings`, 
   - 내용: 최신 릴리스 APK 빌드 절차·서명 키 위치 확인, 테스터 안내문과 의견 질문에 "아바타 때문에 다시 달리고 싶은지"가 있는지, 페이즈 6 디자인 이후 문구가 맞는지 점검해 고친다
   - 확인: `fvm flutter build apk --release` 산출물 경로 기록
   - 결과: 안내문에서 금요일 알림(페이즈 3.5 제거)을 빼고 목표·상점을 넣음, 앱 이름 런마고치, 버전 0.4.0+4 로 올림. **회사 Mac 에 릴리스 서명 키와 `key.properties` 가 없어** 여기서 만든 `app-release.apk`(63.0MB, `build/app/outputs/flutter-apk/`)는 디버그 서명이다. 지인 베타용은 키가 있는 집 PC 에서 빌드하거나 키를 Mac 으로 옮긴 뒤 빌드(사람 확인에 추가)
-- [ ] 5. iPhone 에 최신 main 설치
+- [x] 5. iPhone 에 최신 main 설치
   - 내용: 연결된 iPhone(김동현의 iPhone, iOS 27.0.1)에 `docs/ios.md` 6번 명령으로 릴리스 설치. 무료 서명 7일 만료일을 `HANDOFF.md` 에 적는다. 서명 팀은 저장소에 커밋하지 않는다(임시 worktree `~/personal/runmagochi-merge-check` 사용). 설치가 막히면(Xcode 16.4 < iOS 27) 막힌 지점을 이 파일에 적고 사용자에게 알린다
   - 확인: `fvm flutter devices` 에 iPhone 이 보이고 설치 명령이 성공해 앱이 열린다(사용자 눈으로 확인)
+  - 결과: 2026-10-23 main 183c650 을 무선 연결된 iPhone(iOS 27.0.1)에 릴리스로 설치·실행 명령 성공(Xcode 16.4 로 서명·설치됨, 막힘 없음). 무료 서명 만료 약 2026-10-30. 앱이 열렸는지는 사용자가 확인
 
 ## 완료 기준
 
 ### 자동 확인
-- [ ] `fvm flutter test`, `fvm dart analyze` 통과
-- [ ] `fvm flutter build apk --debug`, `--release`, `fvm flutter build ios --no-codesign --release` 통과
+- [x] `fvm flutter test`(1369 통과), `fvm dart analyze`(문제 없음) 통과
+- [x] `fvm flutter build apk --debug`, `--release`, `fvm flutter build ios --no-codesign --release` 통과
 
 ### E2E (에뮬레이터, `/e2e` 가 확인)
 - [ ] 작업 1 을 고쳤다면: 가상 GPS 로 탈것 의심을 만든 뒤 위치를 끄면 GPS 꺼짐 카드가 뜬다
