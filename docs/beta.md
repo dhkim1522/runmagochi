@@ -21,11 +21,11 @@ storeFile=C:/Users/<이름>/runmagochi-upload.jks
 
 - `key.properties`, `*.jks`, `*.keystore` 는 `.gitignore` 에 있다. 절대 커밋하지 않는다.
 - 키 파일과 비밀번호는 비밀번호 관리자에 넣고, 클라우드에도 한 벌 보관한다.
-- 회사 Mac과 집 Windows PC에서 같은 키를 쓴다. 각 PC에 파일을 복사하고 `key.properties` 의 `storeFile` 경로만 고친다.
+- Mac과 Windows PC에서 같은 키를 쓴다. 각 PC에 파일을 복사하고 `key.properties` 의 `storeFile` 경로만 고친다.
 - 키를 잃으면 직접 설치한 사용자는 앱을 지우고 새로 설치해야 한다. 기록이 사라진다.
 - Play에 올릴 때도 같은 키를 업로드 키로 쓴다. Play 앱 서명을 켜 두면 업로드 키를 잃어도 재설정할 수 있다.
 - `key.properties` 가 없으면 디버그 서명으로 빌드된다. 혼자 확인할 때만 쓴다. 테스터에게 보낼 APK는 반드시 릴리스 키로 서명한다.
-- **회사 Mac 에는 아직 키와 `key.properties` 가 없다**(2026-10-23 확인). 지인 베타 APK는 키가 있는 집 Windows PC 에서 빌드하거나, 키 파일을 Mac 으로 복사하고 `storeFile` 경로를 고친 뒤 빌드한다. Mac 에서 만든 `app-release.apk` 는 디버그 서명이라 나중에 릴리스 서명본으로 덮어 설치할 수 없다.
+- **Mac 에는 아직 키와 `key.properties` 가 없다**(2026-10-23 확인). 지인 베타 APK는 키가 있는 Windows PC 에서 빌드하거나, 키 파일을 Mac 으로 복사하고 `storeFile` 경로를 고친 뒤 빌드한다. Mac 에서 만든 `app-release.apk` 는 디버그 서명이라 나중에 릴리스 서명본으로 덮어 설치할 수 없다.
 
 ## 2. 베타 APK 만들기
 

@@ -63,6 +63,7 @@ Android SDK 플랫폼 37 과 [FVM](https://fvm.app) 이 필요하다. Flutter �
 
 ```
 fvm flutter pub get
-fvm dart run build_runner build
 fvm flutter run
 ```
+
+DB 생성 코드(`app_database.g.dart`)는 저장소에 들어 있다. 테이블을 고쳤을 때만 `fvm dart run build_runner build` 로 다시 만든다. 테스트는 `fvm flutter test`. iOS 는 Mac 에서 빌드한다: [iOS 빌드](docs/ios.md). 릴리스 APK 서명은 [베타 배포](docs/beta.md)에 있다.

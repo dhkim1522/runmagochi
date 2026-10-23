@@ -5,7 +5,7 @@
 
 ## 배경
 
-- 회사 Mac과 집 Windows PC를 오가며 개발한다. 각 PC의 전역 Flutter 버전이 달랐다.
+- Mac과 Windows PC를 오가며 개발한다. 각 PC의 전역 Flutter 버전이 달랐다.
 - Flutter SDK 는 `meta`·`matcher` 같은 일부 패키지 버전을 고정한다. PC가 바뀔 때마다 `pubspec.lock` 이 바뀌었다.
 - 새 Flutter 는 빌드할 때 `analysis_options.yaml` 같은 설정 파일을 자동으로 고친다. 렌더링·린트·Gradle 연동도 버전마다 다르다.
 - `pubspec.yaml` 의 `sdk: ^3.12.2` 는 최소 버전만 정한다.

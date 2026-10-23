@@ -5,7 +5,7 @@
 
 ## 배경
 
-회사 Mac과 집 Windows PC를 오가며 작업한다. Claude Code의 대화 기록과 메모리는 PC마다 따로 저장되어 다른 PC로 넘어가지 않는다.
+Mac과 Windows PC를 오가며 작업한다. Claude Code의 대화 기록과 메모리는 PC마다 따로 저장되어 다른 PC로 넘어가지 않는다.
 
 ## 결정
 

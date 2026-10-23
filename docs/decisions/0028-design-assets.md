@@ -25,6 +25,6 @@
 ## 결과
 
 - 그림을 바꿔도 앱 코드·에셋 경로는 그대로이고, 기존 스프라이트 테스트로 레이어 어긋남을 잡는다.
-- 추가 비용이 없고, 회사 Mac·집 Windows PC 어디서나 같은 명령(`fvm dart run tool/render_sprites.dart`)으로 다시 만든다.
+- 추가 비용이 없고, Mac·Windows PC 어디서나 같은 명령(`fvm dart run tool/render_sprites.dart`)으로 다시 만든다.
 - 손으로 그리는 편집기보다 그리는 속도가 느리고, 그림 품질은 미리보기 PNG 를 보며 고치는 반복에 달려 있다.
 - 후보 결과물은 투표가 끝나고 작업 18 에서 지운다.

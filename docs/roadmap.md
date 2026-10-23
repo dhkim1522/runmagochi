@@ -145,7 +145,7 @@ flowchart LR
 기능·디자인을 마친 앱에 iOS 를 붙이고 본인 iPhone 에 설치한다 (결정 0017·0026·0030). 실기기 사람 확인은 페이즈 9 로 옮겼다(결정 0035). Mac 에서만 진행한다.
 
 - **범위**
-  - iOS 빌드 (회사 Mac, FVM·Xcode)
+  - iOS 빌드 (Mac, FVM·Xcode)
   - iOS 대응: 백그라운드 위치(`CLBackgroundActivitySession` 필요 여부), 권한 문구, 알림 초기화, 음성 안내 오디오 세션, 공유
   - 무료 Apple ID 로 본인 iPhone 에 직접 설치한다. 설치본은 7일마다 다시 설치한다
   - 실측 안내문 `docs/field-test.md`, 지인 베타 자료 점검

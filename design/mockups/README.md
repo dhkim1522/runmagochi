@@ -39,7 +39,7 @@
 
 > 결정 0029 로 바뀌기 전 방향이다. 아래 `*.dc.html` 시안과 `phase-3.5-screens/`·`phase-4-screens/`·`phase-5-screens/` 스크린샷, 구현 메모는 그때 모습 기록이다. 토큰 이름(`cream`·`accent`·립 등)도 옛 이름이다.
 
-- 원본 캔버스: https://claude.ai/artifact/9XWdBkvcoJe1DmjXsbYAaC (2026-10-18 승인)
+- 원본: 이 폴더의 `*.dc.html`(캔버스 아트보드, 2026-10-18 승인. 캔버스 자체는 비공개 미리보기)
 - 디자인 시스템: `docs/design/design-system.md`, 값은 `docs/design/tokens.json`
 - 각 `*.dc.html` 은 캔버스 아트보드 원본이다(390px 폭 폰 화면). 색·크기 값은 토큰 HEX 그대로이니, 구현 때는 HEX 대신 같은 값의 토큰을 `lib/core/theme.dart` 에서 쓴다.
 - 시안 속 도트 아바타는 자리표시다. 실제 캐릭터는 `design/character/` (작업 3·8).
@@ -101,7 +101,7 @@
 
 ### 첫 실행·설정 (페이즈 3 승인본)
 
-- 원본 캔버스: https://claude.ai/artifact/3JY2L7p5Dng1jU4JhJRotH (2026-10-18 승인)
+- 원본: 이 폴더의 `Onboarding1.dc.html`·`Onboarding2.dc.html`·`Settings.dc.html`(2026-10-18 승인)
 - 시안의 캐릭터는 자리표시다. 앱은 무작위로 정해진 종류의 1단계 스프라이트를 쓴다(결정 0011).
 
 | 파일 | 화면 | 내용 |

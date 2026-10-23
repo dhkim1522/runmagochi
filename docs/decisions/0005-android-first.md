@@ -5,7 +5,7 @@
 
 ## 배경
 
-- 개발은 회사 Mac과 집 Windows PC에서 한다. iOS 빌드와 시뮬레이터는 Mac에서만 동작한다.
+- 개발은 Mac과 Windows PC에서 한다. iOS 빌드와 시뮬레이터는 Mac에서만 동작한다.
 - iPhone 지인 베타(TestFlight)에는 Apple 개발자 계정(연 $99)이 필요하다. Android는 APK 파일을 직접 전달하면 비용 없이 배포된다.
 - 테스트 기기로 iPhone과 Android 휴대폰(가족 기기)을 모두 쓸 수 있다.
 
