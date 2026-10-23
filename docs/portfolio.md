@@ -11,7 +11,7 @@
 | 5 | UI 시안·디자인 시스템 | `docs/design/`, `design/mockups/` | 있음 (작업 4 완료: `docs/design/design-process.md`, 토큰은 theme_test 가 코드와 대조) | 4 |
 | 6 | 시스템 아키텍처 | `docs/architecture.md` | 있음 (작업 5 완료: 모듈 지도·플랫폼 경계·주입, 패키지 표 보강) | 5 |
 | 7 | 데이터 모델 ERD | `docs/data-model.md` | 있음 (작업 6 완료, `test/docs/data_model_doc_test.dart` 가 코드와 대조) | 6 |
-| 8 | 시퀀스 다이어그램 | `docs/sequences.md` | 없음 | 7 |
+| 8 | 시퀀스 다이어그램 | `docs/sequences.md` | 있음 (작업 7 완료: 기록·알림 버튼·자동 정지/종료·백업 4종, 코드 이름 대조) | 7 |
 | 9 | 결정 기록 모음 | `docs/decisions/README.md` | 없음(35개 파일만) | 8 |
 | 10 | 페이즈별 개발 기록 | `docs/dev-log.md` | 없음 | 8 |
 | 11 | README 소개 | `README.md` | 시작하기 위주, 스크린샷·GIF 없음 | 9 |

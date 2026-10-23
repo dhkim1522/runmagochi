@@ -68,7 +68,7 @@
   - 테스트: 테이블 이름 일치 검사 — 새 테스트 `test/docs/data_model_doc_test.dart` 가 `docs/data-model.md` 의 엔티티 이름 목록과 `AppDatabase.allTables` 이름 목록이 같은지 본다. 먼저 실패(문서 없음) 확인
   - 확인: `fvm flutter test test/docs/`, mermaid 문법 검사
 
-- [ ] 7. 시퀀스 다이어그램 4종
+- [x] 7. 시퀀스 다이어그램 4종
   - 파일: `docs/sequences.md`(새로)
   - 내용: mermaid `sequenceDiagram` 4개. (a) 러닝 기록: 시작→카운트다운→위치 수신→엔진→10초 저장→종료→요약→경험치·코인·배지 (b) 알림 버튼: 알림 액션→백그라운드 isolate→컨트롤러 일시정지·재개 (c) 자동 일시정지·재개·종료 예고·무활동 종료, 빠른 이동 자동 종료 (d) 백업 내보내기·가져오기. 각 그림 옆에 근거 코드 파일을 적는다
   - 확인: 그림의 참여자·메시지 이름이 실제 클래스·메서드 이름(`grep` 으로 존재 확인). mermaid 문법 검사
