@@ -1,6 +1,6 @@
 # iOS 빌드와 iPhone 설치
 
-iOS 는 Mac 에서만 빌드한다. 무료 Apple ID 로 본인 iPhone 에 직접 설치해 쓴다 (결정 0030). App Store·TestFlight 는 유료 개발자 계정이 필요해 페이즈 9 에서 정한다.
+iOS 는 Mac 에서만 빌드한다. 무료 Apple ID 로 본인 iPhone 에 직접 설치해 쓴다 (결정 0030). App Store·TestFlight 는 유료 개발자 계정이 필요해 페이즈 10 에서 정한다.
 
 ## 준비물
 

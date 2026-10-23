@@ -1,6 +1,6 @@
 # 베타 배포
 
-베타는 릴리스 APK를 직접 공유한다. Play 내부 테스트와 iOS TestFlight 는 페이즈 9에서 한다.
+베타는 릴리스 APK를 직접 공유한다. Play 내부 테스트와 iOS TestFlight 는 페이즈 10에서 한다.
 
 ## 1. 서명 키 만들기
 
