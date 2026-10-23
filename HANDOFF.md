@@ -5,7 +5,9 @@
 ## 현재 상태
 
 - **페이즈 8 진행 중** (`docs/plans/phase-8.md`, 상태 `실행`, 사용자 승인 2026-10-23). 문서 작업 완료: 0 기준값, 1 PRD(`docs/product.md`), 2 시나리오·흐름(`docs/user-flows.md`), 4 디자인 의사결정(`docs/design/design-process.md`), 5 아키텍처, 6 ERD(`docs/data-model.md` + `test/docs/data_model_doc_test.dart`), 7 시퀀스(`docs/sequences.md`), 8 결정 색인(`docs/decisions/README.md`)·개발 기록(`docs/dev-log.md`), 10 플레이북(`docs/playbook.md`, 스킬 `.claude/skills/playbook`). 현황표 `docs/portfolio.md`
-  - 남은 것: **3 화면설계서 재촬영**(컷 64개, 에뮬레이터 필요), 9 README 스크린샷·GIF, 11 포트폴리오 아티팩트, 12 정합성 점검·문서 지도. 에뮬레이터 `runmagochi` 는 켜져 있고 디버그 APK 설치됨(기존 데이터: 말랑이 Lv.1)
+  - 작업 3 완료(2026-10-24): 화면설계서 컷 64개 전체 재촬영·390px 사본·`index.html` 설명 갱신, 촬영 도구 `tool/capture/`([README](tool/capture/README.md)), 와이어프레임 대응표. **화면설계서 아티팩트(https://claude.ai/artifact/456dWcNyLn1vbUsjV9FLVc)는 아직 이전 판** — 새 `design/screens/` 로 다시 게시(작업 11 전). 39d·39e 알림 컷은 10-23 것 유지
+  - 남은 것: 9 README 스크린샷·GIF(에뮬레이터 `runmagochi` 는 켜져 있음, 디버그 APK 설치됨·예시 데이터 젤리 Lv.9), 11 포트폴리오 아티팩트(화면설계서 새 판 포함), 12 정합성 점검·문서 지도
+  - 촬영 중 본 것: 13c(위치 꺼짐) 첫 컷에서 일시정지·종료 버튼에 진한 테두리가 한 번 보임(다시 찍으면 얇은 선, 일시적 포커스 표시로 추정). 가상 GPS 라 페이스가 3~4분대. 릴리스 빌드는 자동 종료 기준 dart-define 을 무시해 종료 예고 알림은 디버그 빌드로 찍음
   - mermaid 문법 검사: 스크래치패드 `mm/check.py`(mermaid-cli, Chrome 사용). 새 문서의 다이어그램 14개 통과
   - 시퀀스를 쓰며 낡은 설명(빠른 이동 30km 자동 종료는 결정 0033 으로 탈것 의심으로 대체)을 고침. 문서 숫자는 코드에서 읽어 쓸 것
 - **페이즈 7 완료** (`docs/plans/phase-7.md`, 작업 1~5, 자동 확인 통과). 실기기 사람 확인은 **페이즈 9 실기기 테스트와 개선**으로 분리(결정 0035). 순서 7 → 8 산출물 정리 → 9 실기기 테스트·개선 → 10 출시(1.0). 다음은 `/phase 8`(계획부터). 실측 안내 `docs/field-test.md`. Android 실기기는 가족 폰을 빌려 로드맵 기준 그대로 실측(사용자 결정 2026-10-23)
