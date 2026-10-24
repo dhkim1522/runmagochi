@@ -12,6 +12,7 @@
 - 포트폴리오 `design/portfolio/index.html`: 한 장짜리 앱 소개 + GitHub 저장소 링크만. 산출물 목록은 넣지 않는다.
 - 산출물 형식: 볼거리(화면설계서 `design/screens/`, 디자인 시스템 `docs/design/design-system/index.html`, UI 후보 비교 `design/mockups/phase-6/compare/`, 캐릭터 에셋 `design/character/asset-catalog.html`)는 HTML, 다이어그램 문서(ERD·시퀀스·흐름·아키텍처·결정)는 md(mermaid). README 의 HTML 링크는 Pages 주소.
 - 디자인 시스템 HTML 은 `python3 tool/export_design_system.py` 로 `project/` 원본에서 다시 만든다. 아티팩트는 작업 중 미리보기용이고 문서는 저장소 파일을 가리킨다.
+- iPhone 16 Pro(iOS 27.0.1)에 최신 릴리스 빌드를 덮어 설치(2026-10-24, 기록 유지). 무료 Apple ID 라 10-31 쯤 열리지 않으면 `docs/ios.md` 대로 다시 설치. Android 폰은 Windows PC 에서 릴리스 키로 빌드해 설치할 예정.
 - 에뮬레이터 `runmagochi` 에는 이제 **릴리스 APK** 가 깔려 있다(예시 데이터 말랑이 Lv.9 + GIF 녹화용 1.22km 러닝 1회). 이 Mac 에 ffmpeg(brew) 설치됨. adb 는 `~/Library/Android/sdk/platform-tools/adb`(PATH 밖).
 
 ### 최종 검토 (2026-10-24 밤)
