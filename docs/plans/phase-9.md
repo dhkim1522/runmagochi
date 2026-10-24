@@ -12,7 +12,7 @@
   - 파일: `lib/run/domain/gpx.dart`(새로), `lib/run/ui/summary_screen.dart`
   - 테스트: 경로 점·구간으로 GPX 1.1 문자열(trk/trkseg/trkpt, 시각 UTC)을 만든다. 상세 화면 공유 메뉴에서 GPX 파일을 공유한다
   - 확인: `fvm flutter test test/run`
-- [ ] 2. 응원 음성 (F28)
+- [x] 2. 응원 음성 (F28)
   - 파일: `lib/run/app/voice_guide.dart`
   - 테스트: 구간 안내 뒤에 캐릭터 종류별 응원 한마디가 붙는다(반 지점·목표 직전·목표 달성). 음성 안내를 끄면 말하지 않는다
   - 확인: `fvm flutter test test/run/app`

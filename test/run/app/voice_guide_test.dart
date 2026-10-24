@@ -77,7 +77,69 @@ void main() {
     });
   });
 
+  group('cheerLine (F28)', () {
+    test('시작·구간·목표 달성 뒤에 캐릭터 이름으로 응원한다', () {
+      expect(cheerLine(const VoiceStart(), '말랑이'), '말랑이도 같이 달려요');
+      expect(
+        cheerLine(const VoiceGoalReached(DistanceGoal(5000)), '말랑이'),
+        '말랑이도 기뻐해요. 정말 잘했어요',
+      );
+      final splits = [
+        for (var km = 1; km <= 4; km++)
+          cheerLine(
+            VoiceSplit(
+              km: km,
+              elapsed: Duration(minutes: 6 * km),
+              avgPaceSecPerKm: 360,
+            ),
+            '말랑이',
+          ),
+      ];
+      // 구간마다 다른 말, 이름 뒤에는 받침과 상관없는 "도" 만 쓴다.
+      expect(splits.toSet().length, 4);
+      for (final line in splits) {
+        expect(line, isNotNull);
+        expect(line, isNot(contains('말랑이가')));
+        expect(line, isNot(contains('말랑이이')));
+      }
+    });
+
+    test('멈춤·경고 사건에는 응원하지 않는다', () {
+      for (final e in const [
+        VoiceAutoPaused(),
+        VoiceAutoResumed(),
+        VoiceVehicle(),
+        VoiceSignalLost(),
+        VoiceEndWarning(30),
+      ]) {
+        expect(cheerLine(e, '말랑이'), isNull, reason: '$e');
+      }
+    });
+  });
+
   group('VoiceGuide', () {
+    test('이름을 주면 안내 뒤에 응원을 한 줄 더 읽는다', () async {
+      final speaker = FakeSpeaker();
+      final guide = VoiceGuide(
+        speaker: speaker,
+        enabled: () async => true,
+        petName: () => '말랑이',
+      );
+      await guide.say(const VoiceStart());
+      await guide.say(const VoiceAutoPaused());
+      expect(speaker.spoken, ['러닝을 시작해요', '말랑이도 같이 달려요', '일시정지했어요']);
+    });
+
+    test('이름을 읽지 못하면 응원 없이 안내만 읽는다', () async {
+      final speaker = FakeSpeaker();
+      await VoiceGuide(
+        speaker: speaker,
+        enabled: () async => true,
+        petName: () => throw StateError('db'),
+      ).say(const VoiceStart());
+      expect(speaker.spoken, ['러닝을 시작해요']);
+    });
+
     test('켜져 있으면 읽는다', () async {
       final speaker = FakeSpeaker();
       await VoiceGuide(

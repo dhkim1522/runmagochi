@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../avatar/app/providers.dart' show growthStateProvider;
 import '../../avatar/data/notification_scheduler.dart';
 import '../../core/clock.dart';
 import '../../profile/app/providers.dart';
@@ -83,5 +84,9 @@ final voiceGuideProvider = Provider<VoiceGuide>(
   (ref) => VoiceGuide(
     speaker: ref.watch(speakerProvider),
     enabled: () => ref.read(profileRepositoryProvider).voiceGuide(),
+    // 홈이 읽어 둔 성장 상태의 이름. 아직 읽지 않았으면 새로 읽지 않고 응원하지 않는다.
+    petName: () => ref.exists(growthStateProvider)
+        ? ref.read(growthStateProvider).value?.name
+        : null,
   ),
 );

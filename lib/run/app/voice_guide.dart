@@ -100,6 +100,25 @@ String? voiceLine(VoiceEvent e) => switch (e) {
   VoiceEndWarning() => null,
 };
 
+/// 캐릭터 응원 한마디 (F28, 결정 0037). 안내 문구 뒤에 읽는다. 응원하지 않을 사건이면 null.
+/// 이름 뒤 조사는 받침과 상관없는 "도" 만 쓴다(말랑이도·토리도).
+String? cheerLine(VoiceEvent e, String petName) => switch (e) {
+  VoiceStart() => '$petName도 같이 달려요',
+  VoiceSplit(:final km) => _splitCheers[(km - 1) % _splitCheers.length](
+    petName,
+  ),
+  VoiceGoalReached() => '$petName도 기뻐해요. 정말 잘했어요',
+  _ => null,
+};
+
+final List<String Function(String)> _splitCheers = [
+  (n) => '$n도 신났어요',
+  (n) => '좋아요, 이 느낌 그대로요',
+  (n) => '$n도 힘내고 있어요',
+  (n) => '숨 고르고, 내 속도로 가요',
+  (n) => '벌써 여기까지 왔어요',
+];
+
 /// `18분 40초`, `1시간 5분 3초`. 0 인 단위는 읽지 않고(`6분`), 전부 0 이면 `0초`.
 String _spokenDuration(Duration d) {
   final total = d.inSeconds < 0 ? 0 : d.inSeconds;
@@ -116,10 +135,13 @@ const Duration voiceLineTimeout = Duration(seconds: 15);
 /// 켜짐 여부를 보고 [Speaker] 로 안내 문구를 읽는다. 문구는 부른 순서대로
 /// 한 줄씩 읽어 서로 끊지 않는다. 실패는 로그만 남기고 러닝에는 영향을 주지 않는다.
 class VoiceGuide {
-  VoiceGuide({required this._speaker, required this._enabled});
+  VoiceGuide({required this._speaker, required this._enabled, this._petName});
 
   final Speaker _speaker;
   final Future<bool> Function() _enabled;
+
+  /// 응원에 쓸 캐릭터 이름(이미 읽어 둔 값). 없거나 읽지 못하면 응원하지 않는다.
+  final String? Function()? _petName;
 
   /// 앞선 문구가 끝나야 다음 문구를 읽도록 잇는 꼬리.
   Future<void> _tail = Future.value();
@@ -129,7 +151,21 @@ class VoiceGuide {
   Future<void> say(VoiceEvent event) {
     final line = _safeLine(event);
     if (line == null) return Future.value();
-    return _tail = _tail.then((_) => _speakLine(line));
+    final cheer = _cheer(event);
+    return _tail = _tail.then((_) async {
+      await _speakLine(line);
+      if (cheer != null) await _speakLine(cheer);
+    });
+  }
+
+  String? _cheer(VoiceEvent event) {
+    try {
+      final name = _petName?.call();
+      return name == null || name.isEmpty ? null : cheerLine(event, name);
+    } catch (e) {
+      debugPrint('응원 이름 읽기 실패: $e');
+      return null;
+    }
   }
 
   String? _safeLine(VoiceEvent event) {
