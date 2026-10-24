@@ -26,7 +26,7 @@
 - **알림 조작**: 알림에서 일시정지·재개·종료. 음성 안내.
 - **내 데이터**: 백업 내보내기·가져오기, 라이트·다크 모드.
 
-요구사항 전체는 [기획서](docs/product.md)(F1~F26)에 상태와 함께 있다.
+요구사항 전체는 [기획서](docs/product.md)(F1~F33)에 상태와 함께 있다.
 
 ## 기술
 
@@ -49,7 +49,7 @@ Flutter 3(FVM 고정) · Riverpod · Drift/SQLite(스키마 7판, 10개 표) · 
 | [설계서](docs/architecture.md) | 기술 스택, 모듈 지도, 플랫폼 경계 |
 | [데이터 모델](docs/data-model.md) | ERD, 스키마 판 이력 |
 | [시퀀스 다이어그램](docs/sequences.md) | 기록~보상, 알림 버튼, 자동 일시정지·종료, 백업 |
-| [결정 기록](docs/decisions/README.md) | 결정 36개 색인과 흐름도 |
+| [결정 기록](docs/decisions/README.md) | 결정 37개 색인과 흐름도 |
 | [개발 기록](docs/dev-log.md) | 페이즈별 테스트 수 추이, 검증에서 잡은 결함 |
 | [플레이북](docs/playbook.md) | 다음 프로젝트용 진행 순서와 규칙 |
 | [로드맵](docs/roadmap.md) | 페이즈별 범위와 완료 기준, 현재 위치 |

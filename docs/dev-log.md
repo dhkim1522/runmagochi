@@ -10,7 +10,7 @@
 | 커밋 | 400여 개 (`fix:` 65개) | `git log` |
 | 코드 줄 수 | lib 16,811 / test 26,132 (생성 파일 제외) | `wc -l` |
 | 자동 테스트 | 1,387개 통과 (앱 1,384 + 문서 대조 3, 페이즈 8 끝 1,372) | `fvm flutter test` |
-| 결정 기록 | 36개 | [색인](decisions/README.md) |
+| 결정 기록 | 37개 | [색인](decisions/README.md) |
 | 화면 컷 | 64개 (Android 라이트·다크, iPhone, 알림) | `design/screens/` |
 | 플랫폼 | Android, iOS(iPhone 16 Pro 설치) | 페이즈 7 |
 
