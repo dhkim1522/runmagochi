@@ -16,6 +16,8 @@ import 'package:runmagochi/core/theme.dart';
 import 'package:runmagochi/core/ui/components.dart';
 import 'package:runmagochi/profile/app/providers.dart';
 import 'package:runmagochi/profile/data/profile_repository.dart';
+import 'package:runmagochi/reminder/app/providers.dart';
+import 'package:runmagochi/reminder/app/reminder_service.dart';
 import 'package:runmagochi/run/app/permission_gate.dart';
 import 'package:runmagochi/run/app/providers.dart';
 import 'package:runmagochi/run/ui/home_screen.dart';
@@ -45,6 +47,14 @@ class _Profile implements ProfileRepository {
     if (voiceFails) throw StateError('저장 실패');
     voice = on;
   }
+
+  bool reminderOn = true;
+
+  @override
+  Future<bool> reminder() async => reminderOn;
+
+  @override
+  Future<void> setReminder(bool on) async => reminderOn = on;
 
   ThemeMode theme = ThemeMode.system;
 
@@ -112,10 +122,23 @@ class _Backup implements BackupService {
       throw UnimplementedError('${invocation.memberName}');
 }
 
+/// 다시 예약을 부른 횟수만 센다.
+class _Reminders implements ReminderService {
+  int refreshes = 0;
+
+  @override
+  Future<void> refresh() async => refreshes++;
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) =>
+      throw UnimplementedError('${invocation.memberName}');
+}
+
 class SettingsEnv {
   final growth = FakeGrowthService(growthState());
   final profile = _Profile();
   final backup = _Backup();
+  final reminders = _Reminders();
   late final repo = _GrowthRepo(growth);
 }
 
@@ -141,6 +164,7 @@ Future<SettingsEnv> pumpSettings(
         growthRepositoryProvider.overrideWithValue(e.repo),
         profileRepositoryProvider.overrideWithValue(e.profile),
         backupServiceProvider.overrideWithValue(e.backup),
+        reminderServiceProvider.overrideWithValue(e.reminders),
         runControllerProvider.overrideWith(() => FakeController()),
         permissionGateProvider.overrideWithValue(FakeGate(GateResult.ready)),
         runRepositoryProvider.overrideWithValue(FakeRepo((0, 0))),
@@ -243,7 +267,11 @@ void task15Tests() {
       );
       final desc = tester
           .widget<Text>(
-            find.text(keepAll('기기를 바꿀 때 백업 파일로 기록을 옮겨요.\n가져오면 지금 데이터는 백업 내용으로 모두 바뀌어요.')),
+            find.text(
+              keepAll(
+                '기기를 바꿀 때 백업 파일로 기록을 옮겨요.\n가져오면 지금 데이터는 백업 내용으로 모두 바뀌어요.',
+              ),
+            ),
           )
           .style!;
       expect(desc.fontSize, 14);
@@ -252,10 +280,11 @@ void task15Tests() {
 
     testWidgets('스위치·입력칸 모양은 테마가 정한다 ($name)', (tester) async {
       await pumpSettings(tester, theme: theme());
-      final sw = tester.widget<Switch>(find.byType(Switch));
-      expect(sw.activeTrackColor, isNull);
-      expect(sw.trackOutlineColor, isNull);
-      expect(sw.inactiveThumbColor, isNull);
+      for (final sw in tester.widgetList<Switch>(find.byType(Switch))) {
+        expect(sw.activeTrackColor, isNull);
+        expect(sw.trackOutlineColor, isNull);
+        expect(sw.inactiveThumbColor, isNull);
+      }
       await tester.tap(find.text('체중'));
       await settle(tester);
       final field = tester.widget<TextField>(find.byType(TextField));
@@ -304,7 +333,9 @@ void main() {
     expect(find.text('아바타 이름'), findsOneWidget);
     expect(find.text('러니'), findsOneWidget);
     expect(
-      find.text(keepAll('기기를 바꿀 때 백업 파일로 기록을 옮겨요.\n가져오면 지금 데이터는 백업 내용으로 모두 바뀌어요.')),
+      find.text(
+        keepAll('기기를 바꿀 때 백업 파일로 기록을 옮겨요.\n가져오면 지금 데이터는 백업 내용으로 모두 바뀌어요.'),
+      ),
       findsOneWidget,
     );
     expect(find.text('내보내기'), findsOneWidget);
@@ -479,7 +510,10 @@ void main() {
       await tester.tap(find.text('가져오기'));
       await settle(tester);
       expect(find.text('백업 파일을 가져올까요?'), findsOneWidget);
-      expect(find.text(keepAll('지금 데이터가 모두 백업 내용으로 바뀌어요.\n되돌릴 수 없어요.')), findsOneWidget);
+      expect(
+        find.text(keepAll('지금 데이터가 모두 백업 내용으로 바뀌어요.\n되돌릴 수 없어요.')),
+        findsOneWidget,
+      );
     }
 
     testWidgets('가져오기 확인 창에서 취소하면 서비스를 부르지 않는다', (tester) async {
@@ -610,14 +644,13 @@ void main() {
       await tester.scrollUntilVisible(find.text('모든 기록 지우고 처음부터'), 200);
       expect(find.text('초기화'), findsOneWidget);
       expect(
-        find.text(keepAll('기록과 캐릭터를 모두 지우고 캐릭터를 새로 만들어요.\n체중·음성 안내·화면 모드는 남아요.')),
+        find.text(
+          keepAll('기록과 캐릭터를 모두 지우고 캐릭터를 새로 만들어요.\n체중·음성 안내·화면 모드는 남아요.'),
+        ),
         findsOneWidget,
       );
       // 되돌릴 수 없는 동작이라 빨간 테두리·글자의 위험 버튼이다.
-      expect(
-        find.widgetWithText(AppButton, '모든 기록 지우고 처음부터'),
-        findsOneWidget,
-      );
+      expect(find.widgetWithText(AppButton, '모든 기록 지우고 처음부터'), findsOneWidget);
       final button = tester.widget<AppButton>(
         find.widgetWithText(AppButton, '모든 기록 지우고 처음부터'),
       );
@@ -758,9 +791,41 @@ void main() {
     });
   });
 
+  group('쉬는 날 알림 (F27)', () {
+    Switch reminderSwitch(WidgetTester tester) =>
+        tester.widgetList<Switch>(find.byType(Switch)).last;
+
+    testWidgets('기본으로 켜져 있고, 바꾸면 저장하고 알림을 다시 예약한다', (tester) async {
+      final env = await pumpSettings(tester);
+      expect(find.text('쉬는 날 알림'), findsOneWidget);
+      expect(find.text('며칠 쉬면 캐릭터가 한 번 불러요'), findsOneWidget);
+      expect(reminderSwitch(tester).value, isTrue);
+      await tester.tap(find.text('쉬는 날 알림'));
+      await settle(tester);
+      expect(env.profile.reminderOn, isFalse);
+      expect(reminderSwitch(tester).value, isFalse);
+      expect(env.reminders.refreshes, 1);
+    });
+
+    testWidgets('가져오기·초기화 뒤에도 다시 예약한다', (tester) async {
+      final env = await pumpSettings(tester);
+      await tester.tap(find.text('가져오기'));
+      await settle(tester);
+      await tester.tap(
+        find.descendant(
+          of: find.byType(AlertDialog),
+          matching: find.text('가져오기'),
+        ),
+      );
+      await settle(tester);
+      expect(env.reminders.refreshes, 1);
+    });
+  });
+
   group('음성 안내', () {
+    // 음성 안내가 첫 스위치, 쉬는 날 알림이 둘째다.
     Switch voiceSwitch(WidgetTester tester) =>
-        tester.widget<Switch>(find.byType(Switch));
+        tester.widgetList<Switch>(find.byType(Switch)).first;
 
     testWidgets('기본으로 켜져 있고 끄면 저장된다', (tester) async {
       final env = await pumpSettings(tester);

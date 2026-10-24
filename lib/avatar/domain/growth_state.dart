@@ -22,6 +22,10 @@ class GrowthState {
 
   /// 다음 외형 단계까지 남은 경험치. 최고 단계면 null.
   final int? xpToNextStage;
+
+  /// 다음 레벨까지 남은 거리(km). 거리 경험치는 1km 에 10 이다.
+  double get kmToNextLevel => (level.xpForNext - level.xpIntoLevel) / 10;
+
   final AvatarMood mood;
   final double totalDistanceM;
   final int runCount;

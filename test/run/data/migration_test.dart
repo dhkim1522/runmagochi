@@ -271,4 +271,29 @@ PRAGMA user_version = 6;
     expect(profile.voiceGuide, isFalse);
     expect(profile.themeMode, 'system');
   });
+
+  test('스키마 7 DB 를 열면 쉬는 날 알림은 켜져 있고 값이 남는다', () async {
+    final executor = NativeDatabase.memory(
+      setup: (raw) {
+        raw.execute('''
+CREATE TABLE profiles (
+  id TEXT NOT NULL, weight_kg REAL NULL, onboarded_at TEXT NULL,
+  voice_guide INTEGER NOT NULL DEFAULT 1 CHECK (voice_guide IN (0, 1)),
+  theme_mode TEXT NOT NULL DEFAULT 'system',
+  created_at TEXT NOT NULL, updated_at TEXT NOT NULL, deleted_at TEXT NULL,
+  PRIMARY KEY (id));
+INSERT INTO profiles (id, weight_kg, voice_guide, theme_mode, created_at, updated_at)
+VALUES ('p1', 62.5, 0, 'dark', '2026-10-01T00:00:00.000Z', '2026-10-01T00:00:00.000Z');
+PRAGMA user_version = 7;
+''');
+      },
+    );
+    final db = AppDatabase(executor);
+    addTearDown(db.close);
+
+    final profile = (await db.select(db.profiles).get()).single;
+    expect(profile.themeMode, 'dark');
+    expect(profile.voiceGuide, isFalse);
+    expect(profile.reminder, isTrue);
+  });
 }

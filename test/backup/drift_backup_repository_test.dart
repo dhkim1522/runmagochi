@@ -162,7 +162,7 @@ void main() {
     final m = jsonDecode(json) as Map<String, dynamic>;
     expect(m['format'], 'runmagochi-backup');
     expect(m['version'], 1);
-    expect(m['schemaVersion'], 7);
+    expect(m['schemaVersion'], 8);
     expect(m['exportedAt'], '2026-10-18T01:00:00.000Z');
     final tables = m['tables'] as Map<String, dynamic>;
     expect(tables.keys, isNot(contains('runPoints')));
@@ -387,6 +387,33 @@ void main() {
     expect((await dst.select(dst.profiles).get()).single.themeMode, 'system');
   });
 
+  test('v7 백업 파일(쉬는 날 알림 없음)을 가져오면 켜져 있다', () async {
+    await _seed(src);
+    await (src.update(
+      src.profiles,
+    )).write(const ProfilesCompanion(reminder: Value(false)));
+    final m =
+        jsonDecode(await DriftBackupRepository(src).exportJson(_now))
+            as Map<String, dynamic>;
+    m['schemaVersion'] = 7;
+    for (final r in (m['tables'] as Map)['profiles'] as List) {
+      (r as Map).remove('reminder');
+    }
+    await _seed(dst, suffix: '-old');
+    await DriftBackupRepository(dst).importJson(jsonEncode(m));
+    expect((await dst.select(dst.profiles).get()).single.reminder, isTrue);
+  });
+
+  test('v8 왕복에 쉬는 날 알림이 유지된다', () async {
+    await _seed(src);
+    await (src.update(
+      src.profiles,
+    )).write(const ProfilesCompanion(reminder: Value(false)));
+    final json = await DriftBackupRepository(src).exportJson(_now);
+    await DriftBackupRepository(dst).importJson(json);
+    expect((await dst.select(dst.profiles).get()).single.reminder, isFalse);
+  });
+
   test('가져오면 기존 데이터를 모두 바꾼다 (진행 중 러닝·점 포함)', () async {
     await _seed(src);
     final json = await DriftBackupRepository(src).exportJson(_now);
@@ -435,7 +462,7 @@ void main() {
       return expectRejected(jsonEncode(parsed()..['version'] = 2));
     });
     test('스키마 버전이 다름', () async {
-      await expectRejected(jsonEncode(parsed()..['schemaVersion'] = 8));
+      await expectRejected(jsonEncode(parsed()..['schemaVersion'] = 9));
       await expectRejected(jsonEncode(parsed()..['schemaVersion'] = 2));
     });
     test('테이블이 없음', () {
@@ -523,7 +550,6 @@ void main() {
     );
     expect(await _dump(dst), before);
   });
-
 
   test('초기화하면 기록·캐릭터 데이터를 모두 지우고 설정값은 남기며 첫 실행 표시를 지운다', () async {
     await _seed(dst);

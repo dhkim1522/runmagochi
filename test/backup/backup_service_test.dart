@@ -273,7 +273,6 @@ void main() {
     expect(await _runIds(dst), ['new']);
   });
 
-
   test('초기화하면 성장 계산과 같은 줄에서 데이터를 지운다', () async {
     await _addRun(dst, 'old');
     expect(await service(dst).reset(), isA<BackupDone>());

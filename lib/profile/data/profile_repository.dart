@@ -14,6 +14,12 @@ abstract interface class ProfileRepository {
   /// 음성 안내를 켜거나 끈다.
   Future<void> setVoiceGuide(bool on);
 
+  /// 쉬는 날 캐릭터 알림(F27)을 켰는지. 행이 없으면 기본값 true.
+  Future<bool> reminder();
+
+  /// 쉬는 날 알림을 켜거나 끈다.
+  Future<void> setReminder(bool on);
+
   /// 화면 모드. 행이 없으면 기본값 시스템.
   Future<ThemeMode> themeMode();
 

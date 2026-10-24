@@ -35,6 +35,7 @@ class DriftProfileRepository implements ProfileRepository {
                 onboardedAt: c.onboardedAt,
                 voiceGuide: c.voiceGuide,
                 themeMode: c.themeMode,
+                reminder: c.reminder,
                 createdAt: now,
                 updatedAt: now,
               ),
@@ -59,6 +60,13 @@ class DriftProfileRepository implements ProfileRepository {
   @override
   Future<void> setVoiceGuide(bool on) =>
       _write((_) => ProfilesCompanion(voiceGuide: Value(on)));
+
+  @override
+  Future<bool> reminder() async => (await _row())?.reminder ?? true;
+
+  @override
+  Future<void> setReminder(bool on) =>
+      _write((_) => ProfilesCompanion(reminder: Value(on)));
 
   @override
   Future<ThemeMode> themeMode() async {

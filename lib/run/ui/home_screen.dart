@@ -15,6 +15,7 @@ import '../../core/home_tab.dart';
 import '../../core/theme.dart';
 import '../../core/ui/components.dart';
 import '../../settings/ui/settings_screen.dart';
+import '../../reminder/app/providers.dart';
 import '../../shop/app/providers.dart';
 import '../../shop/ui/coin_chip.dart';
 import '../app/permission_gate.dart';
@@ -136,6 +137,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   /// 러닝이 끝나 홈으로 돌아오면 성장과 최근 목표를 다시 읽는다.
   /// [goal] 은 방금 끝난 러닝의 목표. 칩이 다시 읽기 전 값으로 잠깐 바뀌지 않게 먼저 둔다.
   void _refreshAfterRun({RunGoal? goal}) {
+    // 방금 달렸으니 쉬는 날 알림을 새 기준으로 다시 예약한다(F27).
+    ref.read(reminderServiceProvider).refresh();
     ref.invalidate(growthStateProvider);
     ref.invalidate(lastRunGoalProvider);
     ref.invalidate(coinBalanceProvider);
@@ -272,9 +275,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         _goal ??
         ref.watch(lastRunGoalProvider).value ??
         const DistanceGoal(3000);
-    final nextLevelKm = g == null
-        ? null
-        : (g.level.xpForNext - g.level.xpIntoLevel) / 10;
+    final nextLevelKm = g?.kmToNextLevel;
     return SafeArea(
       child: Stack(
         children: [

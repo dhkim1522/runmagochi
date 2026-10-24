@@ -31,6 +31,15 @@ void main() {
     expect(await db.select(db.profiles).get(), hasLength(1));
   });
 
+  test('쉬는 날 알림은 행이 없어도 켜져 있고 끄고 켤 수 있다', () async {
+    expect(await repo.reminder(), isTrue);
+    expect(await db.select(db.profiles).get(), isEmpty);
+    await repo.setReminder(false);
+    expect(await repo.reminder(), isFalse);
+    await repo.setReminder(true);
+    expect(await repo.reminder(), isTrue);
+  });
+
   test('화면 모드는 행이 없어도 시스템이고 바꾸면 저장된다', () async {
     expect(await repo.themeMode(), ThemeMode.system);
     expect(await db.select(db.profiles).get(), isEmpty);

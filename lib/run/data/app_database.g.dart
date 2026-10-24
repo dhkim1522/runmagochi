@@ -3599,6 +3599,21 @@ class $ProfilesTable extends Profiles with TableInfo<$ProfilesTable, Profile> {
     requiredDuringInsert: false,
     defaultValue: const Constant('system'),
   );
+  static const VerificationMeta _reminderMeta = const VerificationMeta(
+    'reminder',
+  );
+  @override
+  late final GeneratedColumn<bool> reminder = GeneratedColumn<bool>(
+    'reminder',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("reminder" IN (0, 1))',
+    ),
+    defaultValue: const Constant(true),
+  );
   static const VerificationMeta _createdAtMeta = const VerificationMeta(
     'createdAt',
   );
@@ -3639,6 +3654,7 @@ class $ProfilesTable extends Profiles with TableInfo<$ProfilesTable, Profile> {
     onboardedAt,
     voiceGuide,
     themeMode,
+    reminder,
     createdAt,
     updatedAt,
     deletedAt,
@@ -3685,6 +3701,12 @@ class $ProfilesTable extends Profiles with TableInfo<$ProfilesTable, Profile> {
       context.handle(
         _themeModeMeta,
         themeMode.isAcceptableOrUnknown(data['theme_mode']!, _themeModeMeta),
+      );
+    }
+    if (data.containsKey('reminder')) {
+      context.handle(
+        _reminderMeta,
+        reminder.isAcceptableOrUnknown(data['reminder']!, _reminderMeta),
       );
     }
     if (data.containsKey('created_at')) {
@@ -3738,6 +3760,10 @@ class $ProfilesTable extends Profiles with TableInfo<$ProfilesTable, Profile> {
         DriftSqlType.string,
         data['${effectivePrefix}theme_mode'],
       )!,
+      reminder: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}reminder'],
+      )!,
       createdAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}created_at'],
@@ -3769,6 +3795,9 @@ class Profile extends DataClass implements Insertable<Profile> {
 
   /// 화면 모드: `system`·`light`·`dark`. 기본은 시스템 설정을 따른다.
   final String themeMode;
+
+  /// 쉬는 날 캐릭터 알림(F27). 기본으로 켜져 있다.
+  final bool reminder;
   final DateTime createdAt;
   final DateTime updatedAt;
   final DateTime? deletedAt;
@@ -3778,6 +3807,7 @@ class Profile extends DataClass implements Insertable<Profile> {
     this.onboardedAt,
     required this.voiceGuide,
     required this.themeMode,
+    required this.reminder,
     required this.createdAt,
     required this.updatedAt,
     this.deletedAt,
@@ -3794,6 +3824,7 @@ class Profile extends DataClass implements Insertable<Profile> {
     }
     map['voice_guide'] = Variable<bool>(voiceGuide);
     map['theme_mode'] = Variable<String>(themeMode);
+    map['reminder'] = Variable<bool>(reminder);
     map['created_at'] = Variable<DateTime>(createdAt);
     map['updated_at'] = Variable<DateTime>(updatedAt);
     if (!nullToAbsent || deletedAt != null) {
@@ -3813,6 +3844,7 @@ class Profile extends DataClass implements Insertable<Profile> {
           : Value(onboardedAt),
       voiceGuide: Value(voiceGuide),
       themeMode: Value(themeMode),
+      reminder: Value(reminder),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
       deletedAt: deletedAt == null && nullToAbsent
@@ -3832,6 +3864,7 @@ class Profile extends DataClass implements Insertable<Profile> {
       onboardedAt: serializer.fromJson<DateTime?>(json['onboardedAt']),
       voiceGuide: serializer.fromJson<bool>(json['voiceGuide']),
       themeMode: serializer.fromJson<String>(json['themeMode']),
+      reminder: serializer.fromJson<bool>(json['reminder']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
       deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
@@ -3846,6 +3879,7 @@ class Profile extends DataClass implements Insertable<Profile> {
       'onboardedAt': serializer.toJson<DateTime?>(onboardedAt),
       'voiceGuide': serializer.toJson<bool>(voiceGuide),
       'themeMode': serializer.toJson<String>(themeMode),
+      'reminder': serializer.toJson<bool>(reminder),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
       'deletedAt': serializer.toJson<DateTime?>(deletedAt),
@@ -3858,6 +3892,7 @@ class Profile extends DataClass implements Insertable<Profile> {
     Value<DateTime?> onboardedAt = const Value.absent(),
     bool? voiceGuide,
     String? themeMode,
+    bool? reminder,
     DateTime? createdAt,
     DateTime? updatedAt,
     Value<DateTime?> deletedAt = const Value.absent(),
@@ -3867,6 +3902,7 @@ class Profile extends DataClass implements Insertable<Profile> {
     onboardedAt: onboardedAt.present ? onboardedAt.value : this.onboardedAt,
     voiceGuide: voiceGuide ?? this.voiceGuide,
     themeMode: themeMode ?? this.themeMode,
+    reminder: reminder ?? this.reminder,
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
     deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
@@ -3882,6 +3918,7 @@ class Profile extends DataClass implements Insertable<Profile> {
           ? data.voiceGuide.value
           : this.voiceGuide,
       themeMode: data.themeMode.present ? data.themeMode.value : this.themeMode,
+      reminder: data.reminder.present ? data.reminder.value : this.reminder,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
       deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
@@ -3896,6 +3933,7 @@ class Profile extends DataClass implements Insertable<Profile> {
           ..write('onboardedAt: $onboardedAt, ')
           ..write('voiceGuide: $voiceGuide, ')
           ..write('themeMode: $themeMode, ')
+          ..write('reminder: $reminder, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('deletedAt: $deletedAt')
@@ -3910,6 +3948,7 @@ class Profile extends DataClass implements Insertable<Profile> {
     onboardedAt,
     voiceGuide,
     themeMode,
+    reminder,
     createdAt,
     updatedAt,
     deletedAt,
@@ -3923,6 +3962,7 @@ class Profile extends DataClass implements Insertable<Profile> {
           other.onboardedAt == this.onboardedAt &&
           other.voiceGuide == this.voiceGuide &&
           other.themeMode == this.themeMode &&
+          other.reminder == this.reminder &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt &&
           other.deletedAt == this.deletedAt);
@@ -3934,6 +3974,7 @@ class ProfilesCompanion extends UpdateCompanion<Profile> {
   final Value<DateTime?> onboardedAt;
   final Value<bool> voiceGuide;
   final Value<String> themeMode;
+  final Value<bool> reminder;
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
   final Value<DateTime?> deletedAt;
@@ -3944,6 +3985,7 @@ class ProfilesCompanion extends UpdateCompanion<Profile> {
     this.onboardedAt = const Value.absent(),
     this.voiceGuide = const Value.absent(),
     this.themeMode = const Value.absent(),
+    this.reminder = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.deletedAt = const Value.absent(),
@@ -3955,6 +3997,7 @@ class ProfilesCompanion extends UpdateCompanion<Profile> {
     this.onboardedAt = const Value.absent(),
     this.voiceGuide = const Value.absent(),
     this.themeMode = const Value.absent(),
+    this.reminder = const Value.absent(),
     required DateTime createdAt,
     required DateTime updatedAt,
     this.deletedAt = const Value.absent(),
@@ -3968,6 +4011,7 @@ class ProfilesCompanion extends UpdateCompanion<Profile> {
     Expression<DateTime>? onboardedAt,
     Expression<bool>? voiceGuide,
     Expression<String>? themeMode,
+    Expression<bool>? reminder,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
     Expression<DateTime>? deletedAt,
@@ -3979,6 +4023,7 @@ class ProfilesCompanion extends UpdateCompanion<Profile> {
       if (onboardedAt != null) 'onboarded_at': onboardedAt,
       if (voiceGuide != null) 'voice_guide': voiceGuide,
       if (themeMode != null) 'theme_mode': themeMode,
+      if (reminder != null) 'reminder': reminder,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (deletedAt != null) 'deleted_at': deletedAt,
@@ -3992,6 +4037,7 @@ class ProfilesCompanion extends UpdateCompanion<Profile> {
     Value<DateTime?>? onboardedAt,
     Value<bool>? voiceGuide,
     Value<String>? themeMode,
+    Value<bool>? reminder,
     Value<DateTime>? createdAt,
     Value<DateTime>? updatedAt,
     Value<DateTime?>? deletedAt,
@@ -4003,6 +4049,7 @@ class ProfilesCompanion extends UpdateCompanion<Profile> {
       onboardedAt: onboardedAt ?? this.onboardedAt,
       voiceGuide: voiceGuide ?? this.voiceGuide,
       themeMode: themeMode ?? this.themeMode,
+      reminder: reminder ?? this.reminder,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       deletedAt: deletedAt ?? this.deletedAt,
@@ -4028,6 +4075,9 @@ class ProfilesCompanion extends UpdateCompanion<Profile> {
     if (themeMode.present) {
       map['theme_mode'] = Variable<String>(themeMode.value);
     }
+    if (reminder.present) {
+      map['reminder'] = Variable<bool>(reminder.value);
+    }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
@@ -4051,6 +4101,7 @@ class ProfilesCompanion extends UpdateCompanion<Profile> {
           ..write('onboardedAt: $onboardedAt, ')
           ..write('voiceGuide: $voiceGuide, ')
           ..write('themeMode: $themeMode, ')
+          ..write('reminder: $reminder, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('deletedAt: $deletedAt, ')
@@ -7983,6 +8034,7 @@ typedef $$ProfilesTableCreateCompanionBuilder =
       Value<DateTime?> onboardedAt,
       Value<bool> voiceGuide,
       Value<String> themeMode,
+      Value<bool> reminder,
       required DateTime createdAt,
       required DateTime updatedAt,
       Value<DateTime?> deletedAt,
@@ -7995,6 +8047,7 @@ typedef $$ProfilesTableUpdateCompanionBuilder =
       Value<DateTime?> onboardedAt,
       Value<bool> voiceGuide,
       Value<String> themeMode,
+      Value<bool> reminder,
       Value<DateTime> createdAt,
       Value<DateTime> updatedAt,
       Value<DateTime?> deletedAt,
@@ -8032,6 +8085,11 @@ class $$ProfilesTableFilterComposer
 
   ColumnFilters<String> get themeMode => $composableBuilder(
     column: $table.themeMode,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get reminder => $composableBuilder(
+    column: $table.reminder,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -8085,6 +8143,11 @@ class $$ProfilesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<bool> get reminder => $composableBuilder(
+    column: $table.reminder,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
@@ -8129,6 +8192,9 @@ class $$ProfilesTableAnnotationComposer
   GeneratedColumn<String> get themeMode =>
       $composableBuilder(column: $table.themeMode, builder: (column) => column);
 
+  GeneratedColumn<bool> get reminder =>
+      $composableBuilder(column: $table.reminder, builder: (column) => column);
+
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
 
@@ -8172,6 +8238,7 @@ class $$ProfilesTableTableManager
                 Value<DateTime?> onboardedAt = const Value.absent(),
                 Value<bool> voiceGuide = const Value.absent(),
                 Value<String> themeMode = const Value.absent(),
+                Value<bool> reminder = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<DateTime?> deletedAt = const Value.absent(),
@@ -8182,6 +8249,7 @@ class $$ProfilesTableTableManager
                 onboardedAt: onboardedAt,
                 voiceGuide: voiceGuide,
                 themeMode: themeMode,
+                reminder: reminder,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 deletedAt: deletedAt,
@@ -8194,6 +8262,7 @@ class $$ProfilesTableTableManager
                 Value<DateTime?> onboardedAt = const Value.absent(),
                 Value<bool> voiceGuide = const Value.absent(),
                 Value<String> themeMode = const Value.absent(),
+                Value<bool> reminder = const Value.absent(),
                 required DateTime createdAt,
                 required DateTime updatedAt,
                 Value<DateTime?> deletedAt = const Value.absent(),
@@ -8204,6 +8273,7 @@ class $$ProfilesTableTableManager
                 onboardedAt: onboardedAt,
                 voiceGuide: voiceGuide,
                 themeMode: themeMode,
+                reminder: reminder,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 deletedAt: deletedAt,

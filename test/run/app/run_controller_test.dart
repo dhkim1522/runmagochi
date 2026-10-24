@@ -163,6 +163,10 @@ class _FakeProfileRepository implements ProfileRepository {
   @override
   Future<void> setVoiceGuide(bool on) async => voice = on;
   @override
+  Future<bool> reminder() async => true;
+  @override
+  Future<void> setReminder(bool on) async {}
+  @override
   Future<ThemeMode> themeMode() async => ThemeMode.system;
   @override
   Future<void> setThemeMode(ThemeMode mode) async {}

@@ -13,6 +13,7 @@ import '../../core/home_tab.dart';
 import '../../core/theme.dart';
 import '../../core/ui/components.dart';
 import '../../profile/app/providers.dart';
+import '../../reminder/app/providers.dart';
 
 /// 체중(kg). 입력하지 않았으면 null. 저장하거나 가져온 뒤 invalidate 한다.
 final _weightProvider = FutureProvider.autoDispose<double?>(
@@ -22,6 +23,11 @@ final _weightProvider = FutureProvider.autoDispose<double?>(
 /// 러닝 중 음성 안내 켜짐 여부. 저장하거나 가져온 뒤 invalidate 한다.
 final _voiceProvider = FutureProvider.autoDispose<bool>(
   (ref) => ref.read(profileRepositoryProvider).voiceGuide(),
+);
+
+/// 쉬는 날 캐릭터 알림 켜짐 여부(F27). 저장하거나 가져온 뒤 invalidate 한다.
+final _reminderProvider = FutureProvider.autoDispose<bool>(
+  (ref) => ref.read(profileRepositoryProvider).reminder(),
 );
 
 /// 체중으로 받을 수 있는 범위(kg).
@@ -34,7 +40,7 @@ String _kgLabel(double kg) {
   return r == r.roundToDouble() ? r.toInt().toString() : r.toStringAsFixed(1);
 }
 
-/// 설정: 체중, 아바타 이름, 음성 안내, 화면 모드, 백업 내보내기·가져오기, 초기화, 정보.
+/// 설정: 체중, 아바타 이름, 음성 안내, 쉬는 날 알림, 화면 모드, 백업 내보내기·가져오기, 초기화, 정보.
 /// 홈 오른쪽 위 톱니로 들어온다. 시안 design/mockups/Settings.dc.html
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
@@ -76,6 +82,17 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       _toast('음성 안내를 바꾸지 못했어요');
     }
     if (mounted) ref.invalidate(_voiceProvider);
+  }
+
+  Future<void> _setReminder(bool on) async {
+    try {
+      await ref.read(profileRepositoryProvider).setReminder(on);
+    } catch (_) {
+      _toast('알림 설정을 바꾸지 못했어요');
+    }
+    if (mounted) ref.invalidate(_reminderProvider);
+    // 켜면 최근 러닝 기준으로 예약하고, 끄면 예약을 지운다.
+    await ref.read(reminderServiceProvider).refresh();
   }
 
   Future<void> _setThemeMode(ThemeMode mode) async {
@@ -120,7 +137,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           refreshAfterImport(ref);
           ref.invalidate(_weightProvider);
           ref.invalidate(_voiceProvider);
+          ref.invalidate(_reminderProvider);
           ref.invalidate(themeModeProvider);
+          ref.read(reminderServiceProvider).refresh();
         }
         _toast(doneMessage);
       case BackupCancelled():
@@ -197,6 +216,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       case BackupDone():
         refreshAfterImport(ref);
         ref.invalidate(homeTabProvider);
+        // 러닝이 없어졌으니 예약해 둔 쉬는 날 알림도 지운다.
+        ref.read(reminderServiceProvider).refresh();
         // 첫 실행 게이트가 다시 읽어 첫 실행 화면을 띄운다. 설정은 닫는다.
         ref.invalidate(onboardedProvider);
         Navigator.of(context).popUntil((route) => route.isFirst);
@@ -222,6 +243,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final GrowthState? g = ref.watch(growthStateProvider).value;
     final weight = ref.watch(_weightProvider);
     final voice = ref.watch(_voiceProvider);
+    final reminder = ref.watch(_reminderProvider);
     final themeMode = ref.watch(themeModeProvider);
     final weightLabel = switch (weight) {
       AsyncData(:final value) =>
@@ -277,6 +299,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     subtitle: '러닝 중 거리와 시간을 말로 알려줘요',
                     value: voice.value ?? true,
                     onChanged: voice.hasValue ? _setVoice : null,
+                  ),
+                  _SwitchRow(
+                    title: '쉬는 날 알림',
+                    subtitle: '며칠 쉬면 캐릭터가 한 번 불러요',
+                    value: reminder.value ?? true,
+                    onChanged: reminder.hasValue ? _setReminder : null,
                   ),
                 ],
               ),

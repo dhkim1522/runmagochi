@@ -284,9 +284,13 @@ class FakeGrowthService implements GrowthService {
         );
   }
 
+  /// true 면 load 가 실패한다.
+  bool failLoad = false;
+
   @override
   Future<GrowthState> load() async {
     loads++;
+    if (failLoad) throw StateError('load failed');
     final hold = holdLoad;
     if (hold != null) await hold.future;
     return state;
@@ -348,6 +352,13 @@ class FakeProfile implements ProfileRepository {
   bool markFails = false;
 
   bool voice = true;
+  bool reminderOn = true;
+
+  @override
+  Future<bool> reminder() async => reminderOn;
+
+  @override
+  Future<void> setReminder(bool on) async => reminderOn = on;
 
   @override
   Future<bool> voiceGuide() async => voice;

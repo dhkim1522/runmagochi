@@ -1,6 +1,6 @@
 # 데이터 모델 (ERD)
 
-> 기기의 SQLite(drift)에 저장하는 테이블 10개와 관계. 원본은 `lib/run/data/app_database.dart` 이고(스키마 7판), 이 문서의 테이블 목록은 `test/docs/data_model_doc_test.dart` 가 코드와 같은지 검사한다. 필드 설명과 규칙은 [설계서](architecture.md#데이터-모델), 계산 규칙은 [게임 규칙](specs/game-rules.md) (2026-10-23).
+> 기기의 SQLite(drift)에 저장하는 테이블 10개와 관계. 원본은 `lib/run/data/app_database.dart` 이고(스키마 8판), 이 문서의 테이블 목록은 `test/docs/data_model_doc_test.dart` 가 코드와 같은지 검사한다. 필드 설명과 규칙은 [설계서](architecture.md#데이터-모델), 계산 규칙은 [게임 규칙](specs/game-rules.md) (2026-10-23).
 
 ## ERD
 
@@ -57,6 +57,7 @@ erDiagram
         datetime onboardedAt
         bool voiceGuide
         text themeMode "system | light | dark"
+        bool reminder
     }
     WeeklyGoals {
         text id PK
@@ -116,8 +117,9 @@ erDiagram
 | 5 | 4 | CoinTxns, OwnedItems, Avatars.hatItemId·accessoryItemId |
 | 6 | 5 | Runs.goalSec (시간 목표), Profiles.voiceGuide, Badges |
 | 7 | 6 | Profiles.themeMode (화면 모드) |
+| 8 | 9 | Profiles.reminder (쉬는 날 알림) |
 
-업그레이드는 `onUpgrade` 에서 판마다 단계적으로 실행한다. 백업 파일 형식도 같은 7판이고 이전 판 백업을 가져온다 ([백업과 복원](architecture.md#백업과-복원)).
+업그레이드는 `onUpgrade` 에서 판마다 단계적으로 실행한다. 백업 파일 형식도 같은 8판이고 이전 판 백업을 가져온다 ([백업과 복원](architecture.md#백업과-복원)).
 
 ## 서버 이전을 위한 설계
 

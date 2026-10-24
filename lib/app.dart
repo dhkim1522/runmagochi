@@ -8,6 +8,7 @@ import 'core/theme.dart';
 import 'core/ui/components.dart';
 import 'onboarding/ui/onboarding_screen.dart';
 import 'profile/app/providers.dart';
+import 'reminder/app/providers.dart';
 import 'run/ui/history_screen.dart';
 import 'run/ui/home_screen.dart';
 import 'shop/ui/shop_screen.dart';
@@ -45,12 +46,16 @@ class _OnboardingGateState extends ConsumerState<_OnboardingGate> {
     _cancelOldReminders();
   }
 
-  /// 이전 버전이 예약해 둔 주간 알림을 지운다. 기다리지 않고, 실패는 로그만 남긴다.
+  /// 이전 버전이 예약해 둔 주간 알림을 지운 뒤 쉬는 날 알림(F27)을 다시 예약한다.
+  /// 예약 취소는 대기 중인 알림을 모두 지우므로 반드시 그다음에 예약한다.
+  /// 기다리지 않고, 실패는 로그만 남긴다.
   void _cancelOldReminders() {
+    final reminders = ref.read(reminderServiceProvider);
     ref
         .read(notificationSchedulerProvider)
         .cancelScheduled()
-        .catchError((Object e) => debugPrint('알림: 예약 취소 실패 $e'));
+        .catchError((Object e) => debugPrint('알림: 예약 취소 실패 $e'))
+        .then((_) => reminders.refresh());
   }
 
   @override

@@ -17,21 +17,21 @@ void main() {
   test('encode 후 decode 하면 같은 값이다', () {
     final back = BackupCodec.decode(BackupCodec.encode(data));
     expect(back.exportedAt, data.exportedAt);
-    expect(back.schemaVersion, 7);
+    expect(back.schemaVersion, 8);
     expect(back.tables, data.tables);
   });
 
-  test('schemaVersion 3~7 은 받고 2 와 8 은 거부한다', () {
+  test('schemaVersion 3~8 은 받고 2 와 9 는 거부한다', () {
     String withSchema(int v) {
       final m = jsonDecode(BackupCodec.encode(data)) as Map<String, dynamic>;
       m['schemaVersion'] = v;
       return jsonEncode(m);
     }
 
-    for (final v in [3, 4, 5, 6, 7]) {
+    for (final v in [3, 4, 5, 6, 7, 8]) {
       expect(BackupCodec.decode(withSchema(v)).schemaVersion, v);
     }
-    for (final v in [2, 8]) {
+    for (final v in [2, 9]) {
       expect(
         () => BackupCodec.decode(withSchema(v)),
         throwsA(isA<BackupFormatException>()),

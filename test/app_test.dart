@@ -12,6 +12,8 @@ import 'package:runmagochi/core/ui/components.dart' show AppTabBar;
 import 'package:runmagochi/run/ui/in_run_screen.dart';
 import 'package:runmagochi/onboarding/ui/onboarding_screen.dart';
 import 'package:runmagochi/profile/app/providers.dart';
+import 'package:runmagochi/reminder/app/providers.dart';
+import 'package:runmagochi/reminder/app/reminder_service.dart';
 import 'package:runmagochi/shop/app/providers.dart';
 import 'package:runmagochi/run/app/permission_gate.dart';
 import 'package:runmagochi/run/app/providers.dart';
@@ -207,10 +209,13 @@ void main() {
       required FakeGrowthService growth,
       required FakeController controller,
       BackupService? backup,
+      ReminderService? reminders,
     }) => ProviderScope(
       key: UniqueKey(),
       overrides: [
         if (backup != null) backupServiceProvider.overrideWithValue(backup),
+        if (reminders != null)
+          reminderServiceProvider.overrideWithValue(reminders),
         runControllerProvider.overrideWith(() => controller),
         runRepositoryProvider.overrideWithValue(FakeRepo((0, 0))),
         permissionGateProvider.overrideWithValue(FakeGate(GateResult.ready)),
@@ -323,10 +328,12 @@ void main() {
       expect(find.text('러닝'), findsOneWidget);
     });
 
-    testWidgets('시작할 때 예약 알림 취소를 한 번만 부른다', (tester) async {
+    testWidgets('시작할 때 예약 알림 취소를 한 번만 부르고 그 뒤에 쉬는 날 알림을 예약한다', (tester) async {
       final scheduler = FakeNotificationScheduler();
+      final reminders = _Reminders(scheduler);
       await tester.pumpWidget(
         app(
+          reminders: reminders,
           scheduler: scheduler,
           profile: FakeProfile(),
           repo: FakeOnboardingGrowthRepo(kind: AvatarKind.acorn),
@@ -336,6 +343,8 @@ void main() {
       );
       await settle(tester);
       expect(scheduler.cancels, 1);
+      // 예약 취소가 대기 중인 알림을 모두 지우므로 쉬는 날 알림은 그 뒤에 예약한다.
+      expect(reminders.cancelsBeforeRefresh, [1]);
     });
 
     testWidgets('예약 알림 취소가 실패해도 앱은 홈을 보여 준다', (tester) async {
@@ -366,6 +375,20 @@ class _ResetBackup implements BackupService {
     profile.onboarded = false;
     return const BackupDone();
   }
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) =>
+      throw UnimplementedError('${invocation.memberName}');
+}
+
+/// 다시 예약할 때마다 그때까지의 예약 취소 횟수를 남긴다.
+class _Reminders implements ReminderService {
+  _Reminders(this.scheduler);
+  final FakeNotificationScheduler scheduler;
+  final cancelsBeforeRefresh = <int>[];
+
+  @override
+  Future<void> refresh() async => cancelsBeforeRefresh.add(scheduler.cancels);
 
   @override
   dynamic noSuchMethod(Invocation invocation) =>

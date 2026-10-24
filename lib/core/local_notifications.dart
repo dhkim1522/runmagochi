@@ -17,10 +17,13 @@ abstract final class NotificationIds {
   /// 지우고 방금 띄운 자동 종료 알림은 남긴다.
   static const goalReached = 1002;
 
+  /// 쉬는 날 캐릭터 알림(F27). 예약은 하나만 둔다.
+  static const reminder = 1003;
+
   /// 러닝 진행 알림. `GeolocatorLocationService.ONGOING_NOTIFICATION_ID`.
   static const runProgress = 75415;
 
-  static const all = [autoEnd, endWarning, goalReached, runProgress];
+  static const all = [autoEnd, endWarning, goalReached, reminder, runProgress];
 }
 
 /// 플러그인마다 한 번만 초기화한다.
