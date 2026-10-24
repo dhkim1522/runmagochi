@@ -4,10 +4,11 @@
 
 ## 현재 상태
 
+- **페이즈 9 첫 개선(사용자 iPhone 사용 의견, 결정 0036)**: 설정 › 초기화(`모든 기록 지우고 처음부터`, 기록·캐릭터를 지우고 첫 실행으로, 체중·음성 안내·화면 모드는 남김) 추가, 첫 실행 1장의 "걷다 뛰다 OK" 카드 제거. 테스트 1,384개 통과. 에뮬레이터에서 초기화→첫 실행→홈 Lv.1·코인 0 확인 뒤 예시 데이터 다시 넣음. 화면설계서 01(첫 실행)·34(설정) 컷은 다음 촬영 때 바꾼다.
 - **페이즈 8 산출물 정리 완료** (`docs/plans/phase-8.md`, 상태 `완료`, 2026-10-24). 다음은 페이즈 9 실기기 테스트.
 - 산출물 13종 사용자 승인: [현황표](docs/portfolio.md). 화면 64컷 전체 재촬영, README 스크린샷 6장 + 러닝 GIF(`design/readme/run.gif`, 926KB), 문서 지도 갱신 완료.
 - 문서 표본 확인: 시퀀스 1(러닝 기록~보상)을 코드와 대조해 일치. ERD 는 `test/docs/data_model_doc_test.dart` 가 자동 대조.
-- 자동 검증: `fvm flutter test` 1,372개 통과, `fvm dart analyze` 문제 없음, 디버그 APK 빌드 통과, mermaid 문법 검사 전부 통과, 문서 상대 링크 끊김 0.
+- 자동 검증: `fvm flutter test` 1,372개 통과(페이즈 8 끝), `fvm dart analyze` 문제 없음, 디버그 APK 빌드 통과, mermaid 문법 검사 전부 통과, 문서 상대 링크 끊김 0.
 - 저장소 공개(2026-10-24) + GitHub Pages(main 루트, `.nojekyll`): https://dhkim1522.github.io/runmagochi/ → 포트폴리오로 넘어간다.
 - 포트폴리오 `design/portfolio/index.html`: 한 장짜리 앱 소개 + GitHub 저장소 링크만. 산출물 목록은 넣지 않는다.
 - 산출물 형식: 볼거리(화면설계서 `design/screens/`, 디자인 시스템 `docs/design/design-system/index.html`, UI 후보 비교 `design/mockups/phase-6/compare/`, 캐릭터 에셋 `design/character/asset-catalog.html`)는 HTML, 다이어그램 문서(ERD·시퀀스·흐름·아키텍처·결정)는 md(mermaid). README 의 HTML 링크는 Pages 주소.

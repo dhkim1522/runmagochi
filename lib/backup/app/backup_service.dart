@@ -91,6 +91,19 @@ class BackupService {
     return const BackupDone();
   }
 
+  /// 기록·캐릭터 데이터를 지우고 첫 실행으로 돌아갈 준비를 한다. 설정값은 남긴다.
+  /// 화면(설정)은 부르기 전에 확인을 받고, 성공하면 첫 실행 화면을 다시 띄운다.
+  Future<BackupResult> reset() async {
+    try {
+      if (await _isRunActive()) return const BackupBlockedByRun();
+      // 도는 중인 성장 계산이 지운 뒤에 옛 경험치를 쓰지 않도록 같은 줄에서 지운다.
+      await _growth.exclusive(() => _repository.resetData(_clock()));
+      return const BackupDone();
+    } catch (_) {
+      return const BackupFailed('데이터를 지우지 못했어요');
+    }
+  }
+
   /// `runmagochi-backup-YYYYMMDD.json` (기기 로컬 날짜).
   static String fileName(DateTime now) {
     final d = now.toLocal();

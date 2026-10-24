@@ -9,6 +9,7 @@ import '../../backup/app/backup_service.dart';
 import '../../backup/app/providers.dart';
 import '../../backup/ui/refresh_after_import.dart';
 import '../../core/app_info.dart';
+import '../../core/home_tab.dart';
 import '../../core/theme.dart';
 import '../../core/ui/components.dart';
 import '../../profile/app/providers.dart';
@@ -33,7 +34,7 @@ String _kgLabel(double kg) {
   return r == r.roundToDouble() ? r.toInt().toString() : r.toStringAsFixed(1);
 }
 
-/// 설정: 체중, 아바타 이름, 백업 내보내기·가져오기, 정보.
+/// 설정: 체중, 아바타 이름, 음성 안내, 화면 모드, 백업 내보내기·가져오기, 초기화, 정보.
 /// 홈 오른쪽 위 톱니로 들어온다. 시안 design/mockups/Settings.dc.html
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
@@ -158,6 +159,55 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     await _runBackup((s) => s.import(), '백업을 가져왔어요', refresh: true);
   }
 
+  /// 기록·캐릭터를 지우고 첫 실행 화면으로 돌아간다. 설정값은 남는다.
+  Future<void> _reset() async {
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('모든 기록을 지울까요?'),
+        content: const Text(
+          '러닝 기록·캐릭터·경험치·코인·아이템·배지가 모두 지워져요. 되돌릴 수 없으니 필요하면 먼저 백업을 내보내 주세요.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('취소'),
+          ),
+          TextButton(
+            style: TextButton.styleFrom(
+              foregroundColor: AppColors.of(context).danger,
+            ),
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('지우기'),
+          ),
+        ],
+      ),
+    );
+    if (ok != true || !mounted) return;
+    setState(() => _backupBusy = true);
+    final BackupResult result;
+    try {
+      result = await ref.read(backupServiceProvider).reset();
+    } finally {
+      if (mounted) setState(() => _backupBusy = false);
+    }
+    if (!mounted) return;
+    switch (result) {
+      case BackupDone():
+        refreshAfterImport(ref);
+        ref.invalidate(homeTabProvider);
+        // 첫 실행 게이트가 다시 읽어 첫 실행 화면을 띄운다. 설정은 닫는다.
+        ref.invalidate(onboardedProvider);
+        Navigator.of(context).popUntil((route) => route.isFirst);
+      case BackupCancelled():
+        break;
+      case BackupBlockedByRun():
+        _toast('러닝 중에는 할 수 없어요');
+      case BackupFailed(:final message):
+        _toast(message);
+    }
+  }
+
   void _openLicenses() => showLicensePage(
     context: context,
     applicationName: '런마고치',
@@ -271,6 +321,24 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                           ),
                         ),
                       ],
+                    ),
+                  ],
+                ),
+              ),
+              const _SectionLabel('초기화'),
+              AppCard(
+                padding: const EdgeInsets.all(Gap.s5),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Text(
+                      '기록과 캐릭터를 모두 지우고 캐릭터를 새로 만들어요. 체중·음성 안내·화면 모드는 남아요.',
+                      style: t.label.copyWith(color: c.inkMuted),
+                    ),
+                    const SizedBox(height: Gap.s4),
+                    AppButton.secondary(
+                      label: '모든 기록 지우고 처음부터',
+                      onPressed: _backupBusy ? null : _reset,
                     ),
                   ],
                 ),

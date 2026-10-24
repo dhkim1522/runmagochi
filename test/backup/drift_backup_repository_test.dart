@@ -523,4 +523,73 @@ void main() {
     );
     expect(await _dump(dst), before);
   });
+
+
+  test('초기화하면 기록·캐릭터 데이터를 모두 지우고 설정값은 남기며 첫 실행 표시를 지운다', () async {
+    await _seed(dst);
+    await (dst.update(dst.profiles)..where((p) => p.id.equals('pf'))).write(
+      ProfilesCompanion(
+        onboardedAt: Value(_t),
+        voiceGuide: const Value(false),
+        themeMode: const Value('dark'),
+      ),
+    );
+    await dst
+        .into(dst.coinTxns)
+        .insert(
+          CoinTxnsCompanion.insert(
+            id: 'c1',
+            amount: 10,
+            reason: 'distance',
+            runId: const Value('r1'),
+            createdAt: _t,
+            updatedAt: _t,
+          ),
+        );
+    await dst
+        .into(dst.ownedItems)
+        .insert(
+          OwnedItemsCompanion.insert(
+            id: 'o1',
+            itemId: 'cap',
+            createdAt: _t,
+            updatedAt: _t,
+          ),
+        );
+    await dst
+        .into(dst.badges)
+        .insert(
+          BadgesCompanion.insert(
+            id: 'b1',
+            badgeId: 'first_run',
+            runId: const Value('r1'),
+            earnedAt: _t,
+            createdAt: _t,
+            updatedAt: _t,
+          ),
+        );
+
+    await DriftBackupRepository(dst).resetData(_now);
+
+    expect(await dst.select(dst.runs).get(), isEmpty);
+    expect(await dst.select(dst.runPoints).get(), isEmpty);
+    expect(await dst.select(dst.splits).get(), isEmpty);
+    expect(await dst.select(dst.xpTxns).get(), isEmpty);
+    expect(await dst.select(dst.coinTxns).get(), isEmpty);
+    expect(await dst.select(dst.ownedItems).get(), isEmpty);
+    expect(await dst.select(dst.badges).get(), isEmpty);
+    expect(await dst.select(dst.weeklyGoals).get(), isEmpty);
+    expect(await dst.select(dst.avatars).get(), isEmpty);
+    final profile = (await dst.select(dst.profiles).get()).single;
+    expect(profile.weightKg, 70.5);
+    expect(profile.voiceGuide, isFalse);
+    expect(profile.themeMode, 'dark');
+    expect(profile.onboardedAt, isNull);
+    expect(profile.updatedAt, _now);
+  });
+
+  test('프로필이 없을 때 초기화해도 실패하지 않는다', () async {
+    await DriftBackupRepository(dst).resetData(_now);
+    expect(await dst.select(dst.profiles).get(), isEmpty);
+  });
 }

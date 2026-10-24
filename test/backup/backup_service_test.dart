@@ -55,8 +55,15 @@ class _Growth implements GrowthService {
     );
   }
 
+  int exclusives = 0;
+  bool failExclusive = false;
+
   @override
-  Future<T> exclusive<T>(Future<T> Function() job) => job();
+  Future<T> exclusive<T>(Future<T> Function() job) {
+    exclusives++;
+    if (failExclusive) throw StateError('exclusive');
+    return job();
+  }
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
@@ -264,5 +271,30 @@ void main() {
     growth.fail = true;
     expect(await service(dst).import(), isA<BackupDone>());
     expect(await _runIds(dst), ['new']);
+  });
+
+
+  test('초기화하면 성장 계산과 같은 줄에서 데이터를 지운다', () async {
+    await _addRun(dst, 'old');
+    expect(await service(dst).reset(), isA<BackupDone>());
+    expect(await _runIds(dst), isEmpty);
+    expect(growth.exclusives, 1);
+    expect(files.picks, 0);
+  });
+
+  test('러닝 중에는 초기화를 막고 데이터는 그대로다', () async {
+    await _addRun(dst, 'old');
+    active = true;
+    expect(await service(dst).reset(), isA<BackupBlockedByRun>());
+    expect(await _runIds(dst), ['old']);
+  });
+
+  test('초기화 중 오류가 나면 실패 메시지를 돌려준다', () async {
+    await _addRun(dst, 'old');
+    growth.failExclusive = true;
+    final r = await service(dst).reset();
+    expect(r, isA<BackupFailed>());
+    expect((r as BackupFailed).message, '데이터를 지우지 못했어요');
+    expect(await _runIds(dst), ['old']);
   });
 }

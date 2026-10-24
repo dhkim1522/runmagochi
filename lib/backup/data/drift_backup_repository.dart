@@ -103,17 +103,8 @@ class DriftBackupRepository implements BackupRepository {
     }
 
     await _db.transaction(() async {
-      // 자식 먼저 지운다.
-      await _db.delete(_db.runPoints).go();
-      await _db.delete(_db.splits).go();
-      await _db.delete(_db.xpTxns).go();
-      await _db.delete(_db.coinTxns).go();
-      await _db.delete(_db.ownedItems).go();
-      await _db.delete(_db.badges).go();
-      await _db.delete(_db.weeklyGoals).go();
-      await _db.delete(_db.avatars).go();
+      await _deleteData();
       await _db.delete(_db.profiles).go();
-      await _db.delete(_db.runs).go();
       // 부모 먼저 넣는다.
       for (final r in runs) {
         await _db.into(_db.runs).insert(r);
@@ -143,5 +134,33 @@ class DriftBackupRepository implements BackupRepository {
         await _db.into(_db.badges).insert(r);
       }
     });
+  }
+
+  @override
+  Future<void> resetData(DateTime now) => _db.transaction(() async {
+    await _deleteData();
+    // 아바타 행이 없으면 다음에 읽을 때 캐릭터를 새로 뽑는다.
+    await _db
+        .update(_db.profiles)
+        .write(
+          ProfilesCompanion(
+            onboardedAt: const Value(null),
+            updatedAt: Value(now),
+          ),
+        );
+  });
+
+  /// 프로필을 뺀 모든 테이블을 비운다. 트랜잭션 안에서 부른다.
+  Future<void> _deleteData() async {
+    // 자식 먼저 지운다.
+    await _db.delete(_db.runPoints).go();
+    await _db.delete(_db.splits).go();
+    await _db.delete(_db.xpTxns).go();
+    await _db.delete(_db.coinTxns).go();
+    await _db.delete(_db.ownedItems).go();
+    await _db.delete(_db.badges).go();
+    await _db.delete(_db.weeklyGoals).go();
+    await _db.delete(_db.avatars).go();
+    await _db.delete(_db.runs).go();
   }
 }

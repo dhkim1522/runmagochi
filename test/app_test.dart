@@ -5,6 +5,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:runmagochi/app.dart';
 import 'package:runmagochi/avatar/app/providers.dart';
 import 'package:runmagochi/avatar/domain/growth_rules.dart';
+import 'package:runmagochi/backup/app/backup_service.dart';
+import 'package:runmagochi/backup/app/providers.dart';
 import 'package:runmagochi/core/korean.dart';
 import 'package:runmagochi/core/ui/components.dart' show AppTabBar;
 import 'package:runmagochi/run/ui/in_run_screen.dart';
@@ -13,6 +15,7 @@ import 'package:runmagochi/profile/app/providers.dart';
 import 'package:runmagochi/shop/app/providers.dart';
 import 'package:runmagochi/run/app/permission_gate.dart';
 import 'package:runmagochi/run/app/providers.dart';
+import 'package:runmagochi/settings/ui/settings_screen.dart';
 
 import 'onboarding/onboarding_screen_test.dart' show FakeOnboardingGrowthRepo;
 import 'run/ui/fakes.dart';
@@ -203,9 +206,11 @@ void main() {
       required FakeOnboardingGrowthRepo repo,
       required FakeGrowthService growth,
       required FakeController controller,
+      BackupService? backup,
     }) => ProviderScope(
       key: UniqueKey(),
       overrides: [
+        if (backup != null) backupServiceProvider.overrideWithValue(backup),
         runControllerProvider.overrideWith(() => controller),
         runRepositoryProvider.overrideWithValue(FakeRepo((0, 0))),
         permissionGateProvider.overrideWithValue(FakeGate(GateResult.ready)),
@@ -274,6 +279,50 @@ void main() {
       expect(profile.marks, 1);
     });
 
+    testWidgets('설정에서 초기화하면 첫 실행 화면으로 돌아가고, 다시 마치면 홈이다', (tester) async {
+      tester.view.physicalSize = const Size(1170, 2532);
+      tester.view.devicePixelRatio = 3;
+      addTearDown(tester.view.reset);
+      final profile = FakeProfile();
+      final repo = FakeOnboardingGrowthRepo(kind: AvatarKind.acorn);
+      await tester.pumpWidget(
+        app(
+          profile: profile,
+          repo: repo,
+          growth: FakeGrowthService(growthState()),
+          controller: FakeController(),
+          backup: _ResetBackup(profile),
+        ),
+      );
+      await settle(tester);
+      expect(find.byType(OnboardingScreen), findsNothing);
+
+      await tester.tap(find.byKey(const ValueKey('home-settings')));
+      await settle(tester);
+      await tester.scrollUntilVisible(find.text('모든 기록 지우고 처음부터'), 200);
+      await tester.pump();
+      await tester.tap(find.text('모든 기록 지우고 처음부터'));
+      await settle(tester);
+      await tester.tap(
+        find.descendant(
+          of: find.byType(AlertDialog),
+          matching: find.text('지우기'),
+        ),
+      );
+      await settle(tester);
+
+      expect(find.byType(OnboardingScreen), findsOneWidget);
+      expect(find.byType(SettingsScreen), findsNothing);
+      expect(find.text('러닝'), findsNothing);
+
+      for (final label in ['다음', '시작하기']) {
+        await tester.tap(find.text(label));
+        await settle(tester);
+      }
+      expect(find.byType(OnboardingScreen), findsNothing);
+      expect(find.text('러닝'), findsOneWidget);
+    });
+
     testWidgets('시작할 때 예약 알림 취소를 한 번만 부른다', (tester) async {
       final scheduler = FakeNotificationScheduler();
       await tester.pumpWidget(
@@ -305,4 +354,20 @@ void main() {
       expect(find.text('러닝'), findsOneWidget);
     });
   });
+}
+
+/// 초기화하면 첫 실행 표시를 지운다(실제 저장소처럼).
+class _ResetBackup implements BackupService {
+  _ResetBackup(this.profile);
+  final FakeProfile profile;
+
+  @override
+  Future<BackupResult> reset() async {
+    profile.onboarded = false;
+    return const BackupDone();
+  }
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) =>
+      throw UnimplementedError('${invocation.memberName}');
 }

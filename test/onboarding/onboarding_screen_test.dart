@@ -127,7 +127,7 @@ bool enabled(WidgetTester tester, String label) => isSemantics(
 
 void main() {
   task15Tests();
-  testWidgets('1장: 종류별 1단계 소개 문구와 걷다 뛰다 OK 카드', (tester) async {
+  testWidgets('1장: 종류별 1단계 소개 문구만 있고 버튼처럼 보이는 안내 카드는 없다', (tester) async {
     for (final (kind, headline) in [
       (AvatarKind.chick, '병아리 알이 왔어요!'),
       (AvatarKind.jelly, '젤리 새싹이 왔어요!'),
@@ -137,8 +137,9 @@ void main() {
       expect(findText(headline), findsOneWidget, reason: '$kind');
       expect(findText('처음 만나는 러닝 친구'), findsOneWidget);
       expect(findText('달린 거리만큼 자라서 러닝화를 신고, 언젠가 마라토너가 돼요.'), findsOneWidget);
-      expect(findText('걷다 뛰다 OK'), findsOneWidget);
-      expect(findText('빨리 달리지 않아도 움직인 만큼 자라요.'), findsOneWidget);
+      expect(findText('걷다 뛰다 OK'), findsNothing);
+      expect(findText('빨리 달리지 않아도 움직인 만큼 자라요.'), findsNothing);
+      expect(find.byType(AppCard), findsNothing);
       expect(findText('이전'), findsNothing);
       expect(findText('다음'), findsOneWidget);
     }
@@ -333,7 +334,7 @@ void main() {
     addTearDown(tester.view.reset);
     await pumpOnboarding(tester, textScale: 1.3);
     expect(tester.takeException(), isNull);
-    expect(findText('걷다 뛰다 OK'), findsOneWidget);
+    expect(findText('처음 만나는 러닝 친구'), findsOneWidget);
     await next(tester);
     expect(tester.takeException(), isNull);
     await tester.enterText(find.byType(TextField), '가나다라마바사아자차');

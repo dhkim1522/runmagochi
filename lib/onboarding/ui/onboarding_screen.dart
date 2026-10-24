@@ -366,48 +366,6 @@ class _IntroPage extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(height: Gap.s5),
-          AppCard(
-            radius: Radii.md,
-            padding: const EdgeInsets.all(Gap.s4),
-            child: MergeSemantics(
-              child: Row(
-                children: [
-                  // 무대색 작은 판 위 무대 글자색 그림(무대 겹과 같은 말).
-                  ExcludeSemantics(
-                    child: DecoratedBox(
-                      decoration: BoxDecoration(
-                        color: c.stageSky,
-                        borderRadius: BorderRadius.circular(Radii.sm),
-                      ),
-                      child: SizedBox.square(
-                        dimension: 48,
-                        child: Icon(
-                          Icons.directions_walk,
-                          size: 28,
-                          color: c.stageInk,
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: Gap.s3),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text('걷다 뛰다 OK', style: t.heading),
-                        const SizedBox(height: 2),
-                        _KeepAllText(
-                          '빨리 달리지 않아도 움직인 만큼 자라요.',
-                          style: t.label.copyWith(color: c.inkMuted),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
         ],
       ),
     );

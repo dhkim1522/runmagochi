@@ -79,8 +79,16 @@ class _GrowthRepo implements GrowthRepository {
 class _Backup implements BackupService {
   BackupResult exportResult = const BackupDone();
   BackupResult importResult = const BackupDone();
+  BackupResult resetResult = const BackupDone();
   int exports = 0;
   int imports = 0;
+  int resets = 0;
+
+  @override
+  Future<BackupResult> reset() async {
+    resets++;
+    return resetResult;
+  }
 
   @override
   Future<BackupResult> export() async {
@@ -574,6 +582,85 @@ void main() {
       );
       await settle(tester);
       expect(find.text('러닝 중에는 할 수 없어요'), findsOneWidget);
+    });
+  });
+
+  group('초기화', () {
+    Future<void> openReset(WidgetTester tester) async {
+      await tester.scrollUntilVisible(find.text('모든 기록 지우고 처음부터'), 200);
+      await tester.pump();
+      await tester.tap(find.text('모든 기록 지우고 처음부터'));
+      await settle(tester);
+      expect(find.text('모든 기록을 지울까요?'), findsOneWidget);
+    }
+
+    Future<void> confirmReset(WidgetTester tester) async {
+      await tester.tap(
+        find.descendant(
+          of: find.byType(AlertDialog),
+          matching: find.text('지우기'),
+        ),
+      );
+      await settle(tester);
+    }
+
+    testWidgets('설명은 지우는 것과 남는 것을 말한다', (tester) async {
+      await pumpSettings(tester);
+      await tester.scrollUntilVisible(find.text('모든 기록 지우고 처음부터'), 200);
+      expect(find.text('초기화'), findsOneWidget);
+      expect(
+        find.text('기록과 캐릭터를 모두 지우고 캐릭터를 새로 만들어요. 체중·음성 안내·화면 모드는 남아요.'),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('확인 창에서 취소하면 서비스를 부르지 않는다', (tester) async {
+      final env = await pumpSettings(tester);
+      await openReset(tester);
+      await tester.tap(find.text('취소'));
+      await settle(tester);
+      expect(env.backup.resets, 0);
+      expect(find.byType(SettingsScreen), findsOneWidget);
+    });
+
+    testWidgets('지우기 버튼은 danger 색이다', (tester) async {
+      await pumpSettings(tester);
+      await openReset(tester);
+      final button = tester.widget<TextButton>(
+        find.ancestor(of: find.text('지우기'), matching: find.byType(TextButton)),
+      );
+      expect(
+        button.style!.foregroundColor!.resolve({}),
+        AppColors.light.danger,
+      );
+    });
+
+    testWidgets('확인하면 초기화하고 설정을 닫는다', (tester) async {
+      final env = await pumpSettings(tester);
+      await openReset(tester);
+      await confirmReset(tester);
+      expect(env.backup.resets, 1);
+      expect(find.byType(SettingsScreen), findsNothing);
+    });
+
+    testWidgets('러닝 중이라 막히면 알리고 설정에 남는다', (tester) async {
+      final env = SettingsEnv()
+        ..backup.resetResult = const BackupBlockedByRun();
+      await pumpSettings(tester, env: env);
+      await openReset(tester);
+      await confirmReset(tester);
+      expect(find.text('러닝 중에는 할 수 없어요'), findsOneWidget);
+      expect(find.byType(SettingsScreen), findsOneWidget);
+    });
+
+    testWidgets('실패하면 서비스의 문장을 보여 주고 설정에 남는다', (tester) async {
+      final env = SettingsEnv()
+        ..backup.resetResult = const BackupFailed('데이터를 지우지 못했어요');
+      await pumpSettings(tester, env: env);
+      await openReset(tester);
+      await confirmReset(tester);
+      expect(find.text('데이터를 지우지 못했어요'), findsOneWidget);
+      expect(find.byType(SettingsScreen), findsOneWidget);
     });
   });
 
