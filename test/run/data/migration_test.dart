@@ -252,6 +252,14 @@ PRAGMA user_version = 5;
     final executor = NativeDatabase.memory(
       setup: (raw) {
         raw.execute('''
+CREATE TABLE runs (
+  id TEXT NOT NULL, started_at TEXT NOT NULL, ended_at TEXT NULL,
+  status TEXT NOT NULL, distance_m REAL NOT NULL DEFAULT 0,
+  moving_time_s INTEGER NOT NULL DEFAULT 0, avg_pace_sec_per_km REAL NULL,
+  calories REAL NOT NULL DEFAULT 0, name TEXT NOT NULL DEFAULT '',
+  encoded_route TEXT NULL, goal_m REAL NULL, goal_sec INTEGER NULL,
+  created_at TEXT NOT NULL, updated_at TEXT NOT NULL,
+  deleted_at TEXT NULL, PRIMARY KEY (id));
 CREATE TABLE profiles (
   id TEXT NOT NULL, weight_kg REAL NULL, onboarded_at TEXT NULL,
   voice_guide INTEGER NOT NULL DEFAULT 1 CHECK (voice_guide IN (0, 1)),
@@ -276,6 +284,14 @@ PRAGMA user_version = 6;
     final executor = NativeDatabase.memory(
       setup: (raw) {
         raw.execute('''
+CREATE TABLE runs (
+  id TEXT NOT NULL, started_at TEXT NOT NULL, ended_at TEXT NULL,
+  status TEXT NOT NULL, distance_m REAL NOT NULL DEFAULT 0,
+  moving_time_s INTEGER NOT NULL DEFAULT 0, avg_pace_sec_per_km REAL NULL,
+  calories REAL NOT NULL DEFAULT 0, name TEXT NOT NULL DEFAULT '',
+  encoded_route TEXT NULL, goal_m REAL NULL, goal_sec INTEGER NULL,
+  created_at TEXT NOT NULL, updated_at TEXT NOT NULL,
+  deleted_at TEXT NULL, PRIMARY KEY (id));
 CREATE TABLE profiles (
   id TEXT NOT NULL, weight_kg REAL NULL, onboarded_at TEXT NULL,
   voice_guide INTEGER NOT NULL DEFAULT 1 CHECK (voice_guide IN (0, 1)),
@@ -295,5 +311,38 @@ PRAGMA user_version = 7;
     expect(profile.themeMode, 'dark');
     expect(profile.voiceGuide, isFalse);
     expect(profile.reminder, isTrue);
+    expect(profile.health, isFalse);
+  });
+
+  test('스키마 8 DB 를 열면 기존 러닝은 앱 기록(source app)이다', () async {
+    final executor = NativeDatabase.memory(
+      setup: (raw) {
+        raw.execute('''
+CREATE TABLE runs (
+  id TEXT NOT NULL, started_at TEXT NOT NULL, ended_at TEXT NULL,
+  status TEXT NOT NULL, distance_m REAL NOT NULL DEFAULT 0,
+  moving_time_s INTEGER NOT NULL DEFAULT 0, avg_pace_sec_per_km REAL NULL,
+  calories REAL NOT NULL DEFAULT 0, name TEXT NOT NULL DEFAULT '',
+  encoded_route TEXT NULL, goal_m REAL NULL, goal_sec INTEGER NULL,
+  created_at TEXT NOT NULL, updated_at TEXT NOT NULL,
+  deleted_at TEXT NULL, PRIMARY KEY (id));
+INSERT INTO runs (id, started_at, status, created_at, updated_at)
+VALUES ('r1', '2026-10-01T00:00:00.000Z', 'completed',
+  '2026-10-01T00:00:00.000Z', '2026-10-01T00:00:00.000Z');
+CREATE TABLE profiles (
+  id TEXT NOT NULL, weight_kg REAL NULL, onboarded_at TEXT NULL,
+  voice_guide INTEGER NOT NULL DEFAULT 1 CHECK (voice_guide IN (0, 1)),
+  theme_mode TEXT NOT NULL DEFAULT 'system',
+  reminder INTEGER NOT NULL DEFAULT 1 CHECK (reminder IN (0, 1)),
+  created_at TEXT NOT NULL, updated_at TEXT NOT NULL, deleted_at TEXT NULL,
+  PRIMARY KEY (id));
+PRAGMA user_version = 8;
+''');
+      },
+    );
+    final db = AppDatabase(executor);
+    addTearDown(db.close);
+    expect((await db.select(db.runs).get()).single.source, 'app');
+    expect(await db.select(db.profiles).get(), isEmpty);
   });
 }

@@ -6,7 +6,9 @@ import 'avatar/ui/avatar_screen.dart';
 import 'core/home_tab.dart';
 import 'core/stage/stage_weather.dart';
 import 'core/theme.dart';
+import 'backup/ui/refresh_after_import.dart';
 import 'core/ui/components.dart';
+import 'health/app/providers.dart';
 import 'onboarding/ui/onboarding_screen.dart';
 import 'profile/app/providers.dart';
 import 'reminder/app/providers.dart';
@@ -55,12 +57,25 @@ class _OnboardingGateState extends ConsumerState<_OnboardingGate> {
     super.initState();
     _cancelOldReminders();
     _refreshWeather();
-    // 화면으로 돌아올 때 날씨가 30분 넘게 묵었으면 다시 받는다.
-    _lifecycle = AppLifecycleListener(onResume: _refreshWeather);
+    _importHealth();
+    // 화면으로 돌아올 때 날씨가 30분 넘게 묵었으면 다시 받고, 건강 앱의 새 러닝을 들인다.
+    _lifecycle = AppLifecycleListener(
+      onResume: () {
+        _refreshWeather();
+        _importHealth();
+      },
+    );
   }
 
   void _refreshWeather() =>
       ref.read(stageWeatherProvider.notifier).refreshIfStale();
+
+  /// 건강 앱에서 새 러닝을 들인다(F15). 들였으면 홈이 성장·기록을 다시 읽는다.
+  Future<void> _importHealth() async {
+    if (!ref.read(healthAvailableProvider)) return;
+    final n = await ref.read(healthSyncServiceProvider).sync();
+    if (n > 0 && mounted) refreshAfterImport(ref);
+  }
 
   @override
   void dispose() {

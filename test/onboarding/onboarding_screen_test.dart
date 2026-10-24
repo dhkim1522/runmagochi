@@ -506,7 +506,6 @@ void task15Tests() {
     expect(pet.scale, greaterThanOrEqualTo(3));
   });
 
-
   group('부화 연출 (F33)', () {
     Finder egg() => find.byKey(const ValueKey('hatch-egg'));
     double petOpacity(WidgetTester tester) => tester
@@ -540,7 +539,9 @@ void task15Tests() {
     testWidgets('움직임 줄이기 설정이면 알 없이 바로 캐릭터', (tester) async {
       tester.platformDispatcher.accessibilityFeaturesTestValue =
           const FakeAccessibilityFeatures(disableAnimations: true);
-      addTearDown(tester.platformDispatcher.clearAccessibilityFeaturesTestValue);
+      addTearDown(
+        tester.platformDispatcher.clearAccessibilityFeaturesTestValue,
+      );
       await pumpOnboarding(tester);
       expect(egg(), findsNothing);
       expect(petOpacity(tester), 1);

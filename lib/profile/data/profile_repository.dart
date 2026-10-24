@@ -20,6 +20,12 @@ abstract interface class ProfileRepository {
   /// 쉬는 날 알림을 켜거나 끈다.
   Future<void> setReminder(bool on);
 
+  /// 건강 앱에서 러닝을 들이는지(F15). 행이 없으면 기본값 false.
+  Future<bool> health();
+
+  /// 건강 앱 연동을 켜거나 끈다.
+  Future<void> setHealth(bool on);
+
   /// 화면 모드. 행이 없으면 기본값 시스템.
   Future<ThemeMode> themeMode();
 

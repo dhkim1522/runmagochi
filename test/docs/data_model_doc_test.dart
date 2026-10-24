@@ -57,7 +57,7 @@ void main() {
   });
 
   test('문서의 스키마 판이 코드와 같다', () {
-    expect(db.schemaVersion, 8);
-    expect(doc, contains('스키마 8판'));
+    expect(db.schemaVersion, 9);
+    expect(doc, contains('스키마 9판'));
   });
 }

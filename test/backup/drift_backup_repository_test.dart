@@ -162,7 +162,7 @@ void main() {
     final m = jsonDecode(json) as Map<String, dynamic>;
     expect(m['format'], 'runmagochi-backup');
     expect(m['version'], 1);
-    expect(m['schemaVersion'], 8);
+    expect(m['schemaVersion'], 9);
     expect(m['exportedAt'], '2026-10-18T01:00:00.000Z');
     final tables = m['tables'] as Map<String, dynamic>;
     expect(tables.keys, isNot(contains('runPoints')));
@@ -414,6 +414,51 @@ void main() {
     expect((await dst.select(dst.profiles).get()).single.reminder, isFalse);
   });
 
+  test('v8 백업 파일(건강 연동 없음)을 가져오면 꺼져 있고 v9 왕복에 유지된다', () async {
+    await _seed(src);
+    await (src.update(
+      src.profiles,
+    )).write(const ProfilesCompanion(health: Value(true)));
+    final json = await DriftBackupRepository(src).exportJson(_now);
+    await DriftBackupRepository(dst).importJson(json);
+    expect((await dst.select(dst.profiles).get()).single.health, isTrue);
+    final m = jsonDecode(json) as Map<String, dynamic>;
+    m['schemaVersion'] = 8;
+    for (final r in (m['tables'] as Map)['profiles'] as List) {
+      (r as Map).remove('health');
+    }
+    for (final r in (m['tables'] as Map)['runs'] as List) {
+      (r as Map).remove('source');
+    }
+    await DriftBackupRepository(dst).importJson(jsonEncode(m));
+    expect((await dst.select(dst.profiles).get()).single.health, isFalse);
+  });
+
+  test('v8 백업 파일(러닝 출처 없음)을 가져오면 앱 기록이고, v9 왕복에 출처가 유지된다', () async {
+    await _seed(src);
+    await (src.update(src.runs)..where((r) => r.id.equals('r1'))).write(
+      const RunsCompanion(source: Value('health:w1')),
+    );
+    final json = await DriftBackupRepository(src).exportJson(_now);
+    await DriftBackupRepository(dst).importJson(json);
+    final runs = {
+      for (final r in await dst.select(dst.runs).get()) r.id: r.source,
+    };
+    expect(runs['r1'], 'health:w1');
+    expect(runs['r2'], 'app');
+
+    final m = jsonDecode(json) as Map<String, dynamic>;
+    m['schemaVersion'] = 8;
+    for (final r in (m['tables'] as Map)['runs'] as List) {
+      (r as Map).remove('source');
+    }
+    await DriftBackupRepository(dst).importJson(jsonEncode(m));
+    expect(
+      (await dst.select(dst.runs).get()).every((r) => r.source == 'app'),
+      isTrue,
+    );
+  });
+
   test('가져오면 기존 데이터를 모두 바꾼다 (진행 중 러닝·점 포함)', () async {
     await _seed(src);
     final json = await DriftBackupRepository(src).exportJson(_now);
@@ -462,7 +507,7 @@ void main() {
       return expectRejected(jsonEncode(parsed()..['version'] = 2));
     });
     test('스키마 버전이 다름', () async {
-      await expectRejected(jsonEncode(parsed()..['schemaVersion'] = 9));
+      await expectRejected(jsonEncode(parsed()..['schemaVersion'] = 10));
       await expectRejected(jsonEncode(parsed()..['schemaVersion'] = 2));
     });
     test('테이블이 없음', () {

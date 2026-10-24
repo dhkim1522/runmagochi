@@ -36,6 +36,10 @@
 	<string>러닝 중 화면을 끄거나 다른 앱을 써도 경로와 거리를 이어서 기록하려고 위치를 사용해요. 위치는 이 기기에만 저장돼요.</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
 	<string>공유 창에서 러닝 카드를 사진 앱에 저장하려고 사진 추가 권한을 사용해요.</string>
+	<key>NSHealthShareUsageDescription</key>
+	<string>워치로 달린 러닝을 가져와 캐릭터를 키워요. 읽기만 하고 건강 앱에 쓰지 않아요.</string>
+	<key>NSHealthUpdateUsageDescription</key>
+	<string>이 앱은 건강 앱에 기록을 쓰지 않아요.</string>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>location</string>

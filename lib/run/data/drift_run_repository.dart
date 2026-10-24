@@ -13,7 +13,7 @@ import 'run_repository.dart';
 const _active = 'active';
 const _completed = 'completed';
 
-class DriftRunRepository implements RunRepository {
+class DriftRunRepository implements RunRepository, HealthRunStore {
   /// [now] 는 행 시각(updatedAt 등)에 쓴다. 테스트에서만 바꾼다.
   DriftRunRepository(this._db, {Clock? now}) : _clock = now ?? DateTime.now;
 
@@ -45,6 +45,52 @@ class DriftRunRepository implements RunRepository {
           ),
         );
     return id;
+  }
+
+  @override
+  Future<Set<String>> importedHealthIds() async {
+    final rows = await (_db.select(
+      _db.runs,
+    )..where((r) => r.source.like('health:%'))).get();
+    return {for (final r in rows) r.source.substring(7)};
+  }
+
+  @override
+  Future<DateTime?> lastHealthRunStartedAt() async {
+    final row =
+        await (_db.select(_db.runs)
+              ..where((r) => r.source.like('health:%'))
+              ..orderBy([(r) => OrderingTerm.desc(r.startedAt)])
+              ..limit(1))
+            .getSingleOrNull();
+    return row?.startedAt.toLocal();
+  }
+
+  @override
+  Future<void> importHealthRun(String healthId, RunSummary summary) {
+    return _db.transaction(() async {
+      final id = _uuid.v4();
+      final now = _now();
+      await _db
+          .into(_db.runs)
+          .insert(
+            RunsCompanion.insert(
+              id: id,
+              startedAt: summary.startedAt.toUtc(),
+              status: _completed,
+              endedAt: Value(summary.endedAt.toUtc()),
+              distanceM: Value(summary.distanceM),
+              movingTimeS: Value(summary.movingTime.inSeconds),
+              avgPaceSecPerKm: Value(summary.avgPaceSecPerKm),
+              calories: Value(summary.calories),
+              name: Value(summary.name),
+              source: Value('health:$healthId'),
+              createdAt: now,
+              updatedAt: now,
+            ),
+          );
+      await _insertSplits(id, summary.splits, now);
+    });
   }
 
   @override

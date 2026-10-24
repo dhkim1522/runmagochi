@@ -1,0 +1,99 @@
+import 'package:flutter/foundation.dart';
+import 'package:health/health.dart';
+
+import '../domain/health_workout.dart';
+
+/// 건강 앱(Apple 건강·Health Connect)에서 러닝 운동을 읽는 곳. 테스트는 가짜로 바꾼다.
+abstract interface class HealthSource {
+  /// 이 기기에서 건강 앱을 쓸 수 있는가(Health Connect 미설치·미지원이면 false).
+  Future<bool> isAvailable();
+
+  /// 운동 읽기 권한이 있는가. iOS 는 읽기 허용 여부를 알려 주지 않아 true 로 본다.
+  Future<bool> hasPermission();
+
+  /// 운동 읽기 권한을 요청한다. 허용하면 true.
+  Future<bool> requestPermission();
+
+  /// [since] 이후 시작한 러닝 운동. 달리기가 아닌 운동도 [HealthWorkout.isRunning] 으로 구분해 준다.
+  Future<List<HealthWorkout>> readRunningWorkouts(DateTime since);
+}
+
+/// `health` 패키지 구현. 읽기만 한다(쓰기 권한을 요청하지 않는다).
+class PluginHealthSource implements HealthSource {
+  PluginHealthSource([Health? health]) : _health = health ?? Health();
+
+  final Health _health;
+  bool _configured = false;
+
+  static const _types = [HealthDataType.WORKOUT];
+  static const _access = [HealthDataAccess.READ];
+
+  Future<void> _ensureConfigured() async {
+    if (_configured) return;
+    await _health.configure();
+    _configured = true;
+  }
+
+  @override
+  Future<bool> isAvailable() async {
+    try {
+      await _ensureConfigured();
+      if (defaultTargetPlatform == TargetPlatform.android) {
+        return await _health.isHealthConnectAvailable();
+      }
+      return defaultTargetPlatform == TargetPlatform.iOS;
+    } catch (e) {
+      debugPrint('건강: 사용 가능 확인 실패 $e');
+      return false;
+    }
+  }
+
+  @override
+  Future<bool> hasPermission() async {
+    await _ensureConfigured();
+    // iOS 는 읽기 허용 여부를 숨겨 null 이다. 요청을 이미 했다면 읽어 본다.
+    final ok = await _health.hasPermissions(_types, permissions: _access);
+    return ok ?? defaultTargetPlatform == TargetPlatform.iOS;
+  }
+
+  @override
+  Future<bool> requestPermission() async {
+    await _ensureConfigured();
+    return _health.requestAuthorization(_types, permissions: _access);
+  }
+
+  @override
+  Future<List<HealthWorkout>> readRunningWorkouts(DateTime since) async {
+    await _ensureConfigured();
+    final points = await _health.getHealthDataFromTypes(
+      types: _types,
+      startTime: since,
+      endTime: DateTime.now(),
+    );
+    return [
+      for (final p in points)
+        if (p.value case final WorkoutHealthValue v)
+          HealthWorkout(
+            id: p.uuid,
+            startedAt: p.dateFrom,
+            endedAt: p.dateTo,
+            distanceM: _meters(v),
+            energyKcal: v.totalEnergyBurned?.toDouble(),
+            isRunning: _isRunning(v.workoutActivityType),
+            writtenByThisApp: p.sourceId == 'com.dhkim1522.runmagochi',
+          ),
+    ];
+  }
+
+  static bool _isRunning(HealthWorkoutActivityType t) =>
+      t == HealthWorkoutActivityType.RUNNING ||
+      t == HealthWorkoutActivityType.RUNNING_TREADMILL;
+
+  /// 운동 총 거리(미터). 단위가 미터가 아니거나 모르면 null(들이지 않는다).
+  static double? _meters(WorkoutHealthValue v) {
+    final d = v.totalDistance;
+    if (d == null) return null;
+    final unit = v.totalDistanceUnit;
+    return unit == null || unit == HealthDataUnit.METER ? d.toDouble() : null;
+  }
+}

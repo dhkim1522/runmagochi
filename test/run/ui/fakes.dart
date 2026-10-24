@@ -353,6 +353,13 @@ class FakeProfile implements ProfileRepository {
 
   bool voice = true;
   bool reminderOn = true;
+  bool healthOn = false;
+
+  @override
+  Future<bool> health() async => healthOn;
+
+  @override
+  Future<void> setHealth(bool on) async => healthOn = on;
 
   @override
   Future<bool> reminder() async => reminderOn;

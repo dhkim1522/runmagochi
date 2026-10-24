@@ -136,6 +136,16 @@ class $RunsTable extends Runs with TableInfo<$RunsTable, Run> {
     type: DriftSqlType.int,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _sourceMeta = const VerificationMeta('source');
+  @override
+  late final GeneratedColumn<String> source = GeneratedColumn<String>(
+    'source',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('app'),
+  );
   static const VerificationMeta _createdAtMeta = const VerificationMeta(
     'createdAt',
   );
@@ -183,6 +193,7 @@ class $RunsTable extends Runs with TableInfo<$RunsTable, Run> {
     encodedRoute,
     goalM,
     goalSec,
+    source,
     createdAt,
     updatedAt,
     deletedAt,
@@ -283,6 +294,12 @@ class $RunsTable extends Runs with TableInfo<$RunsTable, Run> {
         goalSec.isAcceptableOrUnknown(data['goal_sec']!, _goalSecMeta),
       );
     }
+    if (data.containsKey('source')) {
+      context.handle(
+        _sourceMeta,
+        source.isAcceptableOrUnknown(data['source']!, _sourceMeta),
+      );
+    }
     if (data.containsKey('created_at')) {
       context.handle(
         _createdAtMeta,
@@ -362,6 +379,10 @@ class $RunsTable extends Runs with TableInfo<$RunsTable, Run> {
         DriftSqlType.int,
         data['${effectivePrefix}goal_sec'],
       ),
+      source: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}source'],
+      )!,
       createdAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}created_at'],
@@ -400,6 +421,9 @@ class Run extends DataClass implements Insertable<Run> {
 
   /// 시작 때 고른 오늘 목표 시간(초). 거리 목표·예전 러닝은 null.
   final int? goalSec;
+
+  /// 기록 출처: `app`(앱이 직접 기록) 또는 `health:<운동 id>`(건강 앱에서 들임, F15).
+  final String source;
   final DateTime createdAt;
   final DateTime updatedAt;
   final DateTime? deletedAt;
@@ -416,6 +440,7 @@ class Run extends DataClass implements Insertable<Run> {
     this.encodedRoute,
     this.goalM,
     this.goalSec,
+    required this.source,
     required this.createdAt,
     required this.updatedAt,
     this.deletedAt,
@@ -445,6 +470,7 @@ class Run extends DataClass implements Insertable<Run> {
     if (!nullToAbsent || goalSec != null) {
       map['goal_sec'] = Variable<int>(goalSec);
     }
+    map['source'] = Variable<String>(source);
     map['created_at'] = Variable<DateTime>(createdAt);
     map['updated_at'] = Variable<DateTime>(updatedAt);
     if (!nullToAbsent || deletedAt != null) {
@@ -477,6 +503,7 @@ class Run extends DataClass implements Insertable<Run> {
       goalSec: goalSec == null && nullToAbsent
           ? const Value.absent()
           : Value(goalSec),
+      source: Value(source),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
       deletedAt: deletedAt == null && nullToAbsent
@@ -503,6 +530,7 @@ class Run extends DataClass implements Insertable<Run> {
       encodedRoute: serializer.fromJson<String?>(json['encodedRoute']),
       goalM: serializer.fromJson<double?>(json['goalM']),
       goalSec: serializer.fromJson<int?>(json['goalSec']),
+      source: serializer.fromJson<String>(json['source']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
       deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
@@ -524,6 +552,7 @@ class Run extends DataClass implements Insertable<Run> {
       'encodedRoute': serializer.toJson<String?>(encodedRoute),
       'goalM': serializer.toJson<double?>(goalM),
       'goalSec': serializer.toJson<int?>(goalSec),
+      'source': serializer.toJson<String>(source),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
       'deletedAt': serializer.toJson<DateTime?>(deletedAt),
@@ -543,6 +572,7 @@ class Run extends DataClass implements Insertable<Run> {
     Value<String?> encodedRoute = const Value.absent(),
     Value<double?> goalM = const Value.absent(),
     Value<int?> goalSec = const Value.absent(),
+    String? source,
     DateTime? createdAt,
     DateTime? updatedAt,
     Value<DateTime?> deletedAt = const Value.absent(),
@@ -561,6 +591,7 @@ class Run extends DataClass implements Insertable<Run> {
     encodedRoute: encodedRoute.present ? encodedRoute.value : this.encodedRoute,
     goalM: goalM.present ? goalM.value : this.goalM,
     goalSec: goalSec.present ? goalSec.value : this.goalSec,
+    source: source ?? this.source,
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
     deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
@@ -585,6 +616,7 @@ class Run extends DataClass implements Insertable<Run> {
           : this.encodedRoute,
       goalM: data.goalM.present ? data.goalM.value : this.goalM,
       goalSec: data.goalSec.present ? data.goalSec.value : this.goalSec,
+      source: data.source.present ? data.source.value : this.source,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
       deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
@@ -606,6 +638,7 @@ class Run extends DataClass implements Insertable<Run> {
           ..write('encodedRoute: $encodedRoute, ')
           ..write('goalM: $goalM, ')
           ..write('goalSec: $goalSec, ')
+          ..write('source: $source, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('deletedAt: $deletedAt')
@@ -627,6 +660,7 @@ class Run extends DataClass implements Insertable<Run> {
     encodedRoute,
     goalM,
     goalSec,
+    source,
     createdAt,
     updatedAt,
     deletedAt,
@@ -647,6 +681,7 @@ class Run extends DataClass implements Insertable<Run> {
           other.encodedRoute == this.encodedRoute &&
           other.goalM == this.goalM &&
           other.goalSec == this.goalSec &&
+          other.source == this.source &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt &&
           other.deletedAt == this.deletedAt);
@@ -665,6 +700,7 @@ class RunsCompanion extends UpdateCompanion<Run> {
   final Value<String?> encodedRoute;
   final Value<double?> goalM;
   final Value<int?> goalSec;
+  final Value<String> source;
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
   final Value<DateTime?> deletedAt;
@@ -682,6 +718,7 @@ class RunsCompanion extends UpdateCompanion<Run> {
     this.encodedRoute = const Value.absent(),
     this.goalM = const Value.absent(),
     this.goalSec = const Value.absent(),
+    this.source = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.deletedAt = const Value.absent(),
@@ -700,6 +737,7 @@ class RunsCompanion extends UpdateCompanion<Run> {
     this.encodedRoute = const Value.absent(),
     this.goalM = const Value.absent(),
     this.goalSec = const Value.absent(),
+    this.source = const Value.absent(),
     required DateTime createdAt,
     required DateTime updatedAt,
     this.deletedAt = const Value.absent(),
@@ -722,6 +760,7 @@ class RunsCompanion extends UpdateCompanion<Run> {
     Expression<String>? encodedRoute,
     Expression<double>? goalM,
     Expression<int>? goalSec,
+    Expression<String>? source,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
     Expression<DateTime>? deletedAt,
@@ -740,6 +779,7 @@ class RunsCompanion extends UpdateCompanion<Run> {
       if (encodedRoute != null) 'encoded_route': encodedRoute,
       if (goalM != null) 'goal_m': goalM,
       if (goalSec != null) 'goal_sec': goalSec,
+      if (source != null) 'source': source,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (deletedAt != null) 'deleted_at': deletedAt,
@@ -760,6 +800,7 @@ class RunsCompanion extends UpdateCompanion<Run> {
     Value<String?>? encodedRoute,
     Value<double?>? goalM,
     Value<int?>? goalSec,
+    Value<String>? source,
     Value<DateTime>? createdAt,
     Value<DateTime>? updatedAt,
     Value<DateTime?>? deletedAt,
@@ -778,6 +819,7 @@ class RunsCompanion extends UpdateCompanion<Run> {
       encodedRoute: encodedRoute ?? this.encodedRoute,
       goalM: goalM ?? this.goalM,
       goalSec: goalSec ?? this.goalSec,
+      source: source ?? this.source,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       deletedAt: deletedAt ?? this.deletedAt,
@@ -824,6 +866,9 @@ class RunsCompanion extends UpdateCompanion<Run> {
     if (goalSec.present) {
       map['goal_sec'] = Variable<int>(goalSec.value);
     }
+    if (source.present) {
+      map['source'] = Variable<String>(source.value);
+    }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
@@ -854,6 +899,7 @@ class RunsCompanion extends UpdateCompanion<Run> {
           ..write('encodedRoute: $encodedRoute, ')
           ..write('goalM: $goalM, ')
           ..write('goalSec: $goalSec, ')
+          ..write('source: $source, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('deletedAt: $deletedAt, ')
@@ -3614,6 +3660,19 @@ class $ProfilesTable extends Profiles with TableInfo<$ProfilesTable, Profile> {
     ),
     defaultValue: const Constant(true),
   );
+  static const VerificationMeta _healthMeta = const VerificationMeta('health');
+  @override
+  late final GeneratedColumn<bool> health = GeneratedColumn<bool>(
+    'health',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("health" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
   static const VerificationMeta _createdAtMeta = const VerificationMeta(
     'createdAt',
   );
@@ -3655,6 +3714,7 @@ class $ProfilesTable extends Profiles with TableInfo<$ProfilesTable, Profile> {
     voiceGuide,
     themeMode,
     reminder,
+    health,
     createdAt,
     updatedAt,
     deletedAt,
@@ -3707,6 +3767,12 @@ class $ProfilesTable extends Profiles with TableInfo<$ProfilesTable, Profile> {
       context.handle(
         _reminderMeta,
         reminder.isAcceptableOrUnknown(data['reminder']!, _reminderMeta),
+      );
+    }
+    if (data.containsKey('health')) {
+      context.handle(
+        _healthMeta,
+        health.isAcceptableOrUnknown(data['health']!, _healthMeta),
       );
     }
     if (data.containsKey('created_at')) {
@@ -3764,6 +3830,10 @@ class $ProfilesTable extends Profiles with TableInfo<$ProfilesTable, Profile> {
         DriftSqlType.bool,
         data['${effectivePrefix}reminder'],
       )!,
+      health: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}health'],
+      )!,
       createdAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}created_at'],
@@ -3798,6 +3868,9 @@ class Profile extends DataClass implements Insertable<Profile> {
 
   /// 쉬는 날 캐릭터 알림(F27). 기본으로 켜져 있다.
   final bool reminder;
+
+  /// 건강 앱(Apple 건강·Health Connect)에서 러닝을 들이는가(F15). 기본은 꺼짐.
+  final bool health;
   final DateTime createdAt;
   final DateTime updatedAt;
   final DateTime? deletedAt;
@@ -3808,6 +3881,7 @@ class Profile extends DataClass implements Insertable<Profile> {
     required this.voiceGuide,
     required this.themeMode,
     required this.reminder,
+    required this.health,
     required this.createdAt,
     required this.updatedAt,
     this.deletedAt,
@@ -3825,6 +3899,7 @@ class Profile extends DataClass implements Insertable<Profile> {
     map['voice_guide'] = Variable<bool>(voiceGuide);
     map['theme_mode'] = Variable<String>(themeMode);
     map['reminder'] = Variable<bool>(reminder);
+    map['health'] = Variable<bool>(health);
     map['created_at'] = Variable<DateTime>(createdAt);
     map['updated_at'] = Variable<DateTime>(updatedAt);
     if (!nullToAbsent || deletedAt != null) {
@@ -3845,6 +3920,7 @@ class Profile extends DataClass implements Insertable<Profile> {
       voiceGuide: Value(voiceGuide),
       themeMode: Value(themeMode),
       reminder: Value(reminder),
+      health: Value(health),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
       deletedAt: deletedAt == null && nullToAbsent
@@ -3865,6 +3941,7 @@ class Profile extends DataClass implements Insertable<Profile> {
       voiceGuide: serializer.fromJson<bool>(json['voiceGuide']),
       themeMode: serializer.fromJson<String>(json['themeMode']),
       reminder: serializer.fromJson<bool>(json['reminder']),
+      health: serializer.fromJson<bool>(json['health']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
       deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
@@ -3880,6 +3957,7 @@ class Profile extends DataClass implements Insertable<Profile> {
       'voiceGuide': serializer.toJson<bool>(voiceGuide),
       'themeMode': serializer.toJson<String>(themeMode),
       'reminder': serializer.toJson<bool>(reminder),
+      'health': serializer.toJson<bool>(health),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
       'deletedAt': serializer.toJson<DateTime?>(deletedAt),
@@ -3893,6 +3971,7 @@ class Profile extends DataClass implements Insertable<Profile> {
     bool? voiceGuide,
     String? themeMode,
     bool? reminder,
+    bool? health,
     DateTime? createdAt,
     DateTime? updatedAt,
     Value<DateTime?> deletedAt = const Value.absent(),
@@ -3903,6 +3982,7 @@ class Profile extends DataClass implements Insertable<Profile> {
     voiceGuide: voiceGuide ?? this.voiceGuide,
     themeMode: themeMode ?? this.themeMode,
     reminder: reminder ?? this.reminder,
+    health: health ?? this.health,
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
     deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
@@ -3919,6 +3999,7 @@ class Profile extends DataClass implements Insertable<Profile> {
           : this.voiceGuide,
       themeMode: data.themeMode.present ? data.themeMode.value : this.themeMode,
       reminder: data.reminder.present ? data.reminder.value : this.reminder,
+      health: data.health.present ? data.health.value : this.health,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
       deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
@@ -3934,6 +4015,7 @@ class Profile extends DataClass implements Insertable<Profile> {
           ..write('voiceGuide: $voiceGuide, ')
           ..write('themeMode: $themeMode, ')
           ..write('reminder: $reminder, ')
+          ..write('health: $health, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('deletedAt: $deletedAt')
@@ -3949,6 +4031,7 @@ class Profile extends DataClass implements Insertable<Profile> {
     voiceGuide,
     themeMode,
     reminder,
+    health,
     createdAt,
     updatedAt,
     deletedAt,
@@ -3963,6 +4046,7 @@ class Profile extends DataClass implements Insertable<Profile> {
           other.voiceGuide == this.voiceGuide &&
           other.themeMode == this.themeMode &&
           other.reminder == this.reminder &&
+          other.health == this.health &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt &&
           other.deletedAt == this.deletedAt);
@@ -3975,6 +4059,7 @@ class ProfilesCompanion extends UpdateCompanion<Profile> {
   final Value<bool> voiceGuide;
   final Value<String> themeMode;
   final Value<bool> reminder;
+  final Value<bool> health;
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
   final Value<DateTime?> deletedAt;
@@ -3986,6 +4071,7 @@ class ProfilesCompanion extends UpdateCompanion<Profile> {
     this.voiceGuide = const Value.absent(),
     this.themeMode = const Value.absent(),
     this.reminder = const Value.absent(),
+    this.health = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.deletedAt = const Value.absent(),
@@ -3998,6 +4084,7 @@ class ProfilesCompanion extends UpdateCompanion<Profile> {
     this.voiceGuide = const Value.absent(),
     this.themeMode = const Value.absent(),
     this.reminder = const Value.absent(),
+    this.health = const Value.absent(),
     required DateTime createdAt,
     required DateTime updatedAt,
     this.deletedAt = const Value.absent(),
@@ -4012,6 +4099,7 @@ class ProfilesCompanion extends UpdateCompanion<Profile> {
     Expression<bool>? voiceGuide,
     Expression<String>? themeMode,
     Expression<bool>? reminder,
+    Expression<bool>? health,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
     Expression<DateTime>? deletedAt,
@@ -4024,6 +4112,7 @@ class ProfilesCompanion extends UpdateCompanion<Profile> {
       if (voiceGuide != null) 'voice_guide': voiceGuide,
       if (themeMode != null) 'theme_mode': themeMode,
       if (reminder != null) 'reminder': reminder,
+      if (health != null) 'health': health,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (deletedAt != null) 'deleted_at': deletedAt,
@@ -4038,6 +4127,7 @@ class ProfilesCompanion extends UpdateCompanion<Profile> {
     Value<bool>? voiceGuide,
     Value<String>? themeMode,
     Value<bool>? reminder,
+    Value<bool>? health,
     Value<DateTime>? createdAt,
     Value<DateTime>? updatedAt,
     Value<DateTime?>? deletedAt,
@@ -4050,6 +4140,7 @@ class ProfilesCompanion extends UpdateCompanion<Profile> {
       voiceGuide: voiceGuide ?? this.voiceGuide,
       themeMode: themeMode ?? this.themeMode,
       reminder: reminder ?? this.reminder,
+      health: health ?? this.health,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       deletedAt: deletedAt ?? this.deletedAt,
@@ -4078,6 +4169,9 @@ class ProfilesCompanion extends UpdateCompanion<Profile> {
     if (reminder.present) {
       map['reminder'] = Variable<bool>(reminder.value);
     }
+    if (health.present) {
+      map['health'] = Variable<bool>(health.value);
+    }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
@@ -4102,6 +4196,7 @@ class ProfilesCompanion extends UpdateCompanion<Profile> {
           ..write('voiceGuide: $voiceGuide, ')
           ..write('themeMode: $themeMode, ')
           ..write('reminder: $reminder, ')
+          ..write('health: $health, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('deletedAt: $deletedAt, ')
@@ -5504,6 +5599,7 @@ typedef $$RunsTableCreateCompanionBuilder =
       Value<String?> encodedRoute,
       Value<double?> goalM,
       Value<int?> goalSec,
+      Value<String> source,
       required DateTime createdAt,
       required DateTime updatedAt,
       Value<DateTime?> deletedAt,
@@ -5523,6 +5619,7 @@ typedef $$RunsTableUpdateCompanionBuilder =
       Value<String?> encodedRoute,
       Value<double?> goalM,
       Value<int?> goalSec,
+      Value<String> source,
       Value<DateTime> createdAt,
       Value<DateTime> updatedAt,
       Value<DateTime?> deletedAt,
@@ -5693,6 +5790,11 @@ class $$RunsTableFilterComposer extends Composer<_$AppDatabase, $RunsTable> {
 
   ColumnFilters<int> get goalSec => $composableBuilder(
     column: $table.goalSec,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get source => $composableBuilder(
+    column: $table.source,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -5905,6 +6007,11 @@ class $$RunsTableOrderingComposer extends Composer<_$AppDatabase, $RunsTable> {
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get source => $composableBuilder(
+    column: $table.source,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
@@ -5971,6 +6078,9 @@ class $$RunsTableAnnotationComposer
 
   GeneratedColumn<int> get goalSec =>
       $composableBuilder(column: $table.goalSec, builder: (column) => column);
+
+  GeneratedColumn<String> get source =>
+      $composableBuilder(column: $table.source, builder: (column) => column);
 
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
@@ -6153,6 +6263,7 @@ class $$RunsTableTableManager
                 Value<String?> encodedRoute = const Value.absent(),
                 Value<double?> goalM = const Value.absent(),
                 Value<int?> goalSec = const Value.absent(),
+                Value<String> source = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<DateTime?> deletedAt = const Value.absent(),
@@ -6170,6 +6281,7 @@ class $$RunsTableTableManager
                 encodedRoute: encodedRoute,
                 goalM: goalM,
                 goalSec: goalSec,
+                source: source,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 deletedAt: deletedAt,
@@ -6189,6 +6301,7 @@ class $$RunsTableTableManager
                 Value<String?> encodedRoute = const Value.absent(),
                 Value<double?> goalM = const Value.absent(),
                 Value<int?> goalSec = const Value.absent(),
+                Value<String> source = const Value.absent(),
                 required DateTime createdAt,
                 required DateTime updatedAt,
                 Value<DateTime?> deletedAt = const Value.absent(),
@@ -6206,6 +6319,7 @@ class $$RunsTableTableManager
                 encodedRoute: encodedRoute,
                 goalM: goalM,
                 goalSec: goalSec,
+                source: source,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 deletedAt: deletedAt,
@@ -8035,6 +8149,7 @@ typedef $$ProfilesTableCreateCompanionBuilder =
       Value<bool> voiceGuide,
       Value<String> themeMode,
       Value<bool> reminder,
+      Value<bool> health,
       required DateTime createdAt,
       required DateTime updatedAt,
       Value<DateTime?> deletedAt,
@@ -8048,6 +8163,7 @@ typedef $$ProfilesTableUpdateCompanionBuilder =
       Value<bool> voiceGuide,
       Value<String> themeMode,
       Value<bool> reminder,
+      Value<bool> health,
       Value<DateTime> createdAt,
       Value<DateTime> updatedAt,
       Value<DateTime?> deletedAt,
@@ -8090,6 +8206,11 @@ class $$ProfilesTableFilterComposer
 
   ColumnFilters<bool> get reminder => $composableBuilder(
     column: $table.reminder,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get health => $composableBuilder(
+    column: $table.health,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -8148,6 +8269,11 @@ class $$ProfilesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<bool> get health => $composableBuilder(
+    column: $table.health,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
@@ -8195,6 +8321,9 @@ class $$ProfilesTableAnnotationComposer
   GeneratedColumn<bool> get reminder =>
       $composableBuilder(column: $table.reminder, builder: (column) => column);
 
+  GeneratedColumn<bool> get health =>
+      $composableBuilder(column: $table.health, builder: (column) => column);
+
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
 
@@ -8239,6 +8368,7 @@ class $$ProfilesTableTableManager
                 Value<bool> voiceGuide = const Value.absent(),
                 Value<String> themeMode = const Value.absent(),
                 Value<bool> reminder = const Value.absent(),
+                Value<bool> health = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<DateTime?> deletedAt = const Value.absent(),
@@ -8250,6 +8380,7 @@ class $$ProfilesTableTableManager
                 voiceGuide: voiceGuide,
                 themeMode: themeMode,
                 reminder: reminder,
+                health: health,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 deletedAt: deletedAt,
@@ -8263,6 +8394,7 @@ class $$ProfilesTableTableManager
                 Value<bool> voiceGuide = const Value.absent(),
                 Value<String> themeMode = const Value.absent(),
                 Value<bool> reminder = const Value.absent(),
+                Value<bool> health = const Value.absent(),
                 required DateTime createdAt,
                 required DateTime updatedAt,
                 Value<DateTime?> deletedAt = const Value.absent(),
@@ -8274,6 +8406,7 @@ class $$ProfilesTableTableManager
                 voiceGuide: voiceGuide,
                 themeMode: themeMode,
                 reminder: reminder,
+                health: health,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 deletedAt: deletedAt,

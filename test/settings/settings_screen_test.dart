@@ -14,6 +14,8 @@ import 'package:runmagochi/core/app_info.dart';
 import 'package:runmagochi/core/korean.dart';
 import 'package:runmagochi/core/theme.dart';
 import 'package:runmagochi/core/ui/components.dart';
+import 'package:runmagochi/health/app/health_sync_service.dart';
+import 'package:runmagochi/health/app/providers.dart';
 import 'package:runmagochi/profile/app/providers.dart';
 import 'package:runmagochi/profile/data/profile_repository.dart';
 import 'package:runmagochi/reminder/app/providers.dart';
@@ -47,6 +49,14 @@ class _Profile implements ProfileRepository {
     if (voiceFails) throw StateError('저장 실패');
     voice = on;
   }
+
+  bool healthOn = false;
+
+  @override
+  Future<bool> health() async => healthOn;
+
+  @override
+  Future<void> setHealth(bool on) async => healthOn = on;
 
   bool reminderOn = true;
 
@@ -122,6 +132,37 @@ class _Backup implements BackupService {
       throw UnimplementedError('${invocation.memberName}');
 }
 
+/// 켜기·들이기 횟수를 센다. 켜기는 실제 서비스처럼 허용되면 프로필에 켜짐을 저장한다.
+class _Health implements HealthSyncService {
+  _Health(this.owner);
+  final _Profile owner;
+  bool enableResult = true;
+  int enables = 0;
+  int syncs = 0;
+
+  @override
+  Future<bool> enable() async {
+    enables++;
+    await owner.setHealth(enableResult);
+    return enableResult;
+  }
+
+  bool supported = true;
+
+  @override
+  Future<bool> isSupported() async => supported;
+
+  @override
+  Future<int> sync() async {
+    syncs++;
+    return 0;
+  }
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) =>
+      throw UnimplementedError('${invocation.memberName}');
+}
+
 /// 다시 예약을 부른 횟수만 센다.
 class _Reminders implements ReminderService {
   int refreshes = 0;
@@ -139,6 +180,7 @@ class SettingsEnv {
   final profile = _Profile();
   final backup = _Backup();
   final reminders = _Reminders();
+  late final health = _Health(profile);
   late final repo = _GrowthRepo(growth);
 }
 
@@ -165,6 +207,8 @@ Future<SettingsEnv> pumpSettings(
         profileRepositoryProvider.overrideWithValue(e.profile),
         backupServiceProvider.overrideWithValue(e.backup),
         reminderServiceProvider.overrideWithValue(e.reminders),
+        healthSyncServiceProvider.overrideWithValue(e.health),
+        healthAvailableProvider.overrideWithValue(true),
         runControllerProvider.overrideWith(() => FakeController()),
         permissionGateProvider.overrideWithValue(FakeGate(GateResult.ready)),
         runRepositoryProvider.overrideWithValue(FakeRepo((0, 0))),
@@ -300,6 +344,9 @@ void task15Tests() {
       await pumpSettings(tester, theme: theme(), textScale: 1.3);
       expect(tester.takeException(), isNull);
       await tester.scrollUntilVisible(find.text('화면 모드'), 200);
+      // 칩이 가장자리에 걸리지 않게 화면 안으로 가져온다.
+      await tester.ensureVisible(find.text('시스템'));
+      await tester.pump();
       expect(tester.takeException(), isNull);
       for (final chip in ['시스템', '라이트', '다크']) {
         expect(find.text(chip).hitTestable(), findsOneWidget, reason: chip);
@@ -311,6 +358,21 @@ void task15Tests() {
       expect(tester.takeException(), isNull);
     });
   }
+}
+
+/// 제목이 [title] 인 스위치 행의 Switch. 제목 글자와 가장 가까운 스위치를 고른다.
+Switch switchOf(WidgetTester tester, String title) {
+  final y = tester.getCenter(find.text(title)).dy;
+  final switches = tester.widgetList<Switch>(find.byType(Switch)).toList();
+  final centers = [
+    for (final e in find.byType(Switch).evaluate())
+      tester.getCenter(find.byElementPredicate((x) => x == e)).dy,
+  ];
+  var best = 0;
+  for (var i = 1; i < centers.length; i++) {
+    if ((centers[i] - y).abs() < (centers[best] - y).abs()) best = i;
+  }
+  return switches[best];
 }
 
 void main() {
@@ -791,9 +853,54 @@ void main() {
     });
   });
 
+  group('건강 앱 연동 (F15)', () {
+    Switch healthSwitch(WidgetTester tester) =>
+        switchOf(tester, '건강 앱에서 러닝 가져오기');
+
+    testWidgets('기본은 꺼져 있고, 켜면 권한을 요청한 뒤 바로 들인다', (tester) async {
+      final env = await pumpSettings(tester);
+      expect(find.text('건강 앱에서 러닝 가져오기'), findsOneWidget);
+      expect(find.text('워치로 달린 러닝도 캐릭터가 자라요'), findsOneWidget);
+      expect(healthSwitch(tester).value, isFalse);
+      await tester.tap(find.text('건강 앱에서 러닝 가져오기'));
+      await settle(tester);
+      expect(env.health.enables, 1);
+      expect(env.health.syncs, 1);
+      expect(env.profile.healthOn, isTrue);
+    });
+
+    testWidgets('권한을 거절하면 켜지 않고 알린다', (tester) async {
+      final env = SettingsEnv()..health.enableResult = false;
+      await pumpSettings(tester, env: env);
+      await tester.tap(find.text('건강 앱에서 러닝 가져오기'));
+      await settle(tester);
+      expect(env.profile.healthOn, isFalse);
+      expect(find.text('건강 앱 권한을 허용해야 가져올 수 있어요'), findsOneWidget);
+      expect(env.health.syncs, 0);
+    });
+
+    testWidgets('건강 앱을 쓸 수 없는 기기면 설치를 안내한다', (tester) async {
+      final env = SettingsEnv()
+        ..health.enableResult = false
+        ..health.supported = false;
+      await pumpSettings(tester, env: env);
+      await tester.tap(find.text('건강 앱에서 러닝 가져오기'));
+      await settle(tester);
+      expect(find.textContaining('Health Connect'), findsOneWidget);
+    });
+
+    testWidgets('끄면 저장하고 가져오지 않는다', (tester) async {
+      final env = SettingsEnv()..profile.healthOn = true;
+      await pumpSettings(tester, env: env);
+      await tester.tap(find.text('건강 앱에서 러닝 가져오기'));
+      await settle(tester);
+      expect(env.profile.healthOn, isFalse);
+      expect(env.health.enables, 0);
+    });
+  });
+
   group('쉬는 날 알림 (F27)', () {
-    Switch reminderSwitch(WidgetTester tester) =>
-        tester.widgetList<Switch>(find.byType(Switch)).last;
+    Switch reminderSwitch(WidgetTester tester) => switchOf(tester, '쉬는 날 알림');
 
     testWidgets('기본으로 켜져 있고, 바꾸면 저장하고 알림을 다시 예약한다', (tester) async {
       final env = await pumpSettings(tester);

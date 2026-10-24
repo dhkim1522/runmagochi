@@ -40,7 +40,7 @@
   - 확인: `fvm flutter test test/widget`, 에뮬레이터 홈 화면에 위젯 추가
   - 결정: 새 패키지(`home_widget`) → 결정 기록. iOS 무료 Apple ID 는 App Group 이 제한될 수 있어 실기기 설치를 확인한다
 - [~] 8. 새 친구 입양·도감 (F31): 추후 업데이트로 미룸(결정 0039). 캐릭터 종류가 3종뿐이라 도감이 비어 보인다.
-- [ ] 9. 건강 앱 연동 (F15)
+- [~] 9. 건강 앱 연동 (F15): 들이기·설정·저장·테스트 완료. 실제로 건강 앱을 읽는 부분만 `health` 패키지를 기다린다(Xcode 업데이트 뒤, `docs/pending/README.md`)
   - 파일: `lib/health/`(새로), 설정, Android Health Connect 권한, iOS HealthKit
   - 테스트: 건강 앱의 러닝 운동(이 앱이 쓴 것 제외)을 읽어 경험치로 반영, 같은 운동은 한 번만. 끄면 읽지 않는다
   - 확인: `fvm flutter test test/health`
@@ -75,6 +75,7 @@
 - [ ] 페이즈 1~6 의 "사람 확인" 항목 통과
 - [ ] 리포트의 개선점을 반영하거나 미룰 이유를 적음
 - [ ] Android 지인 베타 의견 수집
+- [ ] Xcode 업데이트 뒤 `docs/pending/README.md` 대로 건강 앱 읽기를 켜고, `ios/Runner/Runner.entitlements` 를 Xcode Runner 타깃 Signing & Capabilities → HealthKit 으로 연결, 무료 Apple ID 로 서명되는지. 실제 워치 러닝이 건강 앱에서 들어오는지
 - [ ] iPhone 위젯: `ios/PetWidget/README.md` 대로 Xcode 에서 Widget Extension 연결, 무료 Apple ID 로 동작하는지(안 되면 페이즈 10 유료 계정 뒤). 건강 연동도 같다
 
 ## 자동 결정

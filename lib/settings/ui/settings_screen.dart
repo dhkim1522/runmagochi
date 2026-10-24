@@ -12,6 +12,7 @@ import '../../core/app_info.dart';
 import '../../core/home_tab.dart';
 import '../../core/theme.dart';
 import '../../core/ui/components.dart';
+import '../../health/app/providers.dart';
 import '../../profile/app/providers.dart';
 import '../../reminder/app/providers.dart';
 
@@ -28,6 +29,11 @@ final _voiceProvider = FutureProvider.autoDispose<bool>(
 /// 쉬는 날 캐릭터 알림 켜짐 여부(F27). 저장하거나 가져온 뒤 invalidate 한다.
 final _reminderProvider = FutureProvider.autoDispose<bool>(
   (ref) => ref.read(profileRepositoryProvider).reminder(),
+);
+
+/// 건강 앱에서 러닝 가져오기 켜짐 여부(F15). 바꾸거나 가져온 뒤 invalidate 한다.
+final _healthProvider = FutureProvider.autoDispose<bool>(
+  (ref) => ref.read(profileRepositoryProvider).health(),
 );
 
 /// 체중으로 받을 수 있는 범위(kg).
@@ -84,6 +90,33 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     if (mounted) ref.invalidate(_voiceProvider);
   }
 
+  Future<void> _setHealth(bool on) async {
+    final service = ref.read(healthSyncServiceProvider);
+    try {
+      if (on) {
+        // 권한을 요청하고, 허용하면 바로 최근 러닝을 가져온다.
+        if (!await service.enable()) {
+          _toast(
+            await service.isSupported()
+                ? '건강 앱 권한을 허용해야 가져올 수 있어요'
+                : '이 기기에서는 건강 앱을 쓸 수 없어요. Health Connect 를 설치해 주세요',
+          );
+          return;
+        }
+        final n = await service.sync();
+        if (n > 0) {
+          refreshAfterImport(ref);
+          _toast('건강 앱에서 러닝 $n개를 가져왔어요');
+        }
+      } else {
+        await ref.read(profileRepositoryProvider).setHealth(false);
+      }
+    } catch (_) {
+      _toast('건강 앱 설정을 바꾸지 못했어요');
+    }
+    if (mounted) ref.invalidate(_healthProvider);
+  }
+
   Future<void> _setReminder(bool on) async {
     try {
       await ref.read(profileRepositoryProvider).setReminder(on);
@@ -138,6 +171,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           ref.invalidate(_weightProvider);
           ref.invalidate(_voiceProvider);
           ref.invalidate(_reminderProvider);
+          ref.invalidate(_healthProvider);
           ref.invalidate(themeModeProvider);
           ref.read(reminderServiceProvider).refresh();
         }
@@ -244,6 +278,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final weight = ref.watch(_weightProvider);
     final voice = ref.watch(_voiceProvider);
     final reminder = ref.watch(_reminderProvider);
+    final health = ref.watch(_healthProvider);
+    final healthAvailable = ref.watch(healthAvailableProvider);
     final themeMode = ref.watch(themeModeProvider);
     final weightLabel = switch (weight) {
       AsyncData(:final value) =>
@@ -300,6 +336,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     value: voice.value ?? true,
                     onChanged: voice.hasValue ? _setVoice : null,
                   ),
+                  if (healthAvailable)
+                    _SwitchRow(
+                      title: '건강 앱에서 러닝 가져오기',
+                      subtitle: '워치로 달린 러닝도 캐릭터가 자라요',
+                      value: health.value ?? false,
+                      onChanged: health.hasValue ? _setHealth : null,
+                    ),
                   _SwitchRow(
                     title: '쉬는 날 알림',
                     subtitle: '며칠 쉬면 캐릭터가 한 번 불러요',

@@ -20,6 +20,9 @@ class Runs extends Table {
 
   /// 시작 때 고른 오늘 목표 시간(초). 거리 목표·예전 러닝은 null.
   IntColumn get goalSec => integer().nullable()();
+
+  /// 기록 출처: `app`(앱이 직접 기록) 또는 `health:<운동 id>`(건강 앱에서 들임, F15).
+  TextColumn get source => text().withDefault(const Constant('app'))();
   DateTimeColumn get createdAt => dateTime()();
   DateTimeColumn get updatedAt => dateTime()();
   DateTimeColumn get deletedAt => dateTime().nullable()();
@@ -107,6 +110,9 @@ class Profiles extends Table {
 
   /// 쉬는 날 캐릭터 알림(F27). 기본으로 켜져 있다.
   BoolColumn get reminder => boolean().withDefault(const Constant(true))();
+
+  /// 건강 앱(Apple 건강·Health Connect)에서 러닝을 들이는가(F15). 기본은 꺼짐.
+  BoolColumn get health => boolean().withDefault(const Constant(false))();
   DateTimeColumn get createdAt => dateTime()();
   DateTimeColumn get updatedAt => dateTime()();
   DateTimeColumn get deletedAt => dateTime().nullable()();
@@ -209,7 +215,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.production() : super(driftDatabase(name: 'runmagochi'));
 
   @override
-  int get schemaVersion => 8;
+  int get schemaVersion => 9;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -243,6 +249,10 @@ class AppDatabase extends _$AppDatabase {
       }
       if (from < 8) {
         if (from >= 3) await m.addColumn(profiles, profiles.reminder);
+      }
+      if (from < 9) {
+        await m.addColumn(runs, runs.source);
+        if (from >= 3) await m.addColumn(profiles, profiles.health);
       }
     },
   );

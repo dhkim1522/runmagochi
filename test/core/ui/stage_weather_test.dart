@@ -21,7 +21,9 @@ Future<Set<int>> _paint(
     scale: 8,
     pet: const SizedBox.square(dimension: 256),
   );
-  if (weather != null) stage = StageWeatherScope(weather: weather, child: stage);
+  if (weather != null) {
+    stage = StageWeatherScope(weather: weather, child: stage);
+  }
   await tester.pumpWidget(
     MaterialApp(
       theme: dark ? appDarkTheme() : appLightTheme(),

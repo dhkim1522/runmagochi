@@ -40,6 +40,15 @@ void main() {
     expect(await repo.reminder(), isTrue);
   });
 
+  test('건강 앱 연동은 행이 없어도 꺼져 있고 켜고 끌 수 있다', () async {
+    expect(await repo.health(), isFalse);
+    expect(await db.select(db.profiles).get(), isEmpty);
+    await repo.setHealth(true);
+    expect(await repo.health(), isTrue);
+    await repo.setHealth(false);
+    expect(await repo.health(), isFalse);
+  });
+
   test('화면 모드는 행이 없어도 시스템이고 바꾸면 저장된다', () async {
     expect(await repo.themeMode(), ThemeMode.system);
     expect(await db.select(db.profiles).get(), isEmpty);

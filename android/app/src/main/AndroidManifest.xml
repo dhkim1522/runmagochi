@@ -8,6 +8,9 @@
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <!-- 날씨 배경(F25): Open-Meteo 현재 날씨. -->
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- 건강 앱 연동(F15): Health Connect 에서 운동(러닝)만 읽는다. -->
+    <uses-permission android:name="android.permission.health.READ_EXERCISE" />
+    <uses-permission android:name="android.permission.health.READ_DISTANCE" />
     <application
         android:label="런마고치"
         android:name="${applicationName}"
@@ -34,6 +37,17 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
+        <!-- Health Connect 권한 화면에서 "앱 개인정보 보기" 가 열 활동(F15). -->
+        <activity-alias
+            android:name="ViewPermissionUsageActivity"
+            android:exported="true"
+            android:targetActivity=".MainActivity"
+            android:permission="android.permission.START_VIEW_PERMISSION_USAGE">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW_PERMISSION_USAGE" />
+                <category android:name="android.intent.category.HEALTH_PERMISSIONS" />
+            </intent-filter>
+        </activity-alias>
         <!-- 홈 화면 위젯 (F29) -->
         <receiver android:name=".PetWidgetProvider" android:exported="false">
             <intent-filter>

@@ -12,6 +12,8 @@ import 'package:runmagochi/core/stage/stage_weather.dart';
 import 'package:runmagochi/core/ui/components.dart' show AppTabBar;
 import 'package:runmagochi/run/ui/in_run_screen.dart';
 import 'package:runmagochi/onboarding/ui/onboarding_screen.dart';
+import 'package:runmagochi/health/app/health_sync_service.dart';
+import 'package:runmagochi/health/app/providers.dart';
 import 'package:runmagochi/profile/app/providers.dart';
 import 'package:runmagochi/reminder/app/providers.dart';
 import 'package:runmagochi/reminder/app/reminder_service.dart';
@@ -212,12 +214,15 @@ void main() {
       required FakeController controller,
       BackupService? backup,
       ReminderService? reminders,
+      HealthSyncService? health,
     }) => ProviderScope(
       key: UniqueKey(),
       overrides: [
         if (backup != null) backupServiceProvider.overrideWithValue(backup),
         if (reminders != null)
           reminderServiceProvider.overrideWithValue(reminders),
+        if (health != null) healthSyncServiceProvider.overrideWithValue(health),
+        if (health != null) healthAvailableProvider.overrideWithValue(true),
         runControllerProvider.overrideWith(() => controller),
         runRepositoryProvider.overrideWithValue(FakeRepo((0, 0))),
         permissionGateProvider.overrideWithValue(FakeGate(GateResult.ready)),
@@ -330,6 +335,21 @@ void main() {
       expect(find.text('러닝'), findsOneWidget);
     });
 
+    testWidgets('시작할 때 건강 앱의 새 러닝을 가져온다 (F15)', (tester) async {
+      final health = _HealthCounter();
+      await tester.pumpWidget(
+        app(
+          health: health,
+          profile: FakeProfile(),
+          repo: FakeOnboardingGrowthRepo(kind: AvatarKind.acorn),
+          growth: FakeGrowthService(growthState()),
+          controller: FakeController(),
+        ),
+      );
+      await settle(tester);
+      expect(health.syncs, 1);
+    });
+
     testWidgets('받은 날씨를 무대 위로 내려 주고 시작할 때 한 번 받는다 (F25)', (tester) async {
       final weather = _RainNow();
       await tester.pumpWidget(
@@ -434,4 +454,15 @@ class _RainNow extends StageWeatherController {
 
   @override
   Future<void> refreshIfStale() async => refreshes++;
+}
+
+class _HealthCounter implements HealthSyncService {
+  int syncs = 0;
+
+  @override
+  Future<int> sync() async => ++syncs > 0 ? 0 : 0;
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) =>
+      throw UnimplementedError('${invocation.memberName}');
 }

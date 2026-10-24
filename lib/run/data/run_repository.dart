@@ -113,3 +113,16 @@ abstract interface class RunRepository {
   /// 기록을 바꾼 뒤 경험치를 다시 매기지 못한 러닝을 찾는 데 쓴다.
   Future<Map<String, DateTime>> completedRunRevisions();
 }
+
+/// 건강 앱에서 들인 러닝을 저장하고 이미 들인 운동을 알려 주는 곳(F15). 러닝 저장소 중
+/// 건강 연동만 쓰는 부분이라 좁게 나눴다.
+abstract interface class HealthRunStore {
+  /// 지금까지 들인 건강 앱 운동 id. 지운 기록도 포함해 다시 들이지 않는다.
+  Future<Set<String>> importedHealthIds();
+
+  /// 가장 늦게 시작한 건강 앱 러닝의 시작 시각. 없으면 null.
+  Future<DateTime?> lastHealthRunStartedAt();
+
+  /// 건강 앱 운동 [healthId] 를 완료된 러닝 한 건으로 저장한다(한 트랜잭션).
+  Future<void> importHealthRun(String healthId, RunSummary summary);
+}
