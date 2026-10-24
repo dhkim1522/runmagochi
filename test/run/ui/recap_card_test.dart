@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:runmagochi/avatar/app/providers.dart';
 import 'package:runmagochi/avatar/domain/growth_rules.dart';
+import 'package:runmagochi/core/stage/stage_weather.dart';
 import 'package:runmagochi/core/theme.dart';
 import 'package:runmagochi/run/app/providers.dart';
 import 'package:runmagochi/run/app/share_service.dart';
@@ -61,6 +62,18 @@ void main() {
     expect(find.text('2회'), findsOneWidget);
     expect(find.text('40:00'), findsOneWidget);
     expect(find.text('말랑이 Lv.9'), findsOneWidget);
+    // 공유 카드는 날씨와 상관없이 맑은 낮이다.
+    expect(
+      tester
+          .widget<StageWeatherScope>(
+            find.descendant(
+              of: find.byType(RecapCard),
+              matching: find.byType(StageWeatherScope),
+            ),
+          )
+          .weather,
+      StageWeather.clearDay,
+    );
   });
 
   group('기록 화면 결산 공유', () {

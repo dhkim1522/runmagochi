@@ -8,6 +8,7 @@ import 'package:runmagochi/avatar/domain/growth_rules.dart';
 import 'package:runmagochi/backup/app/backup_service.dart';
 import 'package:runmagochi/backup/app/providers.dart';
 import 'package:runmagochi/core/korean.dart';
+import 'package:runmagochi/core/stage/stage_weather.dart';
 import 'package:runmagochi/core/ui/components.dart' show AppTabBar;
 import 'package:runmagochi/run/ui/in_run_screen.dart';
 import 'package:runmagochi/onboarding/ui/onboarding_screen.dart';
@@ -15,6 +16,7 @@ import 'package:runmagochi/profile/app/providers.dart';
 import 'package:runmagochi/reminder/app/providers.dart';
 import 'package:runmagochi/reminder/app/reminder_service.dart';
 import 'package:runmagochi/shop/app/providers.dart';
+import 'package:runmagochi/weather/app/weather_controller.dart';
 import 'package:runmagochi/run/app/permission_gate.dart';
 import 'package:runmagochi/run/app/providers.dart';
 import 'package:runmagochi/settings/ui/settings_screen.dart';
@@ -328,6 +330,34 @@ void main() {
       expect(find.text('러닝'), findsOneWidget);
     });
 
+    testWidgets('받은 날씨를 무대 위로 내려 주고 시작할 때 한 번 받는다 (F25)', (tester) async {
+      final weather = _RainNow();
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            stageWeatherProvider.overrideWith(() => weather),
+            runControllerProvider.overrideWith(FakeController.new),
+            runRepositoryProvider.overrideWithValue(FakeRepo((0, 0))),
+            profileRepositoryProvider.overrideWithValue(FakeProfile()),
+            notificationSchedulerProvider.overrideWithValue(
+              FakeNotificationScheduler(),
+            ),
+            shopRepositoryProvider.overrideWithValue(FakeShop()),
+            growthServiceProvider.overrideWithValue(
+              FakeGrowthService(growthState()),
+            ),
+          ],
+          child: const RunmagochiApp(),
+        ),
+      );
+      await settle(tester);
+      expect(weather.refreshes, 1);
+      final scope = tester.widget<StageWeatherScope>(
+        find.byType(StageWeatherScope).first,
+      );
+      expect(scope.weather.condition, WeatherCondition.rain);
+    });
+
     testWidgets('시작할 때 예약 알림 취소를 한 번만 부르고 그 뒤에 쉬는 날 알림을 예약한다', (tester) async {
       final scheduler = FakeNotificationScheduler();
       final reminders = _Reminders(scheduler);
@@ -393,4 +423,15 @@ class _Reminders implements ReminderService {
   @override
   dynamic noSuchMethod(Invocation invocation) =>
       throw UnimplementedError('${invocation.memberName}');
+}
+
+/// 비 오는 날씨를 돌려주고 받기 횟수를 센다.
+class _RainNow extends StageWeatherController {
+  int refreshes = 0;
+
+  @override
+  StageWeather build() => const StageWeather(WeatherCondition.rain);
+
+  @override
+  Future<void> refreshIfStale() async => refreshes++;
 }

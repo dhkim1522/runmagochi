@@ -4,6 +4,7 @@ import 'dart:ui';
 import 'package:flutter/foundation.dart';
 
 import 'stage_scene.dart';
+import 'stage_weather.dart';
 
 /// 기본 무대 배경 "공원 산책로"(작업 25, 관문 3 에서 고른 안 2): 모래빛 흙길이 펫 뒤
 /// 소실점으로 좁아지고, 길 위 자갈·풀잎·작은 꽃 점, 길가 둥근 나무·덤불, 지평선의 두 겹
@@ -141,11 +142,20 @@ class _ParkSky extends StageLayer {
   void paintStill(StagePixels px, StageView v) {
     px.fill(v.colors.stageSky);
     if (!v.detail) return;
-    final color = ParkPalette.of(v.brightness).cloud;
+    paintClouds(px, v, ParkPalette.of(v.brightness).cloud, _clouds);
+  }
+
+  /// [clouds] 를 [color] 로 그린다. 먼 풍경 띠 위 하늘에만, 말풍선 자리는 비운다.
+  static void paintClouds(
+    StagePixels px,
+    StageView v,
+    Color color,
+    List<(double, double, List<(int, int)>)> clouds,
+  ) {
     // 먼 풍경 띠(지평선 위 12칸) 위까지가 구름이 뜰 하늘.
     final sky = v.yh - _ParkFar.band;
     final bubbleRows = ((bubbleClear - v.originY) / v.artPx).ceil();
-    for (final (fx, fy, shape) in _clouds) {
+    for (final (fx, fy, shape) in clouds) {
       final w = shape.map((r) => r.$2).reduce(math.max) + 1;
       final h = shape.length;
       final x0 = (v.cols * fx - w / 2).round();
@@ -300,6 +310,271 @@ class _ParkRoadside extends StageLayer {
             p.canopyHi,
             yMax: gy,
           );
+        }
+      }
+    }
+  }
+}
+
+/// 날씨 무대 색(F25, 결정 0037). 낮은 라이트, 밤·다크 테마는 다크를 쓴다.
+@immutable
+class WeatherPalette {
+  const WeatherPalette({
+    required this.overcastSky,
+    required this.rainSky,
+    required this.snowSky,
+    required this.cloud,
+    required this.rainCloud,
+    required this.rain,
+    required this.snow,
+    required this.star,
+    required this.moon,
+  });
+
+  /// 흐린 하늘.
+  final Color overcastSky;
+
+  /// 비 오는 하늘.
+  final Color rainSky;
+
+  /// 눈 오는 하늘.
+  final Color snowSky;
+
+  /// 흐림·눈 구름.
+  final Color cloud;
+
+  /// 비구름.
+  final Color rainCloud;
+
+  /// 빗줄기.
+  final Color rain;
+
+  /// 눈송이(공원 꽃 흰색과 다르다).
+  final Color snow;
+
+  /// 별.
+  final Color star;
+
+  /// 달.
+  final Color moon;
+
+  static const light = WeatherPalette(
+    overcastSky: Color(0xFFDCE3D6),
+    rainSky: Color(0xFFC8D0C6),
+    snowSky: Color(0xFFE9EEEA),
+    cloud: Color(0xFFF1F4EE),
+    rainCloud: Color(0xFFB4BDB2),
+    rain: Color(0xFF8FA5B8),
+    snow: Color(0xFFFAFDFF),
+    star: Color(0xFFFFFCE8),
+    moon: Color(0xFFFFF4C2),
+  );
+
+  static const dark = WeatherPalette(
+    overcastSky: Color(0xFF1A2219),
+    rainSky: Color(0xFF151C15),
+    snowSky: Color(0xFF222B22),
+    cloud: Color(0xFF2B3429),
+    rainCloud: Color(0xFF242C23),
+    rain: Color(0xFF5E7488),
+    snow: Color(0xFFDCE6DE),
+    star: Color(0xFFE6EDD2),
+    moon: Color(0xFFF3EDC4),
+  );
+
+  static WeatherPalette of(Brightness b) => b == Brightness.dark ? dark : light;
+}
+
+/// 날씨에 맞는 공원 무대. 맑은 낮은 [parkScene] 그대로다. 같은 날씨는 같은 객체라
+/// 그려 둔 그림을 다시 쓴다. 밤 색(다크 토큰)은 무대 배경(StageBackdrop)이 고른다.
+StageScene parkSceneFor(StageWeather w) => switch ((w.condition, w.night)) {
+  (WeatherCondition.clear, false) => parkScene,
+  (WeatherCondition.clear, true) => _clearNight,
+  (WeatherCondition.cloudy, false) => _cloudyDay,
+  (WeatherCondition.cloudy, true) => _cloudyNight,
+  (WeatherCondition.rain, false) => _rainDay,
+  (WeatherCondition.rain, true) => _rainNight,
+  (WeatherCondition.snow, false) => _snowDay,
+  (WeatherCondition.snow, true) => _snowNight,
+};
+
+const _clearNight = StageScene(
+  name: 'park-clear-night',
+  sky: _WeatherSky(WeatherCondition.clear, night: true),
+  far: _ParkFar(),
+  ground: _ParkGround(),
+  roadside: _ParkRoadside(),
+);
+const _cloudyDay = StageScene(
+  name: 'park-cloudy',
+  sky: _WeatherSky(WeatherCondition.cloudy),
+  far: _ParkFar(),
+  ground: _ParkGround(),
+  roadside: _ParkRoadside(),
+);
+const _cloudyNight = StageScene(
+  name: 'park-cloudy-night',
+  sky: _WeatherSky(WeatherCondition.cloudy, night: true),
+  far: _ParkFar(),
+  ground: _ParkGround(),
+  roadside: _ParkRoadside(),
+);
+const _rainDay = StageScene(
+  name: 'park-rain',
+  sky: _WeatherSky(WeatherCondition.rain),
+  far: _ParkFar(),
+  ground: _ParkGround(),
+  roadside: _ParkRoadside(),
+  overlay: _Rain(),
+);
+const _rainNight = StageScene(
+  name: 'park-rain-night',
+  sky: _WeatherSky(WeatherCondition.rain, night: true),
+  far: _ParkFar(),
+  ground: _ParkGround(),
+  roadside: _ParkRoadside(),
+  overlay: _Rain(),
+);
+const _snowDay = StageScene(
+  name: 'park-snow',
+  sky: _WeatherSky(WeatherCondition.snow),
+  far: _ParkFar(),
+  ground: _ParkGround(),
+  roadside: _ParkRoadside(),
+  overlay: _Snow(),
+);
+const _snowNight = StageScene(
+  name: 'park-snow-night',
+  sky: _WeatherSky(WeatherCondition.snow, night: true),
+  far: _ParkFar(),
+  ground: _ParkGround(),
+  roadside: _ParkRoadside(),
+  overlay: _Snow(),
+);
+
+/// 1 날씨 하늘: 맑은 밤은 별·달, 흐림·비·눈은 잿빛 하늘에 구름을 더 많이.
+class _WeatherSky extends StageLayer {
+  const _WeatherSky(this.condition, {this.night = false});
+
+  final WeatherCondition condition;
+  final bool night;
+
+  static const _many = [
+    (0.16, 0.28, _ParkSky._big),
+    (0.50, 0.20, _ParkSky._medium),
+    (0.80, 0.60, _ParkSky._big),
+    (0.36, 0.56, _ParkSky._medium),
+    (0.64, 0.80, _ParkSky._small),
+  ];
+
+  /// 별 자리: (가로 폭 대비, 세로 하늘 대비).
+  static const _stars = [
+    (0.08, 0.20),
+    (0.30, 0.12),
+    (0.44, 0.40),
+    (0.60, 0.70),
+    (0.86, 0.78),
+    (0.22, 0.62),
+    (0.70, 0.30),
+    (0.92, 0.45),
+    (0.52, 0.85),
+    (0.12, 0.82),
+  ];
+
+  @override
+  void paintStill(StagePixels px, StageView v) {
+    final p = WeatherPalette.of(v.brightness);
+    switch (condition) {
+      case WeatherCondition.clear:
+        px.fill(v.colors.stageSky);
+        if (!v.detail) return;
+        if (!night) {
+          _ParkSky.paintClouds(
+            px,
+            v,
+            ParkPalette.of(v.brightness).cloud,
+            _ParkSky._clouds,
+          );
+          return;
+        }
+        _paintNight(px, v, p);
+      case WeatherCondition.cloudy:
+        px.fill(p.overcastSky);
+        if (v.detail) _ParkSky.paintClouds(px, v, p.cloud, _many);
+      case WeatherCondition.rain:
+        px.fill(p.rainSky);
+        if (v.detail) _ParkSky.paintClouds(px, v, p.rainCloud, _many);
+      case WeatherCondition.snow:
+        px.fill(p.snowSky);
+        if (v.detail) _ParkSky.paintClouds(px, v, p.cloud, _many);
+    }
+  }
+
+  void _paintNight(StagePixels px, StageView v, WeatherPalette p) {
+    final sky = v.yh - _ParkFar.band;
+    final bubbleRows = ((_ParkSky.bubbleClear - v.originY) / v.artPx).ceil();
+    for (final (fx, fy) in _stars) {
+      final x = (v.cols * fx).round();
+      final y = (sky * fy).round();
+      if (y < 1 || y > sky - 2) continue;
+      if (x > v.cx && y < bubbleRows) continue;
+      px.span(x, x, y, p.star);
+    }
+    // 달: 왼쪽 위(말풍선은 오른쪽).
+    final mx = (v.cols * 0.2).roundToDouble();
+    final my = math.max(4.0, (sky * 0.3).roundToDouble());
+    if (my + 3 < sky - 2) {
+      px.disc(mx, my, 3, p.moon, yMin: 0, yMax: (sky - 2).toDouble());
+    }
+  }
+}
+
+/// 칸 (gx, gy) 마다 정해진 작은 수. 비·눈을 격자처럼 줄 세우지 않고 흩뜨린다.
+int _scatter(int gx, int gy) {
+  var h = gx * 73856093 ^ gy * 19349663;
+  h = (h ^ (h >> 13)) * 1274126177;
+  return (h ^ (h >> 16)) & 0x7fffffff;
+}
+
+/// 5 비: 무대를 칸으로 나눠 칸마다 짧은 빗줄기(2칸) 하나를 흩뿌린다. 멈춰 있다(배터리).
+class _Rain extends StageLayer {
+  const _Rain();
+
+  static const _cw = 9, _ch = 7;
+
+  @override
+  void paintStill(StagePixels px, StageView v) {
+    final c = WeatherPalette.of(v.brightness).rain;
+    for (var gy = 0; gy * _ch < v.rows; gy++) {
+      for (var gx = 0; gx * _cw < v.cols; gx++) {
+        final h = _scatter(gx, gy);
+        final x = gx * _cw + h % _cw;
+        final y = gy * _ch + (h ~/ _cw) % (_ch - 1);
+        px.span(x, x, y, c);
+        px.span(x, x, y + 1, c);
+      }
+    }
+  }
+}
+
+/// 5 눈: 칸마다 눈송이 하나(1칸, 셋에 하나는 2×2)를 흩뿌린다. 멈춰 있다.
+class _Snow extends StageLayer {
+  const _Snow();
+
+  static const _cw = 10, _ch = 6;
+
+  @override
+  void paintStill(StagePixels px, StageView v) {
+    final c = WeatherPalette.of(v.brightness).snow;
+    for (var gy = 0; gy * _ch < v.rows; gy++) {
+      for (var gx = 0; gx * _cw < v.cols; gx++) {
+        final h = _scatter(gx + 101, gy + 7);
+        final x = gx * _cw + h % (_cw - 1);
+        final y = gy * _ch + (h ~/ _cw) % (_ch - 1);
+        px.span(x, x, y, c);
+        if (h % 3 == 0) {
+          px.span(x + 1, x + 1, y, c);
+          px.span(x, x + 1, y + 1, c);
         }
       }
     }

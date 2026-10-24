@@ -29,7 +29,7 @@
   - 테스트: 첫 실행 1장에서 알이 흔들리다 금이 가고 깨지며 캐릭터가 나온다(약 3초, 누르면 건너뜀). 움직임 줄이기 설정이면 바로 캐릭터. 초기화 뒤에도 같은 연출
   - 확인: `fvm flutter test test/onboarding`, 스프라이트 생성 `fvm dart run tool/render_sprites.dart`
   - 스킬: pixel-plugin(도트), 규격 `docs/specs/sprite-spec.md`
-- [ ] 6. 날씨 배경 (F25)
+- [x] 6. 날씨 배경 (F25)
   - 파일: `lib/core/stage/` 날씨 장면(맑음·흐림·비·눈·밤), `lib/weather/`(새로, Open-Meteo 무료 API·키 없음), 무대
   - 테스트: 날씨 코드 → 장면 매핑, 해 진 뒤는 밤. 인터넷·위치가 없으면 기본(맑음/낮), 30분 캐시. 러닝 기록 위치와 별개로 대략 위치만 쓴다
   - 확인: `fvm flutter test test/weather test/core`

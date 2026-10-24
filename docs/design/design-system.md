@@ -137,3 +137,7 @@ direction-c 이름과 토큰: `lime` = `primary`, `green` = `primary-deep`·`suc
 - 공통 컴포넌트는 `lib/core/ui/components.dart`(작업 11, 옛 `clay.dart`): `AppCard`·`StatCard`·`StatsCard`(흰 카드 하나에 지표 칸 `StatCard.cell` 여러 개, 작업 12), `AppButton`(기본 연두·`.secondary` 흰·`.panel` 어두운 판, 경계선 없음), `AppChip`·`ChipRow`(칩·분할 선택 공통), `ProgressBar`, `CoinIcon`(코인 칩은 `lib/shop/ui/coin_chip.dart`), `AppTabBar`·`TabIcon`, `PetStage`·`StageBackdrop`·`SpeechBubble`, `Pressable`(누름 0.97), `ScreenTitle`, `CircleIconButton`(48 흰 동그라미 아이콘 버튼: 뒤로, 작업 14), `EmptyState`(흰 카드 + 앱 그림 + `ink-muted` 안내 문구, 작업 14. 넘기는 그림은 `EmptyState.iconSize` 40 으로 그린다), `NoticeCard`(진짜 문제 알림, 작업 15). 다이얼로그는 `AlertDialog` 를 그대로 쓰고(확인 버튼은 연두 면 + 옅은 그림자, 경계선 없음) 모양은 테마(`filledButtonTheme`·`textButtonTheme`·`dialogTheme`)가 정한다.
 - `PetStage` 는 펫(`32 × scale`)을 발끝이 무대 아래에서 `groundHeight − Stage.footSink` 에 서게 놓는다(8배 땅 56 → 펫 상자 아래 32, 6배 땅 40 → 20). 배경은 `scene`(기본 `parkScene`)으로 바꾸고, 러닝 중에는 `moving: true`(작업 25). 펫 위끝이 무대 위끝에 닿는 높이는 `PetStage.fitHeight(scale:, groundHeight:)`(작업 18, 상점 무대·카드 미리보기가 쓴다).
 - 옛 `Borders.thick`·`lip`·`lipPressed` 는 지웠다. 포커스 윤곽은 `Borders.focus` 3, 보조 버튼 머리카락 선은 `Borders.hairline` 1. 그림자는 `AppColors.floatShadow`(작업 31).
+
+## 날씨 무대 (F25)
+
+공원 무대(`parkScene`)는 받은 날씨에 따라 하늘 겹과 5번째 날씨 겹을 바꾼다(`parkSceneFor`, `lib/core/stage/park_scene.dart`). 색은 `WeatherPalette`(라이트·다크): 흐린 하늘·비 하늘·눈 하늘·구름·비구름·빗줄기·눈송이·별·달. 해 진 뒤는 테마와 상관없이 다크 토큰으로 그린다. 비·눈은 칸마다 하나씩 흩뿌리고 멈춰 있다(배터리). 공유 카드는 맑은 낮으로 고정한다.

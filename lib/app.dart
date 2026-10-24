@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'avatar/app/providers.dart';
 import 'avatar/ui/avatar_screen.dart';
 import 'core/home_tab.dart';
+import 'core/stage/stage_weather.dart';
 import 'core/theme.dart';
 import 'core/ui/components.dart';
 import 'onboarding/ui/onboarding_screen.dart';
@@ -12,6 +13,7 @@ import 'reminder/app/providers.dart';
 import 'run/ui/history_screen.dart';
 import 'run/ui/home_screen.dart';
 import 'shop/ui/shop_screen.dart';
+import 'weather/app/weather_controller.dart';
 
 class RunmagochiApp extends ConsumerWidget {
   const RunmagochiApp({super.key});
@@ -23,6 +25,11 @@ class RunmagochiApp extends ConsumerWidget {
       theme: appLightTheme(),
       darkTheme: appDarkTheme(),
       themeMode: ref.watch(themeModeProvider).value ?? ThemeMode.system,
+      // 무대들이 받은 날씨를 입는다(F25). 받기 전에는 맑은 낮.
+      builder: (context, child) => StageWeatherScope(
+        weather: ref.watch(stageWeatherProvider),
+        child: child!,
+      ),
       home: const _OnboardingGate(),
     );
   }
@@ -40,10 +47,24 @@ class _OnboardingGate extends ConsumerStatefulWidget {
 }
 
 class _OnboardingGateState extends ConsumerState<_OnboardingGate> {
+  late final AppLifecycleListener _lifecycle;
+
   @override
   void initState() {
     super.initState();
     _cancelOldReminders();
+    _refreshWeather();
+    // 화면으로 돌아올 때 날씨가 30분 넘게 묵었으면 다시 받는다.
+    _lifecycle = AppLifecycleListener(onResume: _refreshWeather);
+  }
+
+  void _refreshWeather() =>
+      ref.read(stageWeatherProvider.notifier).refreshIfStale();
+
+  @override
+  void dispose() {
+    _lifecycle.dispose();
+    super.dispose();
   }
 
   /// 이전 버전이 예약해 둔 주간 알림을 지운 뒤 쉬는 날 알림(F27)을 다시 예약한다.

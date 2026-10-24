@@ -4,6 +4,7 @@ import '../../avatar/domain/growth_rules.dart';
 import '../../avatar/ui/avatar_view.dart';
 import '../../avatar/ui/sprite_sheet.dart';
 import '../../core/format.dart';
+import '../../core/stage/stage_weather.dart';
 import '../../core/theme.dart';
 import '../../core/ui/components.dart';
 import '../domain/run_stats.dart';
@@ -55,150 +56,159 @@ class RecapCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Theme(
-      data: appLightTheme(),
-      child: Builder(
-        builder: (context) {
-          final c = AppColors.of(context);
-          final t = AppText.of(context);
-          return MediaQuery(
-            data: MediaQuery.of(
-              context,
-            ).copyWith(textScaler: TextScaler.noScaling),
-            child: SizedBox.fromSize(
-              size: shareCardSize,
-              child: Material(
-                type: MaterialType.transparency,
-                child: ColoredBox(
-                  color: c.background,
-                  child: Padding(
-                    padding: const EdgeInsets.all(Gap.s6),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              heading,
-                              style: t.heading.copyWith(color: c.primaryDeep),
-                            ),
-                            const SizedBox(width: Gap.s2),
-                            Flexible(
-                              child: FittedBox(
-                                fit: BoxFit.scaleDown,
-                                child: Text(
-                                  title,
-                                  style: t.caption.copyWith(color: c.inkMuted),
+    // 사용자 테마·날씨와 상관없이 라이트·맑은 낮으로 그린다.
+    return StageWeatherScope(
+      weather: StageWeather.clearDay,
+      child: Theme(
+        data: appLightTheme(),
+        child: Builder(
+          builder: (context) {
+            final c = AppColors.of(context);
+            final t = AppText.of(context);
+            return MediaQuery(
+              data: MediaQuery.of(
+                context,
+              ).copyWith(textScaler: TextScaler.noScaling),
+              child: SizedBox.fromSize(
+                size: shareCardSize,
+                child: Material(
+                  type: MaterialType.transparency,
+                  child: ColoredBox(
+                    color: c.background,
+                    child: Padding(
+                      padding: const EdgeInsets.all(Gap.s6),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                heading,
+                                style: t.heading.copyWith(color: c.primaryDeep),
+                              ),
+                              const SizedBox(width: Gap.s2),
+                              Flexible(
+                                child: FittedBox(
+                                  fit: BoxFit.scaleDown,
+                                  child: Text(
+                                    title,
+                                    style: t.caption.copyWith(
+                                      color: c.inkMuted,
+                                    ),
+                                  ),
                                 ),
                               ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: Gap.s3),
-                        Expanded(
-                          child: LayoutBuilder(
-                            builder: (context, box) {
-                              final scale =
-                                  PetStage.largestScale(
-                                    max: _maxScale,
-                                    min: _minScale,
-                                    fits: (s) =>
-                                        _stageHeight(s) <= box.maxHeight,
-                                  ) ??
-                                  _minScale;
-                              return PetStage(
-                                height: box.maxHeight,
-                                scale: scale,
-                                groundHeight: Stage.groundHeightCompact,
-                                pet: AvatarView(
-                                  kind: kind,
-                                  stage: stage,
-                                  mood: mood,
-                                  action: AvatarAction.idle,
+                            ],
+                          ),
+                          const SizedBox(height: Gap.s3),
+                          Expanded(
+                            child: LayoutBuilder(
+                              builder: (context, box) {
+                                final scale =
+                                    PetStage.largestScale(
+                                      max: _maxScale,
+                                      min: _minScale,
+                                      fits: (s) =>
+                                          _stageHeight(s) <= box.maxHeight,
+                                    ) ??
+                                    _minScale;
+                                return PetStage(
+                                  height: box.maxHeight,
                                   scale: scale,
-                                  hatItemId: hatItemId,
-                                  accessoryItemId: accessoryItemId,
-                                ),
-                              );
-                            },
-                          ),
-                        ),
-                        const SizedBox(height: Gap.s3),
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                            FittedBox(
-                              fit: BoxFit.scaleDown,
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                crossAxisAlignment: CrossAxisAlignment.baseline,
-                                textBaseline: TextBaseline.alphabetic,
-                                children: [
-                                  Text(
-                                    formatKm(stats.distanceM),
-                                    style: t.numberL,
+                                  groundHeight: Stage.groundHeightCompact,
+                                  pet: AvatarView(
+                                    kind: kind,
+                                    stage: stage,
+                                    mood: mood,
+                                    action: AvatarAction.idle,
+                                    scale: scale,
+                                    hatItemId: hatItemId,
+                                    accessoryItemId: accessoryItemId,
                                   ),
-                                  const SizedBox(width: Gap.s1),
-                                  Text(
-                                    'km',
-                                    style: t.titleS.copyWith(color: c.inkMuted),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: Gap.s1),
-                        Row(
-                          children: [
-                            Expanded(child: _Stat('러닝', '${stats.count}회')),
-                            Expanded(
-                              child: _Stat(
-                                '시간',
-                                formatDuration(stats.movingTime),
-                              ),
-                            ),
-                            Expanded(
-                              child: _Stat(
-                                '평균 페이스',
-                                formatPace(stats.avgPaceSecPerKm),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: Gap.s3),
-                        SizedBox(
-                          height: _chartHeight,
-                          child: ExcludeSemantics(
-                            child: CustomPaint(
-                              painter: StatsChartPainter(
-                                bars: stats.bars,
-                                barColor: c.primaryDeep,
-                                baseColor: c.inkMuted.withValues(alpha: 0.35),
-                                labelStyle: t.caption.copyWith(
-                                  color: c.inkMuted,
-                                  fontSize: 10,
-                                ),
-                                textScaler: TextScaler.noScaling,
-                              ),
+                                );
+                              },
                             ),
                           ),
-                        ),
-                        const SizedBox(height: Gap.s3),
-                        Text(
-                          '$name Lv.$level',
-                          textAlign: TextAlign.center,
-                          style: t.heading.copyWith(color: c.primaryDeep),
-                        ),
-                      ],
+                          const SizedBox(height: Gap.s3),
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              FittedBox(
+                                fit: BoxFit.scaleDown,
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.baseline,
+                                  textBaseline: TextBaseline.alphabetic,
+                                  children: [
+                                    Text(
+                                      formatKm(stats.distanceM),
+                                      style: t.numberL,
+                                    ),
+                                    const SizedBox(width: Gap.s1),
+                                    Text(
+                                      'km',
+                                      style: t.titleS.copyWith(
+                                        color: c.inkMuted,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: Gap.s1),
+                          Row(
+                            children: [
+                              Expanded(child: _Stat('러닝', '${stats.count}회')),
+                              Expanded(
+                                child: _Stat(
+                                  '시간',
+                                  formatDuration(stats.movingTime),
+                                ),
+                              ),
+                              Expanded(
+                                child: _Stat(
+                                  '평균 페이스',
+                                  formatPace(stats.avgPaceSecPerKm),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: Gap.s3),
+                          SizedBox(
+                            height: _chartHeight,
+                            child: ExcludeSemantics(
+                              child: CustomPaint(
+                                painter: StatsChartPainter(
+                                  bars: stats.bars,
+                                  barColor: c.primaryDeep,
+                                  baseColor: c.inkMuted.withValues(alpha: 0.35),
+                                  labelStyle: t.caption.copyWith(
+                                    color: c.inkMuted,
+                                    fontSize: 10,
+                                  ),
+                                  textScaler: TextScaler.noScaling,
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: Gap.s3),
+                          Text(
+                            '$name Lv.$level',
+                            textAlign: TextAlign.center,
+                            style: t.heading.copyWith(color: c.primaryDeep),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
               ),
-            ),
-          );
-        },
+            );
+          },
+        ),
       ),
     );
   }

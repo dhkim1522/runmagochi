@@ -19,6 +19,7 @@ class StageScene {
     required this.far,
     required this.ground,
     required this.roadside,
+    this.overlay,
     this.period = 2,
     this.flowSpeed = 0.5,
     this.stepsPerPeriod = 32,
@@ -40,6 +41,9 @@ class StageScene {
   /// 펫과 겹치지 않는다). 펫 앞에 와야 할 아이템이 생기면 5번째 겹을 따로 둔다.
   final StageLayer roadside;
 
+  /// 5 날씨 겹(비·눈): 네 겹의 멈춘 부분 위에 그린다. 없으면 null.
+  final StageLayer? overlay;
+
   /// 흐르는 무늬가 되풀이되는 세상 깊이(카메라 높이 단위).
   final double period;
 
@@ -50,7 +54,7 @@ class StageScene {
   final int stepsPerPeriod;
 
   /// 아래부터 그리는 순서.
-  List<StageLayer> get layers => [sky, far, ground, roadside];
+  List<StageLayer> get layers => [sky, far, ground, roadside, ?overlay];
 
   /// [step] 번 장의 이동량(세상 깊이).
   double offsetAt(int step) => step * period / stepsPerPeriod;

@@ -6,6 +6,7 @@ import 'package:flutter/scheduler.dart';
 
 import '../stage/park_scene.dart';
 import '../stage/stage_scene.dart';
+import '../stage/stage_weather.dart';
 import '../theme.dart';
 
 /// 사각 무대 배경([StageScene] 네 겹)과 펫 발밑 그림자. `PetStage` 가 펫 뒤에 깐다.
@@ -101,13 +102,17 @@ class StageBackdropState extends State<StageBackdrop>
 
   @override
   Widget build(BuildContext context) {
+    // 기본 공원 무대는 날씨를 입는다(F25). 밤이면 테마와 상관없이 밤(다크) 색으로 그린다.
+    final weather = StageWeatherScope.of(context);
+    final park = identical(widget.scene, parkScene);
+    final night = park && weather.night;
     return RepaintBoundary(
       child: CustomPaint(
         size: Size.infinite,
         painter: _StagePainter(
-          scene: widget.scene,
-          colors: AppColors.of(context),
-          brightness: Theme.of(context).brightness,
+          scene: park ? parkSceneFor(weather) : widget.scene,
+          colors: night ? AppColors.dark : AppColors.of(context),
+          brightness: night ? Brightness.dark : Theme.of(context).brightness,
           scale: widget.scale,
           feetFromBottom: widget.feetFromBottom,
           step: _step,
