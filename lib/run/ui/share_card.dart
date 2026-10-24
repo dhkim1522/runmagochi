@@ -319,13 +319,13 @@ class _Stat extends StatelessWidget {
   }
 }
 
-/// [card] 를 화면 밖에서 그려 PNG 바이트로 만든다.
+/// [card](러닝 공유 카드·결산 카드)를 화면 밖에서 그려 PNG 바이트로 만든다.
 ///
 /// 아바타 시트를 먼저 읽어 두고(비어 있는 아바타가 찍히지 않게) 그린 뒤 찍는다.
 /// [sheets] 는 [ShareCard.sheetPaths] 의 결과다.
 Future<Uint8List> renderShareCard(
   BuildContext context,
-  ShareCard card, {
+  Widget card, {
   List<String> sheets = const [],
 }) async {
   final overlay = Overlay.of(context, rootOverlay: true);

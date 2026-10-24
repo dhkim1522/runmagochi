@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -6,10 +7,16 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/format.dart';
 import '../../core/theme.dart';
 import '../../core/ui/components.dart';
+import '../../avatar/app/providers.dart';
+import '../../shop/app/providers.dart';
+import '../../shop/data/shop_repository.dart' show Equipped;
 import '../app/providers.dart';
+import '../app/share_service.dart';
 import '../data/run_repository.dart';
 import '../domain/run_stats.dart';
 import 'home_screen.dart';
+import 'recap_card.dart';
+import 'share_card.dart';
 import 'stats_chart.dart';
 import 'summary_screen.dart';
 
@@ -53,6 +60,72 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
     };
   }
 
+  /// 결산 카드를 만드는 중. 끝날 때까지 버튼을 막는다.
+  bool _sharing = false;
+
+  /// 결산 카드 제목. 주·월만, 러닝이 있는 기간만 공유한다. 없으면 null.
+  String? _recapLabel(RunStats stats) {
+    if (stats.count == 0) return null;
+    final now = _back == 0;
+    return switch (_period) {
+      StatsPeriod.week => now ? '이번 주 결산' : '이 주 결산',
+      StatsPeriod.month => now ? '이번 달 결산' : '이 달 결산',
+      _ => null,
+    };
+  }
+
+  Future<void> _shareRecap(RunStats stats, String heading) async {
+    if (_sharing) return;
+    setState(() => _sharing = true);
+    try {
+      final growth = await ref.read(growthStateProvider.future);
+      Equipped? equipped;
+      try {
+        equipped = await ref.read(equippedProvider.future);
+      } catch (_) {
+        // 장착 정보를 못 읽으면 맨몸으로 그린다.
+      }
+      if (!mounted) return;
+      final card = RecapCard(
+        title: _title(stats),
+        heading: heading,
+        stats: stats,
+        kind: growth.kind,
+        stage: growth.stage,
+        mood: growth.mood,
+        name: growth.name,
+        level: growth.level.level,
+        hatItemId: equipped?.hatItemId,
+        accessoryItemId: equipped?.accessoryItemId,
+      );
+      final png = await renderShareCard(
+        context,
+        card,
+        sheets: ShareCard.sheetPaths(
+          kind: growth.kind,
+          stage: growth.stage,
+          mood: growth.mood,
+          hatItemId: equipped?.hatItemId,
+          accessoryItemId: equipped?.accessoryItemId,
+        ),
+      );
+      final dir = await ref.read(shareTempDirProvider)();
+      final file = File(
+        '${dir.path}/runmagochi_recap_${DateTime.now().millisecondsSinceEpoch}.png',
+      );
+      await file.writeAsBytes(png, flush: true);
+      await ref.read(sharerProvider).shareImage(file.path);
+    } catch (e) {
+      debugPrint('recap share failed: $e');
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('공유하지 못했어요')));
+    } finally {
+      if (mounted) setState(() => _sharing = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     // 러닝이 끝나 요약이 새로 생기면 목록과 통계를 다시 읽는다.
@@ -80,7 +153,22 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const ScreenTitle('기록'),
+                  // 주·월 결산 공유는 요약 화면의 공유처럼 제목 오른쪽에 둔다.
+                  Row(
+                    children: [
+                      const Expanded(child: ScreenTitle('기록')),
+                      if (list != null)
+                        if (_recapLabel(stats) case final heading?)
+                          AppButton.secondary(
+                            key: const ValueKey('recap-share'),
+                            label: '결산 공유',
+                            small: true,
+                            onPressed: _sharing
+                                ? null
+                                : () => _shareRecap(stats, heading),
+                          ),
+                    ],
+                  ),
                   const SizedBox(height: Gap.s4),
                   _PeriodTabs(
                     selected: _period,

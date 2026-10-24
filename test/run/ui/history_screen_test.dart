@@ -95,6 +95,9 @@ void main() {
       runs: [_item('a', '목요일 저녁 러닝', DateTime(2026, 10, 15, 19), 3000)],
     );
     await pump(tester, repo);
+    // 기본 800×600 화면에서는 목록 첫 칸이 아래 끝에 걸쳐 있다.
+    await tester.ensureVisible(find.textContaining('목요일 저녁 러닝'));
+    await tester.pumpAndSettle();
     await tester.tap(find.textContaining('목요일 저녁 러닝'));
     await tester.pumpAndSettle();
     expect(find.byType(SummaryScreen), findsOneWidget);

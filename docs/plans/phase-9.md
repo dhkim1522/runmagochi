@@ -20,9 +20,9 @@
   - 파일: `lib/reminder/`(새로), 설정 화면
   - 테스트: 마지막 러닝 날부터 3일째 저녁 7시에 한 번 예약, 러닝하면 다시 예약. 다음 레벨까지 1km 이하면 문구가 남은 거리로 바뀐다. 설정에서 끄면 예약을 지운다. 기본 켜짐. 스키마 8판(Profiles.reminder), 백업 8판, 결정 0038(timezone)
   - 확인: `fvm flutter test test/reminder test/settings`
-- [ ] 4. 결산 카드 (F32)
+- [x] 4. 결산 카드 (F32)
   - 파일: `lib/run/ui/recap_card.dart`(새로), 기록 화면
-  - 테스트: 주·월 탭에서 공유 버튼으로 기간 거리·러닝 수·레벨 변화를 담은 카드를 만든다. 러닝이 없으면 버튼이 없다
+  - 테스트: 주·월 탭 제목 오른쪽 "결산 공유"로 기간 거리·러닝 수·시간·페이스·막대·현재 레벨 카드를 만든다. 년·전체·러닝 없는 기간에는 버튼이 없다
   - 확인: `fvm flutter test test/run/ui`
 - [ ] 5. 부화 연출 (F33)
   - 파일: `tool/sprites/egg.dart`(새로), `assets/sprites/egg/`, `lib/onboarding/ui/hatch_view.dart`(새로)
