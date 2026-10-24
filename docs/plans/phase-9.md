@@ -34,7 +34,7 @@
   - 테스트: 날씨 코드 → 장면 매핑, 해 진 뒤는 밤. 인터넷·위치가 없으면 기본(맑음/낮), 30분 캐시. 러닝 기록 위치와 별개로 대략 위치만 쓴다
   - 확인: `fvm flutter test test/weather test/core`
   - 결정: 새 패키지(`http`) → 결정 기록
-- [ ] 7. 홈 화면 위젯 (F29)
+- [x] 7. 홈 화면 위젯 (F29)
   - 파일: `lib/widget/`(새로), `android/app/src/main/`(AppWidget), `ios/`(WidgetKit 확장)
   - 테스트: 위젯에 보낼 상태(캐릭터·표정·레벨·다음 레벨까지 거리·날씨)를 만든다. 러닝을 끝내거나 앱을 열면 갱신한다
   - 확인: `fvm flutter test test/widget`, 에뮬레이터 홈 화면에 위젯 추가
@@ -78,7 +78,7 @@
 - [ ] 페이즈 1~6 의 "사람 확인" 항목 통과
 - [ ] 리포트의 개선점을 반영하거나 미룰 이유를 적음
 - [ ] Android 지인 베타 의견 수집
-- [ ] iPhone 위젯·건강 연동이 무료 Apple ID 로 동작하는지(안 되면 페이즈 10 유료 계정 뒤)
+- [ ] iPhone 위젯: `ios/PetWidget/README.md` 대로 Xcode 에서 Widget Extension 연결, 무료 Apple ID 로 동작하는지(안 되면 페이즈 10 유료 계정 뒤). 건강 연동도 같다
 
 ## 자동 결정
 없음

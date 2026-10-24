@@ -14,6 +14,7 @@ import 'run/ui/history_screen.dart';
 import 'run/ui/home_screen.dart';
 import 'shop/ui/shop_screen.dart';
 import 'weather/app/weather_controller.dart';
+import 'widget/pet_widget_sync.dart';
 
 class RunmagochiApp extends ConsumerWidget {
   const RunmagochiApp({super.key});
@@ -86,7 +87,8 @@ class _OnboardingGateState extends ConsumerState<_OnboardingGate> {
       false => OnboardingScreen(
         onFinished: () => ref.invalidate(onboardedProvider),
       ),
-      true => const _HomeShell(),
+      // 홈 화면 위젯 그림은 첫 실행을 마친 뒤부터 그린다(F29).
+      true => const PetWidgetSync(child: _HomeShell()),
     };
   }
 }

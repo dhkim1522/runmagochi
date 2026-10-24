@@ -1,8 +1,6 @@
 import 'dart:typed_data';
-import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart' hide Split;
-import 'package:flutter/rendering.dart';
 
 import '../../avatar/domain/growth_rules.dart';
 import '../../avatar/ui/avatar_view.dart';
@@ -11,6 +9,7 @@ import '../../core/format.dart';
 import '../../core/stage/stage_weather.dart';
 import '../../core/theme.dart';
 import '../../core/ui/components.dart';
+import '../../core/ui/offscreen.dart';
 import '../../shop/domain/catalog.dart';
 import '../domain/route_pace.dart';
 import '../domain/run_summary.dart';
@@ -329,42 +328,15 @@ class _Stat extends StatelessWidget {
 }
 
 /// [card](러닝 공유 카드·결산 카드)를 화면 밖에서 그려 PNG 바이트로 만든다.
-///
-/// 아바타 시트를 먼저 읽어 두고(비어 있는 아바타가 찍히지 않게) 그린 뒤 찍는다.
 /// [sheets] 는 [ShareCard.sheetPaths] 의 결과다.
 Future<Uint8List> renderShareCard(
   BuildContext context,
   Widget card, {
   List<String> sheets = const [],
-}) async {
-  final overlay = Overlay.of(context, rootOverlay: true);
-  for (final p in sheets) {
-    await precacheImage(AssetImage(p), context);
-  }
-  final key = GlobalKey();
-  final entry = OverlayEntry(
-    builder: (_) => Positioned(
-      // 화면 왼쪽 밖. 배치·그리기는 되지만 보이지 않는다.
-      left: -shareCardSize.width - 100,
-      top: 0,
-      child: RepaintBoundary(key: key, child: card),
-    ),
-  );
-  overlay.insert(entry);
-  try {
-    // 그려진 뒤 이미지 리스너가 한 번 더 그리게 한다.
-    await WidgetsBinding.instance.endOfFrame;
-    await WidgetsBinding.instance.endOfFrame;
-    final boundary =
-        key.currentContext!.findRenderObject()! as RenderRepaintBoundary;
-    final image = await boundary.toImage(pixelRatio: shareCardPixelRatio);
-    try {
-      final data = await image.toByteData(format: ui.ImageByteFormat.png);
-      return data!.buffer.asUint8List();
-    } finally {
-      image.dispose();
-    }
-  } finally {
-    entry.remove();
-  }
-}
+}) => renderOffscreen(
+  context,
+  card,
+  size: shareCardSize,
+  pixelRatio: shareCardPixelRatio,
+  sheets: sheets,
+);
