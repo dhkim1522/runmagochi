@@ -4,7 +4,7 @@
 
 ## 숫자
 
-9일(2026-10-16 ~ 10-24) · 커밋 400여 개 · 자동 테스트 1,387개 · 앱 코드 16,811줄 / 테스트 코드 26,132줄 · 결정 기록 38개 · 화면 컷 64개. 출처와 페이즈별 추이는 [개발 기록](dev-log.md).
+9일(2026-10-16 ~ 10-24) · 커밋 400여 개 · 자동 테스트 1,387개 · 앱 코드 16,811줄 / 테스트 코드 26,132줄 · 결정 기록 39개 · 화면 컷 64개. 출처와 페이즈별 추이는 [개발 기록](dev-log.md).
 
 ## 산출물
 
@@ -18,7 +18,7 @@
 | 6 | 시스템 아키텍처 | [`docs/architecture.md`](architecture.md) | 기술 스택, 모듈 지도, 플랫폼 경계, 의존성 주입 |
 | 7 | 데이터 모델 ERD | [`docs/data-model.md`](data-model.md) | 테이블 10개 ERD, 스키마 판 이력. 테스트가 코드와 대조 |
 | 8 | 시퀀스 다이어그램 | [`docs/sequences.md`](sequences.md) | 기록~보상, 알림 버튼, 자동 일시정지·종료, 백업 4종 |
-| 9 | 결정 기록 모음 | [`docs/decisions/README.md`](decisions/README.md) | 결정 38개 색인과 흐름도 |
+| 9 | 결정 기록 모음 | [`docs/decisions/README.md`](decisions/README.md) | 결정 39개 색인과 흐름도 |
 | 10 | 개발 기록 | [`docs/dev-log.md`](dev-log.md) | 페이즈별 테스트 수 추이, 검증에서 잡은 결함 |
 | 11 | README 소개 | [`README.md`](../README.md), `design/readme/` | 앱 소개, 스크린샷 6장 |
 | 12 | 플레이북·스킬 | [`docs/playbook.md`](playbook.md), `.claude/skills/playbook/` | 다음 프로젝트용 진행 순서와 규칙 |
