@@ -4,14 +4,15 @@
 
 ## 현재 상태
 
-- **페이즈 8 산출물 정리 구현 완료, 사람 확인 대기** (`docs/plans/phase-8.md`, 상태 `실측 대기`, 2026-10-24).
-- 산출물 13종이 모두 있다: [현황표](docs/portfolio.md). 화면 64컷 전체 재촬영, README 스크린샷 6장, 문서 지도 갱신 완료.
-- 자동 검증: `fvm flutter test` 1,372개 통과, `fvm dart analyze` 문제 없음, 디버그 APK 빌드 통과(`build/app/outputs/flutter-apk/app-debug.apk`), mermaid 문법 검사 전부 통과, 문서 상대 링크 끊김 0.
+- **페이즈 8 산출물 정리 완료** (`docs/plans/phase-8.md`, 상태 `완료`, 2026-10-24). 다음은 페이즈 9 실기기 테스트.
+- 산출물 13종 사용자 승인: [현황표](docs/portfolio.md). 화면 64컷 전체 재촬영, README 스크린샷 6장 + 러닝 GIF(`design/readme/run.gif`, 926KB), 문서 지도 갱신 완료.
+- 문서 표본 확인: 시퀀스 1(러닝 기록~보상)을 코드와 대조해 일치. ERD 는 `test/docs/data_model_doc_test.dart` 가 자동 대조.
+- 자동 검증: `fvm flutter test` 1,372개 통과, `fvm dart analyze` 문제 없음, 디버그 APK 빌드 통과, mermaid 문법 검사 전부 통과, 문서 상대 링크 끊김 0.
 - 저장소 공개(2026-10-24) + GitHub Pages(main 루트, `.nojekyll`): https://dhkim1522.github.io/runmagochi/ → 포트폴리오로 넘어간다.
 - 포트폴리오 `design/portfolio/index.html`: 한 장짜리 앱 소개 + GitHub 저장소 링크만. 산출물 목록은 넣지 않는다.
 - 산출물 형식: 볼거리(화면설계서 `design/screens/`, 디자인 시스템 `docs/design/design-system/index.html`, UI 후보 비교 `design/mockups/phase-6/compare/`, 캐릭터 에셋 `design/character/asset-catalog.html`)는 HTML, 다이어그램 문서(ERD·시퀀스·흐름·아키텍처·결정)는 md(mermaid). README 의 HTML 링크는 Pages 주소.
 - 디자인 시스템 HTML 은 `python3 tool/export_design_system.py` 로 `project/` 원본에서 다시 만든다. 아티팩트는 작업 중 미리보기용이고 문서는 저장소 파일을 가리킨다.
-- 에뮬레이터 `runmagochi` 는 켜져 있고 디버그 APK 설치됨(예시 데이터 젤리 Lv.9).
+- 에뮬레이터 `runmagochi` 에는 이제 **릴리스 APK** 가 깔려 있다(예시 데이터 말랑이 Lv.9 + GIF 녹화용 1.22km 러닝 1회). 이 Mac 에 ffmpeg(brew) 설치됨. adb 는 `~/Library/Android/sdk/platform-tools/adb`(PATH 밖).
 
 ### 최종 검토 (2026-10-24 밤)
 
@@ -22,14 +23,11 @@
 - 위생: 비밀값·조직 흔적 없음. `.superpowers/` 는 추적되지 않음. 커밋 메일은 개인 주소.
 - 뒤이어 정리: `CLAUDE.md` 의 "회사 Mac" 표현을 고침. README 의 화면 수는 화면설계서 보드 기준 59장으로(PNG 파일은 긴 화면 4장·공유 카드 원본 1장을 더해 64개). 산출물은 캐릭터 에셋을 더해 13종.
 
-## 사람 확인 (다음 `/phase 8` 이 완료 판정)
+## 사람 확인
 
-- [ ] 산출물 13종을 포트폴리오로 쓸 수 있는 수준으로 승인
-- [ ] 문서가 앱 동작과 맞는지 표본 확인(시퀀스 또는 ERD 중 하나)
-- [ ] README 러닝 GIF: ffmpeg·adb 가 PATH 에 없어 만들지 못했다. 넣을지 정하고, 넣으면 도구를 설치해 녹화(≤2MB)
-- 13c(위치 서비스 꺼짐) 컷에서 버튼에 진한 테두리가 한 번 보임. 일시적 포커스 표시로 추정, 실기기에서 확인(페이즈 9)
+- 페이즈 8 사람 확인 끝. 13c(위치 서비스 꺼짐) 컷에서 버튼에 진한 테두리가 한 번 보임. 일시적 포커스 표시로 추정, 실기기에서 확인(페이즈 9)
 
 ## 다음
 
-- 완료 판정 뒤 페이즈 9(실기기 테스트, `docs/field-test.md`). 아이템 그림 검토를 하면 상점·꾸미기 컷은 다시 찍는다.
+- 페이즈 9(실기기 테스트, `docs/field-test.md`): `/phase 9` 로 계획부터. 아이템 그림 검토를 하면 상점·꾸미기 컷은 다시 찍는다.
 - mermaid 검사 도구는 스크래치패드 밖이라 세션마다 사라진다. 다이어그램을 고치면 mermaid-cli 로 다시 검사할 것.

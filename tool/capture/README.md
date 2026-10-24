@@ -30,6 +30,15 @@ python3 tool/capture/make_demo_backups.py /tmp && adb push /tmp/demo-*.json /sdc
 5. iPhone: `flutter build ios --simulator --debug` → `simctl install` → 앱 폴더(`simctl get_app_container … data`)의 `Documents/runmagochi.sqlite` 에 Android 앱 DB 를 복사 → `flutter run -d <기기> --debug` 로 띄워 VM 서비스 주소를 얻고 `dart tool/capture/vm_ui.dart <주소> banner|tap|hold|swipe` + `simctl io screenshot`. 위치는 `simctl location start --speed=4 <위도,경도 …>`.
 6. `make_web.py` 로 사본을 만들고 `design/screens/index.html` 의 컷 설명 숫자를 맞춘다.
 
+## README 러닝 GIF
+
+`design/readme/run.gif` 는 릴리스 APK 에서 이렇게 만들었다(2026-10-24). 재설치 뒤에는 `adb shell dumpsys deviceidle whitelist +com.dhkim1522.runmagochi` 로 배터리 안내를 건너뛴다.
+
+1. `ring_run.py --meters 1250 --speed 4.4` 를 띄우고 `adb shell screenrecord --time-limit 16 /sdcard/clip1.mp4` 중에 시작을 누른다(시작·카운트다운·러닝).
+2. 0.3km 쯤 `screenrecord --time-limit 8 clip2.mp4`(거리가 오르는 장면).
+3. 1.1km 를 넘으면 `screenrecord --time-limit 14 clip3.mp4` 중에 일시정지 → `input swipe 540 2174 540 2174 2300`(길게 눌러 종료) → 요약.
+4. ffmpeg 로 clip1 0~4.75초·5.15~6.6초(카운트다운 뒤 홈이 잠깐 비치는 부분 뺌), clip2 0~4.2초, clip3 0.6초~ + 마지막 장면 3초 정지를 12fps·폭 360 으로 이어 `palettegen`(96색)·`paletteuse` 로 GIF 를 만든다. 2MB 이하.
+
 ## 알려진 한계
 
 - 종료 예고 39d·39e 는 이번에 다시 찍지 못해 10-23 컷을 그대로 둠(작은 아이콘은 반영된 뒤 촬영).

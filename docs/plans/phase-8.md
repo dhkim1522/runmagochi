@@ -1,6 +1,6 @@
 # 페이즈 8 구현 계획
 
-- 상태: 실측 대기
+- 상태: 완료
 - 모드: 수동
 - 범위: docs/roadmap.md 페이즈 8 산출물 정리 (결정 0022·0026·0035)
 
@@ -83,7 +83,7 @@
   - 내용: 한 화면에 앱 소개(문제·해법), 스크린샷 4~6장, 러닝 GIF 1개(에뮬레이터 `fake_run` 녹화), 기능, 기술 스택, 구조 한 장, 산출물 목록 링크, 개발 방식(Claude Code 페이즈 흐름), 빌드·실행. 기존 "시작하기" 절은 아래로 내린다
   - 확인: README 의 상대 링크가 모두 실제 파일을 가리킨다(링크 검사 한 줄 스크립트). GIF 2MB 이하
   - 막히면: GIF 녹화 도구(adb screenrecord·ffmpeg)가 없으면 스크린샷만으로 두고 GIF 는 사람 확인에 남긴다
-  - 결과: 스크린샷 6장(`design/readme/`, 390px)·기능·기술·산출물 표·개발 방법을 넣고 링크 검사 통과. GIF 는 ffmpeg·adb 가 PATH 에 없어 만들지 못했다 → 사람 확인
+  - 결과: 스크린샷 6장(`design/readme/`, 390px)·기능·기술·산출물 표·개발 방법을 넣고 링크 검사 통과. GIF 는 처음엔 ffmpeg·adb 가 PATH 에 없어 미뤘고, 완료 판정 때 ffmpeg 를 설치해 `design/readme/run.gif`(360px, 19초, 926KB)를 넣었다. 릴리스 APK + `tool/capture/ring_run.py` 가상 GPS, `adb screenrecord` 3클립(시작·러닝·종료→요약)을 이어 붙임
 
 - [x] 10. 다음 프로젝트용 플레이북과 스킬
   - 파일: `docs/playbook.md`, `.claude/skills/playbook/SKILL.md`
@@ -113,11 +113,11 @@
 
 ### E2E (에뮬레이터, `/e2e` 가 확인)
 - [x] 화면 재촬영(작업 3) 중 앱이 정상 실행되고, `design/screens/` 목록의 화면을 모두 조작해 찍을 수 있다(누락 컷 0)
-- [ ] README 러닝 GIF 녹화(작업 9)에서 가상 러닝 시작→기록→요약까지 진행된다 (미확인: ffmpeg·adb 가 PATH 에 없어 GIF 를 만들지 못함. 러닝 시작→요약은 작업 3 재촬영에서 확인)
+- [x] README 러닝 GIF 녹화(작업 9)에서 가상 러닝 시작→기록→요약까지 진행된다 (2026-10-24: 1.22km 러닝이 일시정지→길게 눌러 종료→요약, 경험치 +12·코인 +6 까지 진행)
 
 ### 사람 확인
-- [ ] 산출물 12종을 포트폴리오로 쓸 수 있는 수준으로 사용자가 승인 (페이즈 8 완료 기준)
-- [ ] 문서 내용이 앱 동작과 맞는지 사용자가 표본으로 확인(시퀀스·ERD 중 한 가지)
+- [x] 산출물 13종(캐릭터 에셋 추가)을 포트폴리오로 쓸 수 있는 수준으로 사용자가 승인 (2026-10-24)
+- [x] 문서 내용이 앱 동작과 맞는지 표본 확인(시퀀스·ERD 중 한 가지) — 사용자가 Claude 에게 맡김. 시퀀스 1(러닝 기록~보상)을 `run_controller.dart`·`home_screen.dart`·`growth_service.dart`·`achievement_service.dart` 와 대조해 메서드 이름·10초 저장·1초 tick·1km 기준(`minSavedDistanceM`)·sync→awardNew 순서가 일치. ERD 는 `test/docs/data_model_doc_test.dart` 가 코드와 자동 대조
 
 ## 자동 결정
 없음

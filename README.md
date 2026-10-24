@@ -3,6 +3,10 @@
 실제 러닝 기록(GPS·페이스)에 도트 아바타 육성을 더한 Android·iOS 러닝 앱. 달릴수록 캐릭터가 자라고, 오래 쉬면 졸린 표정을 짓는다. 서버 없이 기기 안에서 동작한다.
 
 <p>
+  <img src="design/readme/run.gif" width="200" alt="러닝 시작부터 종료·요약까지 (에뮬레이터 가상 GPS)">
+</p>
+
+<p>
   <img src="design/readme/06-home.png" width="150" alt="홈">
   <img src="design/readme/11-run.png" width="150" alt="러닝 중">
   <img src="design/readme/16-summary-levelup.png" width="150" alt="러닝 요약, 레벨 업">
