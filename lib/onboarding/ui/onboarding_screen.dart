@@ -12,6 +12,7 @@ import '../../avatar/ui/avatar_view.dart';
 import '../../avatar/ui/sprite_sheet.dart' show spriteFramePx;
 import '../../core/theme.dart';
 import '../../core/ui/components.dart';
+import 'hatch_view.dart';
 import '../../profile/app/providers.dart';
 
 /// 저장소의 기본 이름. 이 이름이면 아직 이름을 짓지 않은 것으로 보고 종류별 추천 이름을 채운다.
@@ -251,10 +252,14 @@ class _FillStage extends StatelessWidget {
     required this.kind,
     this.withBubble = false,
     this.bubble,
+    this.hatch = false,
   });
 
   final Key stageKey;
   final AvatarKind kind;
+
+  /// 알에서 태어나는 연출로 시작한다(첫 실행 1장, F33).
+  final bool hatch;
 
   /// 말풍선 자리를 잡는다.
   final bool withBubble;
@@ -301,13 +306,24 @@ class _FillStage extends StatelessWidget {
             height: box.maxHeight,
             scale: scale,
             pet: ExcludeSemantics(
-              child: AvatarView(
-                kind: kind,
-                stage: 1,
-                mood: AvatarMood.normal,
-                action: AvatarAction.idle,
-                scale: scale,
-              ),
+              child: hatch
+                  ? HatchView(
+                      scale: scale,
+                      pet: AvatarView(
+                        kind: kind,
+                        stage: 1,
+                        mood: AvatarMood.normal,
+                        action: AvatarAction.idle,
+                        scale: scale,
+                      ),
+                    )
+                  : AvatarView(
+                      kind: kind,
+                      stage: 1,
+                      mood: AvatarMood.normal,
+                      action: AvatarAction.idle,
+                      scale: scale,
+                    ),
             ),
             // 입력칸이 이미 읽히므로 이름 말풍선은 스크린 리더에서 뺀다.
             bubble: bubble == null
@@ -343,6 +359,7 @@ class _IntroPage extends StatelessWidget {
             child: _FillStage(
               stageKey: const ValueKey('onboarding-stage'),
               kind: kind,
+              hatch: true,
             ),
           ),
           const SizedBox(height: Gap.s5),

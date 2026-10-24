@@ -505,4 +505,51 @@ void task15Tests() {
     );
     expect(pet.scale, greaterThanOrEqualTo(3));
   });
+
+
+  group('부화 연출 (F33)', () {
+    Finder egg() => find.byKey(const ValueKey('hatch-egg'));
+    double petOpacity(WidgetTester tester) => tester
+        .widget<AnimatedOpacity>(
+          find.ancestor(
+            of: find.byType(AvatarView),
+            matching: find.byType(AnimatedOpacity),
+          ),
+        )
+        .opacity;
+
+    testWidgets('1장은 알로 시작해 흔들리다 깨지고 캐릭터가 나온다', (tester) async {
+      await pumpOnboarding(tester);
+      expect(egg(), findsOneWidget);
+      expect(petOpacity(tester), 0);
+      for (var i = 0; i < 40; i++) {
+        await tester.pump(const Duration(milliseconds: 100));
+      }
+      expect(egg(), findsNothing);
+      expect(petOpacity(tester), 1);
+    });
+
+    testWidgets('누르면 기다리지 않고 바로 태어난다', (tester) async {
+      await pumpOnboarding(tester);
+      await tester.tap(egg());
+      await tester.pump();
+      expect(egg(), findsNothing);
+      expect(petOpacity(tester), 1);
+    });
+
+    testWidgets('움직임 줄이기 설정이면 알 없이 바로 캐릭터', (tester) async {
+      tester.platformDispatcher.accessibilityFeaturesTestValue =
+          const FakeAccessibilityFeatures(disableAnimations: true);
+      addTearDown(tester.platformDispatcher.clearAccessibilityFeaturesTestValue);
+      await pumpOnboarding(tester);
+      expect(egg(), findsNothing);
+      expect(petOpacity(tester), 1);
+    });
+
+    testWidgets('이름 짓기(2장)에서는 알 없이 캐릭터가 서 있다', (tester) async {
+      await pumpOnboarding(tester);
+      await next(tester);
+      expect(egg(), findsNothing);
+    });
+  });
 }

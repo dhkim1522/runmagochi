@@ -24,8 +24,8 @@
   - 파일: `lib/run/ui/recap_card.dart`(새로), 기록 화면
   - 테스트: 주·월 탭 제목 오른쪽 "결산 공유"로 기간 거리·러닝 수·시간·페이스·막대·현재 레벨 카드를 만든다. 년·전체·러닝 없는 기간에는 버튼이 없다
   - 확인: `fvm flutter test test/run/ui`
-- [ ] 5. 부화 연출 (F33)
-  - 파일: `tool/sprites/egg.dart`(새로), `assets/sprites/egg/`, `lib/onboarding/ui/hatch_view.dart`(새로)
+- [x] 5. 부화 연출 (F33)
+  - 파일: `tool/sprites/egg.dart`(새로, 6프레임), `assets/sprites/egg/hatch.png`, `lib/onboarding/ui/hatch_view.dart`(새로)
   - 테스트: 첫 실행 1장에서 알이 흔들리다 금이 가고 깨지며 캐릭터가 나온다(약 3초, 누르면 건너뜀). 움직임 줄이기 설정이면 바로 캐릭터. 초기화 뒤에도 같은 연출
   - 확인: `fvm flutter test test/onboarding`, 스프라이트 생성 `fvm dart run tool/render_sprites.dart`
   - 스킬: pixel-plugin(도트), 규격 `docs/specs/sprite-spec.md`

@@ -90,6 +90,7 @@ flutter:
     - assets/sprites/acorn/face/
     - assets/sprites/acorn/hat/
     - assets/sprites/acorn/accessory/
+    - assets/sprites/egg/
     - assets/badges/
 
   fonts:

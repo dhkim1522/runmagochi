@@ -3,6 +3,7 @@
 import 'package:image/image.dart' as img;
 
 import 'badges.dart';
+import 'egg.dart';
 import 'items.dart';
 import 'pet_art.dart';
 import 'pets.dart';
@@ -41,6 +42,8 @@ Map<String, img.Image> allSheets() {
       }
     }
   }
+  // 부화 연출 알(F33).
+  out['assets/sprites/egg/hatch.png'] = sheet(hatchFrames);
   return out;
 }
 

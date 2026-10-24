@@ -59,6 +59,10 @@ face 레이어는 4개 외형 단계가 모두 공유한다. 그래서 어느 �
 
 정수 배율로 키우고 `FilterQuality.none` 으로 그린다.
 
+## 부화 알 (F33)
+
+`assets/sprites/egg/hatch.png`: 32칸 × 6프레임(0 가만히, 1 왼쪽 기울기, 2 오른쪽 기울기, 3 금 1, 4 금 2, 5 깨짐). 펫과 같은 바닥(y=29)·위 5줄 비움 규칙, 병아리 알과 같은 크림 껍데기 색. 데이터는 `tool/sprites/egg.dart`, 재생은 `lib/onboarding/ui/hatch_view.dart`(약 3초).
+
 ## 배지
 
 업적 배지 12개(`lib/achievement/domain/badges.dart` 의 `badgeCatalog`)는 배지마다 그림 한 장이다(페이즈 6 작업 6).
