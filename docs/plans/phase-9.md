@@ -45,8 +45,8 @@
   - 테스트: 건강 앱의 러닝 운동(이 앱이 쓴 것 제외)을 읽어 경험치로 반영, 같은 운동은 한 번만. 끄면 읽지 않는다
   - 확인: `fvm flutter test test/health`
   - 결정: 새 패키지(`health`) → 결정 기록. 스토어 권한 신고는 페이즈 10
-- [ ] 10. 화면설계서·문서 갱신
-  - 파일: `design/screens/`(바뀐 컷 재촬영), `docs/screens.md`, `docs/product.md`, `docs/data-model.md`, `docs/sequences.md`
+- [x] 10. 화면설계서·문서 갱신
+  - 파일: `design/screens/index.html`(설명), `docs/screens.md`, `docs/product.md`, `docs/data-model.md`, `docs/user-flows.md`. 바뀐 화면 컷(01 첫 실행·34 설정 등)은 실측 뒤 한꺼번에 다시 찍는다
   - 확인: `fvm flutter test test/docs`, mermaid 검사, 상대 링크 검사
 
 ## 작업 (실측)
