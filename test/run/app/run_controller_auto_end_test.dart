@@ -275,7 +275,9 @@ void main() {
         expect(env.view.snapshot.state, RunState.idle);
         expect(env.progress.warnings, hasLength(1));
         expect(env.progress.warningCancels, 1);
-        expect(env.notifier.shown, [(_title, '1.00km 기록을 저장했어요. 요약에서 확인해 보세요.')]);
+        expect(env.notifier.shown, [
+          (_title, '1.00km 기록을 저장했어요. 요약에서 확인해 보세요.'),
+        ]);
       });
     });
 

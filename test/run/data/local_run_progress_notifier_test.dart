@@ -101,7 +101,6 @@ void main() {
     });
   });
 
-
   test('스스로 멈춘 상태의 두 번째 버튼은 계속 쉬기다 (Android·iOS)', () async {
     await notifier.show(_content([RunProgressAction.pause]));
     await notifier.show(

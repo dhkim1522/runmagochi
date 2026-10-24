@@ -32,6 +32,9 @@ class FakeSharer implements Sharer {
   Completer<void>? hold;
 
   @override
+  Future<void> shareFile(String path, {required String mimeType}) async {}
+
+  @override
   Future<void> shareImage(String path, {String? text}) async {
     paths.add(path);
     texts.add(text);

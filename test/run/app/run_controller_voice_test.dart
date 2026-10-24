@@ -275,7 +275,10 @@ void main() {
 
       controller.pause();
       async.elapse(const Duration(hours: 1, seconds: 5));
-      expect(speaker.spoken, ['러닝을 시작해요', '일시정지가 길어 러닝을 마쳐요. 30초 안에 재개를 눌러 주세요']);
+      expect(speaker.spoken, [
+        '러닝을 시작해요',
+        '일시정지가 길어 러닝을 마쳐요. 30초 안에 재개를 눌러 주세요',
+      ]);
     });
   });
 

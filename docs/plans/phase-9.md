@@ -8,7 +8,7 @@
 
 ## 작업 (실측 전)
 
-- [ ] 1. GPX 내보내기 (F30)
+- [x] 1. GPX 내보내기 (F30)
   - 파일: `lib/run/domain/gpx.dart`(새로), `lib/run/ui/summary_screen.dart`
   - 테스트: 경로 점·구간으로 GPX 1.1 문자열(trk/trkseg/trkpt, 시각 UTC)을 만든다. 상세 화면 공유 메뉴에서 GPX 파일을 공유한다
   - 확인: `fvm flutter test test/run`

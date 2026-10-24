@@ -9,6 +9,7 @@ import 'package:runmagochi/avatar/app/providers.dart';
 import 'package:runmagochi/avatar/domain/growth_state.dart';
 import 'package:runmagochi/core/theme.dart';
 import 'package:runmagochi/run/app/providers.dart';
+import 'package:runmagochi/run/app/share_service.dart';
 import 'package:runmagochi/run/data/run_repository.dart';
 import 'package:runmagochi/run/domain/location_sample.dart';
 import 'package:runmagochi/run/domain/run_goal.dart';
@@ -777,4 +778,77 @@ void layoutTests() {
       }
     }
   });
+
+  testWidgets('기록 상세에서 GPX 파일을 만들어 공유 창으로 보낸다', (tester) async {
+    tester.view.physicalSize = const Size(800, 2400);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    final dir = Directory.systemTemp.createTempSync('gpx');
+    addTearDown(() => dir.deleteSync(recursive: true));
+    final sharer = _FileSharer();
+    final repo = FakeRepo(
+      (0, 0),
+      details: {
+        'a': RunDetail(
+          run: RunListItem(
+            id: 'a',
+            name: '아침 러닝',
+            startedAt: DateTime(2026, 10, 10, 7),
+            distanceM: 2500,
+            movingTime: const Duration(minutes: 16, seconds: 15),
+            avgPaceSecPerKm: 390,
+          ),
+          calories: 168,
+          route: const [(37.5, 127.0), (37.501, 127.001)],
+          splits: _splits,
+        ),
+      },
+    );
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          runRepositoryProvider.overrideWithValue(repo),
+          growthServiceProvider.overrideWithValue(
+            FakeGrowthService(growthState()),
+          ),
+          sharerProvider.overrideWithValue(sharer),
+          shareTempDirProvider.overrideWithValue(() async => dir),
+        ],
+        child: MaterialApp(
+          theme: appLightTheme(),
+          home: const SummaryScreen.forRun('a'),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(find.text('GPX 파일 내보내기'), 200);
+    await tester.runAsync(() async {
+      await tester.tap(find.text('GPX 파일 내보내기'));
+      for (var i = 0; i < 20 && sharer.paths.isEmpty; i++) {
+        await Future<void>.delayed(const Duration(milliseconds: 20));
+      }
+    });
+    await tester.pump();
+    expect(sharer.paths.single, endsWith('runmagochi-20261010-0700.gpx'));
+    expect(sharer.mimeTypes.single, 'application/gpx+xml');
+    expect(sharer.contents.single, contains('<name>아침 러닝</name>'));
+    expect('<trkpt '.allMatches(sharer.contents.single).length, 2);
+  });
+}
+
+/// 공유한 파일 경로·형식·내용을 남기는 가짜.
+class _FileSharer implements Sharer {
+  final paths = <String>[];
+  final mimeTypes = <String>[];
+  final contents = <String>[];
+
+  @override
+  Future<void> shareFile(String path, {required String mimeType}) async {
+    paths.add(path);
+    mimeTypes.add(mimeType);
+    contents.add(File(path).readAsStringSync());
+  }
+
+  @override
+  Future<void> shareImage(String path, {String? text}) async {}
 }

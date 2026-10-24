@@ -17,6 +17,7 @@ import '../app/providers.dart';
 import '../app/run_editor.dart';
 import '../app/share_service.dart';
 import '../data/run_repository.dart';
+import '../domain/gpx.dart';
 import '../domain/route_pace.dart';
 import '../domain/run_goal.dart';
 import '../domain/run_summary.dart';
@@ -246,7 +247,7 @@ class _SummaryScreenState extends ConsumerState<SummaryScreen> {
               );
               return _SummaryBody(
                 goal: _detailGoal(d),
-                footer: _DeleteRunButton(d.run),
+                footer: _DetailActions(d),
                 name: d.run.name,
                 startedAt: d.run.startedAt,
                 distanceM: d.run.distanceM,
@@ -421,6 +422,66 @@ class _ShareButton extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// 기록에서 연 상세의 아래 행동: GPX 파일 내보내기(F30)와 기록 삭제.
+class _DetailActions extends ConsumerStatefulWidget {
+  const _DetailActions(this.detail);
+  final RunDetail detail;
+
+  @override
+  ConsumerState<_DetailActions> createState() => _DetailActionsState();
+}
+
+class _DetailActionsState extends ConsumerState<_DetailActions> {
+  bool _exporting = false;
+
+  Future<void> _exportGpx() async {
+    if (_exporting) return;
+    setState(() => _exporting = true);
+    final d = widget.detail;
+    try {
+      final gpx = buildGpx(
+        name: d.run.name,
+        startedAt: d.run.startedAt,
+        route: d.route,
+        splits: d.splits,
+      );
+      final dir = await ref.read(shareTempDirProvider)();
+      final file = File('${dir.path}/${gpxFileName(d.run.startedAt)}');
+      await file.writeAsString(gpx, flush: true);
+      await ref
+          .read(sharerProvider)
+          .shareFile(file.path, mimeType: 'application/gpx+xml');
+    } catch (e) {
+      debugPrint('gpx export failed: $e');
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('내보내지 못했어요')));
+    } finally {
+      if (mounted) setState(() => _exporting = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        // 경로가 없는 예전 기록은 내보낼 것이 없다.
+        if (widget.detail.route.length >= 2) ...[
+          AppButton.secondary(
+            label: 'GPX 파일 내보내기',
+            small: true,
+            onPressed: _exporting ? null : _exportGpx,
+          ),
+          const SizedBox(height: Gap.s3),
+        ],
+        _DeleteRunButton(widget.detail.run),
+      ],
     );
   }
 }

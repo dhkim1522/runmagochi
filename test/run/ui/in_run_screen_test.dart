@@ -138,7 +138,9 @@ void main() {
       (RunState.vehicle, '탈것 같아서 일시정지했어요', '혹시 뭘 타셨나요? 이 구간은 기록에서 뺄게요'),
       (RunState.signalLost, '신호가 끊겨 일시정지했어요', '신호가 끊겼어요. 밖으로 나오면 다시 찾을게요'),
     ]) {
-      testWidgets('$state 면 제목이 까닭을 말하고 말풍선, 재개·계속 쉬기·종료 버튼이 보인다', (tester) async {
+      testWidgets('$state 면 제목이 까닭을 말하고 말풍선, 재개·계속 쉬기·종료 버튼이 보인다', (
+        tester,
+      ) async {
         final c = await open(tester, initial: snap(state));
         final bubble = find.widgetWithText(SpeechBubble, notice);
         expect(bubble, findsOneWidget);
