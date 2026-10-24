@@ -62,7 +62,7 @@ abstract interface class RunProgressNotifier {
 
 /// 사용자 일시정지 종료 예고 문구. 알림과 음성 안내가 같이 쓴다.
 const String pausedEndWarningTitle = '일시정지가 길어 러닝을 마쳐요';
-const String pausedEndWarningBody = '30초 안에 재개를 누르세요';
+const String pausedEndWarningBody = '30초 안에 재개를 눌러 주세요';
 
 /// 탈것 의심 안내. 러닝 화면 무대 말풍선과 러닝 알림이 같이 쓴다 (결정 0033).
 const String vehicleNoticeText = '혹시 뭘 타셨나요? 이 구간은 기록에서 뺄게요';
@@ -85,8 +85,8 @@ const String signalLostEndWarningTitle = '신호가 오래 끊겨 러닝을 마�
 }) => paused
     ? (title: pausedEndWarningTitle, body: pausedEndWarningBody)
     : signalLost
-    ? (title: signalLostEndWarningTitle, body: '30초 안에 밖으로 나오거나 재개를 누르세요')
-    : (title: '움직이지 않으면 러닝을 마쳐요', body: '30초 안에 움직이거나 재개를 누르세요');
+    ? (title: signalLostEndWarningTitle, body: '30초 안에 밖으로 나오거나 재개를 눌러 주세요')
+    : (title: '움직이지 않으면 러닝을 마쳐요', body: '30초 안에 움직이거나 재개를 눌러 주세요');
 
 /// 종료 예고 알림이 스스로 사라질 때까지의 밀리초. 끝날 시각까지 남은 시간에
 /// 여유 5초를 더해, 앱이 죽어도 알림이 러닝보다 오래 남지 않게 한다.
@@ -191,6 +191,13 @@ class LocalRunProgressNotifier implements RunProgressNotifier {
     '일시정지',
     showsUserInterface: false,
   );
+
+  /// 스스로 멈춘 상태(재개와 같이 나올 때)의 두 번째 버튼. 하는 일은 일시정지와 같다.
+  static const _restAction = AndroidNotificationAction(
+    pauseActionId,
+    '계속 쉬기',
+    showsUserInterface: false,
+  );
   static const _resumeAction = AndroidNotificationAction(
     resumeActionId,
     '재개',
@@ -247,6 +254,9 @@ class LocalRunProgressNotifier implements RunProgressNotifier {
               for (final action in content.actions)
                 switch (action) {
                   RunProgressAction.resume => _resumeAction,
+                  RunProgressAction.pause
+                      when content.actions.contains(RunProgressAction.resume) =>
+                    _restAction,
                   RunProgressAction.pause => _pauseAction,
                 },
             ],

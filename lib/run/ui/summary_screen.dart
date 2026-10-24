@@ -273,7 +273,12 @@ class _SummaryScreenState extends ConsumerState<SummaryScreen> {
               ),
               child: Row(
                 children: [
-                  const Expanded(child: ScreenTitle('러닝 요약')),
+                  // 종료 직후는 요약, 기록 탭에서 연 상세는 기록.
+                  Expanded(
+                    child: ScreenTitle(
+                      widget.runId == null ? '러닝 요약' : '러닝 기록',
+                    ),
+                  ),
                   const SizedBox(width: Gap.s3),
                   Builder(
                     builder: (context) {
@@ -438,7 +443,7 @@ class _DeleteRunButtonState extends ConsumerState<_DeleteRunButton> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('이 러닝을 지울까요?'),
-        content: const Text('기록에서 지워요. 받은 경험치는 그대로예요.'),
+        content: const KeepAllText('기록에서 지워요.\n받은 경험치는 그대로예요.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),

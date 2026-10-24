@@ -14,8 +14,8 @@ class PermissionScreen extends ConsumerStatefulWidget {
   ConsumerState<PermissionScreen> createState() => _PermissionScreenState();
 }
 
-const _locationMessage = '러닝 경로와 거리를 기록하려면 위치 권한이 필요합니다. 위치는 이 기기에만 저장됩니다.';
-const _preciseMessage = '정확한 위치를 허용해야 거리가 기록됩니다';
+const _locationMessage = '러닝 경로와 거리를 기록하려면 위치 권한이 필요해요.\n위치는 이 기기에만 저장돼요.';
+const _preciseMessage = '정확한 위치를 허용해야 거리가 기록돼요';
 
 class _PermissionScreenState extends ConsumerState<PermissionScreen>
     with WidgetsBindingObserver {
@@ -84,14 +84,15 @@ class _PermissionScreenState extends ConsumerState<PermissionScreen>
         [AppButton(onPressed: gate.openAppSettings, label: '설정 열기')],
       ),
       GateResult.needsBatteryGuide => (
-        '배터리 최적화가 켜져 있으면 화면이 꺼졌을 때 기록이 끊길 수 있습니다. 설정에서 배터리 사용을 제한 없음으로 바꿔 주세요.',
+        '배터리 최적화가 켜져 있으면 화면이 꺼졌을 때 기록이 끊길 수 있어요.\n'
+            '설정에서 배터리 사용을 ‘제한 없음’으로 바꿔 주세요.',
         [
           AppButton(onPressed: gate.openBatterySettings, label: '설정 열기'),
           TextButton(
             style: TextButton.styleFrom(
               minimumSize: const Size.fromHeight(48),
-              foregroundColor: AppColors.of(context).inkMuted,
-              textStyle: AppText.of(context).label,
+              foregroundColor: AppColors.of(context).ink,
+              textStyle: AppText.of(context).bodyStrong,
             ),
             onPressed: () {
               gate.dismissBatteryGuide();
@@ -163,7 +164,7 @@ class _PermissionScreenState extends ConsumerState<PermissionScreen>
                                       ),
                                     ),
                                     const SizedBox(height: Gap.s5),
-                                    Text(
+                                    KeepAllText(
                                       message,
                                       textAlign: TextAlign.center,
                                       style: t.body,
@@ -171,7 +172,7 @@ class _PermissionScreenState extends ConsumerState<PermissionScreen>
                                     if (_result ==
                                         GateResult.needsPreciseLocation) ...[
                                       const SizedBox(height: Gap.s3),
-                                      Text(
+                                      KeepAllText(
                                         _preciseMessage,
                                         textAlign: TextAlign.center,
                                         style: t.bodyStrong.copyWith(

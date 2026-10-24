@@ -169,19 +169,19 @@ void endWarningTests() {
     test('자동 일시정지면 움직이거나 재개하라고 알린다', () {
       final c = endWarningContent(paused: false);
       expect(c.title, '움직이지 않으면 러닝을 마쳐요');
-      expect(c.body, '30초 안에 움직이거나 재개를 누르세요');
+      expect(c.body, '30초 안에 움직이거나 재개를 눌러 주세요');
     });
 
     test('사용자 일시정지면 재개만 안내한다', () {
       final c = endWarningContent(paused: true);
       expect(c.title, '일시정지가 길어 러닝을 마쳐요');
-      expect(c.body, '30초 안에 재개를 누르세요');
+      expect(c.body, '30초 안에 재개를 눌러 주세요');
     });
 
     test('신호 끊김이면 밖으로 나오거나 재개하라고 알린다', () {
       final c = endWarningContent(paused: false, signalLost: true);
       expect(c.title, '신호가 오래 끊겨 러닝을 마쳐요');
-      expect(c.body, '30초 안에 밖으로 나오거나 재개를 누르세요');
+      expect(c.body, '30초 안에 밖으로 나오거나 재개를 눌러 주세요');
     });
 
     test('남은 시간에 여유 5초를 더해 알림을 스스로 거둔다', () {

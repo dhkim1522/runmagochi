@@ -10,6 +10,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:runmagochi/avatar/app/providers.dart';
 import 'package:runmagochi/avatar/domain/growth_rules.dart';
 import 'package:runmagochi/avatar/ui/avatar_view.dart';
+import 'package:runmagochi/core/korean.dart';
 import 'package:runmagochi/core/theme.dart';
 import 'package:runmagochi/core/ui/components.dart';
 import 'package:runmagochi/run/app/providers.dart';
@@ -109,33 +110,35 @@ void main() {
     expect(find.textContaining('kcal'), findsNothing);
   });
 
-  testWidgets('자동 일시정지면 멈춘 제목과 안내, 재개·일시정지·종료 버튼이 보인다', (tester) async {
+  testWidgets('자동 일시정지면 멈춘 제목과 안내, 재개·계속 쉬기·종료 버튼이 보인다', (tester) async {
     final c = await open(tester, initial: snap(RunState.autoPaused));
     expect(find.text('멈춰서 일시정지했어요'), findsOneWidget);
     expect(find.text('움직이면 이어져요'), findsOneWidget);
-    expect(find.widgetWithText(AppButton, '일시정지'), findsOneWidget);
+    // 이미 멈춘 화면이라 "일시정지" 대신 하는 일(사용자 일시정지로 바꿔 계속 쉼)을 이름으로 쓴다.
+    expect(find.widgetWithText(AppButton, '계속 쉬기'), findsOneWidget);
+    expect(find.widgetWithText(AppButton, '일시정지'), findsNothing);
     expect(find.text('길게 눌러 종료'), findsOneWidget);
     await tester.tap(find.text('재개'));
     await tester.pump();
     expect(c.calls, ['resume']);
   });
 
-  testWidgets('자동 일시정지에서 일시정지를 누르면 pause 가 불리고 사용자 일시정지가 된다', (tester) async {
+  testWidgets('자동 일시정지에서 계속 쉬기를 누르면 pause 가 불리고 사용자 일시정지가 된다', (tester) async {
     final c = await open(tester, initial: snap(RunState.autoPaused));
-    await tester.tap(find.widgetWithText(AppButton, '일시정지'));
+    await tester.tap(find.widgetWithText(AppButton, '계속 쉬기'));
     await tester.pump();
     expect(c.calls, ['pause']);
     expect(find.text('멈춰서 일시정지했어요'), findsNothing);
-    expect(find.widgetWithText(AppButton, '일시정지'), findsNothing);
+    expect(find.widgetWithText(AppButton, '계속 쉬기'), findsNothing);
     expect(find.text('재개'), findsOneWidget);
   });
 
   group('탈것 의심·신호 끊김 (결정 0033)', () {
-    for (final (state, notice) in [
-      (RunState.vehicle, '혹시 뭘 타셨나요? 이 구간은 기록에서 뺄게요'),
-      (RunState.signalLost, '신호가 끊겼어요. 밖으로 나오면 다시 찾을게요'),
+    for (final (state, title, notice) in [
+      (RunState.vehicle, '탈것 같아서 일시정지했어요', '혹시 뭘 타셨나요? 이 구간은 기록에서 뺄게요'),
+      (RunState.signalLost, '신호가 끊겨 일시정지했어요', '신호가 끊겼어요. 밖으로 나오면 다시 찾을게요'),
     ]) {
-      testWidgets('$state 면 무대 말풍선으로 알리고 재개·일시정지·종료 버튼이 보인다', (tester) async {
+      testWidgets('$state 면 제목이 까닭을 말하고 말풍선, 재개·계속 쉬기·종료 버튼이 보인다', (tester) async {
         final c = await open(tester, initial: snap(state));
         final bubble = find.widgetWithText(SpeechBubble, notice);
         expect(bubble, findsOneWidget);
@@ -143,8 +146,8 @@ void main() {
           find.descendant(of: find.byType(PetStage), matching: bubble),
           findsOneWidget,
         );
-        expect(find.text('일시정지'), findsWidgets);
-        expect(find.widgetWithText(AppButton, '일시정지'), findsOneWidget);
+        expect(find.widgetWithText(ScreenTitle, title), findsOneWidget);
+        expect(find.widgetWithText(AppButton, '계속 쉬기'), findsOneWidget);
         expect(find.text('길게 눌러 종료'), findsOneWidget);
         // 말풍선은 펫 그림 위(프레임 위 빈 줄까지만 겹치게)에 있다.
         final pet = tester.getRect(find.byType(AvatarView));
@@ -169,7 +172,7 @@ void main() {
       expect(find.byType(SpeechBubble), findsNothing);
       expect(find.text('신호가 끊겼어요. 밖으로 나오면 다시 찾을게요'), findsNothing);
       expect(
-        find.widgetWithText(NoticeCard, '위치 서비스가 꺼져 있어요. 켜면 이어서 기록해요'),
+        find.widgetWithText(NoticeCard, keepAll('위치 서비스가 꺼져 있어요. 켜면 이어서 기록해요')),
         findsOneWidget,
       );
       expect(find.text('재개'), findsOneWidget);
@@ -243,7 +246,7 @@ void main() {
 
   testWidgets('lastError 가 있으면 배너로 보인다', (tester) async {
     await open(tester, error: '위치를 읽지 못했어요');
-    expect(find.text('위치를 읽지 못했어요'), findsOneWidget);
+    expect(find.text(keepAll('위치를 읽지 못했어요')), findsOneWidget);
   });
 
   testWidgets('end 가 실패하면 일시정지 화면에 남고 종료 버튼이 다시 동작한다', (tester) async {
@@ -343,6 +346,14 @@ void main() {
           .widget<FractionallySizedBox>(find.byKey(const Key('hold-fill')))
           .widthFactor!;
       expect(factor(), 0);
+      // 차오르는 면은 연두라 진행이 분명히 보인다(회색 위 회색이 아니게).
+      final fillBox = tester.widget<ColoredBox>(
+        find.descendant(
+          of: find.byKey(const Key('hold-fill')),
+          matching: find.byType(ColoredBox),
+        ),
+      );
+      expect(fillBox.color, AppColors.light.primary);
       final g = await tester.startGesture(
         tester.getCenter(find.text('길게 눌러 종료')),
       );
@@ -357,8 +368,7 @@ void main() {
     testWidgets('위치 오류 문구는 danger 색이다', (tester) async {
       await open(tester, error: '위치를 읽지 못했어요');
       final style = tester
-          .renderObject<RenderParagraph>(find.text('위치를 읽지 못했어요'))
-          .text
+          .widget<Text>(find.text(keepAll('위치를 읽지 못했어요')))
           .style!;
       expect(style.color, AppColors.light.danger);
     });

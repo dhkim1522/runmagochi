@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -44,6 +46,26 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   /// 사용자가 고른 오늘 목표. null 이면 최근 러닝의 목표를 따른다.
   RunGoal? _goal;
 
+  /// 펫 말풍선에 잠깐 띄우는 안내(1km 미만 미저장). 없으면 다음 레벨까지 거리를 보인다.
+  /// 화면 아래 알림은 시작 버튼을 가려서 무대 안에서 알린다.
+  String? _notice;
+  Timer? _noticeTimer;
+
+  void _showNotice(String message) {
+    if (!mounted) return;
+    _noticeTimer?.cancel();
+    setState(() => _notice = message);
+    _noticeTimer = Timer(const Duration(seconds: 4), () {
+      if (mounted) setState(() => _notice = null);
+    });
+  }
+
+  @override
+  void dispose() {
+    _noticeTimer?.cancel();
+    super.dispose();
+  }
+
   RunGoal get _shownGoal =>
       _goal ?? ref.read(lastRunGoalProvider).value ?? const DistanceGoal(3000);
 
@@ -67,7 +89,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       final view = ref.read(runControllerProvider);
       final summary = view.lastSummary;
       if (view.discardedShortRun) {
-        _toast(shortRunMessage);
+        _showNotice(shortRunMessage);
       } else if (view.autoEnded && summary != null) {
         await _openSummary(summary);
       }
@@ -101,7 +123,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       }
       if (!mounted) return;
       if (ref.read(runControllerProvider).discardedShortRun) {
-        _toast(shortRunMessage);
+        _showNotice(shortRunMessage);
         _refreshAfterRun();
         return;
       }
@@ -130,7 +152,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     ).push(MaterialPageRoute<void>(builder: (_) => const InRunScreen()));
     if (!mounted) return;
     if (ref.read(runControllerProvider).discardedShortRun) {
-      _toast(shortRunMessage);
+      _showNotice(shortRunMessage);
       _refreshAfterRun();
       return;
     }
@@ -291,9 +313,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                   hatItemId: equipped?.hatItemId,
                                   accessoryItemId: equipped?.accessoryItemId,
                                 ),
-                          bubble: nextLevelKm == null
-                              ? null
-                              : '다음 레벨까지 ${nextLevelKm.toStringAsFixed(1)}km',
+                          bubble:
+                              _notice ??
+                              (nextLevelKm == null
+                                  ? null
+                                  : '다음 레벨까지 ${nextLevelKm.toStringAsFixed(1)}km'),
                         ),
                       ),
                       const SizedBox(height: Gap.s4),

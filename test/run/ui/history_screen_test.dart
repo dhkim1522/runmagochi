@@ -4,6 +4,7 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart' hide Split;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:runmagochi/core/korean.dart';
 import 'package:runmagochi/avatar/app/providers.dart';
 import 'package:runmagochi/core/theme.dart';
 import 'package:runmagochi/core/ui/components.dart';
@@ -217,7 +218,7 @@ void _deleteTests() {
     await tester.tap(find.text('기록 삭제'));
     await tester.pumpAndSettle();
     expect(find.text('이 러닝을 지울까요?'), findsOneWidget);
-    expect(find.text('기록에서 지워요. 받은 경험치는 그대로예요.'), findsOneWidget);
+    expect(find.text(keepAll('기록에서 지워요.\n받은 경험치는 그대로예요.')), findsOneWidget);
 
     await tester.tap(find.text('삭제'));
     await tester.pumpAndSettle();
@@ -370,6 +371,9 @@ void _statsTests() {
     await tester.pumpAndSettle();
     expect(find.text('0.00'), findsOneWidget);
     expect(find.text('러닝 0회'), findsOneWidget);
+    // 러닝이 없으면 페이스 자리표(-'--")를 늘어놓지 않고 "-" 하나만 둔다.
+    expect(find.text('평균 페이스 -'), findsOneWidget);
+    expect(find.textContaining("-'--"), findsNothing);
     expect(tester.takeException(), isNull);
     await tester.tap(find.text('년'));
     await tester.pumpAndSettle();

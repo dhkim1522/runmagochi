@@ -294,7 +294,10 @@ class _StatsCard extends StatelessWidget {
     final t = AppText.of(context);
     final km = loaded ? formatKm(stats.distanceM) : '-';
     final count = loaded ? '러닝 ${stats.count}회' : '러닝 -회';
-    final pace = loaded ? formatPace(stats.avgPaceSecPerKm) : '-';
+    // 러닝이 없으면 페이스 자리표(-'--") 대신 "-" 하나.
+    final pace = loaded && stats.count > 0
+        ? formatPace(stats.avgPaceSecPerKm)
+        : '-';
     final time = loaded ? formatDuration(stats.movingTime) : '-';
     final (name, unit) = switch (period) {
       StatsPeriod.week => ('요일별', ''),

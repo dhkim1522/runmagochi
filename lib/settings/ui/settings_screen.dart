@@ -139,7 +139,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('백업 파일을 가져올까요?'),
-        content: const Text('지금 데이터가 모두 백업 내용으로 바뀌어요. 되돌릴 수 없어요.'),
+        content: const KeepAllText('지금 데이터가 모두 백업 내용으로 바뀌어요.\n되돌릴 수 없어요.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
@@ -165,8 +165,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('모든 기록을 지울까요?'),
-        content: const Text(
-          '러닝 기록·캐릭터·경험치·코인·아이템·배지가 모두 지워져요. 되돌릴 수 없으니 필요하면 먼저 백업을 내보내 주세요.',
+        content: const KeepAllText(
+          '러닝 기록, 캐릭터, 경험치, 코인, 아이템, 배지가 모두 지워져요.\n'
+          '되돌릴 수 없으니 필요하면 먼저 백업을 내보내 주세요.',
         ),
         actions: [
           TextButton(
@@ -300,8 +301,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Text(
-                      '기기를 바꿀 때 백업 파일로 기록을 옮겨요. 가져오면 지금 데이터는 백업 내용으로 모두 바뀌어요.',
+                    KeepAllText(
+                      '기기를 바꿀 때 백업 파일로 기록을 옮겨요.\n'
+                      '가져오면 지금 데이터는 백업 내용으로 모두 바뀌어요.',
                       style: t.label.copyWith(color: c.inkMuted),
                     ),
                     const SizedBox(height: Gap.s4),
@@ -331,12 +333,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Text(
-                      '기록과 캐릭터를 모두 지우고 캐릭터를 새로 만들어요. 체중·음성 안내·화면 모드는 남아요.',
+                    KeepAllText(
+                      '기록과 캐릭터를 모두 지우고 캐릭터를 새로 만들어요.\n'
+                      '체중·음성 안내·화면 모드는 남아요.',
                       style: t.label.copyWith(color: c.inkMuted),
                     ),
                     const SizedBox(height: Gap.s4),
-                    AppButton.secondary(
+                    AppButton.danger(
                       label: '모든 기록 지우고 처음부터',
                       onPressed: _backupBusy ? null : _reset,
                     ),

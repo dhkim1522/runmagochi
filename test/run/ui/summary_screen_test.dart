@@ -157,6 +157,9 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('아침 러닝'), findsOneWidget);
     expect(find.byKey(const ValueKey('split-row')), findsNWidgets(3));
+    // 기록 탭에서 연 상세는 방금 끝낸 러닝의 요약과 제목이 다르다.
+    expect(find.widgetWithText(ScreenTitle, '러닝 기록'), findsOneWidget);
+    expect(find.widgetWithText(ScreenTitle, '러닝 요약'), findsNothing);
   });
 
   testWidgets('forRun 에서 getRun 이 null 이면 찾을 수 없다는 안내', (tester) async {

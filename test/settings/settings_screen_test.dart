@@ -11,6 +11,7 @@ import 'package:runmagochi/avatar/ui/avatar_screen.dart';
 import 'package:runmagochi/backup/app/backup_service.dart';
 import 'package:runmagochi/backup/app/providers.dart';
 import 'package:runmagochi/core/app_info.dart';
+import 'package:runmagochi/core/korean.dart';
 import 'package:runmagochi/core/theme.dart';
 import 'package:runmagochi/core/ui/components.dart';
 import 'package:runmagochi/profile/app/providers.dart';
@@ -242,7 +243,7 @@ void task15Tests() {
       );
       final desc = tester
           .widget<Text>(
-            find.text('기기를 바꿀 때 백업 파일로 기록을 옮겨요. 가져오면 지금 데이터는 백업 내용으로 모두 바뀌어요.'),
+            find.text(keepAll('기기를 바꿀 때 백업 파일로 기록을 옮겨요.\n가져오면 지금 데이터는 백업 내용으로 모두 바뀌어요.')),
           )
           .style!;
       expect(desc.fontSize, 14);
@@ -303,7 +304,7 @@ void main() {
     expect(find.text('아바타 이름'), findsOneWidget);
     expect(find.text('러니'), findsOneWidget);
     expect(
-      find.text('기기를 바꿀 때 백업 파일로 기록을 옮겨요. 가져오면 지금 데이터는 백업 내용으로 모두 바뀌어요.'),
+      find.text(keepAll('기기를 바꿀 때 백업 파일로 기록을 옮겨요.\n가져오면 지금 데이터는 백업 내용으로 모두 바뀌어요.')),
       findsOneWidget,
     );
     expect(find.text('내보내기'), findsOneWidget);
@@ -478,7 +479,7 @@ void main() {
       await tester.tap(find.text('가져오기'));
       await settle(tester);
       expect(find.text('백업 파일을 가져올까요?'), findsOneWidget);
-      expect(find.text('지금 데이터가 모두 백업 내용으로 바뀌어요. 되돌릴 수 없어요.'), findsOneWidget);
+      expect(find.text(keepAll('지금 데이터가 모두 백업 내용으로 바뀌어요.\n되돌릴 수 없어요.')), findsOneWidget);
     }
 
     testWidgets('가져오기 확인 창에서 취소하면 서비스를 부르지 않는다', (tester) async {
@@ -609,7 +610,34 @@ void main() {
       await tester.scrollUntilVisible(find.text('모든 기록 지우고 처음부터'), 200);
       expect(find.text('초기화'), findsOneWidget);
       expect(
-        find.text('기록과 캐릭터를 모두 지우고 캐릭터를 새로 만들어요. 체중·음성 안내·화면 모드는 남아요.'),
+        find.text(keepAll('기록과 캐릭터를 모두 지우고 캐릭터를 새로 만들어요.\n체중·음성 안내·화면 모드는 남아요.')),
+        findsOneWidget,
+      );
+      // 되돌릴 수 없는 동작이라 빨간 테두리·글자의 위험 버튼이다.
+      expect(
+        find.widgetWithText(AppButton, '모든 기록 지우고 처음부터'),
+        findsOneWidget,
+      );
+      final button = tester.widget<AppButton>(
+        find.widgetWithText(AppButton, '모든 기록 지우고 처음부터'),
+      );
+      expect(button, isA<AppButton>());
+      expect(
+        tester.widget<Text>(find.text('모든 기록 지우고 처음부터')).style!.color,
+        AppColors.light.danger,
+      );
+    });
+
+    testWidgets('확인 창은 지우는 것과 되돌릴 수 없음을 줄을 나눠 말한다', (tester) async {
+      await pumpSettings(tester);
+      await openReset(tester);
+      expect(
+        find.text(
+          keepAll(
+            '러닝 기록, 캐릭터, 경험치, 코인, 아이템, 배지가 모두 지워져요.\n'
+            '되돌릴 수 없으니 필요하면 먼저 백업을 내보내 주세요.',
+          ),
+        ),
         findsOneWidget,
       );
     });

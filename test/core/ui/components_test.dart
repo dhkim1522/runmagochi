@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:runmagochi/avatar/ui/sprite_sheet.dart';
 import 'package:runmagochi/core/stage/stage_scene.dart';
+import 'package:runmagochi/core/korean.dart';
 import 'package:runmagochi/core/theme.dart';
 import 'package:runmagochi/core/ui/components.dart';
 
@@ -158,6 +159,11 @@ void _buttonTests() {
               label: '이전',
               onPressed: () {},
             ),
+            AppButton.danger(
+              key: const Key('r'),
+              label: '지우기',
+              onPressed: () {},
+            ),
             AppButton.panel(
               key: const Key('d'),
               label: '일시정지',
@@ -180,6 +186,12 @@ void _buttonTests() {
       expect(s.border, Border.all(color: c.line, width: Borders.hairline));
       expect(s.boxShadow, c.floatShadow);
       expect(tester.widget<Text>(find.text('이전')).style!.color, c.ink);
+
+      final r = _decoration(tester, find.byKey(const Key('r')));
+      // 위험 버튼: 흰 면 + danger 테두리·글자. 되돌릴 수 없는 동작(초기화)에 쓴다.
+      expect(r.color, c.surface);
+      expect(r.border, Border.all(color: c.danger, width: Borders.edge));
+      expect(tester.widget<Text>(find.text('지우기')).style!.color, c.danger);
 
       final d = _decoration(tester, find.byKey(const Key('d')));
       expect(d.color, c.panel);
@@ -1068,7 +1080,9 @@ void _task15Tests() {
       );
       expect(icon.color, c.danger);
       expect(icon.size, 24);
-      final text = tester.widget<Text>(find.text('위치 신호를 받지 못하고 있어요'));
+      // 한글이 단어 중간에서 줄바꿈되지 않게 단어 잇기 문자를 넣고, 스크린 리더는 원문을 읽는다.
+      final text = tester.widget<Text>(find.text(keepAll('위치 신호를 받지 못하고 있어요')));
+      expect(text.semanticsLabel, '위치 신호를 받지 못하고 있어요');
       expect(text.style!.color, c.danger);
       expect(text.style!.fontSize, 17);
       expect(text.style!.fontWeight, FontWeight.w700);

@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:runmagochi/achievement/app/providers.dart';
 import 'package:runmagochi/achievement/ui/achievement_screen.dart';
 import 'package:runmagochi/avatar/app/providers.dart';
+import 'package:runmagochi/core/korean.dart';
 import 'package:runmagochi/core/theme.dart';
 import 'package:runmagochi/core/ui/components.dart';
 import 'package:runmagochi/run/app/providers.dart';
@@ -163,7 +164,7 @@ void main() {
       expect(tester.takeException(), isNull);
       expect(
         find.ancestor(
-          of: find.text('위치 신호를 받지 못하고 있어요'),
+          of: find.text(keepAll('위치 신호를 받지 못하고 있어요')),
           matching: find.byType(NoticeCard),
         ),
         findsOneWidget,

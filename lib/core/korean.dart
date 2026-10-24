@@ -7,7 +7,13 @@ const wordJoiner = '⁠';
 /// 한글은 글자마다 줄이 바뀔 수 있어 "왔어/요!" 처럼 끊긴다. 단어 안 글자 사이에
 /// [wordJoiner] 를 넣어 띄어쓰기에서만 줄이 바뀌게 한다(CSS word-break: keep-all).
 /// 화면에 그릴 글자에만 쓰고, 스크린 리더 라벨은 원문을 쓴다.
+/// 줄바꿈(`\n`)은 그대로 둔다.
 String keepAll(String text) => text
-    .split(' ')
-    .map((w) => w.runes.map(String.fromCharCode).join(wordJoiner))
-    .join(' ');
+    .split('\n')
+    .map(
+      (line) => line
+          .split(' ')
+          .map((w) => w.runes.map(String.fromCharCode).join(wordJoiner))
+          .join(' '),
+    )
+    .join('\n');

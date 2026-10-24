@@ -58,7 +58,7 @@ void main() {
       expect(voiceLine(const VoiceEndWarning(30)), '움직이지 않으면 30초 뒤 러닝을 마쳐요');
       expect(
         voiceLine(const VoiceEndWarning(30, paused: true)),
-        '일시정지가 길어 러닝을 마쳐요. 30초 안에 재개를 누르세요',
+        '일시정지가 길어 러닝을 마쳐요. 30초 안에 재개를 눌러 주세요',
       );
       expect(voiceLine(const VoiceEndWarning(0)), isNull);
     });

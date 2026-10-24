@@ -144,7 +144,7 @@ void main() {
     expect(find.text('달린 거리 5.02km'), findsOneWidget);
     expect(find.text('경험치 +50'), findsOneWidget);
     expect(find.text('레벨 업!'), findsOneWidget);
-    expect(find.text('Lv.1 에서 Lv.2 로'), findsOneWidget);
+    expect(find.text('Lv.1 → Lv.2'), findsOneWidget);
     expect(find.text('새 외형 단계!'), findsNothing);
     await settle(tester);
   });
@@ -602,7 +602,7 @@ void layoutTests() {
         expect(stageRect.right, boardRect.right - Gap.s5);
         expect(stageRect.bottom, boardRect.bottom - Gap.s5);
         // 무대 위에는 글자를 두지 않는다: 문구는 모두 무대 위쪽.
-        for (final t in ['레벨 업!', 'Lv.19 에서 Lv.20 로', '새 외형 단계!']) {
+        for (final t in ['레벨 업!', 'Lv.19 → Lv.20', '새 외형 단계!']) {
           expect(tester.getRect(find.text(t)).bottom, lessThan(stageRect.top));
         }
         expect(

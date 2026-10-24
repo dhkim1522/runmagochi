@@ -5,6 +5,7 @@ import 'package:flutter/rendering.dart';
 
 import '../stage/park_scene.dart';
 import '../stage/stage_scene.dart';
+import '../korean.dart';
 import '../theme.dart';
 import 'stage_backdrop.dart';
 
@@ -252,13 +253,14 @@ class _PressableState extends State<Pressable> {
   }
 }
 
-enum _ButtonKind { primary, secondary, panel }
+enum _ButtonKind { primary, secondary, panel, danger }
 
 /// 높이 60 알약 버튼. [onPressed] 가 null 이면 비활성(50%).
 ///
 /// - 기본: 연두 주요 버튼(primary + onPrimary 글자, 경계선 없이 옅은 floatShadow). 화면마다 하나.
 /// - [AppButton.secondary]: 흰 보조 버튼(surface + ink 글자, floatShadow + line 머리카락 선).
 /// - [AppButton.panel]: 어두운 판(panel + onPanel 글자, 그림자 없음). 일시정지·재개.
+/// - [AppButton.danger]: 흰 면 + danger 테두리·글자. 되돌릴 수 없는 동작(초기화).
 /// - [small]: 높이 48, 글자 body-strong 17. 주요 버튼 옆 보조 행동(끝부분 잘라내기).
 ///
 /// 글자가 길거나 커지면 줄을 바꾸지 않고 버튼 안에서 작아진다.
@@ -284,6 +286,13 @@ class AppButton extends StatelessWidget {
     this.small = false,
   }) : _kind = _ButtonKind.panel;
 
+  const AppButton.danger({
+    super.key,
+    required this.label,
+    required this.onPressed,
+    this.small = false,
+  }) : _kind = _ButtonKind.danger;
+
   /// 버튼 높이(최소). 글자가 아주 커지면 그만큼 커진다.
   static const double height = 60;
 
@@ -304,7 +313,11 @@ class AppButton extends StatelessWidget {
       _ButtonKind.primary => (c.primary, c.onPrimary, null, c.floatShadow),
       _ButtonKind.secondary => (c.surface, c.ink, c.line, c.floatShadow),
       _ButtonKind.panel => (c.panel, c.onPanel, null, null),
+      _ButtonKind.danger => (c.surface, c.danger, c.danger, c.floatShadow),
     };
+    final edgeWidth = _kind == _ButtonKind.danger
+        ? Borders.edge
+        : Borders.hairline;
     final t = AppText.of(context);
     final enabled = onPressed != null;
     // 머리줄에서 제목과 한 노드로 합쳐지지 않게 따로 둔다.
@@ -325,7 +338,7 @@ class AppButton extends StatelessWidget {
               borderRadius: BorderRadius.circular(Radii.pill),
               border: edge == null
                   ? null
-                  : Border.all(color: edge, width: Borders.hairline),
+                  : Border.all(color: edge, width: edgeWidth),
               boxShadow: shadow,
             ),
             child: ConstrainedBox(
@@ -1098,6 +1111,24 @@ class EmptyState extends StatelessWidget {
   }
 }
 
+/// 한글을 단어 단위로 줄바꿈하는 글자([keepAll]). 문장 글(안내·설명·확인 창 본문)에 쓴다.
+/// 스크린 리더는 단어 잇기 문자가 없는 원문을 읽는다.
+class KeepAllText extends StatelessWidget {
+  const KeepAllText(this.text, {super.key, this.style, this.textAlign});
+
+  final String text;
+  final TextStyle? style;
+  final TextAlign? textAlign;
+
+  @override
+  Widget build(BuildContext context) => Text(
+    keepAll(text),
+    semanticsLabel: text,
+    style: style,
+    textAlign: textAlign,
+  );
+}
+
 /// 알림 줄: 흰 작은 카드(radius-md)에 danger 경계선·느낌표 그림·글자(body-strong).
 /// 위치 신호 오류·저장 실패처럼 지금 러닝에 영향이 있는 진짜 문제에만 쓴다.
 class NoticeCard extends StatelessWidget {
@@ -1120,7 +1151,10 @@ class NoticeCard extends StatelessWidget {
           ),
           const SizedBox(width: Gap.s3),
           Expanded(
-            child: Text(message, style: t.bodyStrong.copyWith(color: c.danger)),
+            child: KeepAllText(
+              message,
+              style: t.bodyStrong.copyWith(color: c.danger),
+            ),
           ),
         ],
       ),

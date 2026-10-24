@@ -6,6 +6,7 @@ import 'package:runmagochi/run/data/run_progress_notifier.dart';
 class _FakePlugin extends Fake implements FlutterLocalNotificationsPlugin {
   InitializationSettings? settings;
   final shown = <(int, DarwinNotificationDetails?)>[];
+  final androidActions = <List<String>>[];
 
   @override
   Future<bool?> initialize({
@@ -25,7 +26,13 @@ class _FakePlugin extends Fake implements FlutterLocalNotificationsPlugin {
     String? body,
     NotificationDetails? notificationDetails,
     String? payload,
-  }) async => shown.add((id, notificationDetails?.iOS));
+  }) async {
+    shown.add((id, notificationDetails?.iOS));
+    androidActions.add([
+      for (final a in notificationDetails?.android?.actions ?? const [])
+        a.title,
+    ]);
+  }
 }
 
 RunProgressContent _content(List<RunProgressAction> actions) =>
@@ -92,5 +99,24 @@ void main() {
         LocalRunProgressNotifier.pauseActionId,
       ],
     });
+  });
+
+
+  test('스스로 멈춘 상태의 두 번째 버튼은 계속 쉬기다 (Android·iOS)', () async {
+    await notifier.show(_content([RunProgressAction.pause]));
+    await notifier.show(
+      _content([RunProgressAction.resume, RunProgressAction.pause]),
+    );
+    // 러닝 중 버튼은 그대로 일시정지, 이미 멈춘 상태에서는 하는 일(계속 쉬기)을 이름으로 쓴다.
+    expect(plugin.androidActions, [
+      ['일시정지'],
+      ['재개', '계속 쉬기'],
+    ]);
+    final titles = {
+      for (final c in plugin.settings!.iOS!.notificationCategories)
+        c.identifier: [for (final a in c.actions) a.title],
+    };
+    expect(titles[darwinRunPauseCategory], ['일시정지']);
+    expect(titles[darwinRunResumePauseCategory], ['재개', '계속 쉬기']);
   });
 }

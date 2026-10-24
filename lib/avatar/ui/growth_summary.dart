@@ -188,7 +188,9 @@ class _GrowthSummaryState extends State<GrowthSummary>
                 ),
                 const SizedBox(height: Gap.s1),
                 Text(
-                  'Lv.${g.levelBefore} 에서 Lv.${g.levelAfter} 로',
+                  // 숫자에 따라 바뀌는 조사(로·으로)를 쓰지 않는다. 화살표는 읽지 않게 라벨을 둔다.
+                  'Lv.${g.levelBefore} → Lv.${g.levelAfter}',
+                  semanticsLabel: '레벨 ${g.levelBefore}에서 ${g.levelAfter}',
                   textAlign: TextAlign.center,
                   style: withWeight(t.body, FontWeight.w600),
                 ),

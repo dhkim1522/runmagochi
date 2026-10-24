@@ -575,7 +575,7 @@ class RunController extends Notifier<RunViewState> {
                   : quit
                   ? _quitBody
                   : '${formatKm(summary.distanceM)}km 기록을 저장했어요. '
-                        '요약에서 확인하세요.',
+                        '요약에서 확인해 보세요.',
             )
             .catchError((Object e) => debugPrint('알림: 자동 종료 알림 실패 $e')),
       );

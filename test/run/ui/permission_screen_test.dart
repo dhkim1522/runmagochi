@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:runmagochi/core/korean.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:runmagochi/core/theme.dart';
@@ -208,7 +209,7 @@ void main() {
     await pump(tester, gate);
 
     expect(
-      find.text('러닝 경로와 거리를 기록하려면 위치 권한이 필요합니다. 위치는 이 기기에만 저장됩니다.'),
+      find.text(keepAll('러닝 경로와 거리를 기록하려면 위치 권한이 필요해요.\n위치는 이 기기에만 저장돼요.')),
       findsOneWidget,
     );
     await tester.tap(find.text('권한 허용'));
@@ -239,10 +240,10 @@ void main() {
     await pump(tester, gate);
 
     expect(
-      find.text('러닝 경로와 거리를 기록하려면 위치 권한이 필요합니다. 위치는 이 기기에만 저장됩니다.'),
+      find.text(keepAll('러닝 경로와 거리를 기록하려면 위치 권한이 필요해요.\n위치는 이 기기에만 저장돼요.')),
       findsOneWidget,
     );
-    expect(find.text('정확한 위치를 허용해야 거리가 기록됩니다'), findsOneWidget);
+    expect(find.text(keepAll('정확한 위치를 허용해야 거리가 기록돼요')), findsOneWidget);
     await tester.tap(find.text('권한 허용'));
     await tester.pump();
     expect(gate.requested, 1);
@@ -250,14 +251,14 @@ void main() {
 
   testWidgets('needsLocation이면 정확한 위치 문구는 없다', (tester) async {
     await pump(tester, FakeGate(GateResult.needsLocation));
-    expect(find.text('정확한 위치를 허용해야 거리가 기록됩니다'), findsNothing);
+    expect(find.text(keepAll('정확한 위치를 허용해야 거리가 기록돼요')), findsNothing);
   });
 
   testWidgets('locationDeniedForever면 설정 열기 버튼', (tester) async {
     final gate = FakeGate(GateResult.locationDeniedForever);
     await pump(tester, gate);
 
-    expect(find.text('설정에서 위치 권한을 허용해 주세요'), findsOneWidget);
+    expect(find.text(keepAll('설정에서 위치 권한을 허용해 주세요')), findsOneWidget);
     await tester.tap(find.text('설정 열기'));
     await tester.pump();
     expect(gate.appSettingsOpened, 1);
@@ -278,6 +279,22 @@ void main() {
     );
     await tester.pump();
     expect(find.text('설정 열기'), findsOneWidget);
+    expect(
+      find.text(
+        keepAll(
+          '배터리 최적화가 켜져 있으면 화면이 꺼졌을 때 기록이 끊길 수 있어요.\n'
+          '설정에서 배터리 사용을 ‘제한 없음’으로 바꿔 주세요.',
+        ),
+      ),
+      findsOneWidget,
+    );
+    // 나중에는 작은 회색 글자가 아니라 본문 굵기·ink 색으로 눌러도 되는 버튼임이 보인다.
+    final later = tester.widget<Text>(find.text('나중에'));
+    final laterStyle = DefaultTextStyle.of(
+      tester.element(find.text('나중에')),
+    ).style.merge(later.style);
+    expect(laterStyle.color, AppColors.light.ink);
+    expect(laterStyle.fontWeight, FontWeight.w700);
     await tester.tap(find.text('나중에'));
     await tester.pump();
     expect(gate.dismissed, 1);
@@ -345,7 +362,7 @@ void main() {
     final gate = FakeGate(GateResult.ready)..checkError = StateError('boom');
     await pump(tester, gate);
     expect(find.text('다시 시도'), findsOneWidget);
-    expect(find.textContaining('위치 권한이 필요합니다'), findsOneWidget);
+    expect(find.textContaining(keepAll('위치 권한이 필요해요')), findsOneWidget);
 
     gate.checkError = null;
     gate.result = GateResult.needsLocation;

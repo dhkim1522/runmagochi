@@ -10,7 +10,6 @@ import '../../avatar/domain/avatar_name.dart';
 import '../../avatar/domain/growth_rules.dart';
 import '../../avatar/ui/avatar_view.dart';
 import '../../avatar/ui/sprite_sheet.dart' show spriteFramePx;
-import '../../core/korean.dart';
 import '../../core/theme.dart';
 import '../../core/ui/components.dart';
 import '../../profile/app/providers.dart';
@@ -349,7 +348,7 @@ class _IntroPage extends StatelessWidget {
           const SizedBox(height: Gap.s5),
           Semantics(
             header: true,
-            child: _KeepAllText(
+            child: KeepAllText(
               _headline(kind),
               textAlign: TextAlign.center,
               style: t.title,
@@ -359,7 +358,7 @@ class _IntroPage extends StatelessWidget {
           Center(
             child: _MaxWidth(
               300,
-              child: _KeepAllText(
+              child: KeepAllText(
                 '달린 거리만큼 자라서 러닝화를 신고, 언젠가 마라토너가 돼요.',
                 textAlign: TextAlign.center,
                 style: t.body.copyWith(color: c.inkMuted),
@@ -396,7 +395,7 @@ class _NamePage extends StatelessWidget {
         children: [
           const ScreenTitle('이름을 지어 주세요'),
           const SizedBox(height: Gap.s2),
-          _KeepAllText(
+          KeepAllText(
             '홈과 아바타 탭에서 이 이름으로 불러요. 설정에서 바꿀 수 있어요.',
             style: t.body.copyWith(color: c.inkMuted),
           ),
@@ -462,23 +461,6 @@ class _LoadError extends StatelessWidget {
       ),
     );
   }
-}
-
-/// 띄어쓰기에서만 줄을 바꾸는 글자([keepAll]). 스크린 리더는 원문을 읽는다.
-class _KeepAllText extends StatelessWidget {
-  const _KeepAllText(this.text, {required this.style, this.textAlign});
-
-  final String text;
-  final TextStyle style;
-  final TextAlign? textAlign;
-
-  @override
-  Widget build(BuildContext context) => Text(
-    keepAll(text),
-    semanticsLabel: text,
-    style: style,
-    textAlign: textAlign,
-  );
 }
 
 /// 폭 상한. [ConstrainedBox] 는 고유 높이를 잴 때 maxWidth 를 무시해, 넓은 화면에서

@@ -120,13 +120,14 @@ class _InRunScreenState extends ConsumerState<InRunScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                ScreenTitle(
-                  autoPaused
-                      ? '멈춰서 일시정지했어요'
-                      : paused
-                      ? '일시정지'
-                      : '러닝 중',
-                ),
+                // 스스로 멈춘 상태는 제목이 까닭을 말한다.
+                ScreenTitle(switch (snap.state) {
+                  RunState.autoPaused => '멈춰서 일시정지했어요',
+                  RunState.vehicle => '탈것 같아서 일시정지했어요',
+                  RunState.signalLost => '신호가 끊겨 일시정지했어요',
+                  _ when paused => '일시정지',
+                  _ => '러닝 중',
+                }),
                 if (autoPaused)
                   Padding(
                     padding: const EdgeInsets.only(top: Gap.s1),
@@ -191,7 +192,7 @@ class _InRunScreenState extends ConsumerState<InRunScreen> {
                   AppButton.panel(label: '일시정지', onPressed: controller.pause)
                 else ...[
                   if (autoStopped) ...[
-                    // 오래 쉴 때는 사용자 일시정지로 바꿔 5분 자동 종료를 피한다.
+                    // 오래 쉴 때는 사용자 일시정지로 바꿔 5분 자동 종료를 피한다(계속 쉬기).
                     Row(
                       children: [
                         Expanded(
@@ -203,7 +204,7 @@ class _InRunScreenState extends ConsumerState<InRunScreen> {
                         const SizedBox(width: Gap.s3),
                         Expanded(
                           child: AppButton.secondary(
-                            label: '일시정지',
+                            label: '계속 쉬기',
                             onPressed: _ending ? null : controller.pause,
                           ),
                         ),
@@ -449,12 +450,35 @@ class _HoldToStopButtonState extends State<_HoldToStopButton>
                             key: const Key('hold-fill'),
                             widthFactor: _progress.value,
                             heightFactor: 1,
-                            child: ColoredBox(color: c.surfaceSoft),
+                            child: ColoredBox(color: c.primary),
                           ),
                         ),
                       ),
                     ),
-                    Text('길게 눌러 종료', style: AppText.of(context).titleS),
+                    // 연두가 덮은 쪽 글자는 onPrimary 로 바꿔 다크에서도 읽히게 한다.
+                    // 버튼 폭 전체에 깔아 차오르는 면과 같은 자리에서 색이 바뀐다.
+                    Positioned.fill(
+                      child: AnimatedBuilder(
+                        animation: _progress,
+                        builder: (context, child) {
+                          final p = _progress.value;
+                          return ShaderMask(
+                            blendMode: BlendMode.srcIn,
+                            shaderCallback: (bounds) => LinearGradient(
+                              colors: [c.onPrimary, c.onPrimary, c.ink, c.ink],
+                              stops: [0, p, p, 1],
+                            ).createShader(Offset.zero & bounds.size),
+                            child: child,
+                          );
+                        },
+                        child: Center(
+                          child: Text(
+                            '길게 눌러 종료',
+                            style: AppText.of(context).titleS,
+                          ),
+                        ),
+                      ),
+                    ),
                   ],
                 ),
               ),

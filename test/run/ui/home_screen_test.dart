@@ -405,7 +405,7 @@ void main() {
     expect(g.syncs, before + 2);
     expect(find.byType(SummaryScreen), findsOneWidget);
     expect(find.text('레벨 업!'), findsOneWidget);
-    expect(find.text('Lv.3 에서 Lv.4 로'), findsOneWidget);
+    expect(find.text('Lv.3 → Lv.4'), findsOneWidget);
     expect(find.text('목표 3km까지 3.00km 남았어요'), findsOneWidget);
   });
 

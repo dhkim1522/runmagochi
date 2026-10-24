@@ -81,7 +81,8 @@ final List<DarwinNotificationCategory> darwinRunNotificationCategories = [
     darwinRunResumePauseCategory,
     actions: [
       DarwinNotificationAction.plain(runResumeActionId, '재개'),
-      DarwinNotificationAction.plain(runPauseActionId, '일시정지'),
+      // 스스로 멈춘 상태라 하는 일(사용자 일시정지로 바꿔 계속 쉼)을 이름으로 쓴다.
+      DarwinNotificationAction.plain(runPauseActionId, '계속 쉬기'),
     ],
   ),
 ];

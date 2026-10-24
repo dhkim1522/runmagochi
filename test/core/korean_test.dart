@@ -9,6 +9,10 @@ void main() {
       expect(keepAll('가').replaceAll(wordJoiner, ''), '가');
     });
 
+    test('줄바꿈은 그대로 두고 줄마다 단어를 잇는다', () {
+      expect(keepAll('지워요.\n남아요.'), '지$wordJoiner워$wordJoiner요$wordJoiner.\n남$wordJoiner아$wordJoiner요$wordJoiner.');
+    });
+
     test('잇기 문자를 빼면 원문과 같다', () {
       const s = '달린 거리만큼 자라서 러닝화를 신고, 언젠가 마라토너가 돼요.';
       expect(keepAll(s).replaceAll(wordJoiner, ''), s);

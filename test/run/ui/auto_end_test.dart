@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:runmagochi/core/ui/components.dart';
 import 'package:runmagochi/avatar/app/providers.dart';
 import 'package:runmagochi/core/theme.dart';
 import 'package:runmagochi/run/app/permission_gate.dart';
@@ -211,7 +212,15 @@ void main() {
 
     expect(find.byType(InRunScreen), findsNothing);
     expect(find.byType(SummaryScreen), findsNothing);
-    expect(find.text('1km 미만은 기록하지 않아요'), findsOneWidget);
+    // 화면 아래 알림은 시작 버튼을 가리므로 펫 말풍선이 잠깐 알려 준다.
+    expect(
+      find.widgetWithText(SpeechBubble, '1km 미만은 기록하지 않아요'),
+      findsOneWidget,
+    );
+    expect(find.byType(SnackBar), findsNothing);
+    await tester.pump(const Duration(seconds: 5));
+    await tester.pump();
+    expect(find.text('1km 미만은 기록하지 않아요'), findsNothing);
   });
 
   testWidgets('복원 때 바로 1km 미만으로 끝나면 요약 대신 안내를 보인다', (tester) async {
@@ -220,7 +229,10 @@ void main() {
     await _settle(tester);
 
     expect(find.byType(SummaryScreen), findsNothing);
-    expect(find.text('1km 미만은 기록하지 않아요'), findsOneWidget);
+    expect(
+      find.widgetWithText(SpeechBubble, '1km 미만은 기록하지 않아요'),
+      findsOneWidget,
+    );
   });
 
   testWidgets('복구 다이얼로그의 종료하기가 1km 미만이면 안내를 보인다', (tester) async {
@@ -232,6 +244,9 @@ void main() {
 
     expect(c.calls, ['restore', 'end']);
     expect(find.byType(SummaryScreen), findsNothing);
-    expect(find.text('1km 미만은 기록하지 않아요'), findsOneWidget);
+    expect(
+      find.widgetWithText(SpeechBubble, '1km 미만은 기록하지 않아요'),
+      findsOneWidget,
+    );
   });
 }
